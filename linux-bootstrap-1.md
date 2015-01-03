@@ -6,7 +6,7 @@ Linux kernel booting process. Part 1.
 
 If you read my previous blog [posts](http://0xax.blogspot.com/search/label/asm), you can note that sometime ago I have started to get involved low-level programming. I wrote some posts about x86_64 assembly programming for Linux. In the same time I started to dive into GNU/Linux kernel source code. It is very interesting for me to understand how low-level things works, how programs runs on my computer, how they located in memory, how kernel manages processes and memory, how network stack works on low-level and many many other things. I decided to write yet another series of posts about GNU/Linux kernel for **x86_64**.
 
-Note, that I'm not professional kernel hacker and I don't write code for kernel at work, just a hobby. I just like low-level stuff and it is interesting to me how these things works. So if you will meet any confusing, you will have a questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new), I'm very appreciate it. All posts will be also accessible at [linux-internals](https://github.com/0xAX/linux-internals) and if you will find something wrong with my English or post content feel free to send pull request.
+Note, that I'm not professional kernel hacker and I don't write code for kernel at work, just a hobby. I just like low-level stuff and it is interesting to me how these things works. So if you will meet any confusing, you will have a questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new), I'll appreciate it very much. All posts will be also accessible at [linux-internals](https://github.com/0xAX/linux-internals) and if you will find something wrong with my English or post content feel free to send pull request.
 
 *Note that it isn't official documentation, just learning and knowledge sharing.*
 
@@ -137,7 +137,7 @@ Real world boot loader starts at the same point, ends with `0xaa55` bytes, but r
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-as i wrote above. But we have only 16 bit general purpose registers. The maximum value of 16 bit register is: `0xffff`; So if we take the biggest values, it will be:
+as I wrote above. But we have only 16 bit general purpose registers. The maximum value of 16 bit register is: `0xffff`; So if we take the biggest values, it will be:
 
 ```python
 >>> hex((0xffff * 16) + 0xffff)
@@ -162,7 +162,7 @@ General real mode memory map is:
 0x000F0000 - 0x000FFFFF - System BIOS
 ```
 
-But stop, at the begging of post written that first instruction executed by CPU located by `0xfffffff0` address, but it's much bigger than `0xffff` (1MB). How CPU can access it in real mode? As i write about and you can read in [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) documentation:
+But stop, at the begging of post written that first instruction executed by CPU located by `0xfffffff0` address, but it's much bigger than `0xffff` (1MB). How CPU can access it in real mode? As I write about and you can read in [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) documentation:
 
 ```
 0xFFFE_0000 - 0xFFFF_FFFF: 128 kByte ROM mapped into address space
@@ -299,7 +299,7 @@ _start:
 	//
 ```
 
-Here we can see `jmp` instruction opcode - `0xeb` to the `start_of_setup-1f` point. `Nf` notation means following: `2f` refers to the next local `2:` label. In our case it is label `1` which goes right after jump. It contains rest of setup [header](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156) and right after setup header we can see `.entrytext` section which starts at `start_of_setup` label.
+Here we can see `jmp` instruction opcode - `0xeb` to the `start_of_setup-1f` point. `Nf` notation means following: `2f` refers to the next local `2:` label. In our case it is label `1` which goes right after jump. It contains the rest of setup [header](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156) and right after setup header we can see `.entrytext` section which starts at `start_of_setup` label.
 
 Actually it's first code which starts to executes besides previous jump instruction. After kernel setup got a control from bootloader, first `jmp` instruction located at `0x200` (first 512 bytes) offset from the start of kernel real mode. This we can read at linux kernel boot protocol and also see in grub2 source code:
 
@@ -337,7 +337,7 @@ First of all it insures that `ds` and `es` segment registers points to the same 
 	sti
 ```
 
-As i wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x0x1020` because execution doesn't start from the start of file, but from:
+As I wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x0x1020` because execution doesn't start from the start of file, but from:
 
 ```
 _start:
@@ -386,7 +386,7 @@ Let's look on all of these cases:
 	sti
 ```
 
-Here we can see aligning of `dx` (contains `sp` given by bootloader) to 4 bytes and checking that it is not zero. If it is zero we put `0xfffc` (4 byte aligned address before maximum segment size - 64 Kb) to `dx`. If it is not zero we continue to use `sp` given by bootloader (0xf7f4 in my case). After this we put `ax` value to `ss` which stores correct segment address `0x10000` and set up correct `sp`. After it we have correct stack:
+Here we can see aligning of `dx` (contains `sp` given by bootloader) to 4 bytes and checking that it is not zero. If it is zero we put `0xfffc` (4 byte aligned address before maximum segment size - 64 Kb) to `dx`. If it is not zerowe  continue to use `sp` given by bootloader (0xf7f4 in my case). After this we put `ax` value to `ss` which stores correct segment address `0x10000` and set up correct `sp`. After it we have correct stack:
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
