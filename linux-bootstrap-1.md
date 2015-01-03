@@ -1,7 +1,7 @@
 GNU/Linux kernel internals
 ================================================================================
 
-Linux kernel bootstrap process. Part 1.
+Linux kernel booting process. Part 1.
 --------------------------------------------------------------------------------
 
 If you read my previous blog [posts](http://0xax.blogspot.com/search/label/asm), you can note that sometime ago I have started to get involved low-level programming. I wrote some posts about x86_64 assembly programming for Linux. In the same time I started to dive into GNU/Linux kernel source code. It is very interesting for me to understand how low-level things works, how programs runs on my computer, how they located in memory, how kernel manages processes and memory, how network stack works on low-level and many many other things. I decided to write yet another series of posts about GNU/Linux kernel for **x86_64**.
