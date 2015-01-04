@@ -33,7 +33,7 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-Processor works in the [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode supported in all x86 compatible processors from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit addres bus, it means that it could work with 0-2^20 address space (1 MB). But it had only 16 bit registers, but with 16 bit registers maximum address is 2^16 or 0xffff (640 Kb). To use all of the address space was used memory segmentation. All memory was divided into small fixed-size segments by 65535 bytes or 64 Kb. Since we can not address memory behind 640 kb with 16 bit register, was coined another method to do it. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. For getting physical address of memory need to multiply segment part on 16 and add offset part:
+Processor works in the [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode supported in all x86 compatible processors from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit addres bus, it means that it could work with 0-2^20 address space (1 MB). But it had only 16 bit registers, but with 16 bit registers maximum address is 2^16 or 0xffff (640 kb). To use all of the address space was used memory segmentation. All memory was divided into small fixed-size segments by 65535 bytes or 64 kb. Since we can not address memory behind 640 kb with 16 bit register, was coined another method to do it. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. For getting physical address of memory need to multiply segment part on 16 and add offset part:
 
 ```
 PhysicalAddress = Segment * 16 + Offset
@@ -166,7 +166,7 @@ General real mode memory map is:
 But stop, at the begging of post written that first instruction executed by CPU located by `0xfffffff0` address, but it's much bigger than `0xffff` (1MB). How CPU can access it in real mode? As i write about and you can read in [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) documentation:
 
 ```
-0xFFFE_0000 - 0xFFFF_FFFF: 128 kByte ROM mapped into address space
+0xFFFE_0000 - 0xFFFF_FFFF: 128 kilobyte ROM mapped into address space
 ```
 
 At the start of execution BIOS is not in RAM, it located in ROM.
@@ -387,7 +387,7 @@ Let's look on all of these cases:
 	sti
 ```
 
-Here we can see aligning of `dx` (contains `sp` given by bootloader) to 4 bytes and checking that it is not zero. If it is zero we put `0xfffc` (4 byte aligned address before maximum segment size - 64 Kb) to `dx`. If it is not zero we continue to use `sp` given by bootloader (0xf7f4 in my case). After this we put `ax` value to `ss` which stores correct segment address `0x10000` and set up correct `sp`. After it we have correct stack:
+Here we can see aligning of `dx` (contains `sp` given by bootloader) to 4 bytes and checking that it is not zero. If it is zero we put `0xfffc` (4 byte aligned address before maximum segment size - 64 kb) to `dx`. If it is not zero we continue to use `sp` given by bootloader (0xf7f4 in my case). After this we put `ax` value to `ss` which stores correct segment address `0x10000` and set up correct `sp`. After it we have correct stack:
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
