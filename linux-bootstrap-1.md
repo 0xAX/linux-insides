@@ -373,8 +373,8 @@ Actually, almost all of the setup code is preparation for C language environment
 Generally, it can be 3 different cases:
 
 * `ss` has valid value 0x10000 (as all other segment registers beside `cs`)
-* `ss` is invlalid and `CAN_USE_HEAP` flag is set     (see below)
-* `ss` is invlalid and `CAN_USE_HEAP` flag is not set (see below)
+* `ss` is invalid and `CAN_USE_HEAP` flag is set     (see below)
+* `ss` is invalid and `CAN_USE_HEAP` flag is not set (see below)
 
 Let's look at all of these cases:
 
