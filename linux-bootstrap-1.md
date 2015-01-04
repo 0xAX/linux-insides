@@ -132,7 +132,7 @@ We will see:
 
 In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes 0xaa and 0x55.
 
-Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... intead of printing one symbol :) Ok, so, from this moment bios handed control to the operating system bootloader and we can go ahead.
+Real world boot loader starts at the same point, ends with `0x55aa` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... intead of printing one symbol :) Ok, so, from this moment bios handed control to the operating system bootloader and we can go ahead.
 
 **NOTE**: as you can read above CPU is in real mode. In real mode for calculating physical address in memory uses following form:
 
@@ -147,7 +147,7 @@ as I wrote above. But we have only 16 bit general purpose registers. The maximum
 '0x10ffef'
 ```
 
-Where `0x10ffef` is equal to `1mb + 64KB - 16b`. But [8086](http://en.wikipedia.org/wiki/Intel_8086) processor, which was first processor with real mode, had 20 bit address line, and `20^2 = 1048576.0` which is 1MB, so it means that actually available memory amount is 1MB.
+Where `0x10ffef` is equal to `1mb + 64KB - 16b`. But [8086](http://en.wikipedia.org/wiki/Intel_8086) processor, which was first processor with real mode, had 20 bit address line, and `2^20 = 1048576.0` which is 1MB, so it means that actually available memory amount is 1MB.
 
 General real mode memory map is:
 
