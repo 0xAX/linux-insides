@@ -32,7 +32,7 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-Processor works in the [Real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode supported in all x86 compatible processors from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit addres bus, it means that it could work with 0-2^20 address space (1 MB). But it had only 16 bit registers, but with 16 bit registers maximum address is 2^16 or 0xffff (640 Kb). To use all of the address space was used memory segmentation. All memory was divided into small fixed-size segments by 65535 bytes or 64 Kb. Since we can not address memory behind 640 kb with 16 bit register, was coined another method to do it. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. For getting physical address of memory need to multiply segment part on 16 and add offset part:
+Processor works in the [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode supported in all x86 compatible processors from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit addres bus, it means that it could work with 0-2^20 address space (1 MB). But it had only 16 bit registers, but with 16 bit registers maximum address is 2^16 or 0xffff (640 Kb). To use all of the address space was used memory segmentation. All memory was divided into small fixed-size segments by 65535 bytes or 64 Kb. Since we can not address memory behind 640 kb with 16 bit register, was coined another method to do it. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. For getting physical address of memory need to multiply segment part on 16 and add offset part:
 
 ```
 PhysicalAddress = Segment * 16 + Offset
@@ -144,7 +144,7 @@ as i wrote above. But we have only 16 bit general purpose registers. The maximum
 '0x10ffef'
 ```
 
-Where `0x10ffef` is equal to `1mb + 64kb - 16b`. But [8086](http://en.wikipedia.org/wiki/Intel_8086) processor which was first processor with Real mode had 20 address line, but `20^2 = 1048576.0` which is 1MB, it means that actually available memory ammount is 1MB.
+Where `0x10ffef` is equal to `1mb + 64kb - 16b`. But [8086](http://en.wikipedia.org/wiki/Intel_8086) processor which was first processor with real mode had 20 address line, but `20^2 = 1048576.0` which is 1MB, it means that actually available memory ammount is 1MB.
 
 General real mode memory map is:
 
