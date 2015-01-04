@@ -147,7 +147,7 @@ as I wrote above. But we have only 16 bit general purpose registers. The maximum
 '0x10ffef'
 ```
 
-Where `0x10ffef` is equal to `1mb + 64KB - 16b`. But [8086](http://en.wikipedia.org/wiki/Intel_8086) processor, which was first processor with real mode, had 20 bit address line, and `20^2 = 1048576.0` which is 1MB, so it means that actually available memory amount is 1MB.
+Where `0x10ffef` is equal to `1mb + 64KB - 16b`. But [8086](http://en.wikipedia.org/wiki/Intel_8086) processor, which was first processor with real mode, had 20 bit address line, and `2^20 = 1048576.0` which is 1MB, so it means that actually available memory amount is 1MB.
 
 General real mode memory map is:
 
