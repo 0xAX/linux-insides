@@ -26,7 +26,7 @@ Magic power button, what's next?
 Despite that it is series of posts about linux kernel, we will not start from kernel code (at least in this paragraph). Ok, you pressed magic power button on your laptop or desktop computer and it started to work. After this mother board sends signal to the [power supply](http://en.wikipedia.org/wiki/Power_supply) which provides computer with the proper amount of electricity. Once motherboard receives [power good signal](http://en.wikipedia.org/wiki/Power_good_signal), it tries to run CPU. CPU resets all leftover data in its registers and sets up predefined values for every register.
 
 
-[80386](http://en.wikipedia.org/wiki/Intel_80386) and later CPUs defines following predifined data in CPU registers after computer resets:
+[80386](http://en.wikipedia.org/wiki/Intel_80386) and later CPUs defines following predefined data in CPU registers after computer resets:
 
 ```
 IP          0xfff0
@@ -34,7 +34,7 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-Processor works in the [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode is supported in all x86 compatible processors, from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit addres bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it had only 16 bit registers, and with 16 bit registers maximum address is 2^16 or 0xffff (640 KB). Memory segmentation was used to make use of all of the addres space. All memory was divided into small fixed-size segments of 65535 bytes, or 64 KB. Since we can not address memory behind 640 KB with 16 bit register, another method to do it has been devised. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. To get physical address in memory, we need to multiply segment part by 16 and add offset part:
+Processor works in the [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode is supported in all x86 compatible processors, from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it had only 16 bit registers, and with 16 bit registers maximum address is 2^16 or 0xffff (640 KB). Memory segmentation was used to make use of all of the address space. All memory was divided into small fixed-size segments of 65535 bytes, or 64 KB. Since we can not address memory behind 640 KB with 16 bit register, another method to do it has been devised. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. To get physical address in memory, we need to multiply segment part by 16 and add offset part:
 
 ```
 PhysicalAddress = Segment * 16 + Offset
@@ -58,7 +58,7 @@ which is 65519 bytes over first megabyte. Since only one megabyte is accessible 
 
 Ok, now we know about real mode and memory addressing, let's get back to register values after reset.
 
-`CS` register has two parts: the visible segment selector and hidden base addres. We know predefined `CS` base and `IP` value, so our logical address will be:
+`CS` register has two parts: the visible segment selector and hidden base address. We know predefined `CS` base and `IP` value, so our logical address will be:
 
 ```
 0xffff0000:0xfff0
@@ -132,7 +132,7 @@ We will see:
 
 In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes 0xaa and 0x55.
 
-Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... intead of printing one symbol :) Ok, so, from this moment bios handed control to the operating system bootloader and we can go ahead.
+Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... instead of printing one symbol :) Ok, so, from this moment bios handed control to the operating system bootloader and we can go ahead.
 
 **NOTE**: as you can read above CPU is in real mode. In real mode for calculating physical address in memory uses following form:
 
@@ -176,7 +176,7 @@ At the start of execution BIOS is not in RAM, it is located in ROM.
 Bootloader
 --------------------------------------------------------------------------------
 
-Now bios transfered control to the operating system bootlader and it needs to load operating system into the memory. There are a couple of bootloaders which can boot linux, like: [Grub2](http://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project) and etc... Linux kernel has [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which describes how to load linux kernel.
+Now bios transfered control to the operating system bootloader and it needs to load operating system into the memory. There are a couple of bootloaders which can boot linux, like: [Grub2](http://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project) and etc... Linux kernel has [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which describes how to load linux kernel.
 
 Let us briefly consider how grub loads linux. GRUB2 execution starts from `grub-core/boot/i386/pc/boot.S`. It starts to load from device its own kernel (not to be confused with linux kernel) and executes `grub_main` after successfully loading.
 
@@ -225,7 +225,7 @@ X+08000  +------------------------+
 
 ```
 
-So after bootloader trasferred control to the kernel, it starts somewhere at:
+So after bootloader transferred control to the kernel, it starts somewhere at:
 
 ```
 0x1000 + X + sizeof(KernelBootSector) + 1
@@ -322,14 +322,14 @@ for my case when kernel loaded at `0x10000`.
 
 After jump to `start_of_setup`, needs to do following things:
 
-* Be sure that all values of all segement registers are equal
+* Be sure that all values of all segment registers are equal
 * Setup correct stack if need
 * Setup [bss](http://en.wikipedia.org/wiki/.bss)
 * Jump to C code at [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)
 
 Let's look at implementation.
 
-Segement registers align
+Segment registers align
 --------------------------------------------------------------------------------
 
 First of all it ensures that `ds` and `es` segment registers point to the same address and enables interrupts with `sti` instruction:
@@ -348,7 +348,7 @@ _start:
 	.byte start_of_setup-1f
 ```
 
-jump, which is 512 bytes offset from the [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L47). Also need to align `cs` from 0x10200 to 0x10000 as all other segement registers. After that we setup stack:
+jump, which is 512 bytes offset from the [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L47). Also need to align `cs` from 0x10200 to 0x10000 as all other segment registers. After that we setup stack:
 
 ```assembly
 	pushw	%ds
@@ -482,3 +482,4 @@ Links
   * [Ralf Brown's Interrupt List](http://www.ctyme.com/intr/int.htm)
   * [Power supply](http://en.wikipedia.org/wiki/Power_supply)
   * [Power good signal](http://en.wikipedia.org/wiki/Power_good_signal)
+
