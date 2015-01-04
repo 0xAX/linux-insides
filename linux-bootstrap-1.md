@@ -53,7 +53,7 @@ But if we take the biggest segment part and offset: `0xffff:0xffff`, it will be:
 '0x10ffef'
 ```
 
-which is 65519 bytes over first megabyte. Since only one megabite accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](http://en.wikipedia.org/wiki/A20_line).
+which is 65519 bytes over first megabyte. Since only one megabyte accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](http://en.wikipedia.org/wiki/A20_line).
 
 Ok, now we know about real mode and memory addressing, let's back to registers values after reset.
 
