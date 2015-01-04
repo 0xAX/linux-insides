@@ -1,4 +1,4 @@
-NU/Linux kernel internals
+GNU/Linux kernel internals
 ================================================================================
 
 Linux kernel booting process. Part 1.
