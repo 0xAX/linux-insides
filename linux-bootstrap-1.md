@@ -26,7 +26,7 @@ Magic power button, what's next?
 Despite that it is series of posts about linux kernel, we will not start from kernel code (at least in this paragraph). Ok, you pressed magic power button on your laptop or desktop computer and it started to work. After this mother board sends signal to the [power supply](http://en.wikipedia.org/wiki/Power_supply) which provides computer with the proper amount of electricity. Once motherboard receives [power good signal](http://en.wikipedia.org/wiki/Power_good_signal), it tries to run CPU. CPU resets all leftover data in its registers and sets up predefined values for every register.
 
 
-[80386](http://en.wikipedia.org/wiki/Intel_80386) and later CPUs defines following predifined data in CPU registers after computer resets:
+[80386](http://en.wikipedia.org/wiki/Intel_80386) and later CPUs defines following predefined data in CPU registers after computer resets:
 
 ```
 IP          0xfff0
