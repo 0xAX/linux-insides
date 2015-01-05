@@ -58,7 +58,7 @@ which is 65519 bytes over first megabyte. Since only one megabyte is accessible 
 
 Ok, now we know about real mode and memory addressing, let's get back to register values after reset.
 
-`CS` register has two parts: the visible segment selector and hidden base addres. We know predefined `CS` base and `IP` value, so our logical address will be:
+`CS` register has two parts: the visible segment selector and hidden base address. We know predefined `CS` base and `IP` value, so our logical address will be:
 
 ```
 0xffff0000:0xfff0
