@@ -4,3 +4,6 @@ Thank you to all contributors:
 * [ecksun](https://github.com/ecksun)
 * [Maciek Makowski](https://github.com/mmakowski)
 * [Thomas Marcelis](https://github.com/ThomasMarcelis)
+* [Chris Costes](https://github.com/ccostes)
+* [nathansoz](https://github.com/nathansoz)
+* [RubanDeventhiran](https://github.com/RubanDeventhiran)
