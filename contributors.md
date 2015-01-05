@@ -1,5 +1,6 @@
 Thank you to all contributors:
 
+* [Jakub Kramarz](https://github.com/jkramarz)
 * [ckrooss](https://github.com/ckrooss)
 * [ecksun](https://github.com/ecksun)
 * [Maciek Makowski](https://github.com/mmakowski)
