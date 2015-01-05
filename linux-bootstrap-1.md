@@ -34,7 +34,7 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-Processor works in the [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode is supported in all x86 compatible processors, from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit addres bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it had only 16 bit registers, and with 16 bit registers maximum address is 2^16 or 0xffff (64 KB). Memory segmentation was used to make use of all of the addres space. All memory was divided into small fixed-size segments of 65535 bytes, or 64 KB. Since we can not address memory behind 64 KB with 16 bit register, another method to do it has been devised. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. To get physical address in memory, we need to multiply segment part by 16 and add offset part:
+Processor works in the [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode is supported in all x86 compatible processors, from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it had only 16 bit registers, and with 16 bit registers maximum address is 2^16 or 0xffff (64 KB). Memory segmentation was used to make use of all of the addres space. All memory was divided into small fixed-size segments of 65535 bytes, or 64 KB. Since we can not address memory behind 64 KB with 16 bit register, another method to do it has been devised. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. To get physical address in memory, we need to multiply segment part by 16 and add offset part:
 
 ```
 PhysicalAddress = Segment * 16 + Offset
@@ -58,13 +58,13 @@ which is 65519 bytes over first megabyte. Since only one megabyte is accessible 
 
 Ok, now we know about real mode and memory addressing, let's get back to register values after reset.
 
-`CS` register has two parts: the visible segment selector and hidden base addres. We know predefined `CS` base and `IP` value, so our logical address will be:
+`CS` register has two parts: the visible segment selector and hidden base address. We know predefined `CS` base and `IP` value, so our logical address will be:
 
 ```
 0xffff0000:0xfff0
 ```
 
-which we can translate to the physical address::
+which we can translate to the physical address:
 
 ```python
 >>> hex((0xffff000 << 4) + 0xfff0)
@@ -132,7 +132,7 @@ We will see:
 
 In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes 0xaa and 0x55.
 
-Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... intead of printing one symbol :) Ok, so, from this moment bios handed control to the operating system bootloader and we can go ahead.
+Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... instead of printing one symbol :) Ok, so, from this moment bios handed control to the operating system bootloader and we can go ahead.
 
 **NOTE**: as you can read above CPU is in real mode. In real mode for calculating physical address in memory uses following form:
 
@@ -373,8 +373,8 @@ Actually, almost all of the setup code is preparation for C language environment
 Generally, it can be 3 different cases:
 
 * `ss` has valid value 0x10000 (as all other segment registers beside `cs`)
-* `ss` is invlalid and `CAN_USE_HEAP` flag is set     (see below)
-* `ss` is invlalid and `CAN_USE_HEAP` flag is not set (see below)
+* `ss` is invalid and `CAN_USE_HEAP` flag is set     (see below)
+* `ss` is invalid and `CAN_USE_HEAP` flag is not set (see below)
 
 Let's look at all of these cases:
 
