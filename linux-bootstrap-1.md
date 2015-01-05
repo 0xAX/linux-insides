@@ -23,10 +23,10 @@ All code is actual for kernel - 3.18, if there will be changes, I will update po
 Magic power button, what's next?
 --------------------------------------------------------------------------------
 
-Despite that it is series of posts about linux kernel, we will not start from kernel code (at least in this paragraph). Ok, you pressed magic power button on your laptop or desktop computer and it started to work. After this mother board sends signal to the [power supply](http://en.wikipedia.org/wiki/Power_supply) which provides computer with the proper amount of electricity. Once motherboard receives [power good signal](http://en.wikipedia.org/wiki/Power_good_signal), it tries to run CPU. CPU resets all leftover data in its registers and sets up predefined values for every register.
+Despite that this is a series of posts about linux kernel, we will not start from kernel code (at least in this paragraph). Ok, you pressed magic power button on your laptop or desktop computer and it started to work. After the mother board sends a signal to the [power supply](http://en.wikipedia.org/wiki/Power_supply), the power supply provides the computer with the proper amount of electricity. Once motherboard receives the [power good signal](http://en.wikipedia.org/wiki/Power_good_signal), it tries to run the CPU. The CPU resets all leftover data in its registers and sets up predefined values for every register.
 
 
-[80386](http://en.wikipedia.org/wiki/Intel_80386) and later CPUs defines following predifined data in CPU registers after computer resets:
+[80386](http://en.wikipedia.org/wiki/Intel_80386) and later CPUs defines the following predifined data in CPU registers after the computer resets:
 
 ```
 IP          0xfff0
@@ -34,7 +34,7 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-Processor works in the [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode is supported in all x86 compatible processors, from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. 8086 processor had 20 bit addres bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it had only 16 bit registers, and with 16 bit registers maximum address is 2^16 or 0xffff (64 KB). Memory segmentation was used to make use of all of the addres space. All memory was divided into small fixed-size segments of 65535 bytes, or 64 KB. Since we can not address memory behind 64 KB with 16 bit register, another method to do it has been devised. Address consists of two parts: beginning address of segment and offset from the beginning of this segment. To get physical address in memory, we need to multiply segment part by 16 and add offset part:
+The processor works in [real mode](http://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode is supported in all x86 compatible processors, from [8086](http://en.wikipedia.org/wiki/Intel_8086) to modern intel 64 CPUs. The 8086 processor had a 20 bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it only had 16 bit registers, and with 16 bit registers the maximum address is 2^16 or 0xffff (64 KB). Memory segmentation was used to make use of all of the address space. All memory was divided into small, fixed-size segments of 65535 bytes, or 64 KB. Since we can not address memory behind 64 KB with 16 bit registers, another method to do it was devised. An address consists of two parts: the beginning address of the segment and the offset from the beginning of this segment. To get a physical address in memory, we need to multiply the segment part by 16 and add the offset part:
 
 ```
 PhysicalAddress = Segment * 16 + Offset
