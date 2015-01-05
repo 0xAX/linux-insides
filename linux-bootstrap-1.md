@@ -64,7 +64,7 @@ Ok, now we know about real mode and memory addressing, let's get back to registe
 0xffff0000:0xfff0
 ```
 
-which we can translate to the physical address::
+which we can translate to the physical address:
 
 ```python
 >>> hex((0xffff000 << 4) + 0xfff0)
