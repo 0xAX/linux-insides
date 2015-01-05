@@ -61,13 +61,13 @@ Ok, now we know about real mode and memory addressing, let's get back to registe
 `CS` register has two parts: the visible segment selector and hidden base address. We know predefined `CS` base and `IP` value, so our logical address will be:
 
 ```
-0xffff0000:0xfff0
+0x0ffff000:0xfff0
 ```
 
 which we can translate to the physical address:
 
 ```python
->>> hex((0xffff000 << 4) + 0xfff0)
+>>> hex((0x0ffff000 << 4) + 0xfff0)
 '0xfffffff0'
 ```
 

@@ -8,3 +8,4 @@ Thank you to all contributors:
 * [Chris Costes](https://github.com/ccostes)
 * [nathansoz](https://github.com/nathansoz)
 * [RubanDeventhiran](https://github.com/RubanDeventhiran)
+* [fuzhli](https://github.com/fuzhli)
