@@ -132,7 +132,7 @@ We will see:
 
 In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes 0xaa and 0x55.
 
-Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... instead of printing one symbol :) Ok, so, from this moment bios handed control to the operating system bootloader and we can go ahead.
+Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... instead of printing one symbol :) Ok, so, from this moment BIOS handed control to the operating system bootloader and we can go ahead.
 
 **NOTE**: as you can read above CPU is in real mode. In real mode for calculating physical address in memory uses following form:
 
@@ -176,7 +176,7 @@ At the start of execution BIOS is not in RAM, it is located in ROM.
 Bootloader
 --------------------------------------------------------------------------------
 
-Now bios transfered control to the operating system bootloader and it needs to load operating system into the memory. There are a couple of bootloaders which can boot linux, like: [Grub2](http://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project) and etc... Linux kernel has [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which describes how to load linux kernel.
+Now BIOS transfered control to the operating system bootloader and it needs to load operating system into the memory. There are a couple of bootloaders which can boot linux, like: [Grub2](http://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project) and etc... Linux kernel has [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which describes how to load linux kernel.
 
 Let us briefly consider how grub loads linux. GRUB2 execution starts from `grub-core/boot/i386/pc/boot.S`. It starts to load from device its own kernel (not to be confused with linux kernel) and executes `grub_main` after successfully loading.
 
