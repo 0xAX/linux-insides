@@ -1,5 +1,5 @@
 Thank you to all contributors:
-
+* [Akash Shende](https://github.com/akash0x53)
 * [Jakub Kramarz](https://github.com/jkramarz)
 * [ckrooss](https://github.com/ckrooss)
 * [ecksun](https://github.com/ecksun)
