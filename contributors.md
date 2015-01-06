@@ -9,3 +9,4 @@ Thank you to all contributors:
 * [nathansoz](https://github.com/nathansoz)
 * [RubanDeventhiran](https://github.com/RubanDeventhiran)
 * [fuzhli](https://github.com/fuzhli)
+* [andars](https://github.com/andars)
