@@ -6,10 +6,10 @@ Kernel booting process. Part 1.
 
 If you have read my previous [blog posts](http://0xax.blogspot.com/search/label/asm), you can see that some time ago I started to get involved with low-level programming. I wrote some posts about x86_64 assembly programming for Linux. At the same time, I started to dive into the Linux source code. It is very interesting for me to understand how low-level things work, how programs run on my computer, how they are located in memory, how the kernel manages processes and memory, how the network stack works on low-level and many many other things. I decided to write yet another series of posts about the Linux kernel for **x86_64**.
 
-Note that I'm not a professional kernel hacker, and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-internals/issues/new). I appreciate it. All posts will also be accessible at[linux-internals](https://github.com/0xAX/linux-internals) and if you find something wrong with my English or post content, feel free to send pull request.
+Note that I'm not a professional kernel hacker, and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-internals/issues/new). I appreciate it. All posts will also be accessible at [linux-internals](https://github.com/0xAX/linux-internals) and if you find something wrong with my English or post content, feel free to send pull request.
 
 
-*Note that it isn't official documentation, just learning and knowledge sharing.*
+*Note that this isn't official documentation, just learning and sharing knowledge.*
 
 **Required knowledge**
 
@@ -196,7 +196,7 @@ hdr:
 	boot_flag:   .word 0xAA55
 ```
 
-Bootloader must fill this and the rest of headers (only marked as `write` in the linux boot protocol, for example [this](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) with values which it either got from command line or calculated. We will not see description and explanation of all fields of kernel setup header, we will get back to it when kernel uses it. Anyway, you can find description of any field in the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).
+The bootloader must fill this and the rest of the headers (only marked as `write` in the linux boot protocol, for example [this](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) with values which it either got from command line or calculated. We will not see description and explanation of all fields of kernel setup header, we will get back to it when kernel uses it. Anyway, you can find description of any field in the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).
 
 As we can see in kernel boot protocol, the memory map will be the following after kernel loading:
 
