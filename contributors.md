@@ -1,4 +1,5 @@
 Thank you to all contributors:
+
 * [Akash Shende](https://github.com/akash0x53)
 * [Jakub Kramarz](https://github.com/jkramarz)
 * [ckrooss](https://github.com/ckrooss)
@@ -11,3 +12,4 @@ Thank you to all contributors:
 * [fuzhli](https://github.com/fuzhli)
 * [andars](https://github.com/andars)
 * [Alexandru Pana](https://github.com/alexpana)
+* [Bogdan Rădulescu](https://github.com/bogdanr)
