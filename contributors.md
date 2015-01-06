@@ -10,3 +10,4 @@ Thank you to all contributors:
 * [RubanDeventhiran](https://github.com/RubanDeventhiran)
 * [fuzhli](https://github.com/fuzhli)
 * [andars](https://github.com/andars)
+* [Alexandru Pana](https://github.com/alexpana)
