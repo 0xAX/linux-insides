@@ -13,3 +13,4 @@ Thank you to all contributors:
 * [andars](https://github.com/andars)
 * [Alexandru Pana](https://github.com/alexpana)
 * [Bogdan Rădulescu](https://github.com/bogdanr)
+* [zil](https://github.com/zil)

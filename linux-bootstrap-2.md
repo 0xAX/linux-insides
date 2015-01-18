@@ -177,7 +177,7 @@ Console initialization
 
 After the `hdr` has copied into the `boot_params.hdr`, next step is console initialization by call of `console_init` function which defined in the [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c).
 
-It tries to find `earlyptink` option in the command line and if the search was successful, it parses port address and baud rate of the serial port and initializes serial port. Value of `earlyprintk` command line option can be one of the:
+It tries to find `earlyprintk` option in the command line and if the search was successful, it parses port address and baud rate of the serial port and initializes serial port. Value of `earlyprintk` command line option can be one of the:
 
 	* serial,0x3f8,115200
 	* serial,ttyS0,115200
