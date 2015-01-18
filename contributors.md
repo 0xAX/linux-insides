@@ -15,3 +15,4 @@ Thank you to all contributors:
 * [Bogdan Rădulescu](https://github.com/bogdanr)
 * [zil](https://github.com/zil)
 * [codelitt](https://github.com/codelitt)
+* [gulyasm](https://github.com/gulyasm)
