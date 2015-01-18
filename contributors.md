@@ -14,3 +14,4 @@ Thank you to all contributors:
 * [Alexandru Pana](https://github.com/alexpana)
 * [Bogdan Rădulescu](https://github.com/bogdanr)
 * [zil](https://github.com/zil)
+* [codelitt](https://github.com/codelitt)
