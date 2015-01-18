@@ -340,7 +340,7 @@ First of all it ensures that `ds` and `es` segment registers point to the same a
 	sti
 ```
 
-As i wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x0x1020` because execution doesn't start from the start of file, but from:
+As i wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
 
 ```
 _start:
