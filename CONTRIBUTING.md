@@ -5,19 +5,19 @@ If you want to contribute to the [linux-insides](https://github.com/0xAX/linux-i
 
 1. Press fork button:
 
-![fork](http://oi58.tinypic.com/jj2trm.jpg)
+    ![fork](http://oi58.tinypic.com/jj2trm.jpg)
 
 2. Clone the repo from your account with:
 
-```
-git clone git@github.com:your_github_username/linux-insides.git
-```
+    ```
+    git clone git@github.com:your_github_username/linux-insides.git
+    ```
 
 3. Create branch with:
 
-```
-git checkout -b "linux-bootstrap-1-fix"
-```
+    ```
+    git checkout -b "linux-bootstrap-1-fix"
+    ```
 
 4. Make your changes.
 

@@ -170,7 +170,7 @@ Implementation of the `memcpy` is easy. At first, it pushes values from `si` and
 memcpy(&boot_params.hdr, &hdr, sizeof hdr);
 ```
 
-So `ax` will contain address of the `boot_params.hdr`, `dx` will contatin address of the `hdr` and `cx` will contatin size of the `hdr` in bytes. memcpy puts address of `boot_params.hdr` to the `di` register and address of `hdr` to `si` and saves size in stack. After this it shifts to the right on 2 size (or divide on 4) and copies from `si` to `di` by 4 bytes. After it we restore size of `hdr` again, align it by 4 bytes  and copy rest of bytes from `si` to `di` by one byte (if there is rest). Restore `si` and `di` values from the stack in the end and after this copying finished.
+So `ax` will contain address of the `boot_params.hdr`, `dx` will contain address of the `hdr` and `cx` will contain size of the `hdr` in bytes. memcpy puts address of `boot_params.hdr` to the `di` register and address of `hdr` to `si` and saves size in stack. After this it shifts to the right on 2 size (or divide on 4) and copies from `si` to `di` by 4 bytes. After it we restore size of `hdr` again, align it by 4 bytes  and copy rest of bytes from `si` to `di` by one byte (if there is rest). Restore `si` and `di` values from the stack in the end and after this copying finished.
 
 Console initialization
 --------------------------------------------------------------------------------
