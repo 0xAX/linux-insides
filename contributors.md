@@ -16,3 +16,4 @@ Thank you to all contributors:
 * [zil](https://github.com/zil)
 * [codelitt](https://github.com/codelitt)
 * [gulyasm](https://github.com/gulyasm)
+* [alx741](https://github.com/alx741)
