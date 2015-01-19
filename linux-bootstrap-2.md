@@ -92,11 +92,11 @@ Don't worry, i know that it looks little scary after real mode, but it's easy. L
 | 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed
 ```
 
-As we can see first bit is 0 for data segment and 1 for code segment. Next three bits `EWA` are expansion direction (expand-dow segment will grow down, more about it you can read [here](http://www.sudleyplace.com/dpmione/expanddown.html)), write enable and accessed for data segments. `CRA` bits are conforming (A transfer of execution into a more-privileged conforming segment allows execution to continue at the current privilege level), read enable and accessed.
+As we can see first bit is 0 for data segment and 1 for code segment. Next three bits `EWA` are expansion direction (expand-down segment will grow down, more about it you can read [here](http://www.sudleyplace.com/dpmione/expanddown.html)), write enable and accessed for data segments. `CRA` bits are conforming (A transfer of execution into a more-privileged conforming segment allows execution to continue at the current privilege level), read enable and accessed.
 
 4. DPL (descriptor privilege level) defines the privilege level of the segment. I can be 0-3 where 0 is the most privileged.
 
-5. P flag - indicates is segment presented in memory or not.
+5. P flag - indicates if segment is presented in memory or not.
 
 6. AVL flag - Available and reserved bits.
 
