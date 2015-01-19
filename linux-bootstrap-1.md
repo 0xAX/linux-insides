@@ -340,7 +340,7 @@ First of all it ensures that `ds` and `es` segment registers point to the same a
 	sti
 ```
 
-As i wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x0x1020` because execution doesn't start from the start of file, but from:
+As i wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
 
 ```
 _start:
@@ -466,7 +466,7 @@ Conclusion
 
 This is the end of the first part about linux kernel internals. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new). In the next part we will see first C code which executes in linux kernel setup, implementation of memory routines as memset, memcpy, `earlyprintk` implementation and early console initialization and many more.
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
 Links
 --------------------------------------------------------------------------------
