@@ -29,7 +29,7 @@ And we can get physical address if we know these two parts by:
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-Memory segmentation was completely remade in the protected mode. There are no 64 kilobytes fixed-size segments. All memory segments described by `Global Descriptor Table` (GDT) instead segment registers. GDT is a structure contained in memory. There is no fixed place for it in memory, but its address is stored in the special register - `GDTR`. Later, when we will see the GDT loading in the linux kernel code. There will be an operation for loading it in memory, something like:
+Memory segmentation was completely redone in the protected mode. There are no 64 kilobytes fixed-size segments. All memory segments described by `Global Descriptor Table` (GDT) instead segment registers. GDT is a structure which contains in memory. There is no fixed place for it in memory, but its address is stored in the special register - `GDTR`. Later, when we will see the GDT loading in the linux kernel code. There will be an operation for loading it in memory, something like:
 
 ```assembly
 lgdt gdt
@@ -92,7 +92,7 @@ Don't worry, i know that it looks little scary after real mode, but it's easy. L
 | 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed
 ```
 
-As we can see first bit is 0 for data segment and 1 for code segment. Next three bits `EWA` are expansion direction (expand-dow segment will grow down, you can read more about this in [here](http://www.sudleyplace.com/dpmione/expanddown.html)), write enable and accessed for data segments. `CRA` bits are conforming (A transfer of execution into a more-privileged conforming segment allows execution to continue at the current privilege level), read enable and accessed.
+As we can see first bit is 0 for data segment and 1 for code segment. Next three bits `EWA` are expansion direction (expand-dow segment will grow down, you can read more about this [here](http://www.sudleyplace.com/dpmione/expanddown.html)), write enable and accessed for data segments. `CRA` bits are conforming (A transfer of execution into a more-privileged conforming segment allows execution to continue at the current privilege level), read enable and accessed.
 
 4. DPL (descriptor privilege level) defines the privilege level of the segment. I can be 0-3 where 0 is the most privileged.
 
