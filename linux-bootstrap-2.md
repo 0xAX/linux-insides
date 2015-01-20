@@ -96,7 +96,7 @@ As we can see first bit is 0 for data segment and 1 for code segment. Next three
 
 4. DPL (descriptor privilege level) defines the privilege level of the segment. I can be 0-3 where 0 is the most privileged.
 
-5. P flag - indicates is segment presented in memory or not.
+5. P flag - indicates if segment is presented in memory or not.
 
 6. AVL flag - Available and reserved bits.
 

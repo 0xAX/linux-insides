@@ -9,7 +9,7 @@ Series of posts about linux kernel.
 
 **Contributions**: Feel free to create issues or create pull-requests if you find issues or my English is poor.
 
-**Please read [CONTRIBUTING.md](https://github.com/0xAX/linux-insides/blob/master/CONTRIBUTING.md) before you pushed your chanages.**
+**Please read [CONTRIBUTING.md](https://github.com/0xAX/linux-insides/blob/master/CONTRIBUTING.md) before you pushed your changes.**
 
 Author
 ---------------
