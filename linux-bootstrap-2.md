@@ -29,7 +29,7 @@ And we can get physical address if we know these two parts by:
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-Memory segmentation was completely redone in the protected mode. There are no 64 kilobytes fixed-size segments. All memory segments described by `Global Descriptor Table` (GDT) instead segment registers. GDT is a structure which contains in memory. There is no fixed place for it in memory, but it's address stored in the special register - `GDTR`. Later, when we will see the GDT loading in the linux kernel code. There will be operation for loading it in memory, something like:
+Memory segmentation was completely redone in the protected mode. There are no 64 kilobytes fixed-size segments. All memory segments described by `Global Descriptor Table` (GDT) instead segment registers. GDT is a structure which contains in memory. There is no fixed place for it in memory, but its address is stored in the special register - `GDTR`. Later, when we will see the GDT loading in the linux kernel code. There will be an operation for loading it in memory, something like:
 
 ```assembly
 lgdt gdt
@@ -92,7 +92,7 @@ Don't worry, i know that it looks little scary after real mode, but it's easy. L
 | 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed
 ```
 
-As we can see first bit is 0 for data segment and 1 for code segment. Next three bits `EWA` are expansion direction (expand-down segment will grow down, more about it you can read [here](http://www.sudleyplace.com/dpmione/expanddown.html)), write enable and accessed for data segments. `CRA` bits are conforming (A transfer of execution into a more-privileged conforming segment allows execution to continue at the current privilege level), read enable and accessed.
+As we can see first bit is 0 for data segment and 1 for code segment. Next three bits `EWA` are expansion direction (expand-dow segment will grow down, you can read more about this [here](http://www.sudleyplace.com/dpmione/expanddown.html)), write enable and accessed for data segments. `CRA` bits are conforming (A transfer of execution into a more-privileged conforming segment allows execution to continue at the current privilege level), read enable and accessed.
 
 4. DPL (descriptor privilege level) defines the privilege level of the segment. I can be 0-3 where 0 is the most privileged.
 
@@ -253,7 +253,7 @@ GLOBAL(memset)
 ENDPROC(memset)
 ```
 
-As you can read above, it uses `fastcall` calling conventions as the `memcpy` function, it means that function gets parameters from `ax`, `dx` and `cx` registers.
+As you can read above, it uses `fastcall` calling conventions as the `memcpy` function, it means that the function gets parameters from `ax`, `dx` and `cx` registers.
 
 Generally `memset` is like a memcpy implementation. It saves value of `di` register on the stack and puts `ax` value into `di` which is the address of `biosregs` structure. Next is `movzbl` instruction, which copies `dl` value to the low 2 bytes of `eax` register. The rest 2 high bytes  of `eax` will be filled by zeros.
 
