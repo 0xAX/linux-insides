@@ -17,3 +17,6 @@ Thank you to all contributors:
 * [codelitt](https://github.com/codelitt)
 * [gulyasm](https://github.com/gulyasm)
 * [alx741](https://github.com/alx741)
+* [Haddayn](https://github.com/Haddayn)
+* [Daniel Campoverde Carrión](https://github.com/alx741)
+* [Guillaume Gomez](https://github.com/GuillaumeGomez)
