@@ -11,6 +11,8 @@ Series of posts about linux kernel.
 
 **Please read [CONTRIBUTING.md](https://github.com/0xAX/linux-insides/blob/master/CONTRIBUTING.md) before you pushed your changes.**
 
+![image](http://oi58.tinypic.com/23upobq.jpg)
+
 Author
 ---------------
 
