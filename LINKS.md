@@ -21,3 +21,13 @@ VGA
 ------------------------
 
 * [Video Graphics Array (VGA)](http://en.wikipedia.org/wiki/Video_Graphics_Array)
+
+IO
+------------------------
+
+* [IO port programming](http://www.tldp.org/HOWTO/text/IO-Port-Programming)
+
+GCC
+------------------------
+
+* [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
