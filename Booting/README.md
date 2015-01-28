@@ -1,0 +1,1 @@
+# Kernel booting process
