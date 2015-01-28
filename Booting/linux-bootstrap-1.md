@@ -1,7 +1,7 @@
-Linux internals
+Kernel booting process. Part 1.
 ================================================================================
 
-Kernel booting process. Part 1.
+From the bootloader to kernel
 --------------------------------------------------------------------------------
 
 If you have read my previous [blog posts](http://0xax.blogspot.com/search/label/asm), you can see that some time ago I started to get involved with low-level programming. I wrote some posts about x86_64 assembly programming for Linux. At the same time, I started to dive into the Linux source code. It is very interesting for me to understand how low-level things work, how programs run on my computer, how they are located in memory, how the kernel manages processes and memory, how the network stack works on low-level and many many other things. I decided to write yet another series of posts about the Linux kernel for **x86_64**.

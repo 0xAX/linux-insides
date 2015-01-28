@@ -1,7 +1,7 @@
-Linux internals
+Kernel booting process. Part 2.
 ================================================================================
 
-Kernel booting process. Part 2.
+First steps in the kernel setup
 --------------------------------------------------------------------------------
 
 We started to dive into linux kernel internals in the previous [part](https://github.com/0xAX/linux-insides/blob/master/boot/linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call of the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). Here we will continue to research of the kernel setup code and see what is `protected mode`, some preparation for transition to it, the heap and console initialization, memory detection and many many more. So... Let's go ahead.
