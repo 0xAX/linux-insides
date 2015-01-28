@@ -4,7 +4,7 @@ Linux internals
 Kernel booting process. Part 2.
 --------------------------------------------------------------------------------
 
-We started to dive into linux kernel internals in the previous [part](https://github.com/0xAX/linux-insides/blob/master/linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call of the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). Here we will continue to research of the kernel setup code and see what is `protected mode`, some preparation for transition to it, the heap and console initialization, memory detection and many many more. So... Let's go ahead.
+We started to dive into linux kernel internals in the previous [part](https://github.com/0xAX/linux-insides/blob/master/boot/linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call of the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). Here we will continue to research of the kernel setup code and see what is `protected mode`, some preparation for transition to it, the heap and console initialization, memory detection and many many more. So... Let's go ahead.
 
 Protected mode
 --------------------------------------------------------------------------------
@@ -266,7 +266,7 @@ After that `biosregs` structure filled with `memset`, `bios_putchar` calls [0x10
 Heap initialization
 --------------------------------------------------------------------------------
 
-After the stack and bss section were prepared in the [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) (see previous [part](https://github.com/0xAX/linux-insides/blob/master/linux-bootstrap-1.md)), need to initialize the [heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) with the [init_heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function.
+After the stack and bss section were prepared in the [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) (see previous [part](https://github.com/0xAX/linux-insides/blob/master/boot/linux-bootstrap-1.md)), need to initialize the [heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) with the [init_heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function.
 
 First of all `init_heap` checks `CAN_USE_HEAP` flag from the `loadflags` kernel setup header and calculates end of the stack if this flag was set:
 
@@ -464,4 +464,4 @@ Links
 * [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
 * [APM](https://en.wikipedia.org/wiki/Advanced_Power_Management)
 * [EDD specification](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
-* [Previous part](https://github.com/0xAX/linux-insides/blob/master/linux-bootstrap-1.md)
+* [Previous part](https://github.com/0xAX/linux-insides/blob/master/boot/linux-bootstrap-1.md)
