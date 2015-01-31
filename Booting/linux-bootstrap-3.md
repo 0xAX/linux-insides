@@ -313,7 +313,7 @@ static int a20_test(int loops)
 }
 ```
 
-First of all we put `0x0000` to the `FS` register and `0xffff` to the `GS` register. Next we read value by address `A20_TEST_ADDR` (it is `0x200`) and put this value into `saved` variable and `ctr`. Next we write updated `ctr` value into `fs:gs` with `wrfs32` function, make little delay, and read value into the `GS` register by address `A20_TEST_ADDR+0x10`, if it's not zero we already have enabled a20 line. If A20 is disabled, we try to enabled it with different method which you can find in the `a20.c`. For example with call of `0x15` BIOS interruption with `AH=0x2041` and etc... If `enabled_a20` function finihsed with fail, printed error message and called function `die`. You can remember it from the first source code file where we started - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
+First of all we put `0x0000` to the `FS` register and `0xffff` to the `GS` register. Next we read value by address `A20_TEST_ADDR` (it is `0x200`) and put this value into `saved` variable and `ctr`. Next we write updated `ctr` value into `fs:gs` with `wrfs32` function, make little delay, and read value into the `GS` register by address `A20_TEST_ADDR+0x10`, if it's not zero we already have enabled a20 line. If A20 is disabled, we try to enabled it with different method which you can find in the `a20.c`. For example with call of `0x15` BIOS interruption with `AH=0x2041` and etc... If `enabled_a20` function finished with fail, printed error message and called function `die`. You can remember it from the first source code file where we started - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
 
 ```assembly
 die:
@@ -351,7 +351,7 @@ where we can see - 16-bit length of IDT and 32-bit pointer to it (More details a
 Setup Global Descriptor Table
 --------------------------------------------------------------------------------
 
-The next point is setup of the Global Descriptor Table (GDT). We can see `setup_gdt` function which setups GDT (you can read about it in the [Kernel booting process. Part 2.](https://github.com/0xAX/linux-insides/blob/master/linux-bootstrap-2.md#protected-mode)). There is definition of the `boot_gdt` array in ths function, which contains definition o the three segments:
+The next point is setup of the Global Descriptor Table (GDT). We can see `setup_gdt` function which setups GDT (you can read about it in the [Kernel booting process. Part 2.](https://github.com/0xAX/linux-insides/blob/master/linux-bootstrap-2.md#protected-mode)). There is definition of the `boot_gdt` array in this function, which contains definition of the three segments:
 
 ```C
 	static const u64 boot_gdt[] __attribute__((aligned(16))) = {
@@ -361,7 +361,7 @@ The next point is setup of the Global Descriptor Table (GDT). We can see `setup_
 	};
 ```
 
-For code, data and TSS (Task state segment). We will not use task state segement for now, it was added there to make Intel VT happy as we can see in the comment line (if you're intereting you can find commit which describes it - [here](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31)). Let's look on `boot_gdt`. First of all we can note that it has `__attribute__((aligned(16)))` attribute. It means that this structure will be aligned by 16 bytes. Let's look on simple example:
+For code, data and TSS (Task state segment). We will not use task state segment for now, it was added there to make Intel VT happy as we can see in the comment line (if you're interesting you can find commit which describes it - [here](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31)). Let's look on `boot_gdt`. First of all we can note that it has `__attribute__((aligned(16)))` attribute. It means that this structure will be aligned by 16 bytes. Let's look on simple example:
 
 ```C
 #include <stdio.h>
@@ -386,7 +386,7 @@ int main(void)
 }
 ```
 
-Techincally structure which contains one `int` field, must be 4 bytes, but here `aligned` structure will be 16 bytes:
+Technically structure which contains one `int` field, must be 4 bytes, but here `aligned` structure will be 16 bytes:
 
 ```
 $ gcc test.c -o test && ./test
@@ -402,7 +402,7 @@ Aligned - 16
 * limit - 0xfffff
 * flags - 0xc09b
 
-What does it mean? Segement's base address is 0, limit (size of segment) is - `0xffff` (1 MB). Let's look on flags. It is `0xc09b` and it will be:
+What does it mean? Segment's base address is 0, limit (size of segment) is - `0xffff` (1 MB). Let's look on flags. It is `0xc09b` and it will be:
 
 ```
 1100 0000 1001 1011
@@ -417,7 +417,7 @@ in binary. Let's try to understand what every bit means. We will go through all 
 * 0000 - 4 bit length 19:16 bits in the descriptor
 * 1    - (P) segment presence in memory
 * 00   - (DPL) - privilege level, 0 is the highest privilege
-* 1    - (S) code or data segement, not a system segment
+* 1    - (S) code or data segment, not a system segment
 * 101  - segment type execute/read/
 * 1    - accessed bit
 
@@ -429,7 +429,7 @@ After this we get length of GDT with:
 gdt.len = sizeof(boot_gdt)-1;
 ```
 
-We get size of `boot_gdt` and substract 1 (the last valid address in the GDT).
+We get size of `boot_gdt` and subtract 1 (the last valid address in the GDT).
 
 Next we get pointer to the GDT with:
 
@@ -437,7 +437,7 @@ Next we get pointer to the GDT with:
 gdt.ptr = (u32)&boot_gdt + (ds() << 4);
 ```
 
-Here we just get address of `boot_gdt` and add it to address of data segement shifted on 4 (remember we're in the real mode now).
+Here we just get address of `boot_gdt` and add it to address of data segment shifted on 4 (remember we're in the real mode now).
 
 In the last we execute `lgdtl` instruction to load GDT into GDTR register:
 
@@ -459,7 +459,7 @@ which defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/
 * address of protected mode entry point
 * address of `boot_params`
 
-Let's look inside `protected_mode_jump`. As i wrote above, you can find it in the `arch/x86/boot/pmjump.S`. First parameter will be in `eax` register and second is in `edx`. First of all we put address of `boot_params` to the `esi` register and address of code segment register `cs` (0x1000) to the `bx`. After this we shift `bx` on 4 and add address of label `2` to it (we will have physycal address of label `2` in the `bx` after it) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
+Let's look inside `protected_mode_jump`. As i wrote above, you can find it in the `arch/x86/boot/pmjump.S`. First parameter will be in `eax` register and second is in `edx`. First of all we put address of `boot_params` to the `esi` register and address of code segment register `cs` (0x1000) to the `bx`. After this we shift `bx` on 4 and add address of label `2` to it (we will have physical address of label `2` in the `bx` after it) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
 
 ```assembly
 movw	$__BOOT_DS, %cx
@@ -482,7 +482,7 @@ and make long jump to the protected mode:
 	.word	__BOOT_CS
 ```
 
-where `0x66` is the operand-size prefix, which allows to mix 16-bit and 32-bit code, `0xea` - is the jump opcode, `in_pm32` is the segment offset and `__BOOT_CS` is the segemnt.
+where `0x66` is the operand-size prefix, which allows to mix 16-bit and 32-bit code, `0xea` - is the jump opcode, `in_pm32` is the segment offset and `__BOOT_CS` is the segment.
 
 After this we are in the protected mode:
 
@@ -517,7 +517,7 @@ And jump to the 32-bit entry point in the end:
 jmpl	*%eax
 ```
 
-remember that `eax` contains address of the 32-bit entry (we passed it as first paramter into `protected_mode_jump`). That's all we're in the protected mode and stops before it's entry point. What is happening after we joined in the 32-bit entry point we will see in the next part.
+remember that `eax` contains address of the 32-bit entry (we passed it as first parameter into `protected_mode_jump`). That's all we're in the protected mode and stops before it's entry point. What is happening after we joined in the 32-bit entry point we will see in the next part.
 
 Conclusion
 --------------------------------------------------------------------------------
