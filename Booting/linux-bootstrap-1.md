@@ -306,9 +306,9 @@ _start:
 	//
 ```
 
-Here we can see `jmp` instruction opcode - `0xeb` to the `start_of_setup-1f` point. `Nf` notation means following: `2f` refers to the next local `2:` label. In our case it is label `1` which goes right after jump. It contains rest of setup [header](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156) and right after setup header we can see `.entrytext` section which starts at `start_of_setup` label.
+Here we can see `jmp` instruction opcode - `0xeb` to the `start_of_setup-1f` point. `Nf` notation means following: `2f` refers to the next local `2:` label. In our case it is the label `1` which goes right after jump. It contains the rest of the setup [header](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156) and right after the setup header we can see the `.entrytext` section which starts at `start_of_setup` label.
 
-Actually it's first code which starts to execute besides previous jump instruction. After kernel setup got the control from bootloader, first `jmp` instruction is located at `0x200` (first 512 bytes) offset from the start of kernel real mode. This we can read in linux kernel boot protocol and also see in grub2 source code:
+This is the first code which starts to execute besides previous jump instruction. After kernel setup has recieved control from the bootloader, the first `jmp` instruction is located at `0x200` (first 512 bytes) offset from the start of kernel real mode. This we can read in linux kernel boot protocol and also see in grub2 source code:
 
 ```C
   state.gs = state.fs = state.es = state.ds = state.ss = segment;
@@ -333,7 +333,7 @@ After jump to `start_of_setup`, needs to do following things:
 
 Let's look at implementation.
 
-Segment registers align
+Segment Registers Align
 --------------------------------------------------------------------------------
 
 First of all it ensures that `ds` and `es` segment registers point to the same address and enables interrupts with `sti` instruction:
@@ -344,7 +344,7 @@ First of all it ensures that `ds` and `es` segment registers point to the same a
 	sti
 ```
 
-As i wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
+As I wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
 
 ```
 _start:
@@ -362,7 +362,7 @@ jump, which is 512 bytes offset from the [4d 5a](https://github.com/torvalds/lin
 
 push `ds` value to stack, and address of [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) label and execute `lretw` instruction. When we call `lretw`, it loads address of `6` label to [instruction pointer](http://en.wikipedia.org/wiki/Program_counter) register and `cs` with value of `ds`. After it we will have `ds` and `cs` with the same values.
 
-Stack setup
+Stack Setup
 --------------------------------------------------------------------------------
 
 Actually, almost all of the setup code is preparation for C language environment in the real mode. The next [step](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L467) is checking of `ss` register value and making of correct stack if `ss` is wrong:
@@ -427,19 +427,19 @@ If `CAN_USE_HEAP` bit is set, put `heap_end_ptr` to `dx` which points to `_end` 
 
 ![minimal stack](http://oi60.tinypic.com/28w051y.jpg)
 
-Bss setup
+Bss Setup
 --------------------------------------------------------------------------------
 
-Last two steps before we can jump to see code need to setup [bss](http://en.wikipedia.org/wiki/.bss) and check magic signature. Signature checking:
+We have two steps left before we can jump to see the code required to setup [bss](http://en.wikipedia.org/wiki/.bss) and check the magic signature. Signature checking:
 
 ```assembly
 cmpl	$0x5a5aaa55, setup_sig
 jne	setup_bad
 ```
 
-just consists of comparing of [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) and `0x5a5aaa55` number, and if they are not equal jump to error printing.
+just consists of comparing of [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) and `0x5a5aaa55` number, and if they are not equal, jump to error printing.
 
-Ok now we have correct segment registers, stack, need only setup bss and jump to C code. Bss section used for storing statically allocated uninitialized data. Here is the code:
+Now we have correct segment registers, stack, we only to setup bss and jump to C code. Bss section used for storing statically allocated uninitialized data. Here is the code:
 
 ```assembly
 	movw	$__bss_start, %di
@@ -450,25 +450,25 @@ Ok now we have correct segment registers, stack, need only setup bss and jump to
 	rep; stosl
 ```
 
-First of all we put [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) address in `di` and `_end + 3` (+3 - align to 4 bytes) in `cx`. Clear `eax` register with `xor` instruction and calculate size of BSS section (put in `cx`). Divide `cx` by 4 and repeat `cx` times `stosl` instruction which stores value of `eax` (it is zero) and increase `di`by the size of `eax`. In this way, we write zeros from `__bss_start` to `_end`:
+First of all we put [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) address in `di` and `_end + 3` (+3 - align to 4 bytes) in `cx`. Next, we clear `eax` register with `xor` instruction and calculate the size of the BSS section (put in `cx`). Divide `cx` by 4 and repeat `cx` times `stosl` instruction which stores value of `eax` (it is zero) and increase `di` by the size of `eax`. In this way, we write zeros from `__bss_start` to `_end`:
 
 ![bss](http://oi59.tinypic.com/29m2eyr.jpg)
 
-Jump to main
+Jump to Main
 --------------------------------------------------------------------------------
 
-That's all, we have stack, bss and now we can jump to `main` C function:
+That's all, we have the stack, bss and now we can jump to the `main` C function:
 
 ```assembly
-	calll main
+	calll  main
 ```
 
-which is in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). What will be there? We will see it in the next part.
+which is in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). We will cover the contents of this function in the next part.
 
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the first part about linux kernel internals. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new). In the next part we will see first C code which executes in linux kernel setup, implementation of memory routines as memset, memcpy, `earlyprintk` implementation and early console initialization and many more.
+This is the end of the first part about linux kernel internals. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new). In the next part we will see the first C code which executes in linux kernel setup, implementation of memory routines as memset, memcpy, `earlyprintk` implementation and early console initialization.
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
