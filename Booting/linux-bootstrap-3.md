@@ -4,9 +4,9 @@ Kernel booting process. Part 3.
 Video mode initialization and transition to protected mode
 --------------------------------------------------------------------------------
 
-This is the third part of the `Kernel booting process` series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call of the `set_video` routine from the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). We will see video mode initialization in the kernel setup code, preparation before switching into the protected mode and transition into it in this part.
+This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call of the `set_video` routine from the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). We will see video mode initialization in the kernel setup code, preparation before switching into the protected mode and transition into it in this part.
 
-**NOTE** If you don't know anything about protected mode, you can find some information about it in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md#protected-mode). Also there are a couple of [links](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md#links) which can help you.
+**NOTE** If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also there are a couple of [links](linux-bootstrap-2.md#links) which can help you.
 
 As i wrote above, we will start from the `set_video` function which defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) source code file. We can see that it starts with getting of video mode from the `boot_params.hdr` structure:
 
@@ -118,7 +118,7 @@ static inline bool heap_free(size_t n)
 }
 ```
 
-which subtracts value of the `HEAP` from the `heap_end` (we calculated it in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md)) and returns 1 if there is enough memory for `n`.
+which subtracts value of the `HEAP` from the `heap_end` (we calculated it in the previous [part](linux-bootstrap-2.md)) and returns 1 if there is enough memory for `n`.
 
 That's all. Now we have simple API for heap and can setup video mode.
 
@@ -351,7 +351,7 @@ where we can see - 16-bit length of IDT and 32-bit pointer to it (More details a
 Setup Global Descriptor Table
 --------------------------------------------------------------------------------
 
-The next point is setup of the Global Descriptor Table (GDT). We can see `setup_gdt` function which setups GDT (you can read about it in the [Kernel booting process. Part 2.](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md#protected-mode)). There is definition of the `boot_gdt` array in this function, which contains definition of the three segments:
+The next point is setup of the Global Descriptor Table (GDT). We can see `setup_gdt` function which setups GDT (you can read about it in the [Kernel booting process. Part 2.](linux-bootstrap-2.md#protected-mode)). There is definition of the `boot_gdt` array in this function, which contains definition of the three segments:
 
 ```C
 	static const u64 boot_gdt[] __attribute__((aligned(16))) = {
@@ -389,7 +389,7 @@ int main(void)
 Technically structure which contains one `int` field, must be 4 bytes, but here `aligned` structure will be 16 bytes:
 
 ```
-$ gcc test.c -o test && ./test
+$ gcc test.c -o test && test
 Not aligned - 4
 Aligned - 16
 ```
@@ -421,7 +421,7 @@ in binary. Let's try to understand what every bit means. We will go through all 
 * 101  - segment type execute/read/
 * 1    - accessed bit
 
-You can know more about every bit in the previous [post](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md) or in the [Intel® 64 and IA-32 Architectures Software Developer’s Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html).
+You can know more about every bit in the previous [post](linux-bootstrap-2.md) or in the [Intel® 64 and IA-32 Architectures Software Developer’s Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html).
 
 After this we get length of GDT with:
 
@@ -538,4 +538,4 @@ Links
 * [A20](http://en.wikipedia.org/wiki/A20_line)
 * [GCC designated inits](https://gcc.gnu.org/onlinedocs/gcc-4.1.2/gcc/Designated-Inits.html)
 * [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
-* [Previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md)
+* [Previous part](linux-bootstrap-2.md)
