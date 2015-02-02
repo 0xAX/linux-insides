@@ -9,9 +9,9 @@ We started to dive into linux kernel internals in the previous [part](https://gi
 Protected mode
 --------------------------------------------------------------------------------
 
-Before we can move to the native Intel64 [Long mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode. What is it protected mode? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode. Main reason to move from the real mode that there is very limited access to the RAM. As you can remember from the previous part, there is only 2^20 bytes or 1 megabyte, or even less 640 kilobytes.
+Before we can move to the native Intel64 [Long mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode. What is protected mode? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode. Main reason to move from the real mode that there is very limited access to the RAM. As you can remember from the previous part, there is only 2^20 bytes or 1 megabyte, or even less 640 kilobytes.
 
-Protected mode brought many changes, but main is another memory management. 24-bit address bus was replaced with 32-bit address bus. It gives  4 gigabytes of physical address. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added which we will see in the next parts.
+Protected mode brought many changes, but main is another memory management. 24-bit address bus was replaced with 32-bit address bus. It gives 4 gigabytes of physical address. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added which we will see in the next parts.
 
 Memory management in the protected mode is divided into two, almost independent parts:
 
@@ -35,7 +35,7 @@ Memory segmentation was completely redone in the protected mode. There are no 64
 lgdt gdt
 ```
 
-where `lgdt` instruction loads base address and limit of global descriptor table to the `GDTR` register. `GDTR` is 48-bit register and consists of two parts:
+where the `lgdt` instruction loads base address and limit of global descriptor table to the `GDTR` register. `GDTR` is 48-bit register and consists of two parts:
 
  * size - 16 bit of global descriptor table;
  * address  - 32-bit of the global descriptor table.
