@@ -22,3 +22,4 @@ Thank you to all contributors:
 * [Guillaume Gomez](https://github.com/GuillaumeGomez)
 * [Leandro Moreira](https://github.com/leandromoreira)
 * [Jonatan Pålsson](https://github.com/jonte)
+* [George Horrell](https://github.com/georgehorrell)

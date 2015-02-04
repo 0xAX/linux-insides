@@ -4,14 +4,14 @@ Kernel booting process. Part 2.
 First steps in the kernel setup
 --------------------------------------------------------------------------------
 
-We started to dive into linux kernel internals in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call of the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). Here we will continue to research of the kernel setup code and see what is `protected mode`, some preparation for transition to it, the heap and console initialization, memory detection and many many more. So... Let's go ahead.
+We started to dive into linux kernel internals in the previous [part](linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call of the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). Here we will continue to research of the kernel setup code and see what is `protected mode`, some preparation for transition to it, the heap and console initialization, memory detection and many many more. So... Let's go ahead.
 
 Protected mode
 --------------------------------------------------------------------------------
 
-Before we can move to the native Intel64 [Long mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode. What is it protected mode? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode. Main reason to move from the real mode that there is very limited access to the RAM. As you can remember from the previous part, there is only 2^20 bytes or 1 megabyte, or even less 640 kilobytes.
+Before we can move to the native Intel64 [Long mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode. What is protected mode? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode. Main reason to move from the real mode that there is very limited access to the RAM. As you can remember from the previous part, there is only 2^20 bytes or 1 megabyte, or even less 640 kilobytes.
 
-Protected mode brought many changes, but main is another memory management. 24-bit address bus was replaced with 32-bit address bus. It gives  4 gigabytes of physical address. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added which we will see in the next parts.
+Protected mode brought many changes, but main is another memory management. 24-bit address bus was replaced with 32-bit address bus. It gives 4 gigabytes of physical address. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added which we will see in the next parts.
 
 Memory management in the protected mode is divided into two, almost independent parts:
 
@@ -35,7 +35,7 @@ Memory segmentation was completely redone in the protected mode. There are no 64
 lgdt gdt
 ```
 
-where `lgdt` instruction loads base address and limit of global descriptor table to the `GDTR` register. `GDTR` is 48-bit register and consists of two parts:
+where the `lgdt` instruction loads base address and limit of global descriptor table to the `GDTR` register. `GDTR` is 48-bit register and consists of two parts:
 
  * size - 16 bit of global descriptor table;
  * address  - 32-bit of the global descriptor table.
@@ -266,7 +266,7 @@ After that `biosregs` structure filled with `memset`, `bios_putchar` calls [0x10
 Heap initialization
 --------------------------------------------------------------------------------
 
-After the stack and bss section were prepared in the [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) (see previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-1.md)), need to initialize the [heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) with the [init_heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function.
+After the stack and bss section were prepared in the [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) (see previous [part](linux-bootstrap-1.md)), need to initialize the [heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) with the [init_heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function.
 
 First of all `init_heap` checks `CAN_USE_HEAP` flag from the `loadflags` kernel setup header and calculates end of the stack if this flag was set:
 
@@ -464,4 +464,4 @@ Links
 * [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
 * [APM](https://en.wikipedia.org/wiki/Advanced_Power_Management)
 * [EDD specification](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
-* [Previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-1.md)
+* [Previous part](linux-bootstrap-1.md)
