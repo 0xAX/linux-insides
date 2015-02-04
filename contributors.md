@@ -20,3 +20,5 @@ Thank you to all contributors:
 * [Haddayn](https://github.com/Haddayn)
 * [Daniel Campoverde Carrión](https://github.com/alx741)
 * [Guillaume Gomez](https://github.com/GuillaumeGomez)
+* [Leandro Moreira](https://github.com/leandromoreira)
+* [Jonatan Pålsson](https://github.com/jonte)

@@ -27,7 +27,8 @@ IO
 
 * [IO port programming](http://www.tldp.org/HOWTO/text/IO-Port-Programming)
 
-GCC
+GCC and GAS
 ------------------------
 
 * [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
+* [Assembler Directives](http://www.chemie.fu-berlin.de/chemnet/use/info/gas/gas_toc.html#TOC65)
