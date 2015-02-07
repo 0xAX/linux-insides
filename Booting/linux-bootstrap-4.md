@@ -162,7 +162,7 @@ As we checked `KEEP_SEGMENTS` flag and put the correct value to the segment regi
 ```assembly
 	leal	(BP_scratch+4)(%esi), %esp
 	call	1f
-1:	popl	%ebp
+1:  popl	%ebp
 	subl	$1b, %ebp
 ```
 
@@ -395,7 +395,7 @@ In the next step we build 4 Page Directory entry in the Page Directory Pointer t
 	leal	pgtable + 0x1000(%ebx), %edi
 	leal	0x1007(%edi), %eax
 	movl	$4, %ecx
-1:	movl	%eax, 0x00(%edi)
+1:  movl	%eax, 0x00(%edi)
 	addl	$0x00001000, %eax
 	addl	$8, %edi
 	decl	%ecx
@@ -412,7 +412,7 @@ The next step is building of `2048` page table entries by 2 megabytes:
 	leal	pgtable + 0x2000(%ebx), %edi
 	movl	$0x00000183, %eax
 	movl	$2048, %ecx
-1:	movl	%eax, 0(%edi)
+1:  movl	%eax, 0(%edi)
 	addl	$0x00200000, %eax
 	addl	$8, %edi
 	decl	%ecx
