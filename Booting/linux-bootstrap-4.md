@@ -162,7 +162,7 @@ As we checked `KEEP_SEGMENTS` flag and put the correct value to the segment regi
 ```assembly
 	leal	(BP_scratch+4)(%esi), %esp
 	call	1f
-1:	popl	%ebp
+1:  popl	%ebp
 	subl	$1b, %ebp
 ```
 
