@@ -97,7 +97,7 @@ SECTIONS {
 }
 ```
 
-Now BIOS has started to work. After all initializations and hardware checking, it needs to load operating system. BIOS tries to find bootable device which contains boot sector. Boot sector is the first sector on device (512 bytes) and contains sequence of `0x55` and `0xaa` at 511 and 512 byte. For example:
+Now the BIOS has started to work. After initializing and checking the hardware, it needs to find a bootable device. A boot order is stored in the BIOS configuration, controlling which devices the kernel attempts to boot. In the case of attempting to boot a hard drive, the BIOS tries to find a boot sector. On hard drives partitioned with an MBR partition layout, the boot sector is stored in the first 446 bytes of the first sector (512 bytes). The final two bytes of the first sector contain `0x55` and `0xaa` which signals the BIOS that the device as bootable. For example:
 
 ```assembly
 [BITS 16]
@@ -132,7 +132,7 @@ We will see:
 
 In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes 0xaa and 0x55.
 
-Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... instead of printing one symbol :) Ok, so, from this moment BIOS handed control to the operating system bootloader and we can go ahead.
+A real-world boot sector has code for continuing the boot process and the partition table... instead of a bunch of 0's and an exclamation point :) Ok, so, from this moment BIOS handed control to the bootloader and we can go ahead.
 
 **NOTE**: as you can read above the CPU is in real mode. In real mode, calculating the physical address in memory is as follows:
 
@@ -176,9 +176,9 @@ At the start of execution BIOS is not in RAM, it is located in ROM.
 Bootloader
 --------------------------------------------------------------------------------
 
-Now BIOS has transferred control to the operating system bootloader and it needs to load operating system into the memory. There are a couple of bootloaders which can boot linux, like: [Grub2](http://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project) and etc... Linux kernel has [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which describes how to load linux kernel.
+There are a number of bootloaders which can boot Linux, such as [GRUB 2](http://www.gnu.org/software/grub/) and [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which specifies the requirements for bootloaders to implement Linux support. This example will describe GRUB 2.
 
-Let us briefly consider how grub loads linux. GRUB2 execution starts from `grub-core/boot/i386/pc/boot.S`. It starts to load from device its own kernel (not to be confused with linux kernel) and executes `grub_main` after successfully loading.
+Now that the BIOS has chosen a boot device and transferred control to the boot sector code, execution starts from [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD). This code is very simple due to the limited amount of space available, and contains a pointer that it uses to jump to the location of GRUB 2's core image. The core image begins with [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD), which is usually stored immediately after the first sector in the unused space before the first partition. The above code loads the rest of the core image into memory, which contains GRUB 2's kernel and drivers for handling filesystems. After loading the rest of the core image, it executes [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c).
 
 `grub_main` initializes console, gets base address for modules, sets root device, loads/parses grub configuration file, loads modules etc... At the end of execution `grub_main` moves grub to normal mode. `grub_normal_execute` (from `grub-core/normal/main.c`) completes last preparation and shows a menu for selecting an operating system. When we select one of grub menu entries, `grub_menu_execute_entry` begins to be executed, which executes grub `boot` command. It starts to boot operating system.
 
