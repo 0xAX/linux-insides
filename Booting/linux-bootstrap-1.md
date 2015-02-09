@@ -16,9 +16,9 @@ Please note that I'm not a professional kernel hacker, and I don't write code fo
 * An understanding of C code
 * An understanding of assembly code (AT&T syntax)
 
-If you just started to learn some tools, I will try to explain some parts during this and the following posts. Ok, our little introduction is finished and now we can start to dive into th kernel and low-level stuff.
+If you just started to learn some tools, I will try to explain some parts during this and the following posts. Ok, our little introduction is finished and now we can start to dive into the kernel and low-level stuff.
 
-All code is actually for kernel - 3.18, if there are changes, I will update my posts.
+This document contains sample code from Linux 3.18. If there are changes, I will update my posts.
 
 Magic power button, what's next?
 --------------------------------------------------------------------------------
@@ -136,7 +136,7 @@ We will see:
 
 In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After starting it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints the `!` symbol. It fills the rest of the 510 bytes with zeros and finishes with two magic bytes 0xaa and 0x55.
 
-Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from the device, loads it to memory, parses and passes boot parameters to kernel and etc... instead of printing one symbol :) Ok, so, from this moment on, BIOS has handed control to the operating system bootloader and we can proceed.
+Real world boot loader starts at the same point, ends with `0xaa55` bytes, but reads kernel code from device, loads it to memory, parses and passes boot parameters to kernel and etc... instead of printing one symbol :) Ok, so, from this moment BIOS handed control to the operating system bootloader and we can go ahead.
 
 **NOTE**: as you can see above, the CPU is in real mode. In real mode, calculating the physical address in memory is as follows:
 
@@ -144,7 +144,7 @@ Real world boot loader starts at the same point, ends with `0xaa55` bytes, but r
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-as we discussed above. But we have only 16 bit general purpose registers. The maximum value of 16 bit register is: `0xffff`; So if we take the biggest values, it will be:
+as I wrote above. But we have only 16 bit general purpose registers. The maximum value of 16 bit register is: `0xffff`; So if we take the biggest values, it will be:
 
 ```python
 >>> hex((0xffff * 16) + 0xffff)
@@ -180,7 +180,7 @@ At the start of execution the BIOS is not in RAM, it is located in ROM.
 Bootloader
 --------------------------------------------------------------------------------
 
-Now the BIOS has transferred control to the operating system bootloader, it needs to load the operating system into memory. There are a number of bootloaders which can boot linux, including: [Grub2](http://www.gnu.org/software/grub/) and [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). There is a linux [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which describes how to load the linux kernel.
+Now the BIOS has transferred control to the operating system bootloader, it needs to load the operating system into memory. There are a number of bootloaders which can boot linux, including: [Grub2](http://www.gnu.org/software/grub/) and [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). There is a linux [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which outlines how to load the linux kernel.
 
 Let us briefly consider how grub loads linux. GRUB2 execution starts from `grub-core/boot/i386/pc/boot.S`. It starts by loading from the device, its own kernel (not to be confused with linux kernel) and then executes `grub_main`.
 
@@ -244,7 +244,7 @@ Now the bootloader has loaded the linux kernel into memory, filled header fields
 Start of Kernel Setup
 --------------------------------------------------------------------------------
 
-Finally we are in the kernel. Technically, the kernel didn't run yet, first of all we need to setup the kernel, memory manager, process manager and etc... Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is a little strange at first sight, as there are many instructions before it. But if we look back...
+Finally we are in the kernel. Technically, the kernel hasn't run yet, first of all we need to setup the kernel, memory manager, process manager and etc... Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is a little strange at first sight, as there are many instructions before it. But if we look back...
 
 A long time ago linux had its own bootloader, but now if you run for example:
 
@@ -439,7 +439,7 @@ jne	setup_bad
 
 just consists of comparing of [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) and `0x5a5aaa55` number, and if they are not equal, jump to error printing.
 
-Now we have correct segment registers, stack, we only to setup bss and jump to C code. Bss section used for storing statically allocated uninitialized data. Here is the code:
+Now we have correct segment registers, stack, we only need to setup bss and jump to C code. Bss section used for storing statically allocated uninitialized data. Here is the code:
 
 ```assembly
 	movw	$__bss_start, %di
@@ -454,13 +454,13 @@ First of all we put [__bss_start](https://github.com/torvalds/linux/blob/master/
 
 ![bss](http://oi59.tinypic.com/29m2eyr.jpg)
 
-Jump to Main
+Jump to main
 --------------------------------------------------------------------------------
 
 That's all, we have the stack, bss and now we can jump to the `main` C function:
 
 ```assembly
-	calll  main
+	calll main
 ```
 
 which is in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). We will cover the contents of this function in the next part.
