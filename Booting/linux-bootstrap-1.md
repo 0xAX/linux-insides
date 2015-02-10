@@ -133,7 +133,14 @@ We will see:
 
 ![Simple bootloader which prints only `!`](http://oi60.tinypic.com/2qbwup0.jpg)
 
-In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes 0xaa and 0x55.
+In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes `0xaa` and `0x55`.
+
+Although you can see binary dump of it with `objdump` util:
+
+```
+nasm -f binary boot.nasm
+objdump -D -b binary -mi386 -Maddr16,data16,intel boot
+```
 
 A real-world boot sector has code for continuing the boot process and the partition table... instead of a bunch of 0's and an exclamation point :) Ok, so, from this moment BIOS handed control to the bootloader and we can go ahead.
 
