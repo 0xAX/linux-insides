@@ -1,7 +1,7 @@
 linux-internals
 ===============
 
-A series of posts about the linux kernel.
+A serie of posts about the linux kernel.
 
 **The goal is simple** - to share my modest knowledge about the internals of the linux kernel and help people who are interested in the linux kernel, and other low-level subject matter.
 
