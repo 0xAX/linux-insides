@@ -6,6 +6,7 @@
     * [Video mode initialization and transition to protected mode](Booting/linux-bootstrap-3.md)
     * [Transition to 64-bit mode](Booting/linux-bootstrap-4.md)
     * [Kernel decompression]()
+    * [First steps inside the kernel]()
 * [Theory]()
     * [Paging]()
 * [Misc]()
