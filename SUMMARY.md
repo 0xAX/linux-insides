@@ -9,6 +9,7 @@
     * [First steps inside the kernel]()
 * [Theory]()
     * [Paging]()
+    * [Elf64]()
 * [Misc]()
     * [Write and Submit your first Linux kernel Patch]() 
 * [Useful links](LINKS.md)
