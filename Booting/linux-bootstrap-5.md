@@ -206,7 +206,7 @@ As i wrote above, `decompress_kernel` function is in the [arch/x86/boot/compress
 	free_mem_end_ptr = heap + BOOT_HEAP_SIZE;
 ```
 
-where `heap` is the second paramter of the `decompress_kernel` function which we got with:
+where `heap` is the second parameter of the `decompress_kernel` function which we got with:
 
 ```assembly
 leaq	boot_heap(%rip), %rsi
@@ -246,7 +246,7 @@ out:
 	return (unsigned char *)choice;
 ```
 
-which just returns `output` paramter which we passed to the `choose_kernel_location` without any changes. Let's try to understand what is it `kaslr`. We can find information about it in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt):
+which just returns the `output` parameter which we passed to the `choose_kernel_location` without any changes. Let's try to understand what is it `kaslr`. We can find information about it in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt):
 
 ```
 kaslr/nokaslr [X86]
