@@ -154,8 +154,8 @@ We can see `0xffffffff81efe497` here. I'm not sure that you have so big RAM. But
 0xffffffffffffffff  +-----------+
                     |           |
                     |           | Kernelspace
-0xffff800000000000  |           |
-                    +-----------+
+                    |           |
+ 0xffff800000000000 +-----------+
                     |           |
                     |           |
                     |   hole    |
