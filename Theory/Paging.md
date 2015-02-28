@@ -15,9 +15,7 @@ In my view, memory management is one of the most complex part of the linux kerne
 As intel manual says:
 
 ```
-Paging provides a mech-anism for implementing a conventional demand-paged, 
-virtual-memory system where sections of a program’s execution environment are 
-mapped into physical memory as needed.
+Paging provides a mech-anism for implementing a conventional demand-paged, virtual-memory system where sections of a program’s execution environment are mapped into physical memory as needed.
 ```
 
 So... I will try to explain how paging works in theory in this post. Of course it will be closely related with the linux kernel for `x86_64`, but we will not go into deep details (at least in this post).
@@ -152,22 +150,22 @@ ffffffff81efeaa2 T start_kernel
 
 We can see `0xffffffff81efe497` here. I'm not sure that you have so big RAM. But anyway `start_kernel` and `x86_64_start_kernel` will be executed. The address space in `x86_64` is `2^64` size, but it's too large, that's why used smaller address space, only 48-bits wide. So we have situation when physical address limited with 48 bits, but addressing still performed with 64 bit pointers. How to solve this problem? Ok, look on the diagram: 
 
-```                                           
-0xffffffffffffffff  +-----------+      
-                    |           |                        
-                    |           |  Kernelspace            
-0xffff800000000000  |           |                        
-                    +-----------+      
-                    |           |                        
-                    |           |                        
-                    |    HOLE   |                        
-                    |           |                        
-                    |           |                        
-0x00007fffffffffff  +-----------+      
-                    |           |                        
-                    |           |  Userspace                        
-                    |           |                        
-0x0000000000000000  +-----------+      
+```
+0xffffffffffffffff  +-----------+
+                    |           |
+                    |           | Kernelspace
+0xffff800000000000  |           |
+                    +-----------+
+                    |           |
+                    |           |
+                    |   hole    |
+                    |           |
+                    |           |
+0x00007fffffffffff  +-----------+
+                    |           |
+                    |           |  Userspace
+                    |           |
+0x0000000000000000  +-----------+
 ```
 
 This solution is `sign extension`. Here we can see that low 48 bits of a virtual address can be used for addressing. Bits `63:48` can be or 0 or 1. Note that all virtual address space is spliten on 2 parts:
