@@ -24,3 +24,4 @@ Thank you to all contributors:
 * [Leandro Moreira](https://github.com/leandromoreira)
 * [Jonatan Pålsson](https://github.com/jonte)
 * [George Horrell](https://github.com/georgehorrell)
+* [Ciro Santilli](https://github.com/cirosantilli)
