@@ -501,4 +501,4 @@ Links
 * [Previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md)
 * [Paging on osdev.org](http://wiki.osdev.org/Paging)
 * [Paging Systems](https://www.cs.rutgers.edu/~pxk/416/notes/09a-paging.html)
-* [x86 paging](http://www.cirosantilli.com/x86-paging/)
+* [x86 Paging Tutorial](http://www.cirosantilli.com/x86-paging/)
