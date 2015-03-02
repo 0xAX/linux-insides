@@ -25,3 +25,4 @@ Thank you to all contributors:
 * [Jonatan Pålsson](https://github.com/jonte)
 * [George Horrell](https://github.com/georgehorrell)
 * [Ciro Santilli](https://github.com/cirosantilli)
+* [Kevin Soules](https://github.com/eax64)

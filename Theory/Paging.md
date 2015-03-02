@@ -23,7 +23,7 @@ So... I will try to explain how paging works in theory in this post. Of course i
 Enabling paging
 --------------------------------------------------------------------------------
 
-There are three three paging modes:
+There are three paging modes:
 
 * 32-bit paging;
 * PAE paging;
@@ -140,7 +140,7 @@ As i wrote about linux kernel for `x86_64` uses 4-level page tables. Their names
 * Page Middle Directory
 * Page Table Entry
 
-After that you compiled and installed linux kernel, you can note `System.map` file which stores address of the functions whic are used by the kernel. Note that addresses are virtual. For example:
+After that you compiled and installed linux kernel, you can note `System.map` file which stores address of the functions that are used by the kernel. Note that addresses are virtual. For example:
 
 ```
 $ grep "start_kernel" System.map
