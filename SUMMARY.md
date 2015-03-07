@@ -11,7 +11,7 @@
 * [Theory](Theory/README.md)
     * [Paging](Theory/Paging.md)
     * [Elf64](Theory/ELF.md)
-    * [Per-CPU variables]()
+    * [Per-CPU variables](Theory/per-cpu.md)
     * [CPUID]()
     * [MSR]()
 * [Misc]()
