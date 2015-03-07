@@ -1,6 +1,8 @@
 Per-CPU variables
 ================================================================================
 
+**In Progress**
+
 Per-CPU variables are one of kernel features. You can understand what this feature mean by it's name. We can create variable and each processor core will have own copy of this variable. We take a closer look on this feature and try to understand how it implemented and how it work in this part.
 
 Kernel provides API for creating per-cpu variables - `DEFINE_PER_CPU` macro:
