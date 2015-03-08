@@ -1,7 +1,7 @@
 Kernel initialization. Part 1.
 ================================================================================
 
-First steps in kernel code
+First steps in the kernel code
 --------------------------------------------------------------------------------
 
 In the previous post (`Kernel booting process. Part 5.`) - [Kernel decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) we stopped at the [jump](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) on the decompressed kernel:
