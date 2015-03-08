@@ -7,7 +7,7 @@
     * [Transition to 64-bit mode](Booting/linux-bootstrap-4.md)
     * [Kernel decompression](Booting/linux-bootstrap-5.md)
 * [Initialization](Initialization/README.md)
-    * [First steps in kernel]()
+    * [First steps in the kernel](Initialization/linux-initialization-1.md)
 * [Theory](Theory/README.md)
     * [Paging](Theory/Paging.md)
     * [Elf64](Theory/ELF.md)
