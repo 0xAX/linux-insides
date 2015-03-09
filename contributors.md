@@ -26,3 +26,4 @@ Thank you to all contributors:
 * [George Horrell](https://github.com/georgehorrell)
 * [Ciro Santilli](https://github.com/cirosantilli)
 * [Kevin Soules](https://github.com/eax64)
+* [Fabio Pozzi](https://github.com/fabiopozzi)
