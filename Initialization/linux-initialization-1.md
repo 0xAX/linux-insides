@@ -17,7 +17,7 @@ So let's start.
 First steps in the kernel
 --------------------------------------------------------------------------------
 
-Ok, we got address of the kernel from the `decompress_kernel` function into `rax` register and just jumped there. Decompressed kernel code starts in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
+Okayay, we got address of the kernel from the `decompress_kernel` function into `rax` register and just jumped there. Decompressed kernel code starts in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
 
 ```assembly
 	__HEAD
@@ -29,13 +29,13 @@ startup_64:
 	...
 ```
 
-We can see defintion of the `startup_64` routine and it defined in the `__HEAD` section, which is just:
+We can see definition of the `startup_64` routine and it defined in the `__HEAD` section, which is just:
 
 ```C
 #define __HEAD		.section	".head.text","ax"
 ```
 
-We can see defintion of this section in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S#L93) linker script:
+We can see definition of this section in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S#L93) linker script:
 
 ```
 .text : AT(ADDR(.text) - LOAD_OFFSET) {
@@ -46,7 +46,7 @@ We can see defintion of this section in the [arch/x86/kernel/vmlinux.lds.S](http
 } :text = 0x9090
 ```
 
-We can understand default virtual and physicall addresses from the linker script. Note that adddress of the `_text` is location counter which is defined as:
+We can understand default virtual and physical addresses from the linker script. Note that address of the `_text` is location counter which is defined as:
 
 ```
 . = __START_KERNEL;
@@ -72,7 +72,7 @@ Now we know default physical and virtual addresses of the `startup_64` routine, 
 	subq	$_text - __START_KERNEL_map, %rbp
 ```
 
-Here we just put the `rip-relative` address to the `rbp` register and than substract  `$_text - __START_KERNEL_map` from it. We know that compiled address of the `_text` is `0xffffffff81000000` and `__START_KERNEL_map` contains `0xffffffff81000000`, so `rbp` will contatin physical address of the `text` - `0x1000000` after this calcuation. We need to calcuate it because kernel can be runned not on the default address, but now we know actuall physical address.
+Here we just put the `rip-relative` address to the `rbp` register and than subtract  `$_text - __START_KERNEL_map` from it. We know that compiled address of the `_text` is `0xffffffff81000000` and `__START_KERNEL_map` contains `0xffffffff81000000`, so `rbp` will contain physical address of the `text` - `0x1000000` after this calculation. We need to calculate it because kernel can be runned not on the default address, but now we know actual physical address.
 
 In the next step we checks that this address is aligned with:
 
@@ -108,7 +108,7 @@ Address most not be greater than 46-bits:
 #define MAX_PHYSMEM_BITS       46
 ```
 
-Ok, we did some early checks and now we can move on.
+Okay, we did some early checks and now we can move on.
 
 Fix base addresses of page tables
 --------------------------------------------------------------------------------
@@ -149,7 +149,7 @@ NEXT_PAGE(level1_fixmap_pgt)
 
 Looks hard, but it is not true.
 
-First of all let's look on the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use first 511 `early_level4_pgt` entries. And after this we can see `level3_kernel_pgt` entry. Note that we substact `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we substract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look on `_PAGE_TABLE`, it is just page entry access rights:
+First of all let's look on the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use first 511 `early_level4_pgt` entries. And after this we can see `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look on `_PAGE_TABLE`, it is just page entry access rights:
 
 ```C
 #define _PAGE_TABLE     (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER | \
@@ -158,7 +158,7 @@ First of all let's look on the `early_level4_pgt`. It starts with the (4096 - 8)
 
 more about it, you can read in the [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) post.
 
-`level3_kernel_pgt` - stores entries which map kernel space. At the start of it's definition, we can see that it filled with zeros `L3_START_KERNEL` times. Here `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After it we can see defintion of two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
+`level3_kernel_pgt` - stores entries which map kernel space. At the start of it's definition, we can see that it filled with zeros `L3_START_KERNEL` times. Here `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After it we can see definition of two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
 
 ```C
 #define _KERNPG_TABLE   (_PAGE_PRESENT | _PAGE_RW | _PAGE_ACCESSED | \
@@ -167,9 +167,9 @@ more about it, you can read in the [paging](http://0xax.gitbooks.io/linux-inside
 
 access rights. The second - `level2_fixmap_pgt` is a virtual addresses which can refer to any physical addresses even under kernel space.
 
-The next `level2_kernel_pgt` calls `PDMS` macro which creates 512 megabytes from the `__START_KERNEL_map` for kernel text (after these 512 megbytes will be modules memory space).
+The next `level2_kernel_pgt` calls `PDMS` macro which creates 512 megabytes from the `__START_KERNEL_map` for kernel text (after these 512 megabytes will be modules memory space).
 
-Now we know Let's back to our code which is in the beginnig of the section. Remember that `rbp` contains actual physical address of the `_text` section. We just add this address to the base addressess of the page tables, that they'll have correct addresses:
+Now we know Let's back to our code which is in the beginning of the section. Remember that `rbp` contains actual physical address of the `_text` section. We just add this address to the base address of the page tables, that they'll have correct addresses:
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -192,10 +192,10 @@ level2_fixmap_pgt[506] -> level1_fixmap_pgt
 
 As we corrected base addresses of the page tables, we can start to build it.
 
-Identy mapping setup
+Identity mapping setup
 --------------------------------------------------------------------------------
 
-Now we can see set up the identity mapping early page pables. Identity Mapped Paging is a virtual addresses which are mapped to physical addresses that have the same value, `1 : 1`. Let's look on it in details. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
+Now we can see set up the identity mapping early page tables. Identity Mapped Paging is a virtual addresses which are mapped to physical addresses that have the same value, `1 : 1`. Let's look on it in details. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
 
 ```assembly
 	leaq	_text(%rip), %rdi
@@ -249,7 +249,7 @@ In the next step we write addresses of the page middle directory entries to the 
 	jne	1b
 ```
 
-Here we put the address of the `level2_kernel_pgt` to the `rdi` and address of the page table entry to the `r8` register. Next we check the present bit in the `level2_kernel_pgt` and if it is zero we're moving to the next page by adding 8 bytes to `rdi` which contatins address of the `level2_kernel_pgt`. After this we compare it with `r8` (contains address of the page table entry) and go back to label `1` or move forward.
+Here we put the address of the `level2_kernel_pgt` to the `rdi` and address of the page table entry to the `r8` register. Next we check the present bit in the `level2_kernel_pgt` and if it is zero we're moving to the next page by adding 8 bytes to `rdi` which contaitns address of the `level2_kernel_pgt`. After this we compare it with `r8` (contains address of the page table entry) and go back to label `1` or move forward.
 
 In the next step we correct `phys_base` physical address with `rbp` (contains physical address of the `_text`), put physical address of the `early_level4_pgt` and jump to label `1`:
 
@@ -337,7 +337,7 @@ early_gdt_descr_base:
 	.quad	INIT_PER_CPU_VAR(gdt_page)
 ```
 
-We need to reload Global Descriptor Table because now kernel works in the userspace addresses, but soon kernel will work in it's own space. Now let's look on `early_gdt_descr` defintion. Global Descriptor Table contains 32 entries:
+We need to reload Global Descriptor Table because now kernel works in the userspace addresses, but soon kernel will work in it's own space. Now let's look on `early_gdt_descr` definition. Global Descriptor Table contains 32 entries:
 
 ```C
 #define GDT_ENTRIES 32
@@ -437,7 +437,7 @@ Here we put the address of the `initial_code` to the `rax` and push fake address
 	...
 ```
 
-As we can see `initial_code` contains addresss of the `x86_64_start_kernel`, which defined in the [arch/x86/kerne/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c) and looks like this:
+As we can see `initial_code` contains address of the `x86_64_start_kernel`, which defined in the [arch/x86/kerne/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c) and looks like this:
 
 ```C
 asmlinkage __visible void __init x86_64_start_kernel(char * real_mode_data) {
@@ -480,7 +480,7 @@ Let's try to understand this trick works. Let's take for example first condition
 * We will have compilation error, because try to get size of the char array with negative index (as can be in our case, because `MODULES_VADDR` can't be less than `__START_KERNEL_map` will be in our case);
 * No compilation errors.
 
-That's all. So interesting C trick for getting compile error which depends on some contants.
+That's all. So interesting C trick for getting compile error which depends on some constants.
 
 In the next step we can see call of the `cr4_init_shadow` function which stores shadow copy of the `cr4` per cpu. Context switches can change bits in the `cr4` so we need to store `cr4` for each CPU. And after this we can see call of the `reset_early_page_tables` function where we resets all page global directory entries and write new pointer to the PGT in `cr3`:
 
