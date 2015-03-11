@@ -8,6 +8,7 @@
     * [Kernel decompression](Booting/linux-bootstrap-5.md)
 * [Initialization](Initialization/README.md)
     * [First steps in the kernel](Initialization/linux-initialization-1.md)
+    * [Early interrupts handler]()
 * [Theory](Theory/README.md)
     * [Paging](Theory/Paging.md)
     * [Elf64](Theory/ELF.md)
