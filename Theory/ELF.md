@@ -5,7 +5,7 @@ ELF (Executable and Linkable Format) is a standard file format for executable fi
 
 An ELF object file consists of the following parts:
 
-* ELF header - describes the main characteristics of the object file: type, CPU architecture, the virtual address of the entry point, the size and offset the remaining parts and etc...;
+* ELF header - describes the main characteristics of the object file: type, CPU architecture, the virtual address of the entry point, the size and offset the remaining parts, etc...;
 * Program header table - listing the available segments and their attributes. Program header table need loaders for placing sections of the file as virtual memory segments;
 * Section header table - contains description of the sections.
 
@@ -13,10 +13,10 @@ Now let's look closer on these components.
 
 **ELF header**
 
-It located in the beginning of the object file. It's main point is to locate all other parts of the object file. File header contains following fields:
+It's located in the beginning of the object file. It's main point is to locate all other parts of the object file. File header contains following fields:
 
 * ELF identification - array of bytes which helps to identify the file as an ELF object file and also provides information about general object file characteristic;
-* Object file type - identifies the object file type. This field can describe that ELF file is relocatable object file, executable file and etc...;
+* Object file type - identifies the object file type. This field can describe that ELF file is relocatable object file, executable file, etc...;
 * Target architecture;
 * Version of the object file format;
 * Virtual address of the program entry point;
