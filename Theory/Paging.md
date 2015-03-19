@@ -10,9 +10,9 @@ Yeah, there will be many different things, but many many and once again many wor
 
 In my view, memory management is one of the most complex part of the linux kernel and in system programming generally. So before we will proceed with the kernel initialization stuff, we will get acquainted with the paging.
 
-`Paging` is a process of translaion a linear memory address to a physical address. If you have read previous parts, you can remember that we saw segmentation in the real mode when physical address calculated by shifting a segment register on four and adding offset. Or also we saw segmentation in the protected mode, where we used the tables of descriptors and base addresses from descriptors with offsets to calculate physical addresses. Now we are in 64-bit mode and that we will see paging.
+`Paging` is a process of translation a linear memory address to a physical address. If you have read previous parts, you can remember that we saw segmentation in the real mode when physical address calculated by shifting a segment register on four and adding offset. Or also we saw segmentation in the protected mode, where we used the tables of descriptors and base addresses from descriptors with offsets to calculate physical addresses. Now we are in 64-bit mode and that we will see paging.
 
-As intel manual says:
+As Intel manual says:
 
 ```
 Paging provides a mech-anism for implementing a conventional demand-paged, virtual-memory system where sections of a program’s execution environment are mapped into physical memory as needed.
@@ -54,7 +54,7 @@ wrmsr
 Paging structures
 --------------------------------------------------------------------------------
 
-Paging divides the linear address space into fixed-size pages. Pages can be mapped into the physical address space or even external storage. This fixed size is `4096` bytes for the `x86_64` linux kernel. For a linear address translation to a physical address used special structures. Every structure is `4096` bytes size and contains `512` entries (this only for `PAE` and `IA32_EFER.LME` modes). Paging structures are hierarchial and linux kernel for `x86_64` uses 4 level paging. CPU uses a part of the linear address to identify entry of the another paging structure which is at the lower level or physical memory region (`page frame`) or physical address in this region (`page offset`). The address of the top level paging structure located in the `cr3` register. We already saw this in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
+Paging divides the linear address space into fixed-size pages. Pages can be mapped into the physical address space or even external storage. This fixed size is `4096` bytes for the `x86_64` linux kernel. For a linear address translation to a physical address used special structures. Every structure is `4096` bytes size and contains `512` entries (this only for `PAE` and `IA32_EFER.LME` modes). Paging structures are hierarchical and linux kernel uses 4 level paging for `x86_64`. CPU uses a part of the linear address to identify entry of the another paging structure which is at the lower level or physical memory region (`page frame`) or physical address in this region (`page offset`). The address of the top level paging structure located in the `cr3` register. We already saw this in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 leal	pgtable(%ebx), %eax
@@ -78,7 +78,7 @@ We built page table structures and put the address of the top-level structure to
  --------------------------------------------------------------------------------
 ```
 
-These fiealds have the following meanings:
+These fields have the following meanings:
 
 * Bits 2:0 - ignored;
 * Bits 51:12 - stores the address of the top level paging structure;
@@ -86,7 +86,7 @@ These fiealds have the following meanings:
 * Reserved - reserved must be 0;
 * Bits 63:52 - reserved must be 0.
 
-The linear address tranlation address is following:
+The linear address translation address is following:
 
 * Given linear address arrives to the [MMU](http://en.wikipedia.org/wiki/Memory_management_unit) instead of memory bus. 
 * 64-bit linear address splits on some parts. Only low 48 bits are significant, it means that `2^48` or 256 TBytes of linear-address space may be accessed at any given time.
@@ -124,7 +124,7 @@ Where:
 * Ignored bits;
 * A - accessed bit indicates was physical page or page structure accessed;
 * PWT and PCD used for cache;
-* U/S - user/superviso bit contols user access to the all physical pages mapped by this table entry;
+* U/S - user/supervisor bit controls user access to the all physical pages mapped by this table entry;
 * R/W - read/write bit controls read/write access to the all physical pages mapped by this table entry;
 * P - present bit. Current bit indicates was page table or physical page loaded into primary memory or not.
 
@@ -195,7 +195,7 @@ ffffffffff600000 - ffffffffffdfffff (=8 MB) vsyscalls
 ffffffffffe00000 - ffffffffffffffff (=2 MB) unused hole
 ```
 
-We can see here memory map for user space, kernel space and non-canonical area between. User space memory map is simple. Let's take a closer look on the kernel space. We can see that it starts from the guard hole which reserved for hypervisor. We can find definiton of this guad hole in the [arch/x86/include/asm/page_64_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_64_types.h):
+We can see here memory map for user space, kernel space and non-canonical area between. User space memory map is simple. Let's take a closer look on the kernel space. We can see that it starts from the guard hole which reserved for hypervisor. We can find definition of this guard hole in the [arch/x86/include/asm/page_64_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_64_types.h):
 
 ```C
 #define __PAGE_OFFSET _AC(0xffff880000000000, UL)
@@ -231,10 +231,11 @@ We know how looks kernel's virtual memory map and now we can see how a virtual a
 In binary it will be:
 
 ```
-0b1111111111111111111111111111111110000001000000000000000000000000
+1111111111111111 111111111 111111110 000001000 000000000 000000000000
+      63:48        47:39     38:30     29:21     20:12      11:0
 ```
 
-The given virtual address will be splitten on some parts as i wrote above:
+The given virtual address split on some parts as i wrote above:
 
 * `63:48` - bits not used;
 * `47:39` - bits of the given linear address stores an index into the paging structure level-4; 
@@ -243,12 +244,12 @@ The given virtual address will be splitten on some parts as i wrote above:
 * `20:12` - bits stores an index into the paging structure level-1;
 * `11:0`  - bits provide the byte offset into the physical page.
 
-That is all. Now you know a little about `paging` theory and we can go ahed in the kernel source code and see first initialization steps.
+That is all. Now you know a little about `paging` theory and we can go ahead in the kernel source code and see first initialization steps.
 
 Conclusion
 --------------------------------------------------------------------------------
 
-It's the end of this short part about paging theory. Of cousre this post doesn't cover all details about paging, but soon we will see it on practice how linux kernel builds paging structures and work with it.
+It's the end of this short part about paging theory. Of course this post doesn't cover all details about paging, but soon we will see it on practice how linux kernel builds paging structures and work with it.
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
