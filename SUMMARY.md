@@ -10,6 +10,7 @@
     * [First steps in the kernel](Initialization/linux-initialization-1.md)
     * [Early interrupts handler](Initialization/linux-initialization-2.md)
     * [Kernel entry point]()
+* [Data Structures in the Linux Kernel]()
 * [Theory](Theory/README.md)
     * [Paging](Theory/Paging.md)
     * [Elf64](Theory/ELF.md)
