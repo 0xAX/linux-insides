@@ -174,7 +174,63 @@ For example:
 const struct miscdevice *p = list_entry(v, struct miscdevice, list)
 ```
 
-After this we can access to the any `miscdevice` field with `p->minor` or `p->name` and etc...
+After this we can access to the any `miscdevice` field with `p->minor` or `p->name` and etc... Let's look on the `list_entry` implementation:
+
+```C
+#define list_entry(ptr, type, member) \
+	container_of(ptr, type, member)
+```
+
+As we can see it just calls `container_of` macro with the same arguments. For the first look `container_of` looks strange:
+
+```C
+#define container_of(ptr, type, member) ({                      \
+    const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
+    (type *)( (char *)__mptr - offsetof(type,member) );})
+```
+
+First of all you can note that it consists from two expressions in curly brackets. Compiler will evaluate the whole block in the curly braces and use the value of the last expression.
+
+For example:
+
+```
+#include <stdio.h>
+
+int main() {
+	int i = 0;
+	printf("i = %d\n", ({++i; ++i;}));
+	return 0;
+}
+```
+
+will print `2`.
+
+The next point is `typeof`, it's simple. As you can understand from it's name, it just returns the type of the given varible. When I first time saw implementation of the `container_of` macro, the stranges thing for me was the zero in the `((type *)0)` expression. Actually this pointers magic calculates the offset of the given field from the address of the structure, but as we have `0` here, it will be just adds offset of the given field to zero. Let's look on the one simple example:
+
+```C
+#include <stdio.h>
+
+struct s {
+        int field1;
+        char field2;
+		char field3;
+};
+
+int main() {
+	printf("%p\n", &((struct s*)0)->field3);
+	return 0;
+}
+```
+
+will print `0x5`.
+
+The next offsetof macro calculates offset from the beggining of the structure to the given structure's field. It's implementation very similar to the previous code:
+
+```C
+#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
+```
+
+Let's summarize all about `container_of` macro. `container_of` macro returns address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns it to the `ptr`. Now `ptr` and `__mptr` points have the same address. Techincally we no need in this line, it needs for the type checking. First line ensures that that given structure (`type` paramter) has a member which called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and substracts it from the structure address. That's all.
 
 Of course `list_add` and `list_entry` is not only functions which provides `<linux/list.h>`. Implementation of the doubly linked list provides the following API:
 
