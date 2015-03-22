@@ -4,7 +4,7 @@ Kernel initialization. Part 3.
 Last preparations before the kernel entry point
 --------------------------------------------------------------------------------
 
-This is third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we will see call of the `start_kernel` function, we must do some preparations. So let's continue.
+This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we will see call of the `start_kernel` function, we must do some preparations. So let's continue.
 
 Again boot_params
 --------------------------------------------------------------------------------
@@ -224,7 +224,7 @@ only with one difference: we pass argument with the `phys_addr_t` which depends 
 #endif
 ```
 
-This configuration option enabled for `CONFIG_PHYS_ADDR_T_64BIT`. After that we got virtual address of the segment which stores the base address of the extended BIOS data area we shift it on 4 and return. After this `ebda_addr` variables contains the base address of the extended BIOS data area.
+This configuration option is enabled by `CONFIG_PHYS_ADDR_T_64BIT`. After that we got virtual address of the segment which stores the base address of the extended BIOS data area, we shift it on 4 and return. After this `ebda_addr` variables contains the base address of the extended BIOS data area.
 
 In the next step we check that address of the extended BIOS data area and low memory is not less than `INSANE_CUTOFF` macro
 
@@ -242,7 +242,7 @@ which is:
 #define INSANE_CUTOFF		0x20000U
 ```
 
-or 128 kilobytes. In the last step we get lower part in the low memory and extended bios data area and call `memblock_reserve` function which will reserve memory region for extended bios data are between low memory and one megabyte mark:
+or 128 kilobytes. In the last step we get lower part in the low memory and extended bios data area and call `memblock_reserve` function which will reserve memory region for extended bios data between low memory and one megabyte mark:
 
 ```C
 lowmem = min(lowmem, ebda_addr);
@@ -250,17 +250,17 @@ lowmem = min(lowmem, LOWMEM_CAP);
 memblock_reserve(lowmem, 0x100000 - lowmem);
 ```
 
-`memblock_reserve` function defined in the [mm/block.c](https://github.com/torvalds/linux/blob/master/mm/block.c) and takes two paramters:
+`memblock_reserve` function is defined at [mm/block.c](https://github.com/torvalds/linux/blob/master/mm/block.c) and takes two paramters:
 
 * base physical address;
 * region size.
 
-and reserves memory region for the given base address and size. `memblock_reserve` is a first function in this book from linux kernel memory manager framework. Soon we will take a closer look on memory manager, but now let's look on it's implementation.
+and reserves memory region for the given base address and size. `memblock_reserve` is the first function in this book from linux kernel memory manager framework. We will take a closer look on memory manager soon, but now let's look at its implementation.
 
 First touch of the linux kernel memory manager framework
 --------------------------------------------------------------------------------
 
-In the previous paragraph we stopped at the call of the `memblock_reserve` function and as i sad before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function make just makes an one call of the:
+In the previous paragraph we stopped at the call of the `memblock_reserve` function and as i sad before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function just calls:
 
 ```C
 memblock_reserve_region(base, size, MAX_NUMNODES, 0);
@@ -324,7 +324,7 @@ struct memblock memblock __initdata_memblock = {
 };
 ```
 
-We will not dive into detail about this varaible, but we will see all details about it in the parts about memory manager. Just note that `memblock` variable defined with the `__initdata_memblock` which is:
+We will not dive into detail of this varaible, but we will see all details about it in the parts about memory manager. Just note that `memblock` variable defined with the `__initdata_memblock` which is:
 
 ```C
 #define __initdata_memblock __meminitdata
@@ -376,7 +376,7 @@ struct memblock_region {
 };
 ```
 
-NUMA node id depends on `MAX_NUMNODES` macro which defined in the [include/linux/numa.h](https://github.com/torvalds/linux/blob/master/include/linux/numa.h):
+NUMA node id depends on `MAX_NUMNODES` macro which is defined in the [include/linux/numa.h](https://github.com/torvalds/linux/blob/master/include/linux/numa.h):
 
 ```C
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
@@ -401,7 +401,7 @@ static inline void memblock_set_region_node(struct memblock_region *r, int nid)
 }
 ```
 
-After this we will have first reserved `memblock` for the extended bios data area in the `.meminit.data` section. `reserve_ebda_region` function finished it's work on this step and we can back to the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c).
+After this we will have first reserved `memblock` for the extended bios data area in the `.meminit.data` section. `reserve_ebda_region` function finished its work on this step and we can go back to the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c).
 
 We finished all preparations before the kernel entry point! The last step in the `x86_64_start_reservations` function is the call of the:
 
@@ -409,7 +409,7 @@ We finished all preparations before the kernel entry point! The last step in the
 start_kernel()
 ```
 
-function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file.
+function from [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) file.
 
 That's all for this part.
 
@@ -418,7 +418,7 @@ Conclusion
 
 It is the end of the third part about linux kernel internals. In next part we will see the first initialization steps in the kernel entry point - `start_kernel` function. It will be the first step before we will see launch of the first `init` process.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
 **Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
