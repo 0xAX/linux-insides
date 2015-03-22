@@ -55,7 +55,7 @@ static void __init copy_bootdata(char *real_mode_data)
 
 First of all note that this function declared with the `__init` prefix. It means that this function will be used only during the initialization and used memory will be freed.
 
-We can see declaration of two variables for the kernel command line and copying `real_mod_data` to the `boot_params` with the `memcpy` function. The next call of the `sanitize_boot_params` function which fills some fields of the `boot_params` structure like `ext_ramdisk_image` and etc... if bootloaders which fail to initialize unknown fields in `boot_params` to zero. After this we're getting address of the command line with the call of the `get_cmd_line_ptr` function:
+We can see declaration of two variables for the kernel command line and copying `real_mode_data` to the `boot_params` with the `memcpy` function. The next call of the `sanitize_boot_params` function which fills some fields of the `boot_params` structure like `ext_ramdisk_image` and etc... if bootloaders which fail to initialize unknown fields in `boot_params` to zero. After this we're getting address of the command line with the call of the `get_cmd_line_ptr` function:
 
 ```C
 unsigned long cmd_line_ptr = boot_params.hdr.cmd_line_ptr;
