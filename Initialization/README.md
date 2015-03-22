@@ -4,4 +4,4 @@ You will see here a couple of posts which describes full cycle of the kernel ini
 
 * [First steps after kernel decompressed](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-1.md) - describes first steps in the kernel.
 * [Early interupt and exception handling](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) - describes early interrupts initialization and early page fault handler.
-* [Last preparations before kernel entry point](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-3.md)
+* [Last preparations before kernel entry point](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-3.md) - describes the last preparations before the call of the `start_kernel`.
