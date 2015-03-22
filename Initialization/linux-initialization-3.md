@@ -4,7 +4,7 @@ Kernel initialization. Part 3.
 Last preparations before the kernel entry point
 --------------------------------------------------------------------------------
 
-This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we will see call of the `start_kernel` function, we must do some preparations. So let's continue.
+This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we will see call of the `start_kernel` function, we must do some preparations. So let's continue.
 
 Again boot_params
 --------------------------------------------------------------------------------
@@ -181,7 +181,7 @@ if (paravirt_enabled())
 	return;
 ```
 
-we exit from the `reserve_ebda_region` function if paravirtualization is enabled because if it enabeld the extended bios data are is absent. In the next step we need to get the end of the low memory:
+we exit from the `reserve_ebda_region` function if paravirtualization is enabled because if it enabeled the extended bios data are is absent. In the next step we need to get the end of the low memory:
 
 ```C
 lowmem = *(unsigned short *)__va(BIOS_LOWMEM_KILOBYTES);
@@ -425,6 +425,6 @@ If you have any questions or suggestions write me a comment or ping me at [twitt
 Links
 --------------------------------------------------------------------------------
 
-* [BIOS data are](http://stanislavs.org/helppc/bios_data_area.html)
+* [BIOS data area](http://stanislavs.org/helppc/bios_data_area.html)
 * [What is in the extended BIOS data area on a PC?](http://www.kryslix.com/nsfaq/Q.6.html)
 * [Previous part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md)
