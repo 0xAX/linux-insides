@@ -6,16 +6,16 @@ Last preparations before the kernel entry point
 
 This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we will see call of the `start_kernel` function, we must do some preparations. So let's continue.
 
-Again boot_params
+boot_params again
 --------------------------------------------------------------------------------
 
-In the previous part we stopped at the setting Interrupt Descriptor Table and loading it in the `IDTR` register. In the next step after we this we can see call of the `copy_bootdata` function:
+In the previous part we stopped at setting Interrupt Descriptor Table and loading it in the `IDTR` register. At the next step after this we can see a call of the `copy_bootdata` function:
 
 ```C
 copy_bootdata(__va(real_mode_data));
 ```
 
-This function takes one argument - virtual address of the `real_mode_data`. Remember that we passed the address of the `boot_params` structure from the [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L114)  to the `x86_64_start_kernel` function as first argument in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
+This function takes one argument - virtual address of the `real_mode_data`. Remember that we passed the address of the `boot_params` structure from [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L114)  to the `x86_64_start_kernel` function as first argument in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
 
 ```
 	/* rsi is pointer to real mode structure with interesting info.
@@ -23,19 +23,19 @@ This function takes one argument - virtual address of the `real_mode_data`. Reme
 	movq	%rsi, %rdi
 ```
 
-Now let's look on the `__va` macro. This macro defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c):
+Now let's look at `__va` macro. This macro defined in [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c):
 
 ```C
 #define __va(x)                 ((void *)((unsigned long)(x)+PAGE_OFFSET))
 ```
 
-where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of the `boot_params` structure and pass it to the `copy_bootdata` function, where we copy `real_mod_data` to the `boot_params` which declared in the [arch/x86/kernel/setup.h](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.h)
+where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of the `boot_params` structure and pass it to the `copy_bootdata` function, where we copy `real_mod_data` to the `boot_params` which is declared in the [arch/x86/kernel/setup.h](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.h)
 
 ```C
 extern struct boot_params boot_params;
 ```
 
-Let's look on the `copy_boot_data` implementation:
+Let's look at the `copy_boot_data` implementation:
 
 ```C
 static void __init copy_bootdata(char *real_mode_data)
@@ -53,7 +53,7 @@ static void __init copy_bootdata(char *real_mode_data)
 }
 ```
 
-First of all note that this function declared with the `__init` prefix. It means that this function will be used only during the initialization and used memory will be freed.
+First of all, note that this function is declared with `__init` prefix. It means that this function will be used only during the initialization and used memory will be freed.
 
 We can see declaration of two variables for the kernel command line and copying `real_mode_data` to the `boot_params` with the `memcpy` function. The next call of the `sanitize_boot_params` function which fills some fields of the `boot_params` structure like `ext_ramdisk_image` and etc... if bootloaders which fail to initialize unknown fields in `boot_params` to zero. After this we're getting address of the command line with the call of the `get_cmd_line_ptr` function:
 
@@ -63,7 +63,7 @@ cmd_line_ptr |= (u64)boot_params.ext_cmd_line_ptr << 32;
 return cmd_line_ptr;
 ```
 
-which get the 64-bit address of the command line from the kernel boot header and returns it. In the last step we check that we got `cmd_line_pty`, getting it's virtual address and copy it to the `boot_command_line` which is just array of bytes:
+which gets the 64-bit address of the command line from the kernel boot header and returns it. In the last step we check that we got `cmd_line_pty`, getting its virtual address and copy it to the `boot_command_line` which is just an array of bytes:
 
 ```C
 extern char __initdata boot_command_line[];
@@ -71,7 +71,7 @@ extern char __initdata boot_command_line[];
 
 After this we will have copied kernel command line and `boot_params` structure. In the next step we can see call of the `load_ucode_bsp` function which loads processor microcode, but we will not see it here.
 
-After microcode was loaded we can see the check of the `console_loglevel` and the `early_printk` function which prints `Kernel Alive` string. But you'll never see this output because `early_printk` not initilized yet. It is a minor bug in the kernel and i sent the patch - [commit](http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=91d8f0416f3989e248d3a3d3efb821eda10a85d2) and you will see it in the mainline soon. So you can skip this code.
+After microcode was loaded we can see the check of the `console_loglevel` and the `early_printk` function which prints `Kernel Alive` string. But you'll never see this output because `early_printk` is not initilized yet. It is a minor bug in the kernel and i sent the patch - [commit](http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=91d8f0416f3989e248d3a3d3efb821eda10a85d2) and you will see it in the mainline soon. So you can skip this code.
 
 Move on init pages
 --------------------------------------------------------------------------------
