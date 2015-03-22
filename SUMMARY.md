@@ -9,7 +9,7 @@
 * [Initialization](Initialization/README.md)
     * [First steps in the kernel](Initialization/linux-initialization-1.md)
     * [Early interrupts handler](Initialization/linux-initialization-2.md)
-    * [Kernel entry point]()
+    * [Last preparations before the kernel entry point](linux-initialization-3.md)
 * [Data Structures in the Linux Kernel](DataStructures/README.md)
     * [Doubly linked list](DataStructures/dlist.md)
 * [Theory](Theory/README.md)
