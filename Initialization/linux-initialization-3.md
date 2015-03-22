@@ -1,10 +1,10 @@
 Kernel initialization. Part 3.
 ================================================================================
 
-Kernel entry point
+Last preparations before the kernel entry point
 --------------------------------------------------------------------------------
 
-This is third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. But before we will see call of the `start_kernel` function, we must do some preparations. So let's continue.
+This is third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we will see call of the `start_kernel` function, we must do some preparations. So let's continue.
 
 Store real mode data in the
 --------------------------------------------------------------------------------
