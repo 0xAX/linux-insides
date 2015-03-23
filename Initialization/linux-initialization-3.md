@@ -181,7 +181,7 @@ if (paravirt_enabled())
 	return;
 ```
 
-we exit from the `reserve_ebda_region` function if paravirtualization is enabled because if it enabeled the extended bios data are is absent. In the next step we need to get the end of the low memory:
+we exit from the `reserve_ebda_region` function if paravirtualization is enabled because if it enabled the extended bios data area is absent. In the next step we need to get the end of the low memory:
 
 ```C
 lowmem = *(unsigned short *)__va(BIOS_LOWMEM_KILOBYTES);
