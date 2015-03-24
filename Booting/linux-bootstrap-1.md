@@ -106,8 +106,6 @@ Now the BIOS has started to work. After initializing and checking the hardware, 
 [BITS 16]
 [ORG  0x7c00]
 
-jmp boot
-
 boot:
     mov al, '!'
     mov ah, 0x0e

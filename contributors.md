@@ -27,3 +27,4 @@ Thank you to all contributors:
 * [Ciro Santilli](https://github.com/cirosantilli)
 * [Kevin Soules](https://github.com/eax64)
 * [Fabio Pozzi](https://github.com/fabiopozzi)
+* [Kevin Swinton](https://github.com/kevinjswinton)
