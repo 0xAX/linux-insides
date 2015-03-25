@@ -28,3 +28,8 @@ Thank you to all contributors:
 * [Kevin Soules](https://github.com/eax64)
 * [Fabio Pozzi](https://github.com/fabiopozzi)
 * [Kevin Swinton](https://github.com/kevinjswinton)
+* [Leandro Moreira](https://github.com/leandromoreira)
+* [LYF610400210](https://github.com/LYF610400210)
+* [Cam Cope](https://github.com/ccope)
+* [Miquel Sabaté Solà](https://github.com/mssola)
+
