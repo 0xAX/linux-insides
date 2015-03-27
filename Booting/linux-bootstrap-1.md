@@ -436,16 +436,18 @@ If `CAN_USE_HEAP` bit is set, put `heap_end_ptr` to `dx` which points to `_end` 
 Bss setup
 --------------------------------------------------------------------------------
 
-Last two steps before we can jump to see code need to setup [bss](https://en.wikipedia.org/wiki/.bss) and check magic signature. Signature checking:
+The last two steps that need to happen before we can jump to the main C code, are that we need to set up the [bss](https://en.wikipedia.org/wiki/.bss) area, and check the "magic" signature. Firstly, signature checking:
 
 ```assembly
 cmpl	$0x5a5aaa55, setup_sig
 jne	setup_bad
 ```
 
-just consists of comparing of [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) and `0x5a5aaa55` number, and if they are not equal jump to error printing.
+This simply consists of comparing the [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) against the magic number `0x5a5aaa55`; if they are not equal, a fatal error is reported.
 
-Ok now we have correct segment registers, stack, need only setup bss and jump to C code. Bss section used for storing statically allocated uninitialized data. Here is the code:
+But if the magic number matches, knowing we have a set of correct segment registers, and a stack, we need only setup the bss section before jumping into the C code.
+
+The bss section is used for storing statically allocated, uninitialized, data. Linux carefully ensures this area of memory is first blanked, using the following code:
 
 ```assembly
 	movw	$__bss_start, %di
@@ -456,7 +458,7 @@ Ok now we have correct segment registers, stack, need only setup bss and jump to
 	rep; stosl
 ```
 
-First of all we put [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) address in `di` and `_end + 3` (+3 - align to 4 bytes) in `cx`. Clear `eax` register with `xor` instruction and calculate size of BSS section (put in `cx`). Divide `cx` by 4 and repeat `cx` times `stosl` instruction which stores value of `eax` (it is zero) and increase `di`by the size of `eax`. In this way, we write zeros from `__bss_start` to `_end`:
+First of all the [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) address is moved into `di`, and the `_end + 3` address (+3 - aligns to 4 bytes) is moved into `cx`. The `eax` register is cleared (using an `xor` instruction), and the bss section size (`cx`-`di`) is calculated and put into `cx`. Then, `cx` is divided by four (the size of a 'word'), and the `stosl` instruction is repeatedly used, storing the value of `eax` (zero) into the address pointed to by `di`, and automatically increasing `di` by four (this occurs until `cx` reaches zero). The net effect of this code, is that zeros are written through all words in memory from `__bss_start` to `_end`:
 
 ![bss](http://oi59.tinypic.com/29m2eyr.jpg)
 
