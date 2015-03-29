@@ -24,5 +24,6 @@
 * [Misc]()
     * [Kernel building and instalation]() 
     * [Write and Submit your first Linux kernel Patch]() 
+    * [Data types in the kernel]()
 * [Useful links](LINKS.md)
 * [Contributors](contributors.md)
