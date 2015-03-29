@@ -28,7 +28,7 @@ struct memblock {
 };
 ```
 
-This structure contains five fields. First is `bottom_up` which allows to allocate memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three feilds describes the type of the memory block. It can be: reserved, memory andphysical memory if `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled. Now we met yet another data structure - `memblock_type`. Let's look on its definition:
+This structure contains five fields. First is `bottom_up` which allows to allocate memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three fields describes the type of the memory block. It can be: reserved, memory and physical memory if `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled. Now we met yet another data structure - `memblock_type`. Let's look on its definition:
 
 ```C
 struct memblock_type {
