@@ -9,9 +9,7 @@ A series of posts about the linux kernel and its insides.
 
 **Support** If you like `linux-insides` you can support me with: 
 
-[![Flattr linux-insides](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=0xAX&url=https://github.com/0xAX/linux-insides/&title=linux-insed)
-
-[![Support at gratipay](http://img.shields.io/gratipay/0xAX.svg)](https://gratipay.com/0xAX/)
+[![Flattr linux-insides](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=0xAX&url=https://github.com/0xAX/linux-insides/&title=linux-insed) [![Support at gratipay](http://img.shields.io/gratipay/0xAX.svg)](https://gratipay.com/0xAX/)
 
 
 
