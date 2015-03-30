@@ -4,7 +4,7 @@ Data Structures in the Linux Kernel
 Doubly linked list
 --------------------------------------------------------------------------------
 
-Linux kernel provides it's own doubly linked list implementation which you can find in the [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h). We will start `Data Structures in the Linux kernel` from the doubly linked list data structure. Why? Because it is very popular in the kernel, just try to [search](http://lxr.free-electrons.com/ident?i=list_head)
+Linux kernel provides its own doubly linked list implementation which you can find in the [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h). We will start `Data Structures in the Linux kernel` from the doubly linked list data structure. Why? Because it is very popular in the kernel, just try to [search](http://lxr.free-electrons.com/ident?i=list_head)
 
 First of all let's look on the main structure:
 
@@ -24,7 +24,7 @@ struct GList {
 };
 ```
 
-Usually linked list structure contains pointer to the item. Linux kernel implementation of the list has not. So the main question is here - `where list stores data?`. Actually implementation of lists in the kernel is - `Intrusive list`. An intrusive linked list does not contain data in it's nodes and nodes just contain pointers to the to the next and previous node and list nodes part of the data that are added to the list. This makes data structure generic, so it does not care about entry data type anymore.
+Usually a linked list structure contains a pointer to the item. Linux kernel implementation of the list does not. So the main question is - `where does the list store the data?`. The actual implementation of lists in the kernel is - `Intrusive list`. An intrusive linked list does not contain data in its nodes - A node just contains pointers to the next and previous node and list nodes part of the data that are added to the list. This makes the data structure generic, so it does not care about entry data type anymore.
 
 For example:
 
@@ -35,7 +35,7 @@ struct nmi_desc {
 };
 ```
 
-Let's look on some examples, how `list_head` uses in the kernel. As i already wrote about, there are many, really many different places where lists are used in the kernel. Let's look for example in miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/master/drivers/char/misc.c) for writing small drivers for handling simple hardware or virtual devices. This drivers share major number:
+Let's look at some examples, how `list_head` is used in the kernel. As I already wrote about, there are many, really many different places where lists are used in the kernel. Let's look for example in miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/master/drivers/char/misc.c) for writing small drivers for handling simple hardware or virtual devices. This drivers share major number:
 
 ```C
 #define MISC_MAJOR              10
@@ -205,7 +205,7 @@ int main() {
 
 will print `2`.
 
-The next point is `typeof`, it's simple. As you can understand from it's name, it just returns the type of the given varible. When I first time saw implementation of the `container_of` macro, the stranges thing for me was the zero in the `((type *)0)` expression. Actually this pointers magic calculates the offset of the given field from the address of the structure, but as we have `0` here, it will be just adds offset of the given field to zero. Let's look on the one simple example:
+The next point is `typeof`, it's simple. As you can understand from its name, it just returns the type of the given varible. When I first time saw implementation of the `container_of` macro, the stranges thing for me was the zero in the `((type *)0)` expression. Actually this pointers magic calculates the offset of the given field from the address of the structure, but as we have `0` here, it will be just adds offset of the given field to zero. Let's look on the one simple example:
 
 ```C
 #include <stdio.h>
@@ -224,7 +224,7 @@ int main() {
 
 will print `0x5`.
 
-The next offsetof macro calculates offset from the beggining of the structure to the given structure's field. It's implementation very similar to the previous code:
+The next offsetof macro calculates offset from the beginning of the structure to the given structure's field. Its implementation is very similar to the previous code:
 
 ```C
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
