@@ -32,4 +32,5 @@ Thank you to all contributors:
 * [LYF610400210](https://github.com/LYF610400210)
 * [Cam Cope](https://github.com/ccope)
 * [Miquel Sabaté Solà](https://github.com/mssola)
+* [Michael Aquilina](https://github.com/MichaelAquilina)
 
