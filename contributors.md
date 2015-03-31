@@ -33,4 +33,5 @@ Thank you to all contributors:
 * [Cam Cope](https://github.com/ccope)
 * [Miquel Sabaté Solà](https://github.com/mssola)
 * [Michael Aquilina](https://github.com/MichaelAquilina)
+* [Gabriel Sullice](https://github.com/gabesullice)
 
