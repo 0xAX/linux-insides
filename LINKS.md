@@ -32,3 +32,8 @@ GCC and GAS
 
 * [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
 * [Assembler Directives](http://www.chemie.fu-berlin.de/chemnet/use/info/gas/gas_toc.html#TOC65)
+
+Other architectures
+------------------------
+
+[PowerPC and Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
