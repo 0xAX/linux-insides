@@ -10,6 +10,8 @@
     * [First steps in the kernel](Initialization/linux-initialization-1.md)
     * [Early interrupts handler](Initialization/linux-initialization-2.md)
     * [Last preparations before the kernel entry point](Initialization/linux-initialization-3.md)
+    * [Kernel entry point]()
+    * [Continue architecture-specific boot-time initializations]()
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
 * [Data Structures in the Linux Kernel](DataStructures/README.md)
