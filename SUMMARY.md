@@ -12,6 +12,8 @@
     * [Last preparations before the kernel entry point](Initialization/linux-initialization-3.md)
     * [Kernel entry point]()
     * [Continue architecture-specific boot-time initializations]()
+* [Initial ram disk]()
+   * [initrd]()
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
 * [Data Structures in the Linux Kernel](DataStructures/README.md)
