@@ -4,15 +4,15 @@ Linux kernel memory management Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-Memory management is a one of the most complex (and i think that it is the most complex) parts of the operating system kernel. In the [last preparations before the kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html) part we stopped right before call of the `start_kernel` function. This function makes initialization of the all kernel features (including architecture-dependent features) before the kernel will run first `init` process. You may remember as we built early page tables, identity page tables and fixmap page tables in the boot time. No compilcated memory management is working now. Now as `start_kernel` function called we will see the transition to the more complex data structures and techniques for memory management. For good understand initialization process of the linux kernel we need to have clear understanding of the techniques. This chapter will provide overview of the different parts of the linux kernel memory management framework and its API and we will start from the `memblock`.
+Memory management is a one of the most complex (and I think that it is the most complex) parts of the operating system kernel. In the [last preparations before the kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html) part we stopped right before call of the `start_kernel` function. This function initializes all the kernel features (including architecture-dependent features) before the kernel runs the first `init` process. You may remember as we built early page tables, identity page tables and fixmap page tables in the boot time. No compilcated memory management is working yet. When the `start_kernel` function is called we will see the transition to more complex data structures and techniques for memory management. For a good understanding of the initialization process in the linux kernel we need to have clear understanding of the techniques. This chapter will provide an overview of the different parts of the linux kernel memory management framework and its API, starting from the `memblock`.
 
 Memblock
 --------------------------------------------------------------------------------
 
-Memblock is one of methods of managing memory regions during the early bootstrap period while when usual kernel memory allocators are not up and
-running yet. Previously it was called - `Logical Memory Block`, but from the [patch](https://lkml.org/lkml/2010/7/13/68) by Yinghai Lu, it was renamed to the `memblock`. As Linux kernel for `x86_64` architecture uses this method. We already met `memblock` in the [Last preparations before the kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html) part. And now time to get acquainted with it closer. We will see how it implemented.
+Memblock is one of methods of managing memory regions during the early bootstrap period while the usual kernel memory allocators are not up and
+running yet. Previously it was called - `Logical Memory Block`, but from the [patch](https://lkml.org/lkml/2010/7/13/68) by Yinghai Lu, it was renamed to the `memblock`. As Linux kernel for `x86_64` architecture uses this method. We already met `memblock` in the [Last preparations before the kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html) part. And now time to get acquainted with it closer. We will see how it is implemented.
 
-We will start to learn `memblock` from the data structures. Definitions of the all data structures you can find in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/include/linux/memblock.h) header file.
+We will start to learn `memblock` from the data structures. Definitions of the all data structures can be found in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/include/linux/memblock.h) header file.
 
 The first structure has the same name as this part and it is:
 
@@ -28,7 +28,7 @@ struct memblock {
 };
 ```
 
-This structure contains five fields. First is `bottom_up` which allows to allocate memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three feilds describes the type of the memory block. It can be: reserved, memory andphysical memory if `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled. Now we met yet another data structure - `memblock_type`. Let's look on its definition:
+This structure contains five fields. First is `bottom_up` which allows to allocate memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three fields describes the type of the memory block. It can be: reserved, memory and physical memory if `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled. Now we met yet another data structure - `memblock_type`. Let's look on its definition:
 
 ```C
 struct memblock_type {

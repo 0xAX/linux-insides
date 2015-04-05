@@ -33,7 +33,14 @@ GCC and GAS
 * [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
 * [Assembler Directives](http://www.chemie.fu-berlin.de/chemnet/use/info/gas/gas_toc.html#TOC65)
 
+
 Important data structures
 --------------------------
 
 * [task_struct definition](http://lxr.free-electrons.com/source/include/linux/sched.h#L1274)
+
+Other architectures
+------------------------
+
+* [PowerPC and Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
+
