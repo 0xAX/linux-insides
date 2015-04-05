@@ -315,7 +315,7 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 
 Yeah, it just returns `1` everytime. Actually we need in it here only for one purpose: In compile time it checks that given `bitmap` is a bitmap, or with another words it checks that given `bitmap` has type - `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting array of `unsigned long` to the `struct cpumask *`. Now we can call `cpumask_set_cpu` function with the `cpu` - 0 and `struct cpumask *cpu_possible_bits`. This function makes only one call of the `set_bit` function which sets the given `cpu` in the cpumask. All of these `set_cpu_*` functions work on the same principle.
 
-If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear for you, don't worry about it. Soon i will publish special part about it in the [theory](http://0xax.gitbooks.io/linux-insides/content/Theory/index.html) chapter.
+If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear for you, don't worry about it. You can get more info by reading of the special part about it -  [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).
 
 As we activated the bootstrap processor, time to go to the next function in the `start_kernel.` Now it is `page_address_init`, but this function does nothing in our case, because it executes only when all `RAM` can't be mapped directly.
 
