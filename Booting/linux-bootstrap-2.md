@@ -114,7 +114,7 @@ Segment registers don't contain the base address of the segment as in the real m
 
 Where `Index` shows the index number of the descriptor in descriptor table. `TI` shows where to search for the descriptor: in the global descriptor table or local. And `RPL` is the privilege level.
 
-Every segment register has a visible and hidden part. When a selector is loaded into one of the segment registers, it will be stored into the visible part. The hidden part contains the base address, limit and access information of the descriptor which pointed to the selector. The following steps are nneded to get the physical address in the protected mode:
+Every segment register has a visible and hidden part. When a selector is loaded into one of the segment registers, it will be stored into the visible part. The hidden part contains the base address, limit and access information of the descriptor which pointed to the selector. The following steps are needed to get the physical address in the protected mode:
 
 * Segment selector must be loaded in one of the segment registers;
 * CPU tries to find (by GDT address + Index from selector) and load the descriptor into the hidden part of segment register;
