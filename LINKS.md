@@ -43,4 +43,3 @@ Other architectures
 ------------------------
 
 * [PowerPC and Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
-
