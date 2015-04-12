@@ -11,7 +11,7 @@
     * [Early interrupts handler](Initialization/linux-initialization-2.md)
     * [Last preparations before the kernel entry point](Initialization/linux-initialization-3.md)
     * [Kernel entry point](Initialization/linux-initialization-4.md)
-    * [Continue architecture-specific boot-time initializations]()
+    * [Continue architecture-specific boot-time initializations](Initialization/linux-initialization-5.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps]()
