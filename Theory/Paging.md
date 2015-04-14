@@ -14,9 +14,7 @@ In my view, memory management is one of the most complex part of the linux kerne
 
 As Intel manual says:
 
-```
-Paging provides a mech-anism for implementing a conventional demand-paged, virtual-memory system where sections of a program’s execution environment are mapped into physical memory as needed.
-```
+> Paging provides a mechanism for implementing a conventional demand-paged, virtual-memory system where sections of a program’s execution environment are mapped into physical memory as needed.
 
 So... I will try to explain how paging works in theory in this post. Of course it will be closely related with the linux kernel for `x86_64`, but we will not go into deep details (at least in this post).
 
