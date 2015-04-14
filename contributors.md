@@ -34,4 +34,5 @@ Thank you to all contributors:
 * [Miquel Sabaté Solà](https://github.com/mssola)
 * [Michael Aquilina](https://github.com/MichaelAquilina)
 * [Gabriel Sullice](https://github.com/gabesullice)
+* [Michael Drüing](https://github.com/darkstar)
 
