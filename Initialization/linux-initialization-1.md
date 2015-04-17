@@ -122,7 +122,7 @@ The first step before we started to setup identity paging, need to correct follo
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-Here we need to correct `early_level4_pgt` and other addresses because as I wrote above kernel can be runned not at the default `0x1000000` address. `rbp` register contains actuall address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what this labels means. First of all let's look on their definition:
+Here we need to correct `early_level4_pgt` and other addresses of the page table directories, because as I wrote above, kernel can be runned not at the default `0x1000000` address. `rbp` register contains actuall address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what this labels means. First of all let's look on their definition:
 
 ```assembly
 NEXT_PAGE(early_level4_pgt)
