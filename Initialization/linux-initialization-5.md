@@ -185,7 +185,7 @@ memset(bm_pte, 0, sizeof(bm_pte));
 pmd_populate_kernel(&init_mm, pmd, bm_pte);
 ```
 
-That's all for this. If you feeling missunderstanding, don't worry. There will be special parts about `ioremap` and `fixmaps` in the [Linux Kernel Memory Management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) chapter.
+That's all for this. If you feeling missunderstanding, don't worry. There is special part about `ioremap` and `fixmaps` in the [Linux Kernel Memory Management. Part 2](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md) chapter.
 
 Obtaining major and minor numbers for the root device
 --------------------------------------------------------------------------------
