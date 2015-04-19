@@ -11,7 +11,7 @@ Protected mode
 
 Before we can move to the native Intel64 [Long mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode. What is the protected mode? The Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode. The Main reason to move away from the real mode that there is very limited access to the RAM. As you can remember from the previous part, there is only 2^20 bytes or 1 megabyte, sometimes even only 640 kilobytes.
 
-Protected mode brought many changes, but the main is a different memory management.The 24-bit address bus was replaced with a 32-bit address bus. It allows to access to 4 gigabytes of physical adress space. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added which we will see in the next parts.
+Protected mode brought many changes, but the main is a different memory management.The 24-bit address bus was replaced with a 32-bit address bus. It allows to access to 4 gigabytes of physical address space. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added which we will see in the next parts.
 
 Memory management in the protected mode is divided into two, almost independent parts:
 

@@ -14,13 +14,13 @@ Kernel provides API for creating per-cpu variables - `DEFINE_PER_CPU` macro:
 
 This macro defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) as many other macros for work with per-cpu variables. Now we will see how this feature implemented.
 
-Take a look on `DECLARE_PER_CPU` definition. We see that it takes 2 paramters: `type` and `name`. So we can use it for creation per-cpu variable, for example like this:
+Take a look on `DECLARE_PER_CPU` definition. We see that it takes 2 parameters: `type` and `name`. So we can use it for creation per-cpu variable, for example like this:
 
 ```C
 DEFINE_PER_CPU(int, per_cpu_n)
 ```
 
-We pass type of our variable and name. `DEFI_PER_CPU` calls `DEFINE_PER_CPU_SECTION` macro and passes the same two paramaters and empty string to it. Let's look on the defintion of the `DEFINE_PER_CPU_SECTION`:
+We pass type of our variable and name. `DEFI_PER_CPU` calls `DEFINE_PER_CPU_SECTION` macro and passes the same two paramaters and empty string to it. Let's look on the definition of the `DEFINE_PER_CPU_SECTION`:
 
 ```C
 #define DEFINE_PER_CPU_SECTION(type, name, sec)    \
@@ -83,7 +83,7 @@ and
 #define raw_cpu_ptr(ptr)        per_cpu_ptr(ptr, 0)
 ```
 
-where `per_cpu_ptr` returns a pointer to the per-cpu variable for the given cpu (second paramter). After that we got per-cpu variables and made any manipulations on it, we must call `put_cpu_var` macro which enables preemption with call of `preempt_enable` function. So the typical usage of a per-cpu variable is following:
+where `per_cpu_ptr` returns a pointer to the per-cpu variable for the given cpu (second parameter). After that we got per-cpu variables and made any manipulations on it, we must call `put_cpu_var` macro which enables preemption with call of `preempt_enable` function. So the typical usage of a per-cpu variable is following:
 
 ```C
 get_cpu_var(var);
@@ -115,7 +115,7 @@ do {
 
 which makes given `ptr` type of `const void __percpu *`, 
 
-After this we can see the call of the `SHIFT_PERCPU_PTR` macro with two paramters. At first paramter we pass our ptr and sencond we pass cpu number to the `per_cpu_offset` macro which:
+After this we can see the call of the `SHIFT_PERCPU_PTR` macro with two parameters. At first parameter we pass our ptr and sencond we pass cpu number to the `per_cpu_offset` macro which:
 
 ```C
 #define per_cpu_offset(x) (__per_cpu_offset[x])
@@ -141,7 +141,7 @@ That's all! Of course it is not full API, but the general part. It can be hard f
 
 Let's again look on the algorithm of getting pointer on per-cpu variable:
 
-* Kernel creates multiply `.data..percpu` sections (ones perc-pu) during intialization process;
+* Kernel creates multiply `.data..percpu` sections (ones perc-pu) during initialization process;
 * All variables created with the `DEFINE_PER_CPU` macro will be reloacated to the first section or for CPU0;
 * `__per_cpu_offset` array filled with the distance (`BOOT_PERCPU_OFFSET`) between `.data..percpu` sections;
 * When `per_cpu_ptr` called for example for getting pointer on the certain per-cpu variable for the third CPU, `__per_cpu_offset` array will be accessed, where every index points to the certain CPU.

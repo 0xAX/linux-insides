@@ -19,7 +19,7 @@ set_cpu_present(cpu, true);
 set_cpu_possible(cpu, true);
 ```
 
-`set_cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depends on `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. Implementation of the all of these functions are very similar. Every function checks the second paramter. If it is `true`, calls `cpumask_set_cpu` or `cpumask_clear_cpu` otherwise.
+`set_cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depends on `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. Implementation of the all of these functions are very similar. Every function checks the second parameter. If it is `true`, calls `cpumask_set_cpu` or `cpumask_clear_cpu` otherwise.
 
 There are two ways for a `cpumask` creation. First is to use `cpumask_t`. It defined as:
 
@@ -27,7 +27,7 @@ There are two ways for a `cpumask` creation. First is to use `cpumask_t`. It def
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 ```
 
-It wraps `cpumask` structure which contains one bitmak `bits` field. `DECLARE_BITMAP` macro gets two paramters:
+It wraps `cpumask` structure which contains one bitmak `bits` field. `DECLARE_BITMAP` macro gets two parameters:
 
 * bitmap name;
 * number of bits.
@@ -70,7 +70,7 @@ The second way to define cpumask is to use `DECLARE_BITMAP` macro directly and `
                             : (void *)sizeof(__check_is_bitmap(bitmap))))
 ```
 
-We can see ternary operator operator here which is `true` everytime. `__check_is_bitmap` inline function defined as:
+We can see ternary operator operator here which is `true` every time. `__check_is_bitmap` inline function defined as:
 
 ```C
 static inline int __check_is_bitmap(const unsigned long *bitmap)
@@ -79,7 +79,7 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 }
 ```
 
-And returns `1` everytime. We need in it here only for one purpose: In compile time it checks that given `bitmap` is a bitmap, or with another words it checks that given `bitmap` has type - `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting array of `unsigned long` to the `struct cpumask *`.
+And returns `1` every time. We need in it here only for one purpose: In compile time it checks that given `bitmap` is a bitmap, or with another words it checks that given `bitmap` has type - `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting array of `unsigned long` to the `struct cpumask *`.
 
 cpumask API
 --------------------------------------------------------------------------------
@@ -103,7 +103,7 @@ void set_cpu_online(unsigned int cpu, bool online)
 }
 ```
 
-First of all it checks the second `state` paramter and calls `cpumask_set_cpu` or `cpumask_clear_cpu` depends on it. Here we can see casting to the `struct cpumask *` of the second paramter in the `cpumask_set_cpu`. In our case it is `cpu_online_bits` which is bitmap and defined as:
+First of all it checks the second `state` parameter and calls `cpumask_set_cpu` or `cpumask_clear_cpu` depends on it. Here we can see casting to the `struct cpumask *` of the second parameter in the `cpumask_set_cpu`. In our case it is `cpu_online_bits` which is bitmap and defined as:
 
 ```C
 static DECLARE_BITMAP(cpu_online_bits, CONFIG_NR_CPUS) __read_mostly;
@@ -118,7 +118,7 @@ static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
 }
 ```
 
-`set_bit` function takes two paramter too, and sets a given bit (first paramter) in the memory (second paramter or `cpu_online_bits` bitmap). We can see here that before `set_bit` will be called, its two paramter will be passed to the
+`set_bit` function takes two parameter too, and sets a given bit (first parameter) in the memory (second parameter or `cpu_online_bits` bitmap). We can see here that before `set_bit` will be called, its two parameter will be passed to the
 
 * cpumask_check;
 * cpumask_bits.
@@ -153,7 +153,7 @@ This function looks scarry, but it is not so hard as it seems. First of all it p
 #define IS_IMMEDIATE(nr)    (__builtin_constant_p(nr))
 ```
 
-`__builtin_constant_p` checks that given paramter is known constant at compile-time. As our `cpu` is not compile-time constant, `else` clause will be executed:
+`__builtin_constant_p` checks that given parameter is known constant at compile-time. As our `cpu` is not compile-time constant, `else` clause will be executed:
 
 ```C
 asm volatile(LOCK_PREFIX "bts %1,%0" : BITOP_ADDR(addr) : "Ir" (nr) : "memory");
@@ -163,7 +163,7 @@ Let's try to understand how it works step by step:
 
 `LOCK_PREFIX` is a x86 `lock` instruction. This instruction tells to the cpu to occupy the system bus while instruction will be executed. This allows to synchronize memory access, preventing simultaneous access of multiple processors (or devices - DMA controller for example) to one memory cell.
 
-`BITOP_ADDR` casts given paramter to the `(*(volatile long *)` and adds `+m` constraints. `+` means that this operand is bot read and written by the instruction. `m` shows that this is memory operand. `BITOP_ADDR` is defined as:
+`BITOP_ADDR` casts given parameter to the `(*(volatile long *)` and adds `+m` constraints. `+` means that this operand is bot read and written by the instruction. `m` shows that this is memory operand. `BITOP_ADDR` is defined as:
 
 ```C
 #define BITOP_ADDR(x) "+m" (*(volatile long *) (x))
@@ -187,7 +187,7 @@ cpumask provides the set of macro for getting amount of the CPUs with different 
 #define num_online_cpus()	cpumask_weight(cpu_online_mask)
 ```
 
-This macro returns amount of the `online` CPUs. It calls `cpumask_weight` function with the `cpu_online_mask` bitmap (read about about it). `cpumask_wieght` function makes an one call of the `bitmap_wiegt` function with two paramters:
+This macro returns amount of the `online` CPUs. It calls `cpumask_weight` function with the `cpu_online_mask` bitmap (read about about it). `cpumask_wieght` function makes an one call of the `bitmap_wiegt` function with two parameters:
 
 * cpumask bitmap;
 * `nr_cpumask_bits` - which is `NR_CPUS` in our case.

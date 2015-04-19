@@ -317,7 +317,7 @@ struct mem_vector {
 
 The next step after we collected all unsafe memory regions in the `mem_avoid` array will be search of the random address which does not overlap with the unsafe regions with the `find_random_addr` function.
 
-First of all we can see allign of the output address in the `find_random_addr` function:
+First of all we can see align of the output address in the `find_random_addr` function:
 
 ```C
 minimum = ALIGN(minimum, CONFIG_PHYSICAL_ALIGN);
@@ -399,7 +399,7 @@ static unsigned long slots[CONFIG_RANDOMIZE_BASE_MAX_OFFSET /
 static unsigned long slot_max;
 ```
 
-After `process_e820_entry` will be executed, we will have array of the addressess which are safe for the decompressed kernel. Next we call `slots_fetch_random` function for getting random item from this array:
+After `process_e820_entry` will be executed, we will have array of the addresses which are safe for the decompressed kernel. Next we call `slots_fetch_random` function for getting random item from this array:
 
 ```C
 if (slot_max == 0)
@@ -418,7 +418,7 @@ After all these checks will see the familiar message:
 Decompressing Linux... 
 ```
 
-and call `decompress` function which will decompress the kernel. `decompress` function depends on what decompression algorithm was choosen during kernel compilartion:
+and call `decompress` function which will decompress the kernel. `decompress` function depends on what decompression algorithm was chosen during kernel compilartion:
 
 ```C
 #ifdef CONFIG_KERNEL_GZIP

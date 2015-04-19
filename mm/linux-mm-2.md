@@ -61,7 +61,7 @@ first of all it check that given index of `fixed_addresses` enum is not greater 
 #define __fix_to_virt(x)        (FIXADDR_TOP - ((x) << PAGE_SHIFT))
 ```
 
-Here we shift left the given `fix-mapped` address index on the `PAGE_SHIFT` which determines size of a page as I wrote above and substract it from the `FIXADDR_TOP` which is the highest address of the `fix-mapped` area. There is inverse function for getting `fix-mapped` address from a virtual address:
+Here we shift left the given `fix-mapped` address index on the `PAGE_SHIFT` which determines size of a page as I wrote above and subtract it from the `FIXADDR_TOP` which is the highest address of the `fix-mapped` area. There is inverse function for getting `fix-mapped` address from a virtual address:
 
 ```C
 static inline unsigned long virt_to_fix(const unsigned long vaddr)
@@ -79,7 +79,7 @@ static inline unsigned long virt_to_fix(const unsigned long vaddr)
 
 A PFN is simply in index within physical memory that is counted in page-sized units. PFN for a physical address could be trivially defined as (page_phys_addr >> PAGE_SHIFT);
 
-`__virt_to_fix` clears first 12 bits in the given address, substracts it from the last address the of `fix-mapped` area (`FIXADDR_TOP`) and shifts right result on `PAGE_SHIFT` which is `12`. Let I explain how it works. As i already wrote we will crear first 12 bits in the given address with `x & PAGE_MASK`. As we substract this from the `FIXADDR_TOP`, we will get last 12 bits of the `FIXADDR_TOP` which are represent. We know that first 12 bits of the virtual address present offset in the page frame. With the shiting it on `PAGE_SHIFT` we will get `Page frame number` which is just all bits in a virtual address besides first 12 offset bits. `Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) of the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. We used `fix-mapped` area in the early `ioremap` initialization. Let's look on it and try to understand what is it `ioremap`, how it implemented in the kernel and how it releated with the `fix-mapped` addresses.
+`__virt_to_fix` clears first 12 bits in the given address, subtracts it from the last address the of `fix-mapped` area (`FIXADDR_TOP`) and shifts right result on `PAGE_SHIFT` which is `12`. Let I explain how it works. As i already wrote we will crear first 12 bits in the given address with `x & PAGE_MASK`. As we subtract this from the `FIXADDR_TOP`, we will get last 12 bits of the `FIXADDR_TOP` which are represent. We know that first 12 bits of the virtual address present offset in the page frame. With the shiting it on `PAGE_SHIFT` we will get `Page frame number` which is just all bits in a virtual address besides first 12 offset bits. `Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) of the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. We used `fix-mapped` area in the early `ioremap` initialization. Let's look on it and try to understand what is it `ioremap`, how it implemented in the kernel and how it releated with the `fix-mapped` addresses.
 
 ioremap
 --------------------------------------------------------------------------------
@@ -164,7 +164,7 @@ struct resource iomem_resource = {
         .flags  = IORESOURCE_MEM,
 };
 
-As I wrote about `request_regions` is used for registering of I/O port region and this macro used in many [places](http://lxr.free-electrons.com/ident?i=request_region) in the kernel. For example let's look on the [drivers/char/rtc.c](https://github.com/torvalds/linux/blob/master/char/rtc.c). This source code file provides [Real Time Clock](http://en.wikipedia.org/wiki/Real-time_clock) interface in the linux kernel. As every kernel module, `rtc` module contains `module_init` defintion:
+As I wrote about `request_regions` is used for registering of I/O port region and this macro used in many [places](http://lxr.free-electrons.com/ident?i=request_region) in the kernel. For example let's look on the [drivers/char/rtc.c](https://github.com/torvalds/linux/blob/master/char/rtc.c). This source code file provides [Real Time Clock](http://en.wikipedia.org/wiki/Real-time_clock) interface in the linux kernel. As every kernel module, `rtc` module contains `module_init` definition:
 
 ```C
 module_init(rtc_init);
@@ -254,7 +254,7 @@ static inline const char *e820_type_to_string(int e820_type)
 
 and we can see it in the `/proc/iomem` (read above).
 
-Now let's try to understand how `ioremap` works. We already know little about `ioremap`, we saw it in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initalization. If you have read this part, you can remember call of the `early_ioremap_init` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c). Initialization of the `ioremap` splitten on two parts: there is early part which we can use before normal `ioremap` is available and normal `ioremap` which is available after `vmalloc` initialization and call of the `paging_init`. We do not know anything about `vmalloc` for now, so let's consider early initialization of the `ioremap`. First of all `early_ioremap_init` checks that `fixmap` is aligned on page middle directory boundary:
+Now let's try to understand how `ioremap` works. We already know little about `ioremap`, we saw it in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. If you have read this part, you can remember call of the `early_ioremap_init` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c). Initialization of the `ioremap` splitten on two parts: there is early part which we can use before normal `ioremap` is available and normal `ioremap` which is available after `vmalloc` initialization and call of the `paging_init`. We do not know anything about `vmalloc` for now, so let's consider early initialization of the `ioremap`. First of all `early_ioremap_init` checks that `fixmap` is aligned on page middle directory boundary:
 
 ```C
 BUILD_BUG_ON((fix_to_virt(0) + PAGE_SIZE) & ((1 << PMD_SHIFT) - 1));
@@ -479,7 +479,7 @@ static inline void __native_flush_tlb_single(unsigned long addr)
 }
 ```
 
-or call `__flush_tlb` which just updates `cr3` register as we saw it above. After this step execution of the `__early_set_fixmap` function is finsihed and we can back to the `__early_ioremap` implementation. As we set fixmap area for the given addres, need to save the base virtual address of the I/O Re-mapped area in the `prev_map` with the `slot` index:
+or call `__flush_tlb` which just updates `cr3` register as we saw it above. After this step execution of the `__early_set_fixmap` function is finsihed and we can back to the `__early_ioremap` implementation. As we set fixmap area for the given address, need to save the base virtual address of the I/O Re-mapped area in the `prev_map` with the `slot` index:
 
 ```C
 prev_map[slot] = (void __iomem *)(offset + slot_virt[slot]);
