@@ -138,7 +138,7 @@ In this example we can see that this code will be executed in 16 bit real mode a
 Although you can see binary dump of it with `objdump` util:
 
 ```
-nasm -f binary boot.nasm
+nasm -f bin boot.nasm
 objdump -D -b binary -mi386 -Maddr16,data16,intel boot
 ```
 
