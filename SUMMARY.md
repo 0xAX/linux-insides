@@ -14,7 +14,7 @@
     * [Continue architecture-specific boot-time initializations](Initialization/linux-initialization-5.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
-    * [Fixmaps and ioremap]()
+    * [Fixmaps and ioremap](mm/linux-mm-2.md)
 * [Interrupts]()
 * [vsyscalls and vdso]()
 * [Concepts](Concepts/README.md)
