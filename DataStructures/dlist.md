@@ -133,7 +133,7 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 }
 ```
 
-It just calls internal function `__list_add` with the 3 given paramters:
+It just calls internal function `__list_add` with the 3 given parameters:
 
 * new  - new entry;
 * head - list head after which will be inserted new item;
@@ -230,7 +230,7 @@ The next offsetof macro calculates offset from the beginning of the structure to
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 ```
 
-Let's summarize all about `container_of` macro. `container_of` macro returns address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns it to the `ptr`. Now `ptr` and `__mptr` points have the same address. Techincally we no need in this line, it needs for the type checking. First line ensures that that given structure (`type` paramter) has a member which called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and substracts it from the structure address. That's all.
+Let's summarize all about `container_of` macro. `container_of` macro returns address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns it to the `ptr`. Now `ptr` and `__mptr` points have the same address. Techincally we no need in this line, it needs for the type checking. First line ensures that that given structure (`type` parameter) has a member which called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and subtracts it from the structure address. That's all.
 
 Of course `list_add` and `list_entry` is not only functions which provides `<linux/list.h>`. Implementation of the doubly linked list provides the following API:
 

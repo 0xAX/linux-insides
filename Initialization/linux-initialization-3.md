@@ -136,7 +136,7 @@ As we have `init_level4_pgt` filled with zeros, we set the last `init_level4_pgt
 init_level4_pgt[511] = early_level4_pgt[511];
 ```
 
-Remeber that we dropped all `early_level4_pgt` entries in the `reset_early_page_table` function and kept only kernel high mapping there.
+Remember that we dropped all `early_level4_pgt` entries in the `reset_early_page_table` function and kept only kernel high mapping there.
 
 The last step in the `x86_64_start_kernel` function is the call of the:
 
@@ -250,7 +250,7 @@ lowmem = min(lowmem, LOWMEM_CAP);
 memblock_reserve(lowmem, 0x100000 - lowmem);
 ```
 
-`memblock_reserve` function is defined at [mm/block.c](https://github.com/torvalds/linux/blob/master/mm/block.c) and takes two paramters:
+`memblock_reserve` function is defined at [mm/block.c](https://github.com/torvalds/linux/blob/master/mm/block.c) and takes two parameters:
 
 * base physical address;
 * region size.
@@ -266,7 +266,7 @@ In the previous paragraph we stopped at the call of the `memblock_reserve` funct
 memblock_reserve_region(base, size, MAX_NUMNODES, 0);
 ```
 
-function and passes 4 paramters there:
+function and passes 4 parameters there:
 
 * physical base address of the memory region;
 * size of the memory region;
@@ -382,7 +382,7 @@ NUMA node id depends on `MAX_NUMNODES` macro which is defined in the [include/li
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
 ```
 
-where `NODES_SHIFT` depends on `CONFIG_NODES_SHIFT` configuration paramter and defined as:
+where `NODES_SHIFT` depends on `CONFIG_NODES_SHIFT` configuration parameter and defined as:
 
 ```C
 #ifdef CONFIG_NODES_SHIFT

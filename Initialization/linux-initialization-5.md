@@ -52,7 +52,7 @@ As you can read above, we passed address of the `#DB` handler as `&debug` in the
 asmlinkage void debug(void);
 ```
 
-We can see `asmlinkage` attribute which tells to us that `debug` is function written with [assembly](http://en.wikipedia.org/wiki/Assembly_language). Yeah, again and again assembly :). Implementation of the `#DB` handler as other handlers is in ths [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S) and defined with the `idtentry` assembly macro:
+We can see `asmlinkage` attribute which tells to us that `debug` is function written with [assembly](http://en.wikipedia.org/wiki/Assembly_language). Yeah, again and again assembly :). Implementation of the `#DB` handler as other handlers is in this [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S) and defined with the `idtentry` assembly macro:
 
 ```assembly
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
@@ -163,7 +163,7 @@ The next step is initialization of early `ioremap`. In general there are two way
 
 We already saw first method (`outb/inb` instructions) in the part about linux kernel booting [process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html). The second method is to map I/O physical addresses to virtual addresses. When a physical address is accessed by the CPU, it may refer to a portion of physical RAM which can be mapped on memory of the I/O device. So `ioremap` used to map device memory into kernel address space.
 
-As i wrote above next function is the `early_ioremap_init` which re-maps I/O memory to kernel address space so it can access it. We need to initialize early ioremap for early intialization code which needs to temporarily map I/O or memory regions before the normal mapping functions like `ioremap` are available. Implementation of this function is in the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c). At the start of the `early_ioremap_init` we can see definition of the `pmd` point with `pmd_t` type (which presents page middle directory entry `typedef struct { pmdval_t pmd; } pmd_t;` where `pmdval_t` is `unsigned long`) and make a check that `fixmap` aligned in a correct way:
+As i wrote above next function is the `early_ioremap_init` which re-maps I/O memory to kernel address space so it can access it. We need to initialize early ioremap for early initialization code which needs to temporarily map I/O or memory regions before the normal mapping functions like `ioremap` are available. Implementation of this function is in the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c). At the start of the `early_ioremap_init` we can see definition of the `pmd` point with `pmd_t` type (which presents page middle directory entry `typedef struct { pmdval_t pmd; } pmd_t;` where `pmdval_t` is `unsigned long`) and make a check that `fixmap` aligned in a correct way:
 
 ```C
 pmd_t *pmd;
@@ -196,7 +196,7 @@ After early `ioremap` was initialized, you can see the following code:
 ROOT_DEV = old_decode_dev(boot_params.hdr.root_dev);
 ```
 
-This code obtains major and minor numbers for the root device where `initrd` will be mounted later in the `do_mount_root` function. Major number of the device identifies a driver associated with the device. Minor number reffered on the device controlled by driver. Note that `old_decode_dev` takes one parameter from the `boot_params_structure`. As we can read from the x86 linux kernel boot protocol:
+This code obtains major and minor numbers for the root device where `initrd` will be mounted later in the `do_mount_root` function. Major number of the device identifies a driver associated with the device. Minor number referred on the device controlled by driver. Note that `old_decode_dev` takes one parameter from the `boot_params_structure`. As we can read from the x86 linux kernel boot protocol:
 
 ```
 Field name:	root_dev

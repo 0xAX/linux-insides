@@ -235,13 +235,13 @@ Remember that we have passed `cpu_number` as `pcp` to the `this_cpu_read` from t
 }) 
 ```
 
-Yes, it look a little strange, but it's easy. First of all we can see defintion of the `pscr_ret__` variable with the `int` type. Why int? Ok, `variable` is `common_cpu` and it was declared as per-cpu int variable:
+Yes, it look a little strange, but it's easy. First of all we can see definition of the `pscr_ret__` variable with the `int` type. Why int? Ok, `variable` is `common_cpu` and it was declared as per-cpu int variable:
 
 ```C
 DECLARE_PER_CPU_READ_MOSTLY(int, cpu_number);
 ```
 
-In the next step we call `__verify_pcpu_ptr` with the address of `cpu_number`. `__veryf_pcpu_ptr` used to verifying that given paramter is an per-cpu pointer. After that we set `pscr_ret__` value which depends on the size of the variable. Our `common_cpu` variable is `int`, so it 4 bytes size. It means that we will get `this_cpu_read_4(common_cpu)` in `pscr_ret__`. In the end of the `__pcpu_size_call_return` we just call it. `this_cpu_read_4` is a macro:
+In the next step we call `__verify_pcpu_ptr` with the address of `cpu_number`. `__veryf_pcpu_ptr` used to verifying that given parameter is an per-cpu pointer. After that we set `pscr_ret__` value which depends on the size of the variable. Our `common_cpu` variable is `int`, so it 4 bytes size. It means that we will get `this_cpu_read_4(common_cpu)` in `pscr_ret__`. In the end of the `__pcpu_size_call_return` we just call it. `this_cpu_read_4` is a macro:
 
 ```C
 #define this_cpu_read_4(pcp)       percpu_from_op("mov", pcp)
@@ -276,9 +276,9 @@ set_cpu_present(cpu, true);
 set_cpu_possible(cpu, true);
 ```
 
-All of these functions use the concept - `cpumask`. `cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depends on `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. Implementation of the all of these functions are very similar. Every function checks the second paramter. If it is `true`, calls `cpumask_set_cpu` or `cpumask_clear_cpu` otherwise.
+All of these functions use the concept - `cpumask`. `cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depends on `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. Implementation of the all of these functions are very similar. Every function checks the second parameter. If it is `true`, calls `cpumask_set_cpu` or `cpumask_clear_cpu` otherwise.
 
-For example let's look on `set_cpu_possible`. As we passed `true` as the second paramter, the:
+For example let's look on `set_cpu_possible`. As we passed `true` as the second parameter, the:
 
 ```C
 cpumask_set_cpu(cpu, to_cpumask(cpu_possible_bits));
@@ -304,7 +304,7 @@ As we can see from its definition, `DECLARE_BITMAP` macro expands to the array o
                             : (void *)sizeof(__check_is_bitmap(bitmap))))
 ```
 
-I don't know how about you, but it looked really weird for me at the first time. We can see ternary operator operator here which is `true` everytime, but why the `__check_is_bitmap` here? It's simple, let's look on it:
+I don't know how about you, but it looked really weird for me at the first time. We can see ternary operator operator here which is `true` every time, but why the `__check_is_bitmap` here? It's simple, let's look on it:
 
 ```C
 static inline int __check_is_bitmap(const unsigned long *bitmap)
@@ -313,7 +313,7 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 }
 ```
 
-Yeah, it just returns `1` everytime. Actually we need in it here only for one purpose: In compile time it checks that given `bitmap` is a bitmap, or with another words it checks that given `bitmap` has type - `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting array of `unsigned long` to the `struct cpumask *`. Now we can call `cpumask_set_cpu` function with the `cpu` - 0 and `struct cpumask *cpu_possible_bits`. This function makes only one call of the `set_bit` function which sets the given `cpu` in the cpumask. All of these `set_cpu_*` functions work on the same principle.
+Yeah, it just returns `1` every time. Actually we need in it here only for one purpose: In compile time it checks that given `bitmap` is a bitmap, or with another words it checks that given `bitmap` has type - `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting array of `unsigned long` to the `struct cpumask *`. Now we can call `cpumask_set_cpu` function with the `cpu` - 0 and `struct cpumask *cpu_possible_bits`. This function makes only one call of the `set_bit` function which sets the given `cpu` in the cpumask. All of these `set_cpu_*` functions work on the same principle.
 
 If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear for you, don't worry about it. You can get more info by reading of the special part about it -  [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).
 
@@ -335,7 +335,7 @@ as you can see it just expands to the `printk` call. For this moment we use `pr_
 pr_notice("%s", linux_banner);
 ```
 
-which is just kernel version with some additional paramters:
+which is just kernel version with some additional parameters:
 
 ```
 Linux version 4.0.0-rc6+ (alex@localhost) (gcc version 4.9.1 (Ubuntu 4.9.1-16ubuntu6) ) #319 SMP
@@ -352,7 +352,7 @@ This function starts from the reserving memory block for the kernel `_text` and 
 memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)_text);
 ```
 
-You can read about `memblock` in the [Linux kernel memory management Part 1.](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html). As you can remember `memblock_reserve` function takes two paramters:
+You can read about `memblock` in the [Linux kernel memory management Part 1.](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html). As you can remember `memblock_reserve` function takes two parameters:
 
 * base physical address of a memory block;
 * size of a memor block.
@@ -364,7 +364,7 @@ Base physical address of the `_text` symbol we will get with the `__pa_symbol` m
 	__phys_addr_symbol(__phys_reloc_hide((unsigned long)(x)))
 ```
 
-First of all it calls `__phys_reloc_hide` macro on the given paramter. `__phys_reloc_hide` macro does nothing for `x86_64` and just returns the given paramter. Implementation of the `__phys_addr_symbol` macro is easy. It just substracts the symbol address from the base addres of the kernel text mapping base virtual address (you can remember that it is `__START_KERNEL_map`) and adds `phys_base` which is base address of the `_text`:
+First of all it calls `__phys_reloc_hide` macro on the given parameter. `__phys_reloc_hide` macro does nothing for `x86_64` and just returns the given parameter. Implementation of the `__phys_addr_symbol` macro is easy. It just subtracts the symbol address from the base address of the kernel text mapping base virtual address (you can remember that it is `__START_KERNEL_map`) and adds `phys_base` which is base address of the `_text`:
 
 ```C
 #define __phys_addr_symbol(x) \
@@ -376,7 +376,7 @@ After we got physical address of the `_text` symbol, `memblock_reserve` can rese
 Reserve memory for initrd
 ---------------------------------------------------------------------------------
 
-In the next step after we reserved place for the kernel text and data is resering place for the [initrd](http://en.wikipedia.org/wiki/Initrd). We will not see details about `initrd` in this post, you just may know that it is temprary root file system stored in memory and used by the kernel during its startup. `early_reserve_initrd` function does all work. First of all this function get the base address of the ram disk, its size and the end address with:
+In the next step after we reserved place for the kernel text and data is resering place for the [initrd](http://en.wikipedia.org/wiki/Initrd). We will not see details about `initrd` in this post, you just may know that it is temporary root file system stored in memory and used by the kernel during its startup. `early_reserve_initrd` function does all work. First of all this function get the base address of the ram disk, its size and the end address with:
 
 ```C
 u64 ramdisk_image = get_ramdisk_image();
@@ -384,7 +384,7 @@ u64 ramdisk_size  = get_ramdisk_size();
 u64 ramdisk_end   = PAGE_ALIGN(ramdisk_image + ramdisk_size);
 ```
 
-All of these paramters it takes from the `boot_params`. If you have read chapter abot [Linux Kernel Booting Process](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html), you must remember that we filled `boot_params` structure during boot time. Kerne setup header contains a couple of fields which describes ramdisk, for example:
+All of these parameters it takes from the `boot_params`. If you have read chapter abot [Linux Kernel Booting Process](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html), you must remember that we filled `boot_params` structure during boot time. Kerne setup header contains a couple of fields which describes ramdisk, for example:
 
 ```
 Field name:	ramdisk_image
