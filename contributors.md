@@ -50,4 +50,4 @@ Thank you to all contributors:
 * [James Flowers](https://github.com/comjf)
 * [Alexander Harding](https://github.com/aeharding)
 * [Dzmitry Plashchynski](https://github.com/plashchynski)
-
+* [Simarpreet Singh](https://github.com/simar7)
