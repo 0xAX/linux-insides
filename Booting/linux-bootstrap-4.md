@@ -172,7 +172,7 @@ After this we have address where we loaded in the `ebp` - `0x100000`.
 
 Now we can setup the stack and verify CPU that it has support of the long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions).
 
-stack setup and CPU verification
+Stack setup and CPU verification
 --------------------------------------------------------------------------------
 
 The next we can see assembly code which setups new stack for kernel decompression:
