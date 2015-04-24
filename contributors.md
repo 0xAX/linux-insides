@@ -51,3 +51,4 @@ Thank you to all contributors:
 * [Alexander Harding](https://github.com/aeharding)
 * [Dzmitry Plashchynski](https://github.com/plashchynski)
 * [Simarpreet Singh](https://github.com/simar7)
+* [umatomba](https://github.com/umatomba)
