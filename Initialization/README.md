@@ -7,3 +7,4 @@ You will find here a couple of posts which describe the full cycle of kernel ini
 * [Last preparations before the kernel entry point](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-3.md) - describes the last preparations before the call of the `start_kernel`.
 * [Kernel entry point](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-4.md) - describes first steps in the kernel generic code.
 * [Continue of architecture-specific initializations](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-5.md) - describes architecture-specific initialization.
+* [Architecture-specific initializations, again...](https://github.com/0xAX/linux-insides/blob/master/Initialization/%20linux-initialization-6.md) - describes continue of the architecture-specific initialization process.
