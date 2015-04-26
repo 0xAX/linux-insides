@@ -12,7 +12,7 @@
     * [Last preparations before the kernel entry point](Initialization/linux-initialization-3.md)
     * [Kernel entry point](Initialization/linux-initialization-4.md)
     * [Continue architecture-specific boot-time initializations](Initialization/linux-initialization-5.md)
-    * [Architecture-specific initializations, again...]()
+    * [Architecture-specific initializations, again...](Initialization/linux-initialization-6.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
