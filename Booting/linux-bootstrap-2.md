@@ -59,10 +59,10 @@ Don't worry, i know that it looks a little scary after real mode, but it's easy.
 
 1. Limit (0 - 15 bits) defines a `length_of_segment - 1`. It depends on `G` bit.
 
-  * if `G` (55-bit) is 0 and segment limit is 0 - size of segment - 1 byte
-  * if `G` is 1 and segment limit is 0 - size of segment 4096 bytes
-  * if `G` is 0 and segment limit is 0xfffff - size of segment 1 megabyte
-  * if `G` is 1 and segment limit is 0xfffff - size of segment 4 gigabytes
+  * if `G` (55-bit) is 0 and segment limit is 0, size of segment is 1 byte
+  * if `G` is 1 and segment limit is 0, size of segment is 4096 bytes
+  * if `G` is 0 and segment limit is 0xfffff, size of segment is 1 megabyte
+  * if `G` is 1 and segment limit is 0xfffff, size of segment is 4 gigabytes
 
 2. Base (0-15, 32-39 and 56-63 bits) defines the physical address of the segment's start address.
 
