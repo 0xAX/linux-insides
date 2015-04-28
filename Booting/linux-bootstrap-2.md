@@ -66,7 +66,7 @@ Don't worry, i know that it looks a little scary after real mode, but it's easy.
 
 2. Base (0-15, 32-39 and 56-63 bits) defines the physical address of the segment's start address.
 
-3. Type (40-47 bits) defines the type of segment and kinds of access to it. Next `S` flag specifies descriptor type. if `S` is 0 - this segment is a system segment, if `S` is 1 - code or data segment (Stack segments are data segments which must be read/write segments). If the segment is a code or data segment, it can be one of the following access types:
+3. Type (40-47 bits) defines the type of segment and kinds of access to it. Next `S` flag specifies descriptor type. if `S` is 0 then this segment is a system segment, whereas if `S` is 1 then this is a code or data segment (Stack segments are data segments which must be read/write segments). If the segment is a code or data segment, it can be one of the following access types:
 
 ```
 |           Type Field        | Descriptor Type | Description
