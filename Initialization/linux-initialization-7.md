@@ -336,6 +336,7 @@ Back to the main.c
 
 As I wrote above, we have finished with the `setup_arch` function and now we can back to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). As you can remember or even you saw yourself, `start_kernel` function is very big too as the `setup_arch`. So the couple of the next part will be dedicated to the learning of this function. So, let's continue with it. After the `setup_arch` we can see the call of the `mm_init_cpumask` function. This function sets the [cpumask]((http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)) pointer to the memory descriptor `cpumask`. We can look on its implementation:
 
+```C
 static inline void mm_init_cpumask(struct mm_struct *mm)
 {
 #ifdef CONFIG_CPUMASK_OFFSTACK
@@ -343,6 +344,7 @@ static inline void mm_init_cpumask(struct mm_struct *mm)
 #endif
         cpumask_clear(mm->cpu_vm_mask_var);
 }
+```
 
 As you can see in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c), we passed memory descriptor of the init process to the `mm_init_cpumask` and here depend on `CONFIG_CPUMASK_OFFSTACK` configuration option we set or clear [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) switch `cpumask`.
 
