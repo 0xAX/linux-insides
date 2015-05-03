@@ -82,14 +82,14 @@ This function check `io_delay_override` variable and overrides I/O delay port if
 
 ```
 io_delay=	[X86] I/O delay method
-	0x80
-		Standard port 0x80 based delay
-	0xed
-		Alternate port 0xed based delay (needed on some systems)
-	udelay
-		Simple two microseconds delay
-	none
-		No delay
+    0x80
+        Standard port 0x80 based delay
+    0xed
+        Alternate port 0xed based delay (needed on some systems)
+    udelay
+        Simple two microseconds delay
+    none
+        No delay
 ```
 
 We can see `io_delay` command line parameter setup with the `early_param` macro in the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/io_delay.c)
