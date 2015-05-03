@@ -298,7 +298,7 @@ BUILD_BUG_ON((unsigned long)__fix_to_virt(VSYSCALL_PAGE) !=
 
 Now `vsyscall` area is in the `fix-mapped` area. That's all about `map_vsyscall`, if you do not know anything about fix-mapped addresses, you can read [Fix-Mapped Addresses and ioremap](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html). More about `vsyscalls` we will see in the `vsyscalls and vdso` part.
 
-Getting SMP configuration
+Getting the SMP configuration
 --------------------------------------------------------------------------------
 
 You can remember how we made a search of the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing) configuration in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/%20linux-initialization-6.html). Now we need to get the `SMP` configurtaion if we found it. For this we check `smp_found_config` variable which we set in the `smp_scan_config` function (read about it the previous part) and call the `get_smp_config` function:
