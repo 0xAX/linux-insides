@@ -250,7 +250,7 @@ Ok, bootloader loaded linux kernel into memory, filled header fields and jumped 
 Start of kernel setup
 --------------------------------------------------------------------------------
 
-Finally we are in the kernel. Technically kernel didn't run yet, first of all we need to setup kernel, memory manager, process manager and etc... Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is little strange at the first look, there are many instructions before it. Actually....
+Finally we are in the kernel. Technically kernel didn't run yet, first of all we need to setup kernel, memory manager, process manager, etc. Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is little strange at the first look, there are many instructions before it. Actually....
 
 Long time ago linux had its own bootloader, but now if you run for example:
 
