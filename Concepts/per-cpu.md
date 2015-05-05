@@ -3,24 +3,24 @@ Per-CPU variables
 
 **In Progress**
 
-Per-CPU variables are one of kernel features. You can understand what this feature mean by it's name. We can create variable and each processor core will have own copy of this variable. We take a closer look on this feature and try to understand how it implemented and how it work in this part.
+Per-CPU variables are one of the kernel features. You can understand what this feature means by reading its name. We can create a variable and each processor core will have its own copy of this variable. We take a closer look on this feature and try to understand how it is implemented and how it works in this part.
 
-Kernel provides API for creating per-cpu variables - `DEFINE_PER_CPU` macro:
+The kernel provides API for creating per-cpu variables - `DEFINE_PER_CPU` macro:
 
 ```C
 #define DEFINE_PER_CPU(type, name) \
         DEFINE_PER_CPU_SECTION(type, name, "")
 ```
 
-This macro defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) as many other macros for work with per-cpu variables. Now we will see how this feature implemented.
+This macro defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) as many other macros for work with per-cpu variables. Now we will see how this feature is implemented.
 
-Take a look on `DECLARE_PER_CPU` definition. We see that it takes 2 parameters: `type` and `name`. So we can use it for creation per-cpu variable, for example like this:
+Take a look at the `DECLARE_PER_CPU` definition. We see that it takes 2 parameters: `type` and `name`, so we can use it to create per-cpu variable, for example like this:
 
 ```C
 DEFINE_PER_CPU(int, per_cpu_n)
 ```
 
-We pass type of our variable and name. `DEFI_PER_CPU` calls `DEFINE_PER_CPU_SECTION` macro and passes the same two paramaters and empty string to it. Let's look on the definition of the `DEFINE_PER_CPU_SECTION`:
+We pass the type and the name of our variable. `DEFI_PER_CPU` calls `DEFINE_PER_CPU_SECTION` macro and passes the same two paramaters and empty string to it. Let's look at the definition of the `DEFINE_PER_CPU_SECTION`:
 
 ```C
 #define DEFINE_PER_CPU_SECTION(type, name, sec)    \
@@ -40,7 +40,7 @@ where section is:
 #define PER_CPU_BASE_SECTION ".data..percpu"
 ```
 
-After all macros will be exapanded we will get global per-cpu variable:
+After all macros are expanded we will get global per-cpu variable:
 
 ```C
 __attribute__((section(".data..percpu"))) int per_cpu_n
@@ -53,15 +53,15 @@ It means that we will have `per_cpu_n` variable in the `.data..percpu` section. 
               CONTENTS, ALLOC, LOAD, DATA
 ```
 
-Ok, now we know that when we use `DEFINE_PER_CPU` macro, per-cpu variable in the `.data..percpu` section will be created. When kernel initilizes it calls `setup_per_cpu_areas` function which loads `.data..percpu` section multiply times, one section per CPU. After kernel finished initialization process we have loaded N `.data..percpu` sections, where N is a number of CPU, and section used by bootstrap processor will contain uninitializaed variable created with `DEFINE_PER_CPU` macro.
+Ok, now we know that when we use `DEFINE_PER_CPU` macro, per-cpu variable in the `.data..percpu` section will be created. When the kernel initilizes it calls `setup_per_cpu_areas` function which loads `.data..percpu` section multiply times, one section per CPU. After the kernel finished the initialization process, we have loaded N `.data..percpu` sections, where N is the number of CPU, and section used by bootstrap processor will contain uninitialized variable created with `DEFINE_PER_CPU` macro.
 
-Kernel provides API for per-cpu variables manipulating:
+The kernel provides API for per-cpu variables manipulating:
 
 * get_cpu_var(var)
 * put_cpu_var(var)
 
 
-Let's look on `get_cpu_var` implementation:
+Let's look at `get_cpu_var` implementation:
 
 ```C
 #define get_cpu_var(var)     \
@@ -93,7 +93,7 @@ get_cpu_var(var);
 put_cpu_var(var);
 ```
 
-Let's look on `per_cpu_ptr` macro:
+Let's look at `per_cpu_ptr` macro:
 
 ```C
 #define per_cpu_ptr(ptr, cpu)                             \
@@ -103,7 +103,7 @@ Let's look on `per_cpu_ptr` macro:
 })
 ```
 
-As i wrote above, this macro returns per-cpu variable for the given cpu. First of all it calls `__verify_pcpu_ptr`:
+As I wrote above, this macro returns per-cpu variable for the given cpu. First of all it calls `__verify_pcpu_ptr`:
 
 ```C
 #define __verify_pcpu_ptr(ptr)
@@ -128,7 +128,7 @@ expands to getting `x` element from the `__per_cpu_offset` array:
 extern unsigned long __per_cpu_offset[NR_CPUS];
 ```
 
-where `NR_CPUS` is the number of CPUs. `__per_cpu_offset` array filled with the distances between cpu-variables copies. For example all per-cpu data is `X` bytes size, so if we access `__per_cpu_offset[Y]`, so `X*Y` will be accessed. Let's look on the `SHIFT_PERCPU_PTR` implementation:
+where `NR_CPUS` is the number of CPUs. `__per_cpu_offset` array filled with the distances between cpu-variables copies. For example all per-cpu data is `X` bytes size, so if we access `__per_cpu_offset[Y]`, so `X*Y` will be accessed. Let's look at the `SHIFT_PERCPU_PTR` implementation:
 
 ```C
 #define SHIFT_PERCPU_PTR(__p, __offset)                                 \
@@ -137,11 +137,11 @@ where `NR_CPUS` is the number of CPUs. `__per_cpu_offset` array filled with the 
 
 `RELOC_HIDE` just returns offset `(typeof(ptr)) (__ptr + (off))` and it will be pointer of the variable.
 
-That's all! Of course it is not full API, but the general part. It can be hard for the start, but to understand per-cpu variables feature need to understand mainly [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) magic.
+That's all! Of course it is not the full API, but the general part. It can be hard for the start, but to understand per-cpu variables feature need to understand mainly [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) magic.
 
-Let's again look on the algorithm of getting pointer on per-cpu variable:
+Let's again look at the algorithm of getting pointer on per-cpu variable:
 
-* Kernel creates multiply `.data..percpu` sections (ones perc-pu) during initialization process;
+* The kernel creates multiply `.data..percpu` sections (ones perc-pu) during initialization process;
 * All variables created with the `DEFINE_PER_CPU` macro will be reloacated to the first section or for CPU0;
 * `__per_cpu_offset` array filled with the distance (`BOOT_PERCPU_OFFSET`) between `.data..percpu` sections;
 * When `per_cpu_ptr` called for example for getting pointer on the certain per-cpu variable for the third CPU, `__per_cpu_offset` array will be accessed, where every index points to the certain CPU.
