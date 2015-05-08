@@ -1,8 +1,6 @@
 Per-CPU variables
 ================================================================================
 
-**In Progress**
-
 Per-CPU variables are one of the kernel features. You can understand what this feature means by reading its name. We can create a variable and each processor core will have its own copy of this variable. We take a closer look on this feature and try to understand how it is implemented and how it works in this part.
 
 The kernel provides API for creating per-cpu variables - `DEFINE_PER_CPU` macro:
@@ -53,7 +51,90 @@ It means that we will have `per_cpu_n` variable in the `.data..percpu` section. 
               CONTENTS, ALLOC, LOAD, DATA
 ```
 
-Ok, now we know that when we use `DEFINE_PER_CPU` macro, per-cpu variable in the `.data..percpu` section will be created. When the kernel initilizes it calls `setup_per_cpu_areas` function which loads `.data..percpu` section multiply times, one section per CPU. After the kernel finished the initialization process, we have loaded N `.data..percpu` sections, where N is the number of CPU, and section used by bootstrap processor will contain uninitialized variable created with `DEFINE_PER_CPU` macro.
+Ok, now we know that when we use `DEFINE_PER_CPU` macro, per-cpu variable in the `.data..percpu` section will be created. When the kernel initilizes it calls `setup_per_cpu_areas` function which loads `.data..percpu` section multiply times, one section per CPU.
+
+Let's look on the per-CPU areas initialization process. It start in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) from the call of the `setup_per_cpu_areas` function which defined in the [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c).
+
+```C
+pr_info("NR_CPUS:%d nr_cpumask_bits:%d nr_cpu_ids:%d nr_node_ids:%d\n",
+        NR_CPUS, nr_cpumask_bits, nr_cpu_ids, nr_node_ids);
+```
+
+The `setup_per_cpu_areas` starts from the output information about the Maximum number of CPUs set during kernel configuration with `CONFIG_NR_CPUS` configuration option, actual number of CPUs, `nr_cpumask_bits` is the same that `NR_CPUS` bit for the new `cpumask` operators and number of `NUMA` nodes.
+
+We can see this output in the dmesg:
+
+```
+$ dmesg | grep percpu
+[    0.000000] setup_percpu: NR_CPUS:8 nr_cpumask_bits:8 nr_cpu_ids:8 nr_node_ids:1
+```
+
+In the next step we check `percpu` first chunk allocator. All percpu areas are allocated in chunks. First chunk is used for the static percpu variables. Linux kernel has `percpu_alloc` command line parameters which provides type of the first chunk allocator. We can read about it in the kernel documentation:
+
+```
+percpu_alloc=	Select which percpu first chunk allocator to use.
+		Currently supported values are "embed" and "page".
+		Archs may support subset or none of the	selections.
+		See comments in mm/percpu.c for details on each
+		allocator.  This parameter is primarily	for debugging
+		and performance comparison.
+```
+
+The [mm/percpu.c](https://github.com/torvalds/linux/blob/master/mm/percpu.c) contains handler of this command line option:
+
+```C
+early_param("percpu_alloc", percpu_alloc_setup);
+```
+
+Where `percpu_alloc_setup` function sets the `pcpu_chosen_fc` variable depends on the `percpu_alloc` parameter value. By default first chunk allocator is `auto`:
+
+```C
+enum pcpu_fc pcpu_chosen_fc __initdata = PCPU_FC_AUTO;
+```
+
+If `percpu_alooc` parameter not given to the kernel command line, the `embed` allocator will be used wich as you can understand embed the first percpu chunk into bootmem with the [memblock](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html). The last allocator is first chunk `page` allocator which maps first chunk with `PAGE_SIZE` pages.
+
+As I wrote about first of all we make a check of the first chunk allocator type in the `setup_per_cpu_areas`. First of all we check that first chunk allocator is not page:
+
+```C
+if (pcpu_chosen_fc != PCPU_FC_PAGE) {
+    ...
+    ...
+    ...
+}
+```
+
+If it is not `PCPU_FC_PAGE`, we will use `embed` allocator and allocate space for the first chunk with the `pcpu_embed_first_chunk` function:
+
+```C
+rc = pcpu_embed_first_chunk(PERCPU_FIRST_CHUNK_RESERVE,
+					    dyn_size, atom_size,
+					    pcpu_cpu_distance,
+					    pcpu_fc_alloc, pcpu_fc_free);
+```
+
+As I wrote above, the `pcpu_embed_first_chunk` function embeds the first percpu chunk into bootmem. As you can see we pass a couple of parameters to the `pcup_embed_first_chunk`, they are
+
+* `PERCPU_FIRST_CHUNK_RESERVE` - the size of the reserved space for the static `percpu` variables;
+* `dyn_size` - minimum free size for dynamic allocation in byte;
+* `atom_size` - all allocations are whole multiples of this and aligned to this parameter;
+* `pcpu_cpu_distance` - callback to determine distance between cpus;
+* `pcpu_fc_alloc` - function to allocate `percpu` page;
+* `pcpu_fc_free` - function to release `percpu` page.
+
+All of this parameters we calculat before the call of the `pcpu_embed_first_chunk`:
+
+```C
+const size_t dyn_size = PERCPU_MODULE_RESERVE + PERCPU_DYNAMIC_RESERVE - PERCPU_FIRST_CHUNK_RESERVE;
+size_t atom_size;
+#ifdef CONFIG_X86_64
+		atom_size = PMD_SIZE;
+#else
+		atom_size = PAGE_SIZE;
+#endif
+```
+
+If first chunk allocator is `PCPU_FC_PAGE`, we will use the `pcpu_page_first_chunk` instead of the `pcpu_embed_first_chunk`. After that `percpu` areas up, we setup `percpu` offset and its segment for the every CPU with the `setup_percpu_segment` function (only for `x86` systems) and move some early data from the arrays to the `percpu` variables (`x86_cpu_to_apicid`, `irq_stack_ptr` and etc...). After the kernel finished the initialization process, we have loaded N `.data..percpu` sections, where N is the number of CPU, and section used by bootstrap processor will contain uninitialized variable created with `DEFINE_PER_CPU` macro.
 
 The kernel provides API for per-cpu variables manipulating:
 
