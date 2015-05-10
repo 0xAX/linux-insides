@@ -9,3 +9,4 @@ You will find here a couple of posts which describe the full cycle of kernel ini
 * [Continue of architecture-specific initializations](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-5.md) - describes architecture-specific initialization.
 * [Architecture-specific initializations, again...](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-6.md) - describes continue of the architecture-specific initialization process.
 * [The End of the architecture-specific initializations, almost...](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-7.md) - describes the end of the `setup_arch` related stuff.
+* [Scheduler initialization](Initialization/linux-initialization-8.md) - describes preparation before scheduler initialization and initialization of it.
