@@ -14,7 +14,7 @@
     * [Continue architecture-specific boot-time initializations](Initialization/linux-initialization-5.md)
     * [Architecture-specific initializations, again...](Initialization/linux-initialization-6.md)
     * [End of the architecture-specific initializations, almost...](Initialization/linux-initialization-7.md)
-    * [Scheduler initialization]()
+    * [Scheduler initialization](Initialization/linux-initialization-8.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
