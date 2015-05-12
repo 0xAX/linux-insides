@@ -52,3 +52,5 @@ Thank you to all contributors:
 * [Dzmitry Plashchynski](https://github.com/plashchynski)
 * [Simarpreet Singh](https://github.com/simar7)
 * [umatomba](https://github.com/umatomba)
+* [Vaibhav Tulsyan](https://github.com/xennygrimmato)
+* [Brandon Wamboldt](https://github.com/brandonwamboldt)
