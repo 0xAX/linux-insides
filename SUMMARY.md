@@ -27,6 +27,7 @@
     * [Cpumasks](Concepts/cpumask.md)
 * [Data Structures in the Linux Kernel](DataStructures/README.md)
     * [Doubly linked list](DataStructures/dlist.md)
+    * [Radix tree]()
 * [Theory](Theory/README.md)
     * [Paging](Theory/Paging.md)
     * [Elf64](Theory/ELF.md)
