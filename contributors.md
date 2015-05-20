@@ -55,3 +55,4 @@ Thank you to all contributors:
 * [Vaibhav Tulsyan](https://github.com/xennygrimmato)
 * [Brandon Wamboldt](https://github.com/brandonwamboldt)
 * [Maxime Leboeuf](https://github.com/leboeuf)
+* [Maximilien Richer](https://github.com/halfa)
