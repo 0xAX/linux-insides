@@ -210,12 +210,12 @@ and many more.
 
 Besides that Linux kernel provides following API for the manipulating of `cpumask`:
 
-* for_each_cpu - iterates over every cpu in a mask;
-* for_each_cpu_not - iterates over every cpu in a complemented mask;
-* cpumask_clear_cpu - clears a cpu in a cpumask;
-* cpumask_test_cpu - tests a cpu in a mask;
-* cpumask_setall - set all cpus in a mask;
-* cpumask_size - returns size to allocate for a 'struct cpumask' in bytes;
+* `for_each_cpu` - iterates over every cpu in a mask;
+* `for_each_cpu_not` - iterates over every cpu in a complemented mask;
+* `cpumask_clear_cpu` - clears a cpu in a cpumask;
+* `cpumask_test_cpu` - tests a cpu in a mask;
+* `cpumask_setall` - set all cpus in a mask;
+* `cpumask_size` - returns size to allocate for a 'struct cpumask' in bytes;
 
 and many many more...
 
