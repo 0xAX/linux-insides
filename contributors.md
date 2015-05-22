@@ -56,3 +56,4 @@ Thank you to all contributors:
 * [Brandon Wamboldt](https://github.com/brandonwamboldt)
 * [Maxime Leboeuf](https://github.com/leboeuf)
 * [Maximilien Richer](https://github.com/halfa)
+* [marmeladema](https://github.com/marmeladema)
