@@ -16,7 +16,7 @@
     * [End of the architecture-specific initializations, almost...](Initialization/linux-initialization-7.md)
     * [Scheduler initialization](Initialization/linux-initialization-8.md)
     * [RCU initialization](Initialization/linux-initialization-9.md)
-    * [End of initialization]()
+    * [End of initialization](Initialization/linux-initialization-10.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
