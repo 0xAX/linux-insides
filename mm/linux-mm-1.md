@@ -85,7 +85,7 @@ These three structures: `memblock`, `memblock_type` and `memblock_region` are ma
 Memblock initialization
 --------------------------------------------------------------------------------
 
-As all API of the `memblock` described in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/include/linux/memblock.h) header file, all implementation of these function is in the [mm/memblock.c]([include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/mm/memblock.c) source code file. Let's look on the top of source code file and we will look there initialization of the `memblock` structure:
+As all API of the `memblock` described in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/include/linux/memblock.h) header file, all implementation of these function is in the [mm/memblock.c](https://github.com/torvalds/linux/blob/master/mm/memblock.c) source code file. Let's look on the top of source code file and we will look there initialization of the `memblock` structure:
 
 ```C
 struct memblock memblock __initdata_memblock = {
