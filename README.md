@@ -1,4 +1,4 @@
-linux-internals
+linux-insides
 ===============
 
 A series of posts about the linux kernel and its insides.
