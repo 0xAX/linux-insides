@@ -16,7 +16,7 @@ So..., First of all what is it interrupt? An interrupt is an `event` which needs
 * `Local APIC`
 * `I/O APIC`
 
-The first - `Local APIC` locates on the each CPU core. The local APIC is responsible for the handling cpu-specific interrupt configuration. Local APIC can recive interrupts from the APIC timer generated interrupts, thermal sensor interrupts, locally connected I/O devices and etc... The second - `I/O APIC` provides multi-processor interrupt management and used to distribute external interrupts. More about the local and I/O APICs we will know in the next parts of this chapter. As you can understand, interrupts can occur in any time. When an interrupt occurs operating system kernel must handle it. But what is it `to handle interrupt`? When an interrupt occurs operating system must:
+The first - `Local APIC` locates on the each CPU core. The local APIC is responsible for the handling cpu-specific interrupt configuration. Local APIC can manage interrupts from the APIC timer generated interrupts, thermal sensor interrupts, locally connected I/O devices and etc. The second - `I/O APIC` provides multi-processor interrupt management and used to distribute external interrupts. More about the local and I/O APICs we will know in the next parts of this chapter. As you can understand, interrupts can occur in any time. When an interrupt occurs operating system kernel must handle it. But what is it `to handle interrupt`? When an interrupt occurs operating system must:
 
 * kernel must stop execution of the current process;
 * kernel searches handler for the interrupt and transfers control to it; 
@@ -24,13 +24,13 @@ The first - `Local APIC` locates on the each CPU core. The local APIC is respons
 
 of course there are many different details behind this like priority of interrupts and many other details, but in general these three points are main.
 
-Address of the interrupts handlers are stored in the special system table called - `Interrupt Descriptor Table` or `IDT`. The processor uses an unique number for recognizing the type of interruption or exception. This number is called - `vector number`. A vector number is an index in the `IDT`. There is limited amount of the verctor numbers and it can be from `0` to `255`. You can note the check of the vector number in the linux kernel source code:
+Address of the interrupts handlers are stored in the special system table called - `Interrupt Descriptor Table` or `IDT`. The processor uses an unique number for recognizing the type of interruption or exception. This number is called - `vector number`. A vector number is an index in the `IDT`. There is limited amount of the vector numbers and it can be from `0` to `255`. You can note the check of the vector number in the linux kernel source code:
 
 ```C
 BUG_ON((unsigned)n > 0xFF);
 ```
 
-You can find this check in the linux kernel source code which is related to the interrupts setup (for example you can find it in the `set_intr_gate` macro, `void set_system_intr_gate` and etc... from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)). First 32 vector numbers from `0` to `31` are reserved by the processor and used for the architecture-defined exceptions and interrupts. You can find table with the description of these verctor numbers in the second part of the linux kernel initialization process - [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html). Vector numbers from `32` to `255` are designated as user-defined interrupts and are not reserved by the processor. These interrupts are generally assigned to external I/O devices to enable those devices to send interrupts to the processor.
+You can find this check in the linux kernel source code which is related to the interrupts setup (for example you can find it in the `set_intr_gate` macro, `void set_system_intr_gate` and etc... from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)). First 32 vector numbers from `0` to `31` are reserved by the processor and used for the architecture-defined exceptions and interrupts. You can find table with the description of these vector numbers in the second part of the linux kernel initialization process - [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html). Vector numbers from `32` to `255` are designated as user-defined interrupts and are not reserved by the processor. These interrupts are generally assigned to external I/O devices to enable those devices to send interrupts to the processor.
 
 Now let's talk about interrupts and its types. We can split interrupts on two big classes:
 
@@ -39,15 +39,15 @@ Now let's talk about interrupts and its types. We can split interrupts on two bi
 
 The first - external interrupts are received through the `Local APIC` or pins on the processor which are connected to the `Local APIC`. The second - software-generated interrupts are caused by the exceptional condition in the processor itself or with the special architecture-specific instruction. For example it can be division by zero in the first case and exit from a program with the `syscall` instruction.
 
-There is additional view of an interrupt - `exception`. As I wrote above, an interrupts can occur at any time for a reason the code and CPU has no control over. Exceptions are `synchronous` with program execution and can be splitted on three leves:
+There is additional view of an interrupt - `exception`. As I wrote above, an interrupts can occur at any time for a reason the code and CPU has no control over. Exceptions are `synchronous` with program execution and can be splitted on three levels:
 
 * `faults`;
 * `traps`;
 * `aborts`.
 
-A `fault` is exceptions that can be corrected. And if it corrected, it allows the program to be restarted. A `trap` is an exception which reported immediately following the execution of the `trap` instruction. Traps allow execution of a program to be continued too as it a `fault` does, but with loss of continuty. And an `boort` is an exception that does not always report location of the instruction which caused the execption and does not allow to restart a program.
+A `fault` is exceptions that can be corrected. And if it corrected, it allows the program to be restarted. A `trap` is an exception which reported immediately following the execution of the `trap` instruction. Traps allow execution of a program to be continued too as it a `fault` does, but with loss of continuty. And an `abort` is an exception that does not always report location of the instruction which caused the exception and does not allow to restart a program.
 
-Also we already know from the previous [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) that interrupts can be `maskable` and `non-maskable`. A maskable interrupts are interrupts which can be banned with the two following instructions for `x86_64` - `sti` and `cli`. We can find they in the linux kernel source code:
+Also we already know from the previous [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) that interrupts can be `maskable` and `non-maskable`. Maskable interrupts are interrupts which can be blocked with the two following instructions for `x86_64` - `sti` and `cli`. We can find they in the linux kernel source code:
 
 ```C
 static inline void native_irq_disable(void)
@@ -67,7 +67,7 @@ static inline void native_irq_enable(void)
 
 These two instructions affects on the `IF` bit from the register flag. The `sti` instruction sets the `IF` flag and the `cli` instruction clears this flag. Non-maskable interrupts are always processed. For example such interrupt can be caused by a failure in a hardware.
 
-If more than one exception or interrupt are occured in the same time, the processor handles them by the predifined priority. We can see priorities from the highest to lowest in the following table:
+If more than one exception or interrupt are occurred in the same time, the processor handles them by the predefined priority. We can see priorities from the highest to lowest in the following table:
 
 ```
 +----------------------------------------------------------------+
@@ -124,13 +124,13 @@ If more than one exception or interrupt are occured in the same time, the proces
 +--------------+-------------------------------------------------+
 ```
 
-Now we know a little about different types of the interrupts and exceptions, it means that it is time to move on to a more practical part. We start with the description of the `Interrupt Descriptor Table`. I already wrote above that `IDT` stores entry points of the interrupts and exceptions handlers. The `IDT` is similar by structure to the `Global Descriptior Table` which we saw in the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html). But of course it has some differences. Instead of `descriptors`, the `IDT` entries are called `gates`. It can contain one of the following gates:
+Now we know a little about different types of the interrupts and exceptions, it means that it is time to move on to a more practical part. We start with the description of the `Interrupt Descriptor Table`. I already wrote above that `IDT` stores entry points of the interrupts and exceptions handlers. The `IDT` is similar by structure to the `Global Descriptor Table` which we saw in the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html). But of course it has some differences. Instead of `descriptors`, the `IDT` entries are called `gates`. It can contain one of the following gates:
 
 * interrupt gates;
 * task gates;
 * trap gates.
 
-in the `x86`. Only [long mode](http://en.wikipedia.org/wiki/Long_mode) interrupt gates and trap gates can be referenced in the `x86_64`. Like the `Global Descriptor Table`, the `Interrupt Descriptor table` is an array of the 8-bytes gates in the `x86` and an array of the 16-bytes gates in the `x86_64`. We can remember from the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html), that `Global Descriptor Table` must contain `NULL` descriptor in the first element of array. Unlike the `Global Descriptor Table`, the `Interrupt Descriptor Table` may contain a gate. But it is not necessary. For example you can remember as we have loaded Interrupt Descriptor table only with the `NULL` gates in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) about trqansition into [protected mode](http://en.wikipedia.org/wiki/Protected_mode):
+in the `x86`. Only [long mode](http://en.wikipedia.org/wiki/Long_mode) interrupt gates and trap gates can be referenced in the `x86_64`. Like the `Global Descriptor Table`, the `Interrupt Descriptor table` is an array of the 8-bytes gates in the `x86` and an array of the 16-bytes gates in the `x86_64`. We can remember from the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html), that `Global Descriptor Table` must contain `NULL` descriptor in the first element of array. Unlike the `Global Descriptor Table`, the `Interrupt Descriptor Table` may contain a gate. But it is not necessary. For example you can remember as we have loaded Interrupt Descriptor table only with the `NULL` gates in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) about transition into [protected mode](http://en.wikipedia.org/wiki/Protected_mode):
 
 ```C
 /*
@@ -143,7 +143,7 @@ static void setup_idt(void)
 }
 ```
 
-from the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c). The `Interrupt Descriptor table` can be located anywhere in the linear address space and the base address of it must be aligned on an 8-byte boundary in the `x86` or 16-byte bounday in the `x86_64`. Base address of the `IDT` is stored in the special register which is called - `IDTR`. There are two instructions in the `x86` compatible processors to control `IDTR` register:
+from the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c). The `Interrupt Descriptor table` can be located anywhere in the linear address space and the base address of it must be aligned on an 8-byte boundary in the `x86` or 16-byte boundary in the `x86_64`. Base address of the `IDT` is stored in the special register which is called - `IDTR`. There are two instructions in the `x86` compatible processors to control `IDTR` register:
 
 * `LIDT`
 * `SIDT`
