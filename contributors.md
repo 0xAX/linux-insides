@@ -58,3 +58,4 @@ Thank you to all contributors:
 * [Maximilien Richer](https://github.com/halfa)
 * [marmeladema](https://github.com/marmeladema)
 * [Anisse Astier](https://github.com/anisse)
+* [TheCodeArtist](https://github.com/TheCodeArtist)

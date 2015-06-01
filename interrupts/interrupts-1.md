@@ -4,50 +4,61 @@ Interrupts and Interrupt Handling. Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-This is the first part of new the chapter of the [linux insides](http://0xax.gitbooks.io/linux-insides/content/) book. We have come a long way in the previous [chapter](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) of this book. We started from the earliest [steps](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of kernel initialization and finished with the [launch](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-10.html) of the first `init` process. Yes, we saw many different initialization steps which are related to the different kernel subsystems. But we did not deep into details about these subsystems. Since this chapter, we will try to understand how different kernel subsytems work and how they are implemented. As you already can understand from the chapter's title, the first subsytem will be [interrupts](http://en.wikipedia.org/wiki/Interrupt).
+This is the first part of the new chapter of the [linux insides](http://0xax.gitbooks.io/linux-insides/content/) book. We have come a long way in the previous [chapter](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) of this book. We started from the earliest [steps](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of kernel initialization and finished with the [launch](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-10.html) of the first `init` process. Yes, we saw several initialization steps which are related to the various kernel subsystems. But we did not dig deep into the details of these subsystems. With this chapter, we will try to understand how the various kernel subsystems work and how they are implemented. As you can already understand from the chapter's title, the first subsystem will be [interrupts](http://en.wikipedia.org/wiki/Interrupt).
 
-What is it interrupt?
+What is an Interrupt?
 --------------------------------------------------------------------------------
 
-We already heard `interrupt` word in the different parts of this book and even saw a couple of examples of the interrupts handlers. In the current chapter we will start from the theory what are `interrupts` and what are `interrupts handlers` and will contiue to deep into details about `interrupts` and how the linux kernel handles it.
+We have already heard of the word `interrupt` in several parts of this book. We even saw a couple of examples of interrupt handlers. In the current chapter we will start from the theory i.e.
 
-So..., First of all what is it interrupt? An interrupt is an `event` which needs in attention emitted by software or hardware. So, for example we press a button on the keyboard and what is the next? What operating system and computer must to do after this? Each device has interrupt line. A device can use it to signal a CPU about interrupt. But interrupts do not fall directly to the CPU. In the old machines there was a [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) which is a chip  responsible for sequential processing interrupt requests from different devices. In the new machines there is [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) or how we will call it next - `APIC`. An `APIC` controller consists from two separate devices:
+* What are `interrupts` ?
+* What are `interrupt handlers`?
+
+We will then continue to dig deeper into the details of `interrupts` and how the Linux kernel handles them.
+
+So..., First of all what is an interrupt? An interrupt is an `event` which is emitted by software or hardware when its needs the CPU's attention. For example, we press a button on the keyboard and what do we expect next? What should the operating system and computer do after this? To simplify matters assume that each peripheral device has an interrupt line to the CPU. A device can use it to signal an interrupt to the CPU. However interrupts are not signaled directly to the CPU. In the old machines there was a [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) which is a chip responsible for sequentially processing multiple interrupt requests from multiple devices. In the new machines there is an [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) commonly known as - `APIC`. An `APIC` consists of two separate devices:
 
 * `Local APIC`
 * `I/O APIC`
 
-The first - `Local APIC` locates on the each CPU core. The local APIC is responsible for the handling cpu-specific interrupt configuration. Local APIC can manage interrupts from the APIC timer generated interrupts, thermal sensor interrupts, locally connected I/O devices and etc. The second - `I/O APIC` provides multi-processor interrupt management and used to distribute external interrupts. More about the local and I/O APICs we will know in the next parts of this chapter. As you can understand, interrupts can occur in any time. When an interrupt occurs operating system kernel must handle it. But what is it `to handle interrupt`? When an interrupt occurs operating system must:
+The first - `Local APIC` is located on each CPU core. The local APIC is responsible for handling the CPU-specific interrupt configuration. The local APIC is usually used to manage interrupts from the APIC-timer, thermal sensor and any other such locally connected I/O devices.
 
-* kernel must stop execution of the current process;
-* kernel searches handler for the interrupt and transfers control to it; 
-* after an interrupt handler finished its work, processor must regain control of the interrupted process;
+The second - `I/O APIC` provides multi-processor interrupt management. It is used to distribute external interrupts among the CPU cores. More about the local and I/O APICs will be covered later in this chapter. As you can understand, interrupts can occur at any time. When an interrupt occurs, the  operating system must handle it immediately. But what does it mean `to handle an interrupt`? When an interrupt occurs, the  operating system must ensure the following steps:
 
-of course there are many different details behind this like priority of interrupts and many other details, but in general these three points are main.
+* The kernel must pause execution of the current process; (preempt current task)
+* The kernel must search for the handler of the interrupt and transfer control (execute interrupt handler);
+* After the interrupt handler completes execution, the interrupted process can resume execution;
 
-Address of the interrupts handlers are stored in the special system table called - `Interrupt Descriptor Table` or `IDT`. The processor uses an unique number for recognizing the type of interruption or exception. This number is called - `vector number`. A vector number is an index in the `IDT`. There is limited amount of the vector numbers and it can be from `0` to `255`. You can note the check of the vector number in the linux kernel source code:
+Of course there are numerous intricacies involved in this procedure of handling interrupts. But the above 3 steps form the basic skeleton of the procedure.
+
+Addresses of each of the interrupt handlers are maintained in a special location referred to as the - `Interrupt Descriptor Table` or `IDT`. The processor uses an unique number for recognizing the type of interruption or exception. This number is called - `vector number`. A vector number is an index in the `IDT`. There is limited amount of the vector numbers and it can be from `0` to `255`. You can note the following range-check upon the vector number within the Linux kernel source-code:
 
 ```C
 BUG_ON((unsigned)n > 0xFF);
 ```
 
-You can find this check in the linux kernel source code which is related to the interrupts setup (for example you can find it in the `set_intr_gate` macro, `void set_system_intr_gate` and etc... from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)). First 32 vector numbers from `0` to `31` are reserved by the processor and used for the architecture-defined exceptions and interrupts. You can find table with the description of these vector numbers in the second part of the linux kernel initialization process - [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html). Vector numbers from `32` to `255` are designated as user-defined interrupts and are not reserved by the processor. These interrupts are generally assigned to external I/O devices to enable those devices to send interrupts to the processor.
+You can find this check within the Linux kernel source code related to interrupt setup (eg. The `set_intr_gate`, `void set_system_intr_gate` in [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)). First 32 vector numbers from `0` to `31` are reserved by the processor and used for the processing of architecture-defined exceptions and interrupts. You can find the table with the description of these vector numbers in the second part of the Linux kernel initialization process - [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html). Vector numbers from `32` to `255` are designated as user-defined interrupts and are not reserved by the processor. These interrupts are generally assigned to external I/O devices to enable those devices to send interrupts to the processor.
 
-Now let's talk about interrupts and its types. We can split interrupts on two big classes:
+Now let's talk about the types of interrupts. Broadly speaking, we can split interrupts into 2 major classes:
 
 * External or hardware generated interrupts;
 * Software-generated interrupts.
 
-The first - external interrupts are received through the `Local APIC` or pins on the processor which are connected to the `Local APIC`. The second - software-generated interrupts are caused by the exceptional condition in the processor itself or with the special architecture-specific instruction. For example it can be division by zero in the first case and exit from a program with the `syscall` instruction.
+The first - external interrupts are received through the `Local APIC` or pins on the processor which are connected to the `Local APIC`. The second - software-generated interrupts are caused by an exceptional condition in the processor itself (sometimes using special architecture-specific instructions). A common example for an exceptional condition is `division by zero`. Another example is exiting a program with the `syscall` instruction.
 
-There is additional view of an interrupt - `exception`. As I wrote above, an interrupts can occur at any time for a reason the code and CPU has no control over. Exceptions are `synchronous` with program execution and can be splitted on three levels:
+As mentioned earlier, an interrupt can occur at any time for a reason which the code and CPU have no control over. On the other hand, exceptions are `synchronous` with program execution and can be classified into 3 categories:
 
-* `faults`;
-* `traps`;
-* `aborts`.
+* `Faults`
+* `Traps`
+* `Aborts`
 
-A `fault` is exceptions that can be corrected. And if it corrected, it allows the program to be restarted. A `trap` is an exception which reported immediately following the execution of the `trap` instruction. Traps allow execution of a program to be continued too as it a `fault` does, but with loss of continuty. And an `abort` is an exception that does not always report location of the instruction which caused the exception and does not allow to restart a program.
+A `fault` is an exception reported before the execution of a "faulty" instruction (which can then be corrected). If corrected, it allows the interrupted program to be resume.
 
-Also we already know from the previous [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) that interrupts can be `maskable` and `non-maskable`. Maskable interrupts are interrupts which can be blocked with the two following instructions for `x86_64` - `sti` and `cli`. We can find they in the linux kernel source code:
+Next a `trap` is an exception which is reported immediately following the execution of the `trap` instruction. Traps also allow the interrupted program to be continued just as a `fault` does.
+
+Finally an `abort` is an exception that does not always report the exact instruction which caused the exception and does not allow the interrupted program to be resumed.
+
+Also we already know from the previous [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) that interrupts can be classified as `maskable` and `non-maskable`. Maskable interrupts are interrupts which can be blocked with the two following instructions for `x86_64` - `sti` and `cli`. We can find them in the Linux kernel source code:
 
 ```C
 static inline void native_irq_disable(void)
@@ -65,9 +76,9 @@ static inline void native_irq_enable(void)
 }
 ```
 
-These two instructions affects on the `IF` bit from the register flag. The `sti` instruction sets the `IF` flag and the `cli` instruction clears this flag. Non-maskable interrupts are always processed. For example such interrupt can be caused by a failure in a hardware.
+These two instructions modify the `IF` flag bit within the interrupt register. The `sti` instruction sets the `IF` flag and the `cli` instruction clears this flag. Non-maskable interrupts are always reported. Usually any failure in the hardware is mapped to such non-maskable interrupts.
 
-If more than one exception or interrupt are occurred in the same time, the processor handles them by the predefined priority. We can see priorities from the highest to lowest in the following table:
+If multiple exceptions or interrupts occur at the same time, the processor handles them in order of their predefined priorities. We can determine the priorities from the highest to the lowest in the following table:
 
 ```
 +----------------------------------------------------------------+
@@ -124,13 +135,13 @@ If more than one exception or interrupt are occurred in the same time, the proce
 +--------------+-------------------------------------------------+
 ```
 
-Now we know a little about different types of the interrupts and exceptions, it means that it is time to move on to a more practical part. We start with the description of the `Interrupt Descriptor Table`. I already wrote above that `IDT` stores entry points of the interrupts and exceptions handlers. The `IDT` is similar by structure to the `Global Descriptor Table` which we saw in the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html). But of course it has some differences. Instead of `descriptors`, the `IDT` entries are called `gates`. It can contain one of the following gates:
+Now that we know a little about the various types of interrupts and exceptions, it is time to move on to a more practical part. We start with the description of the `Interrupt Descriptor Table`. As mentioned earlier, the `IDT` stores entry points of the interrupts and exceptions handlers. The `IDT` is similar in structure to the `Global Descriptor Table` which we saw in the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html). But of course it has some differences. Instead of `descriptors`, the `IDT` entries are called `gates`. It can contain one of the following gates:
 
-* interrupt gates;
-* task gates;
-* trap gates.
+* Interrupt gates
+* Task gates
+* Trap gates.
 
-in the `x86`. Only [long mode](http://en.wikipedia.org/wiki/Long_mode) interrupt gates and trap gates can be referenced in the `x86_64`. Like the `Global Descriptor Table`, the `Interrupt Descriptor table` is an array of the 8-bytes gates in the `x86` and an array of the 16-bytes gates in the `x86_64`. We can remember from the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html), that `Global Descriptor Table` must contain `NULL` descriptor in the first element of array. Unlike the `Global Descriptor Table`, the `Interrupt Descriptor Table` may contain a gate. But it is not necessary. For example you can remember as we have loaded Interrupt Descriptor table only with the `NULL` gates in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) about transition into [protected mode](http://en.wikipedia.org/wiki/Protected_mode):
+in the `x86` architecture. Only [long mode](http://en.wikipedia.org/wiki/Long_mode) interrupt gates and trap gates can be referenced in the `x86_64`. Like the `Global Descriptor Table`, the `Interrupt Descriptor table` is an array of 8-byte gates on `x86` and an array of 16-byte gates on `x86_64`. We can remember from the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html), that `Global Descriptor Table` must contain `NULL` descriptor as its first element. Unlike the `Global Descriptor Table`, the `Interrupt Descriptor Table` may contain a gate; it is not mandatory. For example, you may remember that we have loaded the Interrupt Descriptor table with the `NULL` gates only in the earlier [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) while transitioning into [protected mode](http://en.wikipedia.org/wiki/Protected_mode):
 
 ```C
 /*
@@ -143,12 +154,12 @@ static void setup_idt(void)
 }
 ```
 
-from the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c). The `Interrupt Descriptor table` can be located anywhere in the linear address space and the base address of it must be aligned on an 8-byte boundary in the `x86` or 16-byte boundary in the `x86_64`. Base address of the `IDT` is stored in the special register which is called - `IDTR`. There are two instructions in the `x86` compatible processors to control `IDTR` register:
+from the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c). The `Interrupt Descriptor table` can be located anywhere in the linear address space and the base address of it must be aligned on an 8-byte boundary on `x86` or 16-byte boundary on `x86_64`. Base address of the `IDT` is stored in the special register - `IDTR`. There are two instructions on `x86`-compatible processors to modify the `IDTR` register:
 
 * `LIDT`
 * `SIDT`
 
-The first instruction is for loads base address of the `IDT` to the `IDTR` and the second `SIDT` instruction stores the contents of the `IDTR`. The `IDTR` register is 48-bytes size in the `x86` and contains following information:
+The first instruction `LIDT` is used to load the base-address of the `IDT` i.e. the specified operand into the `IDTR`. The second instruction `SIDT` is used to read and store the contents of the `IDTR` into the specified operand. The `IDTR` register is 48-bits on the `x86` and contains following information:
 
 ```
 +-----------------------------------+----------------------+
@@ -159,7 +170,7 @@ The first instruction is for loads base address of the `IDT` to the `IDTR` and t
 47                                16 15                    0
 ```
 
-You can see in the code above (look on the `setup_idt` function implementation) that we filled `null_idt` and load it to the `IDTR` register with the `lidt` instruction. Note that `null_idt` has `gdt_ptr` type which is defined as:
+Looking at the implementation of `setup_idt`, we have prepared a `null_idt` and loaded it to the `IDTR` register with the `lidt` instruction. Note that `null_idt` has `gdt_ptr` type which is defined as:
 
 ```C
 struct gdt_ptr {
@@ -168,7 +179,7 @@ struct gdt_ptr {
 } __attribute__((packed));
 ```
 
-Here we can see definition of the structure with the two fields with 2-bytes and 4-bytes sizes or 48-bytes structure as we can see it on the diagram. Now let's look on the `IDT` entries structure. As I already wrote above, `IDT` is an array of the 16-byte entries which are called gates in the `x86_64`. They have following structure:
+Here we can see the definition of the structure with the two fields of 2-bytes and 4-bytes each (a total of 48-bits) as we can see in the diagram. Now let's look at the `IDT` entries structure. The `IDT` entries structure is an array of the 16-byte entries which are called gates in the `x86_64`. They have the following structure:
 
 ```
 127                                                                             96
@@ -197,25 +208,26 @@ Here we can see definition of the structure with the two fields with 2-bytes and
 +-------------------------------------------------------------------------------+
 ```
 
-To form an index into the IDT, the processor scales the exception or interrupt vector by sixteen. The processor handles appearance of an exception and an interrupt in the similar way as it handles calls  of a procedure or a task when it sees `call` instruction. A processor uses an unique number or `vector number` of the interrupt or the exception as index to find the necessary `Interrupt Descriptor Table` entry. Now let's take a closer look on a `IDT` entry.
+To form an index into the IDT, the processor scales the exception or interrupt vector by sixteen. The processor handles the occurrence of exceptions and interrupts just like it handles calls of a procedure when it sees the `call` instruction. A processor uses an unique number or `vector number` of the interrupt or the exception as the index to find the necessary `Interrupt Descriptor Table` entry. Now let's take a closer look at an `IDT` entry.
 
-As we can see, `IDT` entry on the diagram consists from the following fields:
+As we can see, `IDT` entry on the diagram consists of the following fields:
 
-* `0-15` bits  - offset from the segment selector which is used by the processor as base address of the entry point of the interrupt handler;
-* `16-31` bits - base address of the segment select which contains entry pint of the interrupt handler;
-* `IST` - new special mechanism in the `x86_64`, will see it later; 
+* `0-15` bits  - offset from the segment selector which is used by the processor as the base address of the entry point of the interrupt handler;
+* `16-31` bits - base address of the segment select which contains the entry point of the interrupt handler;
+* `IST` - a new special mechanism in the `x86_64`, will see it later;
 * `DPL` - Descriptor Privilege Level;
 * `P` - Segment Present flag;
 * `48-63` bits - second part of the handler base address;
 * `64-95` bits - third part of the base address of the handler;
 * `96-127` bits - and the last bits are reserved by the CPU.
 
-And the last `Type` field describes type of the `IDT` entry. There are three different kinds of handlers for interrupts:
+And the last `Type` field describes the type of the `IDT` entry. There are three different kinds of handlers for interrupts:
 
 * Interrupt gate
 * Trap gate
+* Task gate
 
-The `IST` or `Interrupt Stack Table` is a new mechanism in the `x86_64`. It used as an alternative to the the legacy stack-switch mechanism. Previously The `x86` architecture provided a mechanism to automatically switch stack frames in response to an interrupt. The `IST` is a modified version of the `x86` Stack switching mode. This mechanism unconditionally switches stacks when it is enabled and can be enabled for an any interrupt in the `IDT` entry related with the certain interrupt (soon we will see it). From this we can understand that `IST` is not necessary for the all interrupts, but some interrupts can use old legacy stack switching mode. The `IST` mechanism provides up to seven `IST` pointers in the [Task State Segement](http://en.wikipedia.org/wiki/Task_state_segment) or `TSS` which is the special structure which contains information about a process. The `TSS` is used for stack switching during and interrupt or an exception handling in the linux kernel. Each pointer referenced by an interrupt gate from the `IDT`.
+The `IST` or `Interrupt Stack Table` is a new mechanism in the `x86_64`. It used as an alternative to the the legacy stack-switch mechanism. Previously The `x86` architecture provided a mechanism to automatically switch stack frames in response to an interrupt. The `IST` is a modified version of the `x86` Stack switching mode. This mechanism unconditionally switches stacks when it is enabled and can be enabled for any interrupt in the `IDT` entry related with the certain interrupt (we will soon see it). From this we can understand that `IST` is not necessary for all interrupts. Some interrupts can continue to use the legacy stack switching mode. The `IST` mechanism provides up to seven `IST` pointers in the [Task State Segment](http://en.wikipedia.org/wiki/Task_state_segment) or `TSS` which is the special structure which contains information about a process. The `TSS` is used for stack switching during the execution of an interrupt or exception handler in the Linux kernel. Each pointer is referenced by an interrupt gate from the `IDT`.
 
 The `Interrupt Descriptor Table` represented by the array of the `gate_desc` structures:
 
@@ -250,7 +262,7 @@ struct gate_struct64 {
 } __attribute__((packed));
 ```
 
-Each active thread has a very big stack in the linux kernel for the `x86_64` architecture. The stack size is defined as `THREAD_SIZE` and equal to the:
+Each active thread has a large stack in the Linux kernel for the `x86_64` architecture. The stack size is defined as `THREAD_SIZE` and is equal to:
 
 ```C
 #define PAGE_SHIFT      12
@@ -262,7 +274,7 @@ Each active thread has a very big stack in the linux kernel for the `x86_64` arc
 #define THREAD_SIZE  (PAGE_SIZE << THREAD_SIZE_ORDER)
 ```
 
-The `PAGE_SIZE` is `4096` and the `THREAD_SIZE_ORDER` depends on the `KASAN_STACK_ORDER`. As we can see, the `KASAN_STACK` depends on the `CONFIG_KASAN` kernel configuration parameter and equal to the: 
+The `PAGE_SIZE` is `4096`-bytes and the `THREAD_SIZE_ORDER` depends on the `KASAN_STACK_ORDER`. As we can see, the `KASAN_STACK` depends on the `CONFIG_KASAN` kernel configuration parameter and equal to the:
 
 ```C
 #ifdef CONFIG_KASAN
@@ -272,14 +284,14 @@ The `PAGE_SIZE` is `4096` and the `THREAD_SIZE_ORDER` depends on the `KASAN_STAC
 #endif
 ```
 
-`KASan` is a runtime memory [debugger](http://lwn.net/Articles/618180/). So... the `THREAD_SIZE` will be `16384` bytes if `CONFIG_KASAN` is disabled or `32768` if this kernel configuration option is enabled. These stacks contain useful data as long as a thread is alive or in zombie state. While the thread is in user space the kernel stack is empty except for the `thread_info` (some details about this structure you can find in the fourth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) about linux kernel initialization process) structure at the bottom of the stack. Not only active or zombie threads have own stack. There are also specialized stacks which are associated with the each available CPU and these stacks are active when the kernel is under control on that CPU. When a CPU in the user space, these stacks do not contain any useful information too. Each CPU has amount of the special per-cpu stack. The first is `interrupt stack` used for the external hardware interrupts. Its size is:
+`KASan` is a runtime memory [debugger](http://lwn.net/Articles/618180/). So... the `THREAD_SIZE` will be `16384` bytes if `CONFIG_KASAN` is disabled or `32768` if this kernel configuration option is enabled. These stacks contain useful data as long as a thread is alive or in a zombie state. While the thread is in user-space, the kernel stack is empty except for the `thread_info` structure (details about this structure are available in the fourth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process) at the bottom of the stack. The active or zombie threads aren't the only threads with their own stack. There also exist specialized stacks that are associated with each available CPU. These stacks are active when the kernel is executing on that CPU. When the user-space is executing on the CPU, these stacks do not contain any useful information. Each CPU has a few special per-cpu stacks as well. The first is the `interrupt stack` used for the external hardware interrupts. Its size is determined as follows:
 
 ```C
 #define IRQ_STACK_ORDER (2 + KASAN_STACK_ORDER)
 #define IRQ_STACK_SIZE (PAGE_SIZE << IRQ_STACK_ORDER)
 ```
 
-or `16384` bytes too. The per-cpu interrupt stack represented by the `irq_stack_union` unioun in the linux kernel for `x86_64`:
+or `16384` bytes. The per-cpu interrupt stack represented by the `irq_stack_union` union in the Linux kernel for `x86_64`:
 
 ```C
 union irq_stack_union {
@@ -292,9 +304,9 @@ union irq_stack_union {
 };
 ```
 
-The first `irq_stack` field is an 16 killobytes array which is directly stack. Also you can see that `irq_stack_union` contains structure with the two fields:
+The first `irq_stack` field is a 16 kilobytes array. Also you can see that `irq_stack_union` contains structure with the two fields:
 
-* `gs_base` - actually `gs` register always points to the bottom of the `irqstack` union. On the `x86_64`, the `gs` register is shared by percpu area and stack canary (more about `percpu` variables you can read in the special [part](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)).  All percpu symbols are zero based and the `gs` points to the base of percpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) abolished in the long mode, but we can set base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still used as kind of address registers. If you remember the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of the linux kernel initialization process, you can remember that we have set the `gs` register:
+* `gs_base` - The `gs` register always points to the bottom of the `irqstack` union. On the `x86_64`, the `gs` register is shared by per-cpu area and stack canary (more about `per-cpu` variables you can read in the special [part](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)).  All per-cpu symbols are zero based and the `gs` points to the base of per-cpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) is abolished in the long mode, but we can set base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still be used as address registers. If you remember the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of the Linux kernel initialization process, you can remember that we have set the `gs` register:
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -310,10 +322,10 @@ GLOBAL(initial_gs)
 .quad	INIT_PER_CPU_VAR(irq_stack_union)
 ```
     
-* `stack_canary` - [Stack canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries) for the interrupt stack. We need in `stack protector`
-to protect our stack and verify that it hasn't been overwritten. Note that `gs_base` is an 40 bytes array. `GCC` requires that stack canary will be on the fixed offset from the base of the `gs` and its value must be `40` for the `x86_64` and `20` for the `x86`.
+* `stack_canary` - [Stack canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries) for the interrupt stack is a `stack protector`
+to verify that the stack hasn't been overwritten. Note that `gs_base` is an 40 bytes array. `GCC` requires that stack canary will be on the fixed offset from the base of the `gs` and its value must be `40` for the `x86_64` and `20` for the `x86`.
 
-The `irq_stack_union` is the first data in the `percpu` area, we can see it in the `System.map`:
+The `irq_stack_union` is the first datum in the `percpu` area, we can see it in the `System.map`:
 
 ```
 0000000000000000 D __per_cpu_start
@@ -331,14 +343,14 @@ We can see its definition in the code:
 DECLARE_PER_CPU_FIRST(union irq_stack_union, irq_stack_union) __visible;
 ```
 
-Now, time to look on the initialization of the `irq_stack_union`. First of all besides the `irq_stack_union` definition, we can see the definition of the following per-cpu variables in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h):
+Now, its time to look at the initialization of the `irq_stack_union`. Besides the `irq_stack_union` definition, we can see the definition of the following per-cpu variables in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h):
 
 ```C
 DECLARE_PER_CPU(char *, irq_stack_ptr);
 DECLARE_PER_CPU(unsigned int, irq_count);
 ```
 
-The first is the `irq_stack_ptr` and as you can understand from the variable's name, it is pointer to the top of the stack. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function from the [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c):
+The first is the `irq_stack_ptr`. From the variable's name, it is obvious that this is a pointer to the top of the stack. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function in [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c):
 
 ```C
 void __init setup_per_cpu_areas(void)
@@ -362,7 +374,7 @@ for_each_possible_cpu(cpu) {
 }
 ```
 
-Here we goes through all possobile cpu and setup `irq_stack_ptr`. As you can see it will be equal to the top of the interrupt stack minus `64`. Why `64` is here? If you remember, we set the stack canary in the beginning of the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) with the call of the `boot_init_stack_canary` function:
+Here we go over all the CPUs on-by-one and setup `irq_stack_ptr`. This turns out to be equal to the top of the interrupt stack minus `64`. Why `64`? If you remember, we set the stack canary in the beginning of the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) with the call of the `boot_init_stack_canary` function:
 
 ```C
 static __always_inline void boot_init_stack_canary(void)
@@ -386,8 +398,10 @@ static __always_inline void boot_init_stack_canary(void)
 }
 ```
 
-Note that `canary` is `64` bits value. That's why we need to substract `64` from the size of the interrupt stack to avoid stack canary value. Initialization of the `irq_stack_union.gs_base` is in the `load_percpu_segment` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c):
+Note that `canary` is `64` bits value. That's why we need to subtract `64` from the size of the interrupt stack to avoid overlapping with the stack canary value. Initialization of the `irq_stack_union.gs_base` is in the `load_percpu_segment` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c):
+
 TODO maybe more about the wrmsl
+
 ```C
 void load_percpu_segment(int cpu)
 {
@@ -411,9 +425,9 @@ and as we already know `gs` register points to the bottom of the interrupt stack
 	.quad	INIT_PER_CPU_VAR(irq_stack_union)
 ```
 
-Here we can see `wrmsr` instruction which loads data from the `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case model specific register is `MSR_GS_BASE` which contains the base address of the memory segment pointed by the `gs` register and `edx:eax` point to the address of the `initial_gs` which is base address of the our `irq_stack_union`.
+Here we can see the `wrmsr` instruction which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case model specific register is `MSR_GS_BASE` which contains the base address of the memory segment pointed by the `gs` register. `edx:eax` point to the address of the `initial_gs` which is the base address of the our `irq_stack_union`.
 
-We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides ability to switch to a new stack for events non-maskable interrupt, double fault and etc... There can be up to seven `IST` entries per-cpu. They are:
+We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides ability to switch to a new stack for events non-maskable interrupt, double fault and etc... There can be up to seven `IST` entries per-cpu. Some of them are:
 
 * `DOUBLEFAULT_STACK`
 * `NMI_STACK`
@@ -439,14 +453,14 @@ set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
 set_intr_gate_ist(X86_TRAP_DF, &double_fault, DOUBLEFAULT_STACK);
 ```
 
-where `&nmi` and `&double_fault` are addresses of the entries to the given interrupts handlers:
+where `&nmi` and `&double_fault` are addresses of the entries to the given interrupt handlers:
 
 ```C
 asmlinkage void nmi(void);
 asmlinkage void double_fault(void);
 ```
 
-and defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S) 
+defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S)
 
 ```assembly
 idtentry double_fault do_double_fault has_error_code=1 paranoid=2
@@ -460,7 +474,7 @@ ENTRY(nmi)
 END(nmi)
 ```
 
-When an interrupt or an exception occurs the new `ss` selector is forced to `NULL` and the `ss` selector’s `rpl` field is set to the new `cpl`. The old `ss`, `rsp`, register flags, `cs`, `rip` are pushed onto the new stack. 64-bit mode, the size of interrupt stack-frame pushes is fixed at eightbytes, so we will get following stack:
+When an interrupt or an exception occurs, the new `ss` selector is forced to `NULL` and the `ss` selector’s `rpl` field is set to the new `cpl`. The old `ss`, `rsp`, register flags, `cs`, `rip` are pushed onto the new stack. In 64-bit mode, the size of interrupt stack-frame pushes is fixed at 8-bytes, so we will get the following stack:
 
 ```
 +---------------+
@@ -475,18 +489,18 @@ When an interrupt or an exception occurs the new `ss` selector is forced to `NUL
 +---------------+ 
 ```
 
-If `IST` field in interrupt gate is not `0`, we read `IST` pointer into the `rsp`. If the interrupt vector number has an error code associated with it, pushes the error code onto the stack. If the interrupt vector number has no an error code, anyway we push dummy error code to the stack. We need to do it for the stack consistency. After this we loads the segment-selector field from the gate descriptor into the CS register and processor must check that the target code-segment is a 64-bit mode code segment by the checking `21` bit or `L` bit in the `Global Descriptor Table`. In the last step we loads the offset field from the gate descriptor into the `rip` which will be entry of the interrupt handler. After this the interrupt handler begins execution. After an interrupt handler finished its execution, it must return control to the interrupted process with the `iret` instruction. The `iret` instruction pops the stack pointer (`ss:rsp`) only unconditionally and does not depend on the `cpl` change and restores the stack of the interrupted process. 
+If the `IST` field in the interrupt gate is not `0`, we read the `IST` pointer into `rsp`. If the interrupt vector number has an error code associated with it, we then push the error code onto the stack. If the interrupt vector number has no error code, we go ahead and push the dummy error code on to the stack. We need to do this to ensure stack consistency. Next we load the segment-selector field from the gate descriptor into the CS register and must verify that the target code-segment is a 64-bit mode code segment by the checking bit `21` i.e. the `L` bit in the `Global Descriptor Table`. Finally we load the offset field from the gate descriptor into `rip` which will be the entry-point of the interrupt handler. After this the interrupt handler begins to execute. After an interrupt handler finishes its execution, it must return control to the interrupted process with the `iret` instruction. The `iret` instruction unconditionally pops the stack pointer (`ss:rsp`) to restore the stack of the interrupted process and does not depend on the `cpl` change.
 
 That's all.
 
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the first part about interrupts and interrupt handling in the linux kernel. We saw the some theory and first steps of the initialization of the interrupts and exceptions related stuff. In the next part we will continue to dive into interrupts and interrupts handling, but there will be more practice.
+It is the end of the first part about interrupts and interrupt handling in the Linux kernel. We saw some theory and the first steps of the initialization of stuff related to interrupts and exceptions. In the next part we will continue to dive into interrupts and interrupts handling - into the more practical aspects of it.
 
 If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me a PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
 Links
 --------------------------------------------------------------------------------
