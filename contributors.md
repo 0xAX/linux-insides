@@ -57,3 +57,4 @@ Thank you to all contributors:
 * [Maxime Leboeuf](https://github.com/leboeuf)
 * [Maximilien Richer](https://github.com/halfa)
 * [marmeladema](https://github.com/marmeladema)
+* [Anisse Astier](https://github.com/anisse)
