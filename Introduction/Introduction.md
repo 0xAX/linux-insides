@@ -12,4 +12,3 @@ Linux began in 1991, when a Finnish University student, Linus Torvalds, began de
 --------------------------------------------------------------------------------
 
 * [Linus Torvalds](http://es.wikipedia.org/wiki/Linus_Torvalds)
-
