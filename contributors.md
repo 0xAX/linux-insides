@@ -60,3 +60,4 @@ Thank you to all contributors:
 * [Anisse Astier](https://github.com/anisse)
 * [TheCodeArtist](https://github.com/TheCodeArtist)
 * [Ehsun N](https://github.com/imehsunn)
+* [Adam Shannon](https://github.com/adamdecaf)
