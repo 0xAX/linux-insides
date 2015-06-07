@@ -61,3 +61,4 @@ Thank you to all contributors:
 * [TheCodeArtist](https://github.com/TheCodeArtist)
 * [Ehsun N](https://github.com/imehsunn)
 * [Adam Shannon](https://github.com/adamdecaf)
+* [Donny Nadolny](https://github.com/dnadolny)
