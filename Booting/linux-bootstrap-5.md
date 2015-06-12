@@ -38,7 +38,7 @@ ENTRY(startup_64)
 	movl	%eax, %gs
 ```
 
-in the start of `startup_64`. All segment registers besides `cs` points now to the `ds` which is `0x18` (if you don't understand why it is `0x18`, read the previous part).
+in the beginning of the `startup_64`. All segment registers besides `cs` points now to the `ds` which is `0x18` (if you don't understand why it is `0x18`, read the previous part).
 
 The next step is computation of difference between where kernel was compiled and where it was loaded:
 
