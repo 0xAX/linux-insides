@@ -1,5 +1,8 @@
 Kernel introduction.
 ================================================================================
+
+The Begining
+--------------------------------------------------------------------------------
 Linux has began in the Operating system more important in the last years and many people use it in their lives commonly.
 But nobody like remember the history about the Linux kernel.
 
@@ -7,12 +10,11 @@ It s now installed on millions of systems and used by home users and professiona
 
 This the first part to undestand if you want to begin with this topics.
 Linux looks like any other Unix systems; indeed, UNIX compatiblity has a major design and goal of the Linux Kernel project.
-Linux began in 1991, when a Finnish University student, Linus Torvalds, began developing a small but incompleted kernel for the 80386 procesors, the first true 32-bits processors in the intel's range of PC-compatible CPUs.
-
+In 1991 a Finish student named of Linus Benedict Torvalds begin with his development. He released the first linux version on September 1991, and on february 1992, he lisensed the kernel under the GPL licence. 
 
 ![image](https://lh4.googleusercontent.com/-Y_ESIDYRHpk/AAAAAAAAAAI/AAAAAAAAQtI/GsbYt_CjQmI/photo.jpg)
 
-
+This part is a part no more 
 
 --------------------------------------------------------------------------------
 
