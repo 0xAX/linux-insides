@@ -177,7 +177,7 @@ static inline phys_addr_t memblock_cap_size(phys_addr_t base, phys_addr_t *size)
 }
 ```
 
-`memblock_cap_size` returns new size which is the smallest value between the given `size` and base.
+`memblock_cap_size` returns new size which is the smallest value between the given size and `ULLONG_MAX - base`.
 
 After that we have the end address of the new memory region, `memblock_add_region` checks overlap and merge condititions with already added memory regions. Insertion of the new memory region to the `memblcok` consists of two steps:
 
