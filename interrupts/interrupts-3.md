@@ -390,7 +390,7 @@ static inline void preempt_conditional_sti(struct pt_regs *regs)
 }
 ```
 
-more about `local_irq_enabled` and related stuff you can read in the second parts about [interrupts handling in the Linux kernel](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html). In the next step we check the previous mode was [virtual 8086](https://en.wikipedia.org/wiki/Virtual_8086_mode) and handle the trap:
+more about `local_irq_enabled` and related stuff you can read in the second part about [interrupts handling in the Linux kernel](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html). In the next step we check the previous mode was [virtual 8086](https://en.wikipedia.org/wiki/Virtual_8086_mode) and handle the trap:
 
 ```C
 if (regs->flags & X86_VM_MASK) {
