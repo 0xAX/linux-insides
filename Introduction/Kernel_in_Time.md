@@ -9,11 +9,11 @@ Table of linux kernel History.
 
 | Version | Fecha |
 |--------|--------|
-| **0.1** |**17 September 1991**|
+|**0.1**|**17 September 1991**|
 | 0.2 | 4 October 1991 |
 | 0.11 | 8 Dicember 1991 |
 | 0.95 | 7 March 1992 |
-| **1.0** |**13 March 1994**|
+|**1.0**|**13 March 1994**|
 | 1.1 | 6 April 1994 |
 | 1.2 | 6 April 1995 |
 | 1.3 | 12 June 1995 |
@@ -55,11 +55,11 @@ Table of linux kernel History.
 | 3.13 | 19 January 2014 |
 | 3.14 | 30 March 2014 |
 | 3.15 | 8 June 2014 |
-| 3.16 | August 2014 |
-| 3.17 | October 2014 |
-| 3.18 | 8 Dicember 2014 |
+| 3.16 | 3 August 2014 |
+| 3.17 | 5 October 2014 |
+| 3.18 | 7 Dicember 2014 |
 | 3.19 | 8 February 2015 |
-|**4.0**|**March 2015**|
+|**4.0**|**12 April 2015**|
 | 4.1 | June 2015 |
 
 
