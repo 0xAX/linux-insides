@@ -20,6 +20,7 @@
 * [Interrupts](interrupts/README.md)
     * [Introduction](interrupts/interrupts-1.md)
     * [Start to dive into interrupts](interrupts/interrupts-2.md)
+    * [Interrupt handlers](interrupts/interrupts-3.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
