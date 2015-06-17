@@ -179,7 +179,7 @@ static inline phys_addr_t memblock_cap_size(phys_addr_t base, phys_addr_t *size)
 
 `memblock_cap_size` returns new size which is the smallest value between the given size and `ULLONG_MAX - base`.
 
-After that we have the end address of the new memory region, `memblock_add_region` checks overlap and merge condititions with already added memory regions. Insertion of the new memory region to the `memblcok` consists of two steps:
+After that we have the end address of the new memory region, `memblock_add_range` checks overlap and merge conditions with already added memory regions. Insertion of the new memory region to the `memblcok` consists of two steps:
 
 * Adding of non-overlapping parts of the new memory area as separate regions;  
 * Merging of all neighbouring regions.
@@ -212,7 +212,7 @@ while (type->cnt + nr_new > type->max)
 	goto repeat;
 ```
 
-`memblock_double_array` doubles the size of the given regions array. Than we set insert to `true` and go to the `repeat` label. In the second step, starting from the `repeat` label we go through the same loop and insert the current memory region into the memory block with the `memblock_insert_region` function:
+`memblock_double_array` doubles the size of the given regions array. Then we set `insert` to `true` and go to the `repeat` label. In the second step, starting from the `repeat` label we go through the same loop and insert the current memory region into the memory block with the `memblock_insert_region` function:
 
 ```C
 	if (base < end) {
@@ -237,7 +237,7 @@ memmove(rgn + 1, rgn, (type->cnt - idx) * sizeof(*rgn));
 
 After this fills `memblock_region` fields of the new memory region base, size and etc... and increase size of the `memblock_type`. In the end of the execution, `memblock_add_range` calls `memblock_merge_regions` which merges neighboring compatible regions in the second step.
 
-In the second case th new memory region can overlap already stored regions. For example we already have `region1` in the `memblock`:
+In the second case the new memory region can overlap already stored regions. For example we already have `region1` in the `memblock`:
 
 ```
 0                    0x1000
@@ -301,7 +301,7 @@ If none of these conditions are not true, we update the size of the first region
 this->size += next->size;
 ```
 
-As we update the size of the first memory region with the size of the next memory region, we copy every (in the loop) memory region which is after the current (`this`) memory region on the one index ago with the `memmove` function:
+As we update the size of the first memory region with the size of the next memory region, we copy every (in the loop) memory region which is after the current (`this`) memory region to the one index ago with the `memmove` function:
 
 ```C
 memmove(next, next + 1, (type->cnt - (i + 2)) * sizeof(*next));
@@ -330,7 +330,7 @@ That's all. This is the whole principle of the work of the `memblock_add_range` 
 
 There is also `memblock_reserve` function which does the same as `memblock_add`, but only with one difference. It stores `memblock_type.reserved` in the memblock instead of `memblock_type.memory`.
 
-Of course this it is not the full API. Memblock provides an API for not only adding `memory` and `reserved` memory regions, but also:
+Of course this is not the full API. Memblock provides an API for not only adding `memory` and `reserved` memory regions, but also:
 
 * memblock_remove - removes memory region from memblock;
 * memblock_find_in_range - finds free area in given range;
@@ -363,13 +363,13 @@ phys_addr_t __init_memblock get_allocated_memblock_reserved_regions_info(
 }
 ```
 
-First of all this function checks that `memblock` contains reserved memory regions. If `memblock` does not contain reserved memory regions we just return zero. Otherwise we write the physical address of the reserved memory regions array to the given address and return aligned size of the allicated aray. Note that there is `PAGE_ALIGN` macro used for align. Actually it depends on size of page:
+First of all this function checks that `memblock` contains reserved memory regions. If `memblock` does not contain reserved memory regions we just return zero. Otherwise we write the physical address of the reserved memory regions array to the given address and return aligned size of the allocated array. Note that there is `PAGE_ALIGN` macro used for align. Actually it depends on size of page:
 
 ```C
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 ```
 
-Implementation of the `get_allocated_memblock_memory_regions_info` function is the same. It has only one difference, `memblock_type.memory` used instead of `memblock_type.memory`.
+Implementation of the `get_allocated_memblock_memory_regions_info` function is the same. It has only one difference, `memblock_type.memory` used instead of `memblock_type.reserved`.
 
 Memblock debugging
 --------------------------------------------------------------------------------
