@@ -10,7 +10,7 @@ It s now installed on millions of systems and used by home users and professiona
 
 This the first part to undestand if you want to begin with this topics.
 Linux looks like any other Unix systems; indeed, UNIX compatiblity has a major design and goal of the Linux Kernel project and it is considered as the core of the Operating Systems.
-The First difference betwen any other programs in the system consist that controls the hardware and the applications but the applications do not communicate with the hardware directly, instead the go to the kernel. In summary 
+The First difference betwen any other programs in the system consist that controls the hardware and the applications but the applications do not communicate with the hardware directly, instead the go to the kernel. In summary
 
 In 1991 a Finish student named of Linus Benedict Torvalds begin with his development. He released the first linux version on September 1991, and on february 1992, he lisensed the kernel under the GPL licence.
 
