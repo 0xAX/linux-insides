@@ -4,13 +4,13 @@ Linux kernel memory management Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-Memory management is a one of the most complex (and I think that it is the most complex) parts of the operating system kernel. In the [last preparations before the kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html) part we stopped right before call of the `start_kernel` function. This function initializes all the kernel features (including architecture-dependent features) before the kernel runs the first `init` process. You may remember as we built early page tables, identity page tables and fixmap page tables in the boot time. No compilcated memory management is working yet. When the `start_kernel` function is called we will see the transition to more complex data structures and techniques for memory management. For a good understanding of the initialization process in the linux kernel we need to have clear understanding of the techniques. This chapter will provide an overview of the different parts of the linux kernel memory management framework and its API, starting from the `memblock`.
+Memory management is one of the most complex (and I think that it is the most complex) parts of the operating system kernel. In the [last preparations before the kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html) part we stopped right before call of the `start_kernel` function. This function initializes all the kernel features (including architecture-dependent features) before the kernel runs the first `init` process. You may remember as we built early page tables, identity page tables and fixmap page tables in the boot time. No compilcated memory management is working yet. When the `start_kernel` function is called we will see the transition to more complex data structures and techniques for memory management. For a good understanding of the initialization process in the linux kernel we need to have a clear understanding of these techniques. This chapter will provide an overview of the different parts of the linux kernel memory management framework and its API, starting from the `memblock`.
 
 Memblock
 --------------------------------------------------------------------------------
 
-Memblock is one of methods of managing memory regions during the early bootstrap period while the usual kernel memory allocators are not up and
-running yet. Previously it was called - `Logical Memory Block`, but from the [patch](https://lkml.org/lkml/2010/7/13/68) by Yinghai Lu, it was renamed to the `memblock`. As Linux kernel for `x86_64` architecture uses this method. We already met `memblock` in the [Last preparations before the kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html) part. And now time to get acquainted with it closer. We will see how it is implemented.
+Memblock is one of the methods of managing memory regions during the early bootstrap period while the usual kernel memory allocators are not up and
+running yet. Previously it was called `Logical Memory Block`, but with the [patch](https://lkml.org/lkml/2010/7/13/68) by Yinghai Lu, it was renamed to the `memblock`. As Linux kernel for `x86_64` architecture uses this method. We already met `memblock` in the [Last preparations before the kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html) part. And now time to get acquainted with it closer. We will see how it is implemented.
 
 We will start to learn `memblock` from the data structures. Definitions of the all data structures can be found in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/include/linux/memblock.h) header file.
 
@@ -28,7 +28,7 @@ struct memblock {
 };
 ```
 
-This structure contains five fields. First is `bottom_up` which allows to allocate memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three fields describes the type of the memory block. It can be: reserved, memory and physical memory if `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled. Now we met yet another data structure - `memblock_type`. Let's look on its definition:
+This structure contains five fields. First is `bottom_up` which allows allocating memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three fields describe the type of the memory block. It can be: reserved, memory and physical memory if the `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled. Now we see yet another data structure - `memblock_type`. Let's look at its definition:
 
 ```C
 struct memblock_type {
@@ -39,7 +39,7 @@ struct memblock_type {
 };
 ```
 
-This structure provides information about memory type. It contains fields which describe number of memory regions which are inside current memory block, size of the all memory regions, size of the allocated array of the memory regions and pointer to the array of the `memblock_region` structures. `memblock_region` is a structure which describes memory region. Its definition looks:
+This structure provides information about memory type. It contains fields which describe the number of memory regions which are inside the current memory block, the size of all memory regions, the size of the allocated array of the memory regions and pointer to the array of the `memblock_region` structures. `memblock_region` is a structure which describes a memory region. Its definition is:
 
 ```C
 struct memblock_region {
@@ -60,7 +60,7 @@ struct memblock_region {
 #define MEMBLOCK_HOTPLUG	0x1
 ```
 
-Also `memblock_region` provides integer field - [numa](http://en.wikipedia.org/wiki/Non-uniform_memory_access) node selector, if `CONFIG_HAVE_MEMBLOCK_NODE_MAP` configuration option is enabled.
+Also `memblock_region` provides integer field - [numa](http://en.wikipedia.org/wiki/Non-uniform_memory_access) node selector, if the `CONFIG_HAVE_MEMBLOCK_NODE_MAP` configuration option is enabled.
 
 Schematically we can imagine it as:
 
@@ -85,7 +85,7 @@ These three structures: `memblock`, `memblock_type` and `memblock_region` are ma
 Memblock initialization
 --------------------------------------------------------------------------------
 
-As all API of the `memblock` described in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/include/linux/memblock.h) header file, all implementation of these function is in the [mm/memblock.c]([include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/mm/memblock.c) source code file. Let's look on the top of source code file and we will look there initialization of the `memblock` structure:
+As all API of the `memblock` described in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/master/include/linux/memblock.h) header file, all implementation of these function is in the [mm/memblock.c](https://github.com/torvalds/linux/blob/master/mm/memblock.c) source code file. Let's look at the top of the source code file and we will see the initialization of the `memblock` structure:
 
 ```C
 struct memblock memblock __initdata_memblock = {
@@ -121,7 +121,7 @@ Here we can see initialization of the `memblock` structure which has the same na
 
 You can note that it depends on `CONFIG_ARCH_DISCARD_MEMBLOCK`. If this configuration option is enabled, memblock code will be put to the `.init` section and it will be released after the kernel is booted up.
 
-Next we can see initialization of the `memblock_type memory`, `memblock_type reserved` and `memblock_type physmem` fields of the `memblock` structure. Here we interesting only in the `memblock_type.regions` initialization process. Note that every `memblock_type` field initialized by the arrays of the `memblock_region`:
+Next we can see initialization of the `memblock_type memory`, `memblock_type reserved` and `memblock_type physmem` fields of the `memblock` structure. Here we are interested only in the `memblock_type.regions` initialization process. Note that every `memblock_type` field initialized by the arrays of the `memblock_region`:
 
 ```C
 static struct memblock_region memblock_memory_init_regions[INIT_MEMBLOCK_REGIONS] __initdata_memblock;
@@ -152,15 +152,15 @@ On this step initialization of the `memblock` structure finished and we can look
 Memblock API
 --------------------------------------------------------------------------------
 
-Ok we have finished with initilization of the `memblock` structure and now we can look on the Memblock API and its implementation. As i said about, all implementation of the `memblock` presented in the [mm/memblock.c](https://github.com/torvalds/linux/blob/master/mm/memblock.c). To understand how `memblock` works and implemented, let's look on it's usage first of all. There are a couple of [places](http://lxr.free-electrons.com/ident?i=memblock) in the linux kernel where memblock is used. For example let's take `memblock_x86_fill` function from the [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/e820.c#L1061). This function goes through the memory map provided by the [e820](http://en.wikipedia.org/wiki/E820) and adds memory regions reserved by the kernel to the `memblock` with the `memblock_add` function. As we met `memblock_add` function first, let's start from it.
+Ok we have finished with initilization of the `memblock` structure and now we can look on the Memblock API and its implementation. As I said above, all implementation of the `memblock` presented in the [mm/memblock.c](https://github.com/torvalds/linux/blob/master/mm/memblock.c). To understand how `memblock` works and is implemented, let's look at its usage first of all. There are a couple of [places](http://lxr.free-electrons.com/ident?i=memblock) in the linux kernel where memblock is used. For example let's take `memblock_x86_fill` function from the [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/e820.c#L1061). This function goes through the memory map provided by the [e820](http://en.wikipedia.org/wiki/E820) and adds memory regions reserved by the kernel to the `memblock` with the `memblock_add` function. As we met `memblock_add` function first, let's start from it.
 
-This function takes physical base address and size of the memory region and adds it to the `memblock`. `memblock_add` function does not anything special in its body, but just calls:
+This function takes physical base address and size of the memory region and adds it to the `memblock`. `memblock_add` function does not do anything special in its body, but just calls:
 
 ```C
 memblock_add_range(&memblock.memory, base, size, MAX_NUMNODES, 0);
 ```
 
-function. We pass memory block type - `memory`, physical base address and size of the memory region, maximum number of nodes which are zero if `CONFIG_NODES_SHIFT` is not set in the configuration file or `CONFIG_NODES_SHIFT` if it is set, and flags. `memblock_add_range` function adds new memory region to the memory block. It starts from check the size of the given region and if it is zero just return. After this, `memblock_add_range` check existence of the memory regions in the `memblock` structure with the given `memblock_type`. If there are no memory regions, we just fill new `memory_region` with the given values and return (we already saw implementation of this in the [First touch of the linux kernel memory manager framework](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html)). If `memblock_type` is no empty, we start to add new memory region to the `memblock` with the given `memblock_type`.
+function. We pass memory block type - `memory`, physical base address and size of the memory region, maximum number of nodes which are zero if `CONFIG_NODES_SHIFT` is not set in the configuration file or `CONFIG_NODES_SHIFT` if it is set, and flags. The `memblock_add_range` function adds new memory region to the memory block. It starts by checking the size of the given region and if it is zero it just returns. After this, `memblock_add_range` checks for existence of the memory regions in the `memblock` structure with the given `memblock_type`. If there are no memory regions, we just fill new `memory_region` with the given values and return (we already saw the implementation of this in the [First touch of the linux kernel memory manager framework](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-3.html)). If `memblock_type` is not empty, we start to add new memory region to the `memblock` with the given `memblock_type`.
 
 First of all we get the end of the memory region with the:
 
@@ -168,7 +168,7 @@ First of all we get the end of the memory region with the:
 phys_addr_t end = base + memblock_cap_size(base, &size);
 ```
 
-`memblock_cap_size` adjusts `size` that `base + size` will not overflow. Its implementation pretty easy:
+`memblock_cap_size` adjusts `size` that `base + size` will not overflow. Its implementation is pretty easy:
 
 ```C
 static inline phys_addr_t memblock_cap_size(phys_addr_t base, phys_addr_t *size)
@@ -177,14 +177,14 @@ static inline phys_addr_t memblock_cap_size(phys_addr_t base, phys_addr_t *size)
 }
 ```
 
-`memblock_cap_size` returns new size which is the smallest value between the given `size` and base.
+`memblock_cap_size` returns new size which is the smallest value between the given size and `ULLONG_MAX - base`.
 
-After that we got end address of the new memory region, `memblock_add_region` checks overlap and merge condititions with already added memory regions. Insertion of the new memory region to the `memblcok` consists from two steps:
+After that we have the end address of the new memory region, `memblock_add_range` checks overlap and merge conditions with already added memory regions. Insertion of the new memory region to the `memblcok` consists of two steps:
 
 * Adding of non-overlapping parts of the new memory area as separate regions;  
 * Merging of all neighbouring regions.
 
-We are going throuth the all already stored memory regions and check overlapping:
+We are going through all the already stored memory regions and checking for overlap with the new region:
 
 ```C
 	for (i = 0; i < type->cnt; i++) {
@@ -202,7 +202,7 @@ We are going throuth the all already stored memory regions and check overlapping
 	}
 ```
 
-if new memory region does not overlap regions which are already stored in the `memblock`, insert this region into the memblock with and this is first step, we check that new region can fit into the memory block and call `memblock_double_array` in other way:
+If the new memory region does not overlap regions which are already stored in the `memblock`, insert this region into the memblock with and this is first step, we check that new region can fit into the memory block and call `memblock_double_array` in other way:
 
 ```C
 while (type->cnt + nr_new > type->max)
@@ -212,7 +212,7 @@ while (type->cnt + nr_new > type->max)
 	goto repeat;
 ```
 
-`memblock_double_array` doubles the size of the given regions array. Than we set insert to the `true` and go to the `repeat` label. In the second step, starting from the `repeat` label we go through the same loop and insert current memory region into the memory block with the `memblock_insert_region` function:
+`memblock_double_array` doubles the size of the given regions array. Then we set `insert` to `true` and go to the `repeat` label. In the second step, starting from the `repeat` label we go through the same loop and insert the current memory region into the memory block with the `memblock_insert_region` function:
 
 ```C
 	if (base < end) {
@@ -223,7 +223,7 @@ while (type->cnt + nr_new > type->max)
 	}
 ```
 
-As we set `insert` to `true` in the first step, now `memblock_insert_region` will be called. `memblock_insert_region` has almost the same implemetation that we saw when we insert new region to the empty `memblock_type` (see above). This function get the last memory region:
+As we set `insert` to `true` in the first step, now `memblock_insert_region` will be called. `memblock_insert_region` has almost the same implementation that we saw when we insert new region to the empty `memblock_type` (see above). This function gets the last memory region:
 
 ```C
 struct memblock_region *rgn = &type->regions[idx];
@@ -235,9 +235,9 @@ and copies memory area with `memmove`:
 memmove(rgn + 1, rgn, (type->cnt - idx) * sizeof(*rgn));
 ```
 
-After this fills `memblock_region` fields of the new memory region base, size and etc... and increase size of the `memblock_type`. In the end of the exution, `memblock_add_range` calls `memblock_merge_regions` which merges neighboring compatible regions in the second step.
+After this fills `memblock_region` fields of the new memory region base, size and etc... and increase size of the `memblock_type`. In the end of the execution, `memblock_add_range` calls `memblock_merge_regions` which merges neighboring compatible regions in the second step.
 
-In the second case new memory region can overlap already stored regions. For example we already have `region1` in the `memblock`:
+In the second case the new memory region can overlap already stored regions. For example we already have `region1` in the `memblock`:
 
 ```
 0                    0x1000
@@ -279,7 +279,7 @@ if (base < end) {
 }
 ```
 
-In this case we insert `overlapping portion` (we insert only higher portion, because lower already in the overlapped memory region), than remaining portion and merge these portions with `memblock_merge_regions`. As i said above `memblock_merge_regions` function merges neighboring compatible regions. It goes through the all memory regions from the given `memblock_type`, takes two neighboring memory regions - `type->regions[i]` and `type->regions[i + 1]` and checks that these regions have the same flags, belong to the same node and that end address of the first regions is not equal to the base address of the second region:
+In this case we insert `overlapping portion` (we insert only the higher portion, because the lower portion is already in the overlapped memory region), then the remaining portion and merge these portions with `memblock_merge_regions`. As I said above `memblock_merge_regions` function merges neighboring compatible regions. It goes through the all memory regions from the given `memblock_type`, takes two neighboring memory regions - `type->regions[i]` and `type->regions[i + 1]` and checks that these regions have the same flags, belong to the same node and that end address of the first regions is not equal to the base address of the second region:
 
 ```C
 while (i < type->cnt - 1) {
@@ -301,7 +301,7 @@ If none of these conditions are not true, we update the size of the first region
 this->size += next->size;
 ```
 
-As we update the size of the first memory region with the size of the next memory region, we copy every (in the loop) memory region which is after the current (`this`) memory region on the one index ago with the `memmove` function:
+As we update the size of the first memory region with the size of the next memory region, we copy every (in the loop) memory region which is after the current (`this`) memory region to the one index ago with the `memmove` function:
 
 ```C
 memmove(next, next + 1, (type->cnt - (i + 2)) * sizeof(*next));
@@ -330,7 +330,7 @@ That's all. This is the whole principle of the work of the `memblock_add_range` 
 
 There is also `memblock_reserve` function which does the same as `memblock_add`, but only with one difference. It stores `memblock_type.reserved` in the memblock instead of `memblock_type.memory`.
 
-Of course it is not full API. Memblock provides API for not only adding `memory` and `reserved` memory regions, but also:
+Of course this is not the full API. Memblock provides an API for not only adding `memory` and `reserved` memory regions, but also:
 
 * memblock_remove - removes memory region from memblock;
 * memblock_find_in_range - finds free area in given range;
@@ -342,12 +342,12 @@ and many more....
 Getting info about memory regions
 --------------------------------------------------------------------------------
 
-Memblock also provides API for the getting information about allocated memorey regions in the `memblcok`. It splitted on two parts:
+Memblock also provides an API for getting information about allocated memory regions in the `memblcok`. It is split in two parts:
 
 * get_allocated_memblock_memory_regions_info - getting info about memory regions;
 * get_allocated_memblock_reserved_regions_info - getting info about reserved regions.
 
-Implementation of these function is easy. Let's look on `get_allocated_memblock_reserved_regions_info` for example:
+Implementation of these functions is easy. Let's look at `get_allocated_memblock_reserved_regions_info` for example:
 
 ```C
 phys_addr_t __init_memblock get_allocated_memblock_reserved_regions_info(
@@ -363,25 +363,25 @@ phys_addr_t __init_memblock get_allocated_memblock_reserved_regions_info(
 }
 ```
 
-First of all this function checks that `memblock` contains reserved memory regions. If `memblock` does not contain reserved memory regions we just return zero. In other way we write physical address of the reserved memory regions array to the given address and return aligned size of the allicated aray. Note that there is `PAGE_ALIGN` macro used for align. Actually it depends on size of page:
+First of all this function checks that `memblock` contains reserved memory regions. If `memblock` does not contain reserved memory regions we just return zero. Otherwise we write the physical address of the reserved memory regions array to the given address and return aligned size of the allocated array. Note that there is `PAGE_ALIGN` macro used for align. Actually it depends on size of page:
 
 ```C
 #define PAGE_ALIGN(addr) ALIGN(addr, PAGE_SIZE)
 ```
 
-Implementation of the `get_allocated_memblock_memory_regions_info` function is the same. It has only one difference, `memblock_type.memory` used instead of `memblock_type.memory`.
+Implementation of the `get_allocated_memblock_memory_regions_info` function is the same. It has only one difference, `memblock_type.memory` used instead of `memblock_type.reserved`.
 
 Memblock debugging
 --------------------------------------------------------------------------------
 
-There are many calls of the `memblock_dbg` in the memblock implementation. If you will pass `memblock=debug` option to the kernel command line, this function will be called. Actually `memblock_dbg` is just a macro which expands to the `printk`:
+There are many calls to `memblock_dbg` in the memblock implementation. If you pass the `memblock=debug` option to the kernel command line, this function will be called. Actually `memblock_dbg` is just a macro which expands to `printk`:
 
 ```C
 #define memblock_dbg(fmt, ...) \
          if (memblock_debug) printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
 ```
 
-For example you can see call of this macro in the `memblock_reserve` function:
+For example you can see a call of this macro in the `memblock_reserve` function:
 
 ```C
 memblock_dbg("memblock_reserve: [%#016llx-%#016llx] flags %#02lx %pF\n",
@@ -390,7 +390,7 @@ memblock_dbg("memblock_reserve: [%#016llx-%#016llx] flags %#02lx %pF\n",
 		     flags, (void *)_RET_IP_);
 ```
 
-And you must see something like this:
+And you will see something like this:
 
 ![Memblock](http://oi57.tinypic.com/1zoj589.jpg)
 
@@ -405,9 +405,9 @@ for getting dump of the `memblock` contents.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the first part about linux kernel memory management. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new).
+This is the end of the first part about linux kernel memory management. If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-internals/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me a PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
 Links
 --------------------------------------------------------------------------------

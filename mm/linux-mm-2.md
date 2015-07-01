@@ -4,7 +4,7 @@ Linux kernel memory management Part 2.
 Fix-Mapped Addresses and ioremap
 --------------------------------------------------------------------------------
 
-`Fix-Mapped` addresses is a set of the special compile-time addresses whose corresponding physical address do not have to be linear address minus `__START_KERNEL_map`. Each fix-mapped address maps one page frame and kernel uses they as pointers that never change their addresses. It is the main point of these addresses. As comment says: `to have a constant address at compile time, but to set the physical address only in the boot process`. You can remember that in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html), we already set the `level2_fixmap_pgt`:
+`Fix-Mapped` addresses are a set of special compile-time addresses whose corresponding physical address do not have to be a linear address minus `__START_KERNEL_map`. Each fix-mapped address maps one page frame and the kernel uses them as pointers that never change their address. That is the main point of these addresses. As the comment says: `to have a constant address at compile time, but to set the physical address only in the boot process`. You can remember that in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html), we already set the `level2_fixmap_pgt`:
 
 ```assembly
 NEXT_PAGE(level2_fixmap_pgt)
@@ -16,7 +16,7 @@ NEXT_PAGE(level1_fixmap_pgt)
 	.fill	512,8,0
 ```
 
-As you can see `level2_fixmap_pgt` is right after the `level2_kernel_pgt` which is kernel code+data+bss. Every fix-mapped address is presented by a integer index which is defined in the `fixed_addresses` enum from the [arch/x86/include/asm/fixmap.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/fixmap.h). For example it contains entries for `VSYSCALL_PAGE` - if emulation of legacy vsyscall page is enabled, `FIX_APIC_BASE` for local [apic](h
+As you can see `level2_fixmap_pgt` is right after the `level2_kernel_pgt` which is kernel code+data+bss. Every fix-mapped address is represented by an integer index which is defined in the `fixed_addresses` enum from the [arch/x86/include/asm/fixmap.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/fixmap.h). For example it contains entries for `VSYSCALL_PAGE` - if emulation of legacy vsyscall page is enabled, `FIX_APIC_BASE` for local [apic](h
 ttp://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) and etc... In a virtual memory fix-mapped area is placed in the modules area:
 
 ```
@@ -37,7 +37,7 @@ Base virtual address and size of the `fix-mapped` area are presented by the two 
 #define FIXADDR_START		(FIXADDR_TOP - FIXADDR_SIZE)
 ```
 
-Here `__end_of_permanent_fixed_addresses` is an element of the `fixed_addresses` enum and as I wrote above: Every fix-mapped address is presented by a integer index which is defined in the `fixed_addresses`. `PAGE_SHIFT` determines size of a page. For example size of the one page we can get with the `1 << PAGE_SHIFT`. In our case we need to get the size of the fix-mapped area, but not only of one page, that's why we are using `__end_of_permanent_fixed_addresses` for getting the size of the fix-mapped area. In my case it's a little more than `536` killobytes. In your case it can be different number, because the size depends on amount of the fix-mapped addresses which are depends on your kernel's configuration.
+Here `__end_of_permanent_fixed_addresses` is an element of the `fixed_addresses` enum and as I wrote above: Every fix-mapped address is represented by an integer index which is defined in the `fixed_addresses`. `PAGE_SHIFT` determines size of a page. For example size of the one page we can get with the `1 << PAGE_SHIFT`. In our case we need to get the size of the fix-mapped area, but not only of one page, that's why we are using `__end_of_permanent_fixed_addresses` for getting the size of the fix-mapped area. In my case it's a little more than `536` killobytes. In your case it might be a different number, because the size depends on amount of the fix-mapped addresses which are depends on your kernel's configuration.
 
 The second `FIXADDR_START` macro just extracts from the last address of the fix-mapped area its size for getting base virtual address of the fix-mapped area. `FIXADDR_TOP` is rounded up address from the base address of the [vsyscall](https://lwn.net/Articles/446528/) space:
 
@@ -55,13 +55,13 @@ static __always_inline unsigned long fix_to_virt(const unsigned int idx)
 }
 ```
 
-first of all it check that given index of `fixed_addresses` enum is not greater or equal than `__end_of_fixed_addresses` with the `BUILD_BUG_ON` macro and than returns the result of the `__fix_to_virt` macro:
+first of all it checks that the index given for the `fixed_addresses` enum is not greater or equal than `__end_of_fixed_addresses` with the `BUILD_BUG_ON` macro and then returns the result of the `__fix_to_virt` macro:
 
 ```C
 #define __fix_to_virt(x)        (FIXADDR_TOP - ((x) << PAGE_SHIFT))
 ```
 
-Here we shift left the given `fix-mapped` address index on the `PAGE_SHIFT` which determines size of a page as I wrote above and subtract it from the `FIXADDR_TOP` which is the highest address of the `fix-mapped` area. There is inverse function for getting `fix-mapped` address from a virtual address:
+Here we shift left the given `fix-mapped` address index on the `PAGE_SHIFT` which determines size of a page as I wrote above and subtract it from the `FIXADDR_TOP` which is the highest address of the `fix-mapped` area. There is an inverse function for getting `fix-mapped` address from a virtual address:
 
 ```C
 static inline unsigned long virt_to_fix(const unsigned long vaddr)
@@ -77,14 +77,14 @@ static inline unsigned long virt_to_fix(const unsigned long vaddr)
 #define __virt_to_fix(x)        ((FIXADDR_TOP - ((x)&PAGE_MASK)) >> PAGE_SHIFT)
 ```
 
-A PFN is simply in index within physical memory that is counted in page-sized units. PFN for a physical address could be trivially defined as (page_phys_addr >> PAGE_SHIFT);
+A PFN is simply an index within physical memory that is counted in page-sized units. PFN for a physical address could be trivially defined as (page_phys_addr >> PAGE_SHIFT);
 
-`__virt_to_fix` clears first 12 bits in the given address, subtracts it from the last address the of `fix-mapped` area (`FIXADDR_TOP`) and shifts right result on `PAGE_SHIFT` which is `12`. Let I explain how it works. As i already wrote we will crear first 12 bits in the given address with `x & PAGE_MASK`. As we subtract this from the `FIXADDR_TOP`, we will get last 12 bits of the `FIXADDR_TOP` which are represent. We know that first 12 bits of the virtual address present offset in the page frame. With the shiting it on `PAGE_SHIFT` we will get `Page frame number` which is just all bits in a virtual address besides first 12 offset bits. `Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) of the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. We used `fix-mapped` area in the early `ioremap` initialization. Let's look on it and try to understand what is it `ioremap`, how it implemented in the kernel and how it releated with the `fix-mapped` addresses.
+`__virt_to_fix` clears the first 12 bits in the given address, subtracts it from the last address the of `fix-mapped` area (`FIXADDR_TOP`) and shifts right result on `PAGE_SHIFT` which is `12`. Let me explain how it works. As I already wrote we will clear the first 12 bits in the given address with `x & PAGE_MASK`. As we subtract this from the `FIXADDR_TOP`, we will get the last 12 bits of the `FIXADDR_TOP` which are present. We know that the first 12 bits of the virtual address represent the offset in the page frame. With the shiting it on `PAGE_SHIFT` we will get `Page frame number` which is just all bits in a virtual address besides the first 12 offset bits. `Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) in the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. We used `fix-mapped` area in the early `ioremap` initialization. Let's look on it and try to understand what is it `ioremap`, how it is implemented in the kernel and how it is releated to the `fix-mapped` addresses.
 
 ioremap
 --------------------------------------------------------------------------------
 
-Linux kernel provides many different primitives to manage memory. For this moment we will touch `I/O memory`. Every device controlled with reading/writing from/to its registers. For example driver can turn off/on a device by writing to the its registers or get state of a device by reading from its registers. Besides registers, many devices have buffer and where driver can write something or read from there. As we know for this moment there are two ways to access device's registers and data buffers:
+Linux kernel provides many different primitives to manage memory. For this moment we will touch `I/O memory`. Every device is controlled by reading/writing from/to its registers. For example a driver can turn off/on a device by writing to its registers or get the state of a device by reading from its registers. Besides registers, many devices have buffers where a driver can write something or read from there. As we know for this moment there are two ways to access device's registers and data buffers:
 
 * through the I/O ports;
 * mapping of the all registers to the memory address space;
@@ -120,7 +120,7 @@ $ cat /proc/ioports
 ...
 ```
 
-`/proc/ioporst` provides information about what driver used address of a `I/O` ports region. All of these memory regions, for example `0000-0cf7`, were claimed with the `request_region` function from the [include/linux/ioport.h](https://github.com/torvalds/linux/blob/master/include/linux/ioport.h). Actuall `request_region` is a macro which defied as:
+`/proc/ioporst` provides information about what driver used address of a `I/O` ports region. All of these memory regions, for example `0000-0cf7`, were claimed with the `request_region` function from the [include/linux/ioport.h](https://github.com/torvalds/linux/blob/master/include/linux/ioport.h). Actually `request_region` is a macro which defied as:
 
 ```C
 #define request_region(start,n,name)   __request_region(&ioport_resource, (start), (n), (name), 0)
@@ -146,6 +146,7 @@ struct resource {
 
 and contains start and end addresses of the resource, name and etc... Every `resource` structure contains pointers to the `parent`, `slibling` and `child` resources. As it has parent and childs, it means that every subset of resuorces has root `resource` structure. For example, for `I/O` ports it is `ioport_resource` structure:
 
+```C
 struct resource ioport_resource = {
          .name   = "PCI IO",
          .start  = 0,
@@ -153,6 +154,7 @@ struct resource ioport_resource = {
         .flags  = IORESOURCE_IO,
 };
 EXPORT_SYMBOL(ioport_resource);
+```
 
 Or for `iomem`, it is `iomem_resource` structure:
 
@@ -163,8 +165,9 @@ struct resource iomem_resource = {
         .end    = -1,
         .flags  = IORESOURCE_MEM,
 };
+```
 
-As I wrote about `request_regions` is used for registering of I/O port region and this macro used in many [places](http://lxr.free-electrons.com/ident?i=request_region) in the kernel. For example let's look on the [drivers/char/rtc.c](https://github.com/torvalds/linux/blob/master/char/rtc.c). This source code file provides [Real Time Clock](http://en.wikipedia.org/wiki/Real-time_clock) interface in the linux kernel. As every kernel module, `rtc` module contains `module_init` definition:
+As I wrote about `request_regions` is used for registering of I/O port region and this macro used in many [places](http://lxr.free-electrons.com/ident?i=request_region) in the kernel. For example let's look at [drivers/char/rtc.c](https://github.com/torvalds/linux/blob/master/char/rtc.c). This source code file provides [Real Time Clock](http://en.wikipedia.org/wiki/Real-time_clock) interface in the linux kernel. As every kernel module, `rtc` module contains `module_init` definition:
 
 ```C
 module_init(rtc_init);
@@ -195,7 +198,7 @@ So with the `request_region(RTC_PORT(0), size, "rtc")` we register memory region
 0070-0077 : rtc0
 ```
 
-So, we got it! Ok, it was ports. The second way is use of `I/O` memory. As I wrote above this was is mapping of control registers and memory of a device to the memory address space. `I/O` memory is a set of contiguous addresses which are provides by a device to CPU through a bus. All memory-mapped I/O addresses are not used by the kernel directly. There is special `ioremap` function which allows to covert physical address on a bus to the kernel virtual address or in another words `ioremap` maps I/O physical memory region to access it from the kernel. `ioremap` function takes two parameters:
+So, we got it! Ok, it was ports. The second way is use of `I/O` memory. As I wrote above this way is mapping of control registers and memory of a device to the memory address space. `I/O` memory is a set of contiguous addresses which are provided by a device to CPU through a bus. All memory-mapped I/O addresses are not used by the kernel directly. There is a special `ioremap` function which allows us to covert the physical address on a bus to the kernel virtual address or in another words `ioremap` maps I/O physical memory region to access it from the kernel. The `ioremap` function takes two parameters:
 
 * start of the memory region;
 * size of the memory region;
@@ -254,7 +257,7 @@ static inline const char *e820_type_to_string(int e820_type)
 
 and we can see it in the `/proc/iomem` (read above).
 
-Now let's try to understand how `ioremap` works. We already know little about `ioremap`, we saw it in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. If you have read this part, you can remember call of the `early_ioremap_init` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c). Initialization of the `ioremap` splitten on two parts: there is early part which we can use before normal `ioremap` is available and normal `ioremap` which is available after `vmalloc` initialization and call of the `paging_init`. We do not know anything about `vmalloc` for now, so let's consider early initialization of the `ioremap`. First of all `early_ioremap_init` checks that `fixmap` is aligned on page middle directory boundary:
+Now let's try to understand how `ioremap` works. We already know a little about `ioremap`, we saw it in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. If you have read this part, you can remember the call of the `early_ioremap_init` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c). Initialization of the `ioremap` is split inn two parts: there is the early part which we can use before the normal `ioremap` is available and the normal `ioremap` which is available after `vmalloc` initialization and call of the `paging_init`. We do not know anything about `vmalloc` for now, so let's consider early initialization of the `ioremap`. First of all `early_ioremap_init` checks that `fixmap` is aligned on page middle directory boundary:
 
 ```C
 BUILD_BUG_ON((fix_to_virt(0) + PAGE_SIZE) & ((1 << PMD_SHIFT) - 1));
@@ -500,9 +503,9 @@ So, this is the end!
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part about linux kernel memory management. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new).
+This is the end of the second part about linux kernel memory management. If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-internals/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me a PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
 Links
 --------------------------------------------------------------------------------
