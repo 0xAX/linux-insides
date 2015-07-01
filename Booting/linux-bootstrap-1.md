@@ -4,9 +4,9 @@ Kernel booting process. Part 1.
 From the bootloader to kernel
 --------------------------------------------------------------------------------
 
-If you have read my previous [blog posts](http://0xax.blogspot.com/search/label/asm), you can see that some time ago I started to get involved with low-level programming. I wrote some posts about x86_64 assembly programming for Linux. At the same time, I started to dive into the Linux source code. It is very interesting for me to understand how low-level things work, how programs run on my computer, how they are located in memory, how the kernel manages processes and memory, how the network stack works on low-level and many many other things. I decided to write yet another series of posts about the Linux kernel for **x86_64**.
+If you have read my previous [blog posts](http://0xax.blogspot.com/search/label/asm), you can see that sometime ago I started to get involved with low-level programming. I wrote some posts about x86_64 assembly programming for Linux. At the same time, I started to dive into the Linux source code. I have a great interest in understanding how low-level things work, how programs run on my computer, how they are located in memory, how the kernel manages processes and memory, how the network stack works on low-level and many many other things. So, I decided to write yet another series of posts about the Linux kernel for **x86_64**.
 
-Note that I'm not a professional kernel hacker, and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). I appreciate it. All posts will also be accessible at [linux-insides](https://github.com/0xAX/linux-insides) and if you find something wrong with my English or the post content, feel free to send a pull request.
+Note that I'm not a professional kernel hacker and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). I appreciate it. All posts will also be accessible at [linux-insides](https://github.com/0xAX/linux-insides) and if you find something wrong with my English or the post content, feel free to send a pull request.
 
 
 *Note that this isn't the official documentation, just learning and sharing knowledge.*
@@ -16,11 +16,11 @@ Note that I'm not a professional kernel hacker, and I don't write code for the k
 * Understanding C code
 * Understanding assembly code (AT&T syntax)
 
-Anyway, if you just started to learn some tools, I will try to explain some parts during this and following posts. Ok, little introduction finished and now we can start to dive into the kernel and low-level stuff.
+Anyway, if you just started to learn some tools, I will try to explain some parts during this and the following posts. Ok, little introduction finished and now we can start to dive into the kernel and low-level stuff.
 
-All code is actually for kernel - 3.18, if there are changes, I will update the posts.
+All code is actually for kernel - 3.18. If there are changes, I will update the posts accordingly.
 
-Magic power button, what's next?
+The Magic Power Button, What happens next?
 --------------------------------------------------------------------------------
 
 Despite that this is a series of posts about Linux kernel, we will not start from kernel code (at least in this paragraph). Ok, you pressed the magic power button on your laptop or desktop computer and it started to work. After the motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply), the power supply provides the computer with the proper amount of electricity. Once motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to run the CPU. The CPU resets all leftover data in its registers and sets up predefined values for every register.
@@ -34,13 +34,13 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode) now and we need to make a little retreat for understanding memory segmentation in this mode. Real mode is supported in all x86-compatible processors, from [8086](https://en.wikipedia.org/wiki/Intel_8086) to modern Intel 64-bit CPUs. The 8086 processor had a 20-bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it only has 16-bit registers, and with 16-bit registers the maximum address is 2^16 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all of the address space available. All memory is divided into small, fixed-size segments of 65535 bytes, or 64 KB. Since we cannot address memory behind 64 KB with 16 bit registers, another method to do it was devised. An address consists of two parts: the beginning address of the segment and the offset from the beginning of this segment. To get a physical address in memory, we need to multiply the segment part by 16 and add the offset part:
+The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode) and we need to back up a little to understand memory segmentation in this mode. Real mode is supported in all x86-compatible processors, from [8086](https://en.wikipedia.org/wiki/Intel_8086) to modern Intel 64-bit CPUs. The 8086 processor had a 20-bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it only has 16-bit registers, and with 16-bit registers the maximum address is 2^16 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all of the address space available. All memory is divided into small, fixed-size segments of 65535 bytes, or 64 KB. Since we cannot address memory below 64 KB with 16 bit registers, an alternate method to do it was devised. An address consists of two parts: the beginning address of the segment and the offset from the beginning of this segment. To get a physical address in memory, we need to multiply the segment part by 16 and add the offset part:
 
 ```
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-For example `CS:IP` is `0x2000:0x0010`. The corresponding physical address will be:
+For example if `CS:IP` is `0x2000:0x0010`, the corresponding physical address will be:
 
 ```python
 >>> hex((0x2000 << 4) + 0x0010)
@@ -142,7 +142,7 @@ nasm -f bin boot.nasm
 objdump -D -b binary -mi386 -Maddr16,data16,intel boot
 ```
 
-A real-world boot sector has code for continuing the boot process and the partition table instead of a bunch of 0's and an exclamation point :) Ok, so, from this point onwards BIOS hands over the control to the bootloader and we can go ahead.
+A real-world boot sector has code for continuing the boot process and the partition table instead of a bunch of 0's and an exclamation point :) Ok so, from this point onwards BIOS hands over the control to the bootloader and we can go ahead.
 
 **NOTE**: As you can read above the CPU is in real mode. In real mode, calculating the physical address in memory is done as following:
 
@@ -157,7 +157,7 @@ Same as I mentioned before. But we have only 16 bit general purpose registers. T
 '0x10ffef'
 ```
 
-Where `0x10ffef` is equal to `1MB + 64KB - 16b`. But a [8086](https://en.wikipedia.org/wiki/Intel_8086) processor, which was the first processor with real mode. It had 20 bit address lineand `2^20 = 1048576.0` is 1MB. So, it means that the actual  memory available is 1MB.
+Where `0x10ffef` is equal to `1MB + 64KB - 16b`. But a [8086](https://en.wikipedia.org/wiki/Intel_8086) processor, which was the first processor with real mode. It had 20 bit address line and `2^20 = 1048576.0` is 1MB. So, it means that the actual  memory available is 1MB.
 
 General real mode's memory map is:
 
@@ -175,7 +175,7 @@ General real mode's memory map is:
 0x000F0000 - 0x000FFFFF - System BIOS
 ```
 
-But stop, at the beginning of post I wrote that first instruction executed by the CPU is located at the address `0xFFFFFFF0`, which is much bigger than `0xFFFFF` (1MB). How can CPU access it in real mode? As I write about and you can read in [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) documentation:
+But stop, at the beginning of post I wrote that first instruction executed by the CPU is located at the address `0xFFFFFFF0`, which is much bigger than `0xFFFFF` (1MB). How can CPU access it in real mode? As I write about it and you can read in [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) documentation:
 
 ```
 0xFFFE_0000 - 0xFFFF_FFFF: 128 kilobyte ROM mapped into address space
@@ -241,20 +241,20 @@ So after the bootloader transferred control to the kernel, it starts somewhere a
 0x1000 + X + sizeof(KernelBootSector) + 1
 ```
 
-where `X` is the address kernel bootsector loaded. In my case `X` is `0x10000` (), we can see it in memory dump:
+where `X` is the address of kernel bootsector loaded. In my case `X` is `0x10000`, we can see it in memory dump:
 
 ![kernel first address](http://oi57.tinypic.com/16bkco2.jpg)
 
 Ok, now the bootloader has loaded Linux kernel into the memory, filled header fields and jumped to it. Now we can move directly to the kernel setup code.
 
-Start of kernel setup
+Start of Kernel Setup
 --------------------------------------------------------------------------------
 
-<<<<<<< HEAD
 Finally we are in the kernel. Technically kernel didn't run yet, first of all we need to setup kernel, memory manager, process manager etc. Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is a little strange at the first look, there are many instructions before it.
+
 =======
+
 Finally we are in the kernel. Technically kernel didn't run yet, first of all we need to setup kernel, memory manager, process manager, etc. Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is little strange at the first look, there are many instructions before it. Actually....
->>>>>>> upstream/master
 
 Actually Long time ago Linux kernel had its own bootloader, but now if you run for example:
 
@@ -484,7 +484,7 @@ This is the end of the first part about Linux kernel internals. If you have ques
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
-Links
+Links For Further Reading
 --------------------------------------------------------------------------------
 
   * [Intel 80386 programmer's reference manual 1986](http://css.csail.mit.edu/6.858/2014/readings/i386.pdf)
