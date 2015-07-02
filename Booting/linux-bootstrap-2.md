@@ -465,17 +465,19 @@ where `0x80` is the first hard drive and the `EDD_MBR_SIG_MAX` macro is 16. It c
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part about linux kernel internals. In the next part we will see video mode setting and the rest of preparations before transition to protected mode and directly transitioning into it.
+This is the end of the second part about Linux kernel internals. In the next part we will see video mode setting and the rest of preparations before transition to protected mode and directly transitioning into it.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
 **Please note that English is not my first language, And I am really sorry for any inconvenience. If you found any mistakes please send me a PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
-Links
+Links For Further Reading
 --------------------------------------------------------------------------------
 
 * [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)
+* [Protected mode](http://wiki.osdev.org/Protected_Mode)
 * [Long mode](http://en.wikipedia.org/wiki/Long_mode)
+* [Nice explanation of CPU Modes with code](http://www.codeproject.com/Articles/45788/The-Real-Protected-Long-mode-assembly-tutorial-for)
 * [How to Use Expand Down Segments on Intel 386 and Later CPUs](http://www.sudleyplace.com/dpmione/expanddown.html)
 * [earlyprintk documentation](http://lxr.free-electrons.com/source/Documentation/x86/earlyprintk.txt)
 * [Kernel Parameters](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
@@ -483,5 +485,6 @@ Links
 * [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
 * [APM](https://en.wikipedia.org/wiki/Advanced_Power_Management)
 * [EDD specification](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
-* [Previous part](linux-bootstrap-1.md)
+* [TLDP documentation for Linux Boot Process](http://www.tldp.org/HOWTO/Linux-i386-Boot-Code-HOWTO/setup.html) (old)
+* [Previous Part](linux-bootstrap-1.md)
 
