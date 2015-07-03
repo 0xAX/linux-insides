@@ -484,7 +484,7 @@ This is the end of the first part about Linux kernel internals. If you have ques
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
-Links For Further Reading
+Links
 --------------------------------------------------------------------------------
 
   * [Intel 80386 programmer's reference manual 1986](http://css.csail.mit.edu/6.858/2014/readings/i386.pdf)
