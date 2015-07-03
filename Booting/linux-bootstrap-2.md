@@ -471,7 +471,7 @@ If you have any questions or suggestions write me a comment or ping me at [twitt
 
 **Please note that English is not my first language, And I am really sorry for any inconvenience. If you found any mistakes please send me a PR to [linux-internals](https://github.com/0xAX/linux-internals).**
 
-Links For Further Reading
+Links
 --------------------------------------------------------------------------------
 
 * [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)
