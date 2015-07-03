@@ -4,16 +4,25 @@ Kernel booting process. Part 2.
 First steps in the kernel setup
 --------------------------------------------------------------------------------
 
-We started to dive into linux kernel internals in the previous [part](linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call of the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). Here we will continue to research the kernel setup code and see what `protected mode` is, some preparation for the transition into it, the heap and console initialization, memory detection and much much more. So, Let's go ahead.
+We started to dive into linux kernel internals in the previous [part](linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call to the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). 
+
+In this part we will continue to research the kernel setup code and 
+* see what `protected mode` is,
+* some preparation for the transition into it,
+* the heap and console initialization,
+* memory detection, cpu validation, keyboard initialization
+* and much much more.
+
+So, Let's go ahead.
 
 Protected mode
 --------------------------------------------------------------------------------
 
-Before we can move to the native Intel64 [Long mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode.
+Before we can move to the native Intel64 [Long Mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode.
 
 What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from the [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode came. The Main reason to move away from [real mode](http://wiki.osdev.org/Real_Mode) is that there is very limited access to the RAM. As you may remember from the previous part, there is only 2^20 bytes or 1 megabyte, sometimes even only 640 kilobytes of RAM available in real mode.
 
-Protected mode brought many changes, but the main one is the difference memory management. The 24-bit address bus was replaced with a 32-bit address bus. It allows access to 4 gigabytes of physical address space vs 1MB of real mode. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added, which you can read about in the next sections.
+Protected mode brought many changes, but the main one is the difference in memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allows access to 4-gigabytes of physical address space vs 1MB of real mode. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added, which you can read about in the next sections.
 
 Memory management in protected mode is divided into two, almost independent parts:
 
@@ -33,7 +42,9 @@ And we can get the physical address if we know these two parts by:
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-Memory segmentation was completely redone in protected mode. There are no 64 kilobyte fixed-size segments. All memory segments are described by the `Global Descriptor Table` (GDT) instead of segment registers. The GDT is a structure which resides in memory. There is no fixed place for it in memory, but its address is stored in the special `GDTR` register. Later we will see the GDT loading in the linux kernel code. There will be an operation for loading it into memory, something like:
+Memory segmentation was completely redone in protected mode. There are no 64 kilobyte fixed-size segments. Instead, the size and location of each segment is described by an associated data structure called segment descriptor. The segment descriptors are stored in the `Global Descriptor Table` (GDT).
+
+The GDT is a structure which resides in memory. There is no fixed place for it in the memory so, its address is stored in the special `GDTR` register. Later we will see the GDT loading in the linux kernel code. There will be an operation for loading it into memory, something like:
 
 ```assembly
 lgdt gdt
@@ -41,36 +52,45 @@ lgdt gdt
 
 where the `lgdt` instruction loads the base address and limit of global descriptor table to the `GDTR` register. `GDTR` is a 48-bit register and consists of two parts:
 
- * size - 16 bit of global descriptor table;
- * address  - 32-bit of the global descriptor table.
+ * size(16-bit) of global descriptor table;
+ * address(32-bit) of the global descriptor table.
 
-The global descriptor table contains `descriptors` which describe memory segments.  Every descriptor is 64-bits. The general scheme of a descriptor is:
+The global descriptor table contains `descriptors` which describe memory segments.  Every descriptor is 64-bits long. The general scheme of a descriptor is:
 
 ```
 31          24        19      16              7            0
 ------------------------------------------------------------
 |             | |B| |A|       | |   | |0|E|W|A|            |
-| BASE 31..24 |G|/|L|V| LIMIT |P|DPL|S|  TYPE | BASE 23:16 | 4
-|             | |D| |L| 19..16| |   | |1|C|R|A|            |
+| BASE 31:24 |G|/|L|V| LIMIT |P|DPL|S|  TYPE | BASE 23:16 | 4
+|             | |D| |L| 19:16| |   | |1|C|R|A|            |
 ------------------------------------------------------------
 |                             |                            |
-|        BASE 15..0           |       LIMIT 15..0          | 0
+|        BASE 15:0           |       LIMIT 15:0          | 0
 |                             |                            |
 ------------------------------------------------------------
 ```
 
-Don't worry, I know it looks a little scary after real mode, but it's easy. Let's look at it closer:
+Don't worry, I know it looks a little scary after real mode, but it's easy. For example LIMIT 15:0 means that bit 0-15 of the Descriptor contain the value for the limit. The rest of it is in LIMIT 16:19. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
 
-1. Limit (0 - 15 bits) defines a `length_of_segment - 1`. It depends on `G` bit.
+1. Limit[20-bits] is at 0-15,16-19 bits. It defines `length_of_segment - 1`. It depends on `G`(Granularity) bit.
 
-  * if `G` (55-bit) is 0 and segment limit is 0, the size of the segment is 1 byte
+  * if `G` (bit 55) is 0 and segment limit is 0, the size of the segment is 1 byte
   * if `G` is 1 and segment limit is 0, the size of the segment is 4096 bytes
   * if `G` is 0 and segment limit is 0xfffff, the size of the segment is 1 megabyte
   * if `G` is 1 and segment limit is 0xfffff, the size of the segment is 4 gigabytes
 
-2. Base (0-15, 32-39 and 56-63 bits) defines the physical address of the segment's start address.
+  So, it means that if
+  * if G is 0, Limit is interpreted in terms of 1 Byte.
+  * if G is 1, Limit is interpreted in terms of 4096 Bytes = 4 KBytes.
 
-3. Type (40-47 bits) defines the type of segment and kinds of access to it. Next `S` flag specifies descriptor type. if `S` is 0 then this segment is a system segment, whereas if `S` is 1 then this is a code or data segment (Stack segments are data segments which must be read/write segments). If the segment is a code or data segment, it can be one of the following access types:
+2. Base[32-bits] is at (0-15, 32-39 and 56-63 bits). It defines the physical address of the segment's start address.
+
+3. Type/Attribute (40-47 bits) defines the type of segment and kinds of access to it. 
+  * `S` flag at bit 44 specifies descriptor type. If `S` is 0 then this segment is a system segment, whereas if `S` is 1 then this is a code or data segment (Stack segments are data segments which must be read/write segments).
+  
+To determine if the segment is a code or data segment we can check its Ex(bit 43) Attribute marked as 0 in the above diagram. If it is 0, then the segment is a Data segment otherwise it is a code segment.
+
+A segment can be of one of the following types:
 
 ```
 |           Type Field        | Descriptor Type | Description
@@ -96,19 +116,24 @@ Don't worry, I know it looks a little scary after real mode, but it's easy. Let'
 | 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed
 ```
 
-As we can see the first bit is `0` for a _data_ segment and `1` for a _code_ segment. The next three bits `EWA` are expansion direction (expand-down segment will grow down, you can read more about it  [here](http://www.sudleyplace.com/dpmione/expanddown.html)), write enable and accessed for data segments. `CRA` bits are conforming (A transfer of execution into a more-privileged conforming segment allows execution to continue at the current privilege level), read enable and accessed.
+As we can see the first bit(bit 43) is `0` for a _data_ segment and `1` for a _code_ segment. The next three bits(40, 41, 42, 43) are either `EWA`(*E*xpansion *W*ritable *A*ccessible) or CRA(*C*onforming *R*eadable *A*ccessible).
+  * if E(bit 42) is 0, expand up other wise expand down. Read more [here](http://www.sudleyplace.com/dpmione/expanddown.html).
+  * if W(bit 41)(for Data Segments) is 1, write access is allowed otherwise not. Note that read access is always allowed on data segments.
+  * A(bit 40) - Whether the segment is accessed by processor or not.
+  * C(bit 43) is conforming bit(for code selectors). If C is 1, the segment code can be executed from a lower level privilege for e.g user level. If C is 0, it can only be executed from the same privilege level.
+  * R(bit 41)(for code segments). If 1 read access to segment is allowed otherwise not. Write access is never allowed to code segments.
 
-4. DPL (descriptor privilege level) defines the privilege level of the segment. It can be 0-3 where 0 is the most privileged.
+4. DPL[2-bits] (Descriptor Privilege Level) is at bits 45-46. It defines the privilege level of the segment. It can be 0-3 where 0 is the most privileged.
 
-5. P flag - indicates if the segment is present in memory or not.
+5. P flag(bit 47) - indicates if the segment is present in memory or not.
 
-6. AVL flag - Available and reserved bits.
+6. AVL flag(bit 52) - Available and reserved bits.
 
-7. L flag - indicates whether a code segment contains native 64-bit code. If 1 then the code segment executes in 64 bit mode.
+7. L flag(bit 53) - indicates whether a code segment contains native 64-bit code. If 1 then the code segment executes in 64 bit mode.
 
-8. B/D flag - default operation size/default stack pointer size and/or upper bound.
+8. B/D flag(bit 54) - default operation size/default stack pointer size and/or upper bound.
 
-Segment registers don't contain the base address of the segment as in real mode. Instead they contain a special structure - `segment selector`. `Selector` is a 16-bit structure:
+Segment registers don't contain the base address of the segment as in real mode. Instead they contain a special structure - `Segment Selector`. Each Segment Descriptor has an associated Segment Selector. `Segment Selector` is a 16-bit structure:
 
 ```
 -----------------------------
@@ -116,12 +141,16 @@ Segment registers don't contain the base address of the segment as in real mode.
 -----------------------------
 ```
 
-Where `Index` shows the index number of the descriptor in the descriptor table. `TI` shows where to search for the descriptor: in the global descriptor table or local. And `RPL` is the privilege level.
+Where `Index` shows the index number of the descriptor in the GDT. `TI` shows where to search for the descriptor: in the Global Descriptor Table(GDT) or Local Descriptor Table. And `RPL` is the privilege level.
 
-Every segment register has a visible and hidden part. When a selector is loaded into one of the segment registers, it will be stored into the visible part. The hidden part contains the base address, limit and access information of the descriptor which pointed to the selector. The following steps are needed to get the physical address in the protected mode:
+Every segment register has a visible and hidden part.
+* Visible - Segment Selector is stored here
+* Hidden - Segment Descriptor(base, limit, attributes, flags)
+ 
+The following steps are needed to get the physical address in the protected mode:
 
-* The segment selector must be loaded in one of the segment registers;
-* The CPU tries to find (by GDT address + Index from selector) and load the descriptor into the hidden part of the segment register;
+* The segment selector must be loaded in one of the segment registers
+* The CPU tries to find (by GDT address + Index from selector) and load the descriptor into the hidden part of the segment register
 * Base address (from segment descriptor) + offset will be the linear address of the segment which is the physical address (if paging is disabled).
 
 Schematically it will look like this:
@@ -130,10 +159,10 @@ Schematically it will look like this:
 
 The algorithm for the transition from real mode into protected mode is:
 
-* Disable interrupts;
-* Describe and load GDT with `lgdt` instruction;
-* Set PE (Protection Enable) bit in CR0 (Control Register 0);
-* Jump to protected mode code;
+* Disable interrupts
+* Describe and load GDT with `lgdt` instruction
+* Set PE (Protection Enable) bit in CR0 (Control Register 0)
+* Jump to protected mode code
 
 We will see the transition to protected mode in the linux kernel in the next part, but before we can move to protected mode, we need to do some preparations.
 
