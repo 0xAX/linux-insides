@@ -25,6 +25,6 @@ If you want to contribute to [linux-insides](https://github.com/0xAX/linux-insid
 
 **IMPORTANT**
 
-Please, make the actual changes. While you made your changes, I can merge changes from somebody else and your changes can conflict with `master` branch content. Please rebase on master everytime before you're going to push your changes and check that your branch doesn't conflict with `master`.
+Please, make the actual changes. While you made your changes, I can merge changes from somebody else and your changes can conflict with `master` branch content. Please rebase on master every time before you're going to push your changes and check that your branch doesn't conflict with `master`.
 
 Thank you.

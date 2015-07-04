@@ -172,7 +172,7 @@ After this we have address where we loaded in the `ebp` - `0x100000`.
 
 Now we can setup the stack and verify CPU that it has support of the long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions).
 
-stack setup and CPU verification
+Stack setup and CPU verification
 --------------------------------------------------------------------------------
 
 The next we can see assembly code which setups new stack for kernel decompression:
@@ -501,4 +501,4 @@ Links
 * [Previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md)
 * [Paging on osdev.org](http://wiki.osdev.org/Paging)
 * [Paging Systems](https://www.cs.rutgers.edu/~pxk/416/notes/09a-paging.html)
-* [x86 paging](http://www.cirosantilli.com/x86-paging/)
+* [x86 Paging Tutorial](http://www.cirosantilli.com/x86-paging/)
