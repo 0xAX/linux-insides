@@ -22,7 +22,7 @@ Before we can move to the native Intel64 [Long Mode](http://en.wikipedia.org/wik
 
 What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from the [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode came.
 
-The Main reason to move away from [Real mode](http://wiki.osdev.org/Real_Mode) is that there is very limited access to the RAM. As you may remember from the previous part, there is only 2<sup>20</sup> bytes or 1 Megabyte, sometimes even only 640 Kilobytes of RAM available in the Real mode.
+The main reason to move away from [Real mode](http://wiki.osdev.org/Real_Mode) is that there is very limited access to the RAM. As you may remember from the previous part, there is only 2<sup>20</sup> bytes or 1 Megabyte, sometimes even only 640 Kilobytes of RAM available in the Real mode.
 
 Protected mode brought many changes, but the main one is the difference in memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs 1 Megabyte of real mode. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added, which you can read about in the next sections.
 
@@ -169,7 +169,7 @@ The algorithm for the transition from real mode into protected mode is:
 * Set PE (Protection Enable) bit in CR0 (Control Register 0)
 * Jump to protected mode code
 
-We will see the transition to protected mode in the linux kernel in the next part, but before we can move to protected mode, we need to do some preparations.
+We will see the complete transition to protected mode in the linux kernel in the next part, but before we can move to protected mode, we need to do some more preparations.
 
 Let's look at [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). We can see some routines there which perform keyboard initialization, heap initialization, etc... Let's take a look.
 
