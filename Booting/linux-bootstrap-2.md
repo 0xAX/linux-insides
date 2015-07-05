@@ -1,7 +1,7 @@
 Kernel booting process. Part 2.
 ================================================================================
 
-Overview
+First steps in the kernel setup
 --------------------------------------------------------------------------------
 
 We started to dive into linux kernel internals in the previous [part](linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call to the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). 
@@ -31,7 +31,7 @@ Memory management in Protected mode is divided into two, almost independent part
 * Segmentation
 * Paging
 
-Here we will only see Segmentation. Paging will be discussed in the next sections. 
+Here we will only see segmentation. Paging will be discussed in the next sections. 
 
 As you can read in the previous part, addresses consist of two parts in real mode:
 
