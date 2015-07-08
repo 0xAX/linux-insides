@@ -313,9 +313,9 @@ After that `biosregs` structure is filled with `memset`, `bios_putchar` calls th
 Heap initialization
 --------------------------------------------------------------------------------
 
-After the stack and bss section were prepared in [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) (see previous [part](linux-bootstrap-1.md)), the kernel needs to initialize the [heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) with the [init_heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function.
+After the stack and bss section were prepared in [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) (see previous [part](linux-bootstrap-1.md)), the kernel needs to initialize the [heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) with the [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function.
 
-First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21) flag from the [`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) kernel setup header and calculates the end of the stack if this flag was set:
+First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21) flag from the [`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) in the kernel setup header and calculates the end of the stack if this flag was set:
 
 ```C
 	char *stack_end;
@@ -327,9 +327,13 @@ First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds
 
 or in other words `stack_end = esp - STACK_SIZE`.
 
-Then there is the `heap_end` calculation which is `heap_end_ptr` or `_end` + 512 and a check if `heap_end` is greater than `stack_end` makes it equal.
+Then there is the `heap_end` calculation:
+```c
+	heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
+```
+which means `heap_end_ptr` or `_end` + `512`(`0x200h`). And at the last is checked that whether `heap_end` is greater than `stack_end`. If it is then `stack_end` is assigned to `heap_end` to make them equal.
 
-From this moment we can use the heap in the kernel setup code. We will see how to use it and how the API for it is implemented in the next posts.
+Now the heap is initialized and we can use it using the `GET_HEAP` method. We will see how it is used, how to use it and how the it is implemented in the next posts.
 
 CPU validation
 --------------------------------------------------------------------------------
@@ -344,12 +348,14 @@ check_cpu(&cpu_level, &req_level, &err_flags);
 	return -1;
 	}
 ```
-It checks the cpu's flags, presence of [long mode](http://en.wikipedia.org/wiki/Long_mode) (which we will see in more detail in the next sections) in case of x86_64(64-bit) CPU, checks the processor's vendor and makes preparation for certain vendors like turning off SSE+SSE2 for AMD if they are missing, etc.
+`check_cpu` checks the cpu's flags, presence of [long mode](http://en.wikipedia.org/wiki/Long_mode) in case of x86_64(64-bit) CPU, checks the processor's vendor and makes preparation for certain vendors like turning off SSE+SSE2 for AMD if they are missing, etc.
 
 Memory detection
 --------------------------------------------------------------------------------
 
-The next step is memory detection by the `detect_memory` function. It uses different programming interfaces for memory detection like `0xe820`, `0xe801` and `0x88`. We will see only the implementation of 0xE820 here. Let's look into the `detect_memory_e820` implementation from the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c) source file. First of all, the `detect_memory_e820` function initializes the `biosregs` structure as we saw above and fills registers with special values for the `0xe820` call:
+The next step is memory detection by the `detect_memory` function. `detect_memory` basically provides a map of available RAM to the cpu. It uses different programming interfaces for memory detection like `0xe820`, `0xe801` and `0x88`. We will see only the implementation of **0xE820** here.
+
+Let's look into the `detect_memory_e820` implementation from the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c) source file. First of all, the `detect_memory_e820` function initializes the `biosregs` structure as we saw above and fills registers with special values for the `0xe820` call:
 
 ```assembly
 	initregs(&ireg);
@@ -359,9 +365,13 @@ The next step is memory detection by the `detect_memory` function. It uses diffe
 	ireg.di  = (size_t)&buf;
 ```
 
-The `ax` register must contain the number of the function (0xe820 in our case), `cx` register contains size of the buffer which will contain data about memory, `edx` must contain the `SMAP` magic number, `es:di` must contain the address of the buffer which will contain memory data and `ebx` has to be zero.
+* `ax` contains the number of the function (0xe820 in our case)
+* `cx` register contains size of the buffer which will contain data about memory
+* `edx` must contain the `SMAP` magic number
+* `es:di` must contain the address of the buffer which will contain memory data
+* `ebx` has to be zero.
 
-Next is a loop where data about the memory will be collected. It starts from the call of the 0x15 bios interrupt, which writes one line from the address allocation table. For getting the next line we need to call this interrupt again (which we do in the loop). Before the next call `ebx` must contain the value returned previously:
+Next is a loop where data about the memory will be collected. It starts from the call of the `0x15` BIOS interrupt, which writes one line from the address allocation table. For getting the next line we need to call this interrupt again (which we do in the loop). Before the next call `ebx` must contain the value returned previously:
 
 ```C
 	intcall(0x15, &ireg, &oreg);
@@ -389,7 +399,18 @@ You can see the result of this in the `dmesg` output, something like:
 Keyboard initialization
 --------------------------------------------------------------------------------
 
-The next step is the initialization of the keyboard with the call of the [`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65) function. At first `keyboard_init` initializes registers using the `initregs` function and calling the [0x16](http://www.ctyme.com/intr/rb-1756.htm) interrupt for getting the keyboard status. After this it calls [0x16](http://www.ctyme.com/intr/rb-1757.htm) again to set repeat rate and delay.
+The next step is the initialization of the keyboard with the call of the [`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65) function. At first `keyboard_init` initializes registers using the `initregs` function and calling the [0x16](http://www.ctyme.com/intr/rb-1756.htm) interrupt for getting the keyboard status.
+```c
+	initregs(&ireg);
+	ireg.ah = 0x02;		/* Get keyboard status */
+	intcall(0x16, &ireg, &oreg);
+	boot_params.kbd_status = oreg.al;
+```
+After this it calls [0x16](http://www.ctyme.com/intr/rb-1757.htm) again to set repeat rate and delay.
+```c
+	ireg.ax = 0x0305;	/* Set keyboard repeat rate */
+	intcall(0x16, &ireg, NULL);
+```
 
 Querying
 --------------------------------------------------------------------------------
@@ -422,7 +443,7 @@ int query_mca(void)
 }
 ```
 
-It fills  the `ah` register with `0xc0` and calls the `0x15` BIOS interruption. After the interrupt execution it checks  the [carry flag](http://en.wikipedia.org/wiki/Carry_flag) and if it is set to 1, the BIOS doesn't support `MCA`. If carry flag is set to 0, `ES:BX` will contain a pointer to the system information table, which looks like this:
+It fills  the `ah` register with `0xc0` and calls the `0x15` BIOS interruption. After the interrupt execution it checks  the [carry flag](http://en.wikipedia.org/wiki/Carry_flag) and if it is set to 1, the BIOS doesn't support (**MCA**)[https://en.wikipedia.org/wiki/Micro_Channel_architecture]. If carry flag is set to 0, `ES:BX` will contain a pointer to the system information table, which looks like this:
 
 ```
 Offset	Size	Description	)
@@ -460,15 +481,15 @@ static inline void set_fs(u16 seg)
 }
 ```
 
-There is inline assembly which gets the value of the `seg` parameter and puts it into the `fs` register. There are many functions in [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h) like `set_fs`, for example `set_gs`, `fs`, `gs` for reading a value in it etc...
+This function contains inline assembly which gets the value of the `seg` parameter and puts it into the `fs` register. There are many functions in [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h) like `set_fs`, for example `set_gs`, `fs`, `gs` for reading a value in it etc...
 
 At the end of `query_mca` it just copies the table which pointed to by `es:bx` to the `boot_params.sys_desc_table`.
 
 The next step is getting [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep) information by calling the `query_ist` function. First of all it checks the CPU level and if it is correct, calls `0x15` for getting info and saves the result to `boot_params`.
 
-The following [query_apm_bios](https://github.com/torvalds/linux/blob/master/arch/x86/boot/apm.c#L21) function gets [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management) information from the BIOS. `query_apm_bios` calls the `0x15` BIOS interruption too, but with `ah` - `0x53` to check `APM` installation. After the `0x15` execution, `query_apm_bios` functions checks `PM` signature (it must be `0x504d`), carry flag (it must be 0 if `APM` supported) and value of the `cx` register (if it's 0x02, protected mode interface is supported).
+The following [query_apm_bios](https://github.com/torvalds/linux/blob/master/arch/x86/boot/apm.c#L21) function gets [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management) information from the BIOS. `query_apm_bios` calls the `0x15` BIOS interruption too, but with `ah` = `0x53` to check `APM` installation. After the `0x15` execution, `query_apm_bios` functions checks `PM` signature (it must be `0x504d`), carry flag (it must be 0 if `APM` supported) and value of the `cx` register (if it's 0x02, protected mode interface is supported).
 
-Next it calls the `0x15` again, but with `ax = 0x5304` for disconnecting the `APM` interface and connect the 32bit protected mode interface. In the end it fills `boot_params.apm_bios_info` with values obtained from the BIOS.
+Next it calls the `0x15` again, but with `ax = 0x5304` for disconnecting the `APM` interface and connecting the 32-bit protected mode interface. In the end it fills `boot_params.apm_bios_info` with values obtained from the BIOS.
 
 Note that `query_apm_bios` will be executed only if `CONFIG_APM` or `CONFIG_APM_MODULE` was set in configuration file:
 
@@ -478,7 +499,7 @@ Note that `query_apm_bios` will be executed only if `CONFIG_APM` or `CONFIG_APM_
 #endif
 ```
 
-The last is the [`query_edd`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c#L122) function, which asks `Enhanced Disk Drive` information from the BIOS. Let's look into the `query_edd` implementation.
+The last is the [`query_edd`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c#L122) function, which queries `Enhanced Disk Drive` information from the BIOS. Let's look into the `query_edd` implementation.
 
 First of all it reads the [edd](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt#L1023) option from kernel's command line and if it was set to `off` then `query_edd` just returns.
 
@@ -496,7 +517,7 @@ If EDD is enabled, `query_edd` goes over BIOS-supported hard disks and queries E
 		...
 ```
 
-where `0x80` is the first hard drive and the `EDD_MBR_SIG_MAX` macro is 16. It collects data into the array of [edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172) structures. `get_edd_info` checks that EDD is present by invoking the `0x13` interrupt with `ah` as `0x41` and if EDD is present, `get_edd_info` again calls the `0x13` interrupt, but with `ah` as `0x48` and `si` containing the address of the buffer where EDD information will be stored.
+where `0x80` is the first hard drive and the value of `EDD_MBR_SIG_MAX` macro is 16. It collects data into the array of [edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172) structures. `get_edd_info` checks that EDD is present by invoking the `0x13` interrupt with `ah` as `0x41` and if EDD is present, `get_edd_info` again calls the `0x13` interrupt, but with `ah` as `0x48` and `si` containing the address of the buffer where EDD information will be stored.
 
 Conclusion
 --------------------------------------------------------------------------------
