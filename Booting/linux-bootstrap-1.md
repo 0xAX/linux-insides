@@ -135,7 +135,7 @@ We will see:
 
 In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes `0xaa` and `0x55`.
 
-Although you can see binary dump of it with `objdump` util:
+You can see binary dump of it with `objdump` util:
 
 ```
 nasm -f bin boot.nasm
