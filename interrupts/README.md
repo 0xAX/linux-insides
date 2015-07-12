@@ -8,3 +8,4 @@ You will find a couple of posts which describes an interrupts and an exceptions 
 * [Interrupt handlers](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-4.md) - fourth part describes first non-early interrupt handlers.
 * [Implementation of exception handlers](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-5.md) - descripbes implementation of some exception handlers as double fault, divide by zero and etc.
 * [Handling Non-Maskable interrupts](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-6.md) - describes handling of non-maskable interrupts and the rest of interrupts handlers from the architecture-specific part.
+* [Dive into external hardware interrupts](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-7.md) - this part describes early initialization of code which is related to handling of external hardware interrupts.
