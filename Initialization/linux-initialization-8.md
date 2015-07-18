@@ -441,7 +441,7 @@ init_idle(current, smp_processor_id());
 calc_load_update = jiffies + LOAD_FREQ;
 ```
 
-So, the `init` process will be runned, when there will no other candidates (as it first process in the system). In the end we just set `scheduler_running` variable:
+So, the `init` process will be run, when there will be no other candidates (as it is the first process in the system). In the end we just set `scheduler_running` variable:
 
 ```C
 scheduler_running = 1;
