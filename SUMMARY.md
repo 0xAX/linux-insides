@@ -25,7 +25,7 @@
     * [Implementation of some exception handlers](interrupts/interrupts-5.md)
     * [Handling Non-Maskable interrupts](interrupts/interrupts-6.md)
     * [Dive into external hardware interrupts](interrupts/interrupts-7.md)
-    * [Initialization of external hardware interrupts structures]()
+    * [Initialization of external hardware interrupts structures](interrupts/interrupts-8.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
