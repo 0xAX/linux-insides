@@ -63,3 +63,4 @@ Thank you to all contributors:
 * [Adam Shannon](https://github.com/adamdecaf)
 * [Donny Nadolny](https://github.com/dnadolny)
 * [Ehsun N](https://github.com/imehsunn)
+* [Waqar Ahmed](https://github.com/Waqar144)
