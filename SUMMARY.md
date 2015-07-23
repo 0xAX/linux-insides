@@ -45,7 +45,6 @@
 * [Initial ram disk]()
    * [initrd]()
 * [Misc](Misc/README.md)
-    * [Kernel building and instalation]()
     * [How kernel compiled]()
     * [Write and Submit your first Linux kernel Patch]() 
     * [Data types in the kernel]()
