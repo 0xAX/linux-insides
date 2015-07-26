@@ -45,7 +45,7 @@
 * [Initial ram disk]()
    * [initrd]()
 * [Misc](Misc/README.md)
-    * [How kernel compiled]()
+    * [How kernel compiled](https://github.com/0xAX/linux-insides/blob/master/Misc/how_kernel_compiled.md)
     * [Write and Submit your first Linux kernel Patch]() 
     * [Data types in the kernel]()
 * [Useful links](LINKS.md)
