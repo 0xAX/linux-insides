@@ -233,7 +233,7 @@ export RCS_TAR_IGNORE := --exclude SCCS --exclude BitKeeper --exclude .svn \
 			 --exclude CVS --exclude .pc --exclude .hg --exclude .git
 ```
 
-That's all. We have finsihed with the all preparations, next point is the building of `vmlinux`.
+That's all. We have finished with the all preparations, next point is the building of `vmlinux`.
 
 Directly to the kernel build
 --------------------------------------------------------------------------------
