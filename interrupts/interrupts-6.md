@@ -4,9 +4,9 @@ Interrupts and Interrupt Handling. Part 6.
 Non-maskable interrupt handler
 --------------------------------------------------------------------------------
 
-It is sixth part of the [Interrupts and Interrupt Handling in the Linux kernel](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-5.html) we saw implementation of some exception handlers for the [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault) exception, divide excetpion, invalid [opcode](https://en.wikipedia.org/wiki/Opcode) excetpion and etc. As I wrote in the previous part we will see implementations of the rest excetpions in this part. We will see implementation of the following handlers:
+It is sixth part of the [Interrupts and Interrupt Handling in the Linux kernel](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-5.html) we saw implementation of some exception handlers for the [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault) exception, divide exception, invalid [opcode](https://en.wikipedia.org/wiki/Opcode) exceptions and etc. As I wrote in the previous part we will see implementations of the rest exceptions in this part. We will see implementation of the following handlers:
 
-* [Non-Masksable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt;
+* [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt;
 * [BOUND](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm) Range Exceeded Exception;
 * [Coprocessor](https://en.wikipedia.org/wiki/Coprocessor) exception;
 * [SIMD](https://en.wikipedia.org/wiki/SIMD) coprocessor exception.
@@ -16,7 +16,7 @@ in this part. So, let's start.
 Non-Maskable interrupt handling
 --------------------------------------------------------------------------------
 
-A [Non-Masksable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt is a hardware interrupt that cannot be ignore by standard masking techniques. In a general way, a non-maskable interrupt can be generated in either of two ways:
+A [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt is a hardware interrupt that cannot be ignore by standard masking techniques. In a general way, a non-maskable interrupt can be generated in either of two ways:
 
 * External hardware asserts the non-maskable interrupt [pin](https://en.wikipedia.org/wiki/CPU_socket) on the CPU.
 * The processor receives a message on the system bus or the APIC serial bus with a delivery mode `NMI`.
@@ -49,7 +49,7 @@ ENTRY(nmi)
 END(nmi)
 ```
 
-in the same [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file. Let's dive into it and will try to understand how `Non-Maskable` interrupt handler works. The `nmi` handlers starts from the call of the:
+in the same [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file. Lets dive into it and will try to understand how `Non-Maskable` interrupt handler works. The `nmi` handlers starts from the call of the:
 
 ```assembly
 PARAVIRT_ADJUST_EXCEPTION_FRAME
@@ -123,7 +123,7 @@ pushq	11*8(%rsp)
 .endr
 ```
 
-with the [.rept](http://tigcc.ticalc.org/doc/gnuasm.html#SEC116) assembly directive. We need in the copy of the original stack frame. Generally we need in two copies of the interrupt stack. First is `copied` interrupts stack: `saved` stack frame and `copied` stack frame. Now we pushes original stack frame to the `saved` stack frame which locates after the just allocated `40` bytes (`copied` stack frame). This stack frame is used to fixup the `copied` stack frame that a nested NMI may change. The second - `copied` stack frame modifed by any nested `NMIs` to let the first `NMI` know that we triggered a second `NMI` and we shoult rebepat the first `NMI` handler. Ok, we have made first copy of the original stack frame, now time to make second copy:
+with the [.rept](http://tigcc.ticalc.org/doc/gnuasm.html#SEC116) assembly directive. We need in the copy of the original stack frame. Generally we need in two copies of the interrupt stack. First is `copied` interrupts stack: `saved` stack frame and `copied` stack frame. Now we pushes original stack frame to the `saved` stack frame which locates after the just allocated `40` bytes (`copied` stack frame). This stack frame is used to fixup the `copied` stack frame that a nested NMI may change. The second - `copied` stack frame modified by any nested `NMIs` to let the first `NMI` know that we triggered a second `NMI` and we should repeat the first `NMI` handler. Ok, we have made first copy of the original stack frame, now time to make second copy:
 
 ```assembly
 addq	$(10*8), %rsp
@@ -162,7 +162,7 @@ After all of these manipulations our stack frame will be like this:
 +-------------------------+
 ```
 
-After this we push dummy error code on the stack as we did it already in the previous exception handlers and allocate space for the general purpose regiseters on the stack:
+After this we push dummy error code on the stack as we did it already in the previous exception handlers and allocate space for the general purpose registers on the stack:
 
 ```assembly
 pushq	$-1
@@ -183,7 +183,7 @@ After space allocation for the general registers we can see call of the `paranoi
 call	paranoid_entry
 ```
 
-We can remember from the previous parts this label. It pushes general purpose regisrers on the stack, reads `MSR_GS_BASE` [Model Specific regiser](https://en.wikipedia.org/wiki/Model-specific_register) and checks its value. If the value of the `MSR_GS_BASE` is negative, we came from the kernel mode and just return from the `paranoid_entry`, in other way it means that we came from the usermode and need to execeute `swapgs` instruction which will change user `gs` with the kernel `gs`:
+We can remember from the previous parts this label. It pushes general purpose registers on the stack, reads `MSR_GS_BASE` [Model Specific register](https://en.wikipedia.org/wiki/Model-specific_register) and checks its value. If the value of the `MSR_GS_BASE` is negative, we came from the kernel mode and just return from the `paranoid_entry`, in other way it means that we came from the usermode and need to execute `swapgs` instruction which will change user `gs` with the kernel `gs`:
 
 ```assembly
 ENTRY(paranoid_entry)
@@ -201,7 +201,7 @@ ENTRY(paranoid_entry)
 END(paranoid_entry)
 ```
 
-Note that after the `swapgs` instruction we zeroed the `ebx` register. Next time we will check content of this register and if we executed `swapgs` than `ebx` must contain `0` and `1` in other way. In the next step we store value of the `cr2` [control register](https://en.wikipedia.org/wiki/Control_register) to the `r12` register, because the `NMI` handler can cause `page fault` and corrup the value of this control register:
+Note that after the `swapgs` instruction we zeroed the `ebx` register. Next time we will check content of this register and if we executed `swapgs` than `ebx` must contain `0` and `1` in other way. In the next step we store value of the `cr2` [control register](https://en.wikipedia.org/wiki/Control_register) to the `r12` register, because the `NMI` handler can cause `page fault` and corrupt the value of this control register:
 
 ```C
 movq	%cr2, %r12
@@ -215,7 +215,7 @@ movq	$-1, %rsi
 call	do_nmi
 ```
 
-We will back to the `do_nmi` little later in this part, but now let's look what occurs after the `do_nmi` will finish its exceution. After the `do_nmi` handler will be finished we check the `cr2` register, because we can got page fault during `do_nmi` performed and if we got it we restore original `cr2`, in other way we jump on the label `1`. After this we test content of the `ebx` register (remember it must contain `0` if we have used `swapgs` instruction and `1` if we didn't use it) and execute `SWAPGS_UNSAFE_STACK` if it contains `1` or jump to the `nmi_restore` label. The `SWAPGS_UNSAFE_STACK` macro just expands to the `swapgs` instruction. In the `nmi_restore` label we restore general purpose registers, clear allocated space on the stack for this registers clear our temporary variable and exit from the interrupt handler with the `INTERRUPT_RETURN` macro:
+We will back to the `do_nmi` little later in this part, but now let's look what occurs after the `do_nmi` will finish its execution. After the `do_nmi` handler will be finished we check the `cr2` register, because we can got page fault during `do_nmi` performed and if we got it we restore original `cr2`, in other way we jump on the label `1`. After this we test content of the `ebx` register (remember it must contain `0` if we have used `swapgs` instruction and `1` if we didn't use it) and execute `SWAPGS_UNSAFE_STACK` if it contains `1` or jump to the `nmi_restore` label. The `SWAPGS_UNSAFE_STACK` macro just expands to the `swapgs` instruction. In the `nmi_restore` label we restore general purpose registers, clear allocated space on the stack for this registers clear our temporary variable and exit from the interrupt handler with the `INTERRUPT_RETURN` macro:
 
 ```assembly
 	movq	%cr2, %rcx
@@ -239,14 +239,14 @@ nmi_restore:
 
 where `INTERRUPT_RETURN` is defined in the [arch/x86/include/irqflags.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/irqflags.h) and just expands to the `iret` instruction. That's all.
 
-Now let's consider case when another `NMI` interrupt occured when previous `NMI` interrupt didn't finish its execution. You can remember from the beginnig of this part that we've made a check that we came from userspace and jump on the `first_nmi` in this case:
+Now let's consider case when another `NMI` interrupt occurred when previous `NMI` interrupt didn't finish its execution. You can remember from the beginning of this part that we've made a check that we came from userspace and jump on the `first_nmi` in this case:
 
 ```assembly
 cmpl	$__KERNEL_CS, 16(%rsp)
 jne	first_nmi
 ```
 
-Note that in this case it is first `NMI` everytime, because if the first `NMI` catched page fault, breakpoint or another exception it will be executed in the kernel mode. If we didn't come from userspace, first of all we test our temporary variable:
+Note that in this case it is first `NMI` every time, because if the first `NMI` catched page fault, breakpoint or another exception it will be executed in the kernel mode. If we didn't come from userspace, first of all we test our temporary variable:
 
 ```assembly
 cmpl	$1, -8(%rsp)
@@ -310,7 +310,7 @@ That's all.
 Range Exceeded Exception
 --------------------------------------------------------------------------------
 
-The next exception is the `BOUND` range exceeded exception. The `BOUND` instruction determines if the first operand (array index) is within the bounds of an array specified the second operand (bounds operand). If the index is not within bounds, a `BOUND` range exceeded exception or `#BR` is occured. The handler of the `#BR` exception is the `do_bounds` function that defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c). The `do_bounds` handler starts with the call of the `exception_enter` function and ends with the call of the `exception_exit`:
+The next exception is the `BOUND` range exceeded exception. The `BOUND` instruction determines if the first operand (array index) is within the bounds of an array specified the second operand (bounds operand). If the index is not within bounds, a `BOUND` range exceeded exception or `#BR` is occurred. The handler of the `#BR` exception is the `do_bounds` function that defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c). The `do_bounds` handler starts with the call of the `exception_enter` function and ends with the call of the `exception_exit`:
 
 ```C
 prev_state = exception_enter();
@@ -457,7 +457,7 @@ Links
 
 * [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault)
 * [opcode](https://en.wikipedia.org/wiki/Opcode)
-* [Non-Masksable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) 
+* [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) 
 * [BOUND instruction](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm)
 * [CPU socket](https://en.wikipedia.org/wiki/CPU_socket)
 * [Interrupt Descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table)

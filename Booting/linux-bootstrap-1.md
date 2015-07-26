@@ -135,7 +135,7 @@ We will see:
 
 In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes `0xaa` and `0x55`.
 
-Although you can see binary dump of it with `objdump` util:
+You can see binary dump of it with `objdump` util:
 
 ```
 nasm -f bin boot.nasm
@@ -251,10 +251,6 @@ Start of Kernel Setup
 --------------------------------------------------------------------------------
 
 Finally we are in the kernel. Technically kernel didn't run yet, first of all we need to setup kernel, memory manager, process manager etc. Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is a little strange at the first look, there are many instructions before it.
-
-=======
-
-Finally we are in the kernel. Technically kernel didn't run yet, first of all we need to setup kernel, memory manager, process manager, etc. Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is little strange at the first look, there are many instructions before it. Actually....
 
 Actually Long time ago Linux kernel had its own bootloader, but now if you run for example:
 
