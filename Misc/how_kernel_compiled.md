@@ -8,16 +8,17 @@ I will not tell you how to build and install custom Linux kernel on your machine
 
 This makefile is the the top makefile in the Linux kernel source code and kernel build starts here. Yes, it is big, but moreover, if you've read the source code of the Linux kernel you can noted that all directories with a source code has an own makefile. Of course it is not real to describe how each source files compiled and linked. So, we will see compilation only for the standard case. You will not find here building of the kernel's documentation, cleaning of the kernel source code, [tags](https://en.wikipedia.org/wiki/Ctags) generation, [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler) related stuff and etc. We will start from the `make` execution with the standard kernel configuration file and will finish with the building of the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage).
 
-Will be good if you already familar with the [make](https://en.wikipedia.org/wiki/Make_%28software%29) util, but anyway I will try to describe all code that will be in this part.
+It would be good if you're already familiar with the [make](https://en.wikipedia.org/wiki/Make_%28software%29) util, but I will anyway try to describe all code that will be in this part.
 
 So let's start.
 
 Preparation before the kernel compilation
 ---------------------------------------------------------------------------------
 
-Yes, there are need to do many preparations before the kernel compilation will be started. The main point here is to find and configure type of compilation, to parse command line arguments that are passed to the `make` util and etc. So let's dive into the top `Makefile` of the Linux kernel.
+There are many things to preparate before the kernel compilation will be started. The main point here is to find and configure 
+the type of compilation, to parse command line arguments that are passed to the `make` util and etc. So let's dive into the top `Makefile` of the Linux kernel.
 
-The Linux kernel top `Makefile` is responsible for building two major products: [vmlinux](https://en.wikipedia.org/wiki/Vmlinux) (the resident kernel image) and modules (any module files). The [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) of the Linux kernel starts from the definition of the following variables:
+The Linux kernel top `Makefile` is responsible for building two major products: [vmlinux](https://en.wikipedia.org/wiki/Vmlinux) (the resident kernel image) and the modules (any module files). The [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) of the Linux kernel starts from the definition of the following variables:
 
 ```Makefile
 VERSION = 4
@@ -27,13 +28,13 @@ EXTRAVERSION = -rc3
 NAME = Hurr durr I'ma sheep
 ```
 
-As you can understand from the names of these variables they determine the current version of the Linux kernel and will be used in the different places, first is forming of the `KERNELVERSION` variable:
+These variables determine the current version of the Linux kernel and are used in the different places, for example in the forming of the `KERNELVERSION` variable:
 
 ```Makefile
 KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
 ```
 
-After this we can see a couple of the `ifeq` condition that makes a check of some parameters passed to the `make`. The Linux kernel `makefiles` provides special `make help` target that prints available targets and some command line arguments that can be passed to the `make`. For example: `make V=1` - provides verbose builds. First `ifeq` condition checks that `V=n` option is passed to the make:
+After this we can see a couple of the `ifeq` condition that check some of the parameters passed to `make`. The Linux kernel `makefiles` provides a special `make help` target that prints all available targets and some of the command line arguments that can be passed to `make`. For example: `make V=1` - provides verbose builds. The first `ifeq` condition checks if the `V=n` option is passed to make:
 
 ```Makefile
 ifeq ("$(origin V)", "command line")
@@ -54,7 +55,7 @@ endif
 export quiet Q KBUILD_VERBOSE
 ```
 
-If this option is passed to the `make` we set `KBUILD_VERBOSE` variable to the value of the `V` option and set it to zero in other way. After this we check value of the `KBUILD_VERBOSE` variable and set values of the `quiet` and `Q` variables depends on the `KBUILD_VERBOSE` value. The `@` symbols suppress the output of the command and if it will be set before a command we will see something like this: `CC scripts/mod/empty.o` instead of the `Compiling .... scripts/mod/empty.o`. In the end we just export all of these variables. The next `ifeq` statement checks that `O=/dir` option was passed to the `make`. This option allows to locate all output files in the given `dir`:
+If this option is passed to `make` we set the `KBUILD_VERBOSE` variable to the value of the `V` option. Otherwise we set the `KBUILD_VERBOSE` variable to zero. After this we check value of the `KBUILD_VERBOSE` variable and set values of the `quiet` and `Q` variables depends on the `KBUILD_VERBOSE` value. The `@` symbols suppress the output of the command and if it will be set before a command we will see something like this: `CC scripts/mod/empty.o` instead of the `Compiling .... scripts/mod/empty.o`. In the end we just export all of these variables. The next `ifeq` statement checks that `O=/dir` option was passed to the `make`. This option allows to locate all output files in the given `dir`:
 
 ```Makefile
 ifeq ($(KBUILD_SRC),)
