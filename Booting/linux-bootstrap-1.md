@@ -342,12 +342,12 @@ Let's look at implementation.
 Segment registers align
 --------------------------------------------------------------------------------
 
-First of all it ensures that `ds` and `es` segment registers point to the same address and disable interrupts with `cld` instruction:
+First of all it ensures that `ds` and `es` segment registers point to the same address and disable interrupts with `cli` instruction:
 
 ```assembly
 	movw	%ds, %ax
 	movw	%ax, %es
-	cld	
+	cli	
 ```
 
 As I wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
