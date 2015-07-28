@@ -254,7 +254,7 @@ The `all:` target is the default when no target is given on the command line. Yo
 vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
 ```
 
-The `vmlinux` is is the Linux kernel in an statically linked executable file format. The [scripts/link-vmlinux.sh](https://github.com/torvalds/linux/blob/master/scripts/link-vmlinux.sh) script links combines different compiled subsystems into vmlinux. The second target is the `vmlinux-deps` that defined as:
+The `vmlinux` is the Linux kernel in a statically linked executable file format. The [scripts/link-vmlinux.sh](https://github.com/torvalds/linux/blob/master/scripts/link-vmlinux.sh) script links and combines different compiled subsystems into vmlinux. The second target is the `vmlinux-deps` that defined as:
 
 ```Makefile
 vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_INIT) $(KBUILD_VMLINUX_MAIN)
