@@ -22,7 +22,7 @@ Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-s
 Contributions 
 --------------
 
-Feel free to create issues or create pull-requests if you find any issues or my English is poor.
+Feel free to create issues or pull-requests if you have any problems.
 
 **Please read [CONTRIBUTING.md](https://github.com/0xAX/linux-insides/blob/master/CONTRIBUTING.md) before pushing any changes.**
 
