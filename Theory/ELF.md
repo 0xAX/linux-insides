@@ -213,4 +213,4 @@ Program Headers:
 
 Here we can see five segments with sections list. All of these sections you can find in the generated linker script at - `arch/x86/kernel/vmlinux.lds`.
 
-That's all. Of course it's not a full description of ELF object format, but if you are interesting in it, you can find documentation - [here](http://downloads.openwatcom.org/ftp/devel/docs/elf-64-gen.pdf)
+That's all. Of course it's not a full description of ELF(Executable and	Linkable Format), but if you are interested in it, you can find documentation - [here](ftp://ftp.openwatcom.org/pub/devel/docs/elf-64-gen.pdf)
