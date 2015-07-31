@@ -102,7 +102,7 @@ in the linux kernel source code.
 
 `elf64_phdr` defined in the same [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h).
 
-And ELF object file also contains other fields/structures which you can find in the [Documentation](http://downloads.openwatcom.org/ftp/devel/docs/elf-64-gen.pdf). Better let's look on the `vmlinux`.
+And ELF object file also contains other fields/structures which you can find in the [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf). Better let's look on the `vmlinux`.
 
 vmlinux
 --------------------------------------------------------------------------------
@@ -213,4 +213,4 @@ Program Headers:
 
 Here we can see five segments with sections list. All of these sections you can find in the generated linker script at - `arch/x86/kernel/vmlinux.lds`.
 
-That's all. Of course it's not a full description of ELF(Executable and	Linkable Format), but if you are interested in it, you can find documentation - [here](ftp://ftp.openwatcom.org/pub/devel/docs/elf-64-gen.pdf)
+That's all. Of course it's not a full description of ELF(Executable and	Linkable Format), but if you are interested in it, you can find documentation - [here](http://www.uclibc.org/docs/elf-64-gen.pdf)
