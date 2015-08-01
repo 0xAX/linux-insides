@@ -4,17 +4,20 @@ Kernel booting process. Part 3.
 Video mode initialization and transition to protected mode
 --------------------------------------------------------------------------------
 
-This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call of the `set_video` routine from the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). We will see video mode initialization in the kernel setup code, preparation before switching into the protected mode and transition into it in this part.
+This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call of the `set_video` routine from the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). In this part, we will see:
+- video mode initialization in the kernel setup code,
+- preparation before switching into the protected mode,
+- transition to protected mode
 
-**NOTE** If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also there are a couple of [links](linux-bootstrap-2.md#links) which can help you.
+**NOTE: If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also there are a couple of [links](linux-bootstrap-2.md#links) which can help you.**
 
-As i wrote above, we will start from the `set_video` function which defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) source code file. We can see that it starts with getting of video mode from the `boot_params.hdr` structure:
+As i wrote above, we will start from the `set_video` function which defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
 
 ```C
 u16 mode = boot_params.hdr.vid_mode;
 ```
 
-which we filled in the `copy_boot_params` function (you can read about it in the previous post). `vid_mode` is an obligatory field which filled by the bootloader. You can find information about it in the kernel boot protocol:
+which we filled in the `copy_boot_params` function (you can read about it in the previous post). `vid_mode` is an obligatory field which is filled by the bootloader. You can find information about it in the kernel boot protocol:
 
 ```
 Offset	Proto	Name		Meaning
@@ -34,49 +37,44 @@ vga=<mode>
 	line is parsed.
 ```
 
-So we can add `vga` option to the grub or another bootloader configuration file and it will pass this option to the kernel command line. This option can have different values as we can read from the description, for example it can be integer number or `ask`. If you will pass `ask`, you see menu like this:
+So we can add `vga` option to the grub or another bootloader configuration file and it will pass this option to the kernel command line. This option can have different values as we can mentioned in the description, for example it can be an integer number `0xFFFD` or `ask`. If you pass `ask` t `vga`, you will see a menu like this:
 
 ![video mode setup menu](http://oi59.tinypic.com/ejcz81.jpg)
 
-which will suggest to select video mode. We will look on it's implementation, but before we must to know about another things.
+which will ask to select a video mode. We will look at it's implementation, but before diving into the implementation we have to look at some other things.
 
 Kernel data types
 --------------------------------------------------------------------------------
 
-Earlier we saw definitions of different data types like `u16` and etc... in the kernel setup code. Let's look on a couple of data types provided by the kernel:
+Earlier we saw definitions of different data types like `u16` etc. in the kernel setup code. Let's look on a couple of data types provided by the kernel:
 
-```
+
 | Type | char | short | int | long | u8 | u16 | u32 | u64 |
 |------|------|-------|-----|------|----|-----|-----|-----|
 | Size |  1   |   2   |  4  |   8  |  1 |  2  |  4  |  8  |
-```
 
-If you will read source code of the kernel, you'll see it very often, so it will be good to remember about it.
+If you read source code of the kernel, you'll see these very often and so it will be good to remember them.
 
 Heap API
 --------------------------------------------------------------------------------
 
-As we got `vid_mode` from the `boot_params.hdr`, we can see call of the `RESET_HEAP` in the `set_video` function. `RESET_HEAP` is a macro which defined in the [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199) and looks as:
+After we have `vid_mode` from the `boot_params.hdr` in the `set_video` function we can see call to `RESET_HEAP` function. `RESET_HEAP` is a macro which defined in the [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199). It is defined as:
 
-```C
+```c
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-If you read second part, you can remember that we initialized the heap with the [init_heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function. Since we can use heap, we have a couple functions for it which defined in the `boot.h`. They are:
+If you have read the second part, you will remember that we initialized the heap with the [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function. We have a couple of utility functions for heap which are defined in the `boot.h`. They are:
 
-```C
-#define RESET_HEAP()...
+```c
+RESET_HEAP()
 ```
 
-As we saw just now. It uses for resetting the heap by setting the `HEAP` variable equal to `_end`, where `_end` is just:
-
-```C
-extern char _end[];
-```
+As we saw just above it resets the heap by setting the `HEAP` variable equal to `_end`, where `_end` is just `extern char _end[];`
 
 Next is `GET_HEAP` macro:
 
-```C
+```c
 #define GET_HEAP(type, n) \
 	((type *)__get_heap(sizeof(type),__alignof__(type),(n)))
 ```
@@ -84,12 +82,12 @@ Next is `GET_HEAP` macro:
 for heap allocation. It calls internal function `__get_heap` with 3 parameters:
 
 * size of a type in bytes, which need be allocated
-* next parameter shows how type of variable is aligned
-* how many bytes to allocate
+* `__alignof__(type)` shows how type of variable is aligned
+* `n` tells how many bytes to allocate
 
 Implementation of `__get_heap` is:
 
-```C
+```c
 static inline char *__get_heap(size_t s, size_t a, size_t n)
 {
 	char *tmp;
@@ -101,20 +99,20 @@ static inline char *__get_heap(size_t s, size_t a, size_t n)
 }
 ```
 
-and further we will see usage of it, something like this:
+and further we will see its usage, something like:
 
-```C
-saved.data = GET_HEAP(u16, saved.x*saved.y);
+```c
+saved.data = GET_HEAP(u16, saved.x * saved.y);
 ```
 
-Let's try to understand how `GET_HEAP` works. We can see here that `HEAP` (which equal to `_end` after `RESET_HEAP()`) is the address of aligned memory according to `a` parameter. After it we save memory address from `HEAP` to the `tmp` variable, move `HEAP` to the end of allocated block and return `tmp` which is start address of allocated memory.
+Let's try to understand how `__get_heap` works. We can see here that `HEAP` (which is equal to `_end` after `RESET_HEAP()`) is the address of aligned memory according to `a` parameter. After it we save memory address from `HEAP` to the `tmp` variable, move `HEAP` to the end of allocated block and return `tmp` which is start address of allocated memory.
 
 And the last function is:
 
 ```C
 static inline bool heap_free(size_t n)
 {
-	return (int)(heap_end-HEAP) >= (int)n;
+	return (int)(heap_end - HEAP) >= (int)n;
 }
 ```
 
@@ -125,30 +123,41 @@ That's all. Now we have simple API for heap and can setup video mode.
 Setup video mode
 --------------------------------------------------------------------------------
 
-Now we can move directly to video mode initialization. We stopped at the `RESET_HEAP()` call in the `set_video` function. The next call of `store_mode_params` which stores video mode parameters in the `boot_params.screen_info` structure which defined in the [include/uapi/linux/screen_info.h](https://github.com/0xAX/linux/blob/master/include/uapi/linux/screen_info.h). If we will look at `store_mode_params` function, we can see that it starts from the call of the `store_cursor_position` function. As you can understand from the function name, it gets information about cursor and stores it. First of all `store_cursor_position` initializes two variables which has type - `biosregs`, with `AH = 0x3` and calls `0x10` BIOS interruption. After interruption successfully executed, it returns row and column in the `DL` and `DH` registers. Row and column will be stored in the `orig_x` and `orig_y` fields from the the `boot_params.screen_info` structure. After `store_cursor_position` executed, `store_video_mode` function will be called. It just gets current video mode and stores it in the `boot_params.screen_info.orig_video_mode`. 
+Now we can move directly to video mode initialization. We stopped at the `RESET_HEAP()` call in the `set_video` function. Next is the call to  `store_mode_params` which stores video mode parameters in the `boot_params.screen_info` structure which is defined in the [include/uapi/linux/screen_info.h](https://github.com/0xAX/linux/blob/master/include/uapi/linux/screen_info.h).
 
-After this, it checks current video mode and set the `video_segment`. After the BIOS transfers control to the boot sector, the following addresses are video memory:
+If we will look at `store_mode_params` function, we can see that it starts with the call to `store_cursor_position` function. As you can understand from the function name, it gets information about cursor and stores it.
+
+First of all `store_cursor_position` initializes two variables which has type - `biosregs`, with `AH = 0x3` and calls `0x10` BIOS interruption. After interruption successfully executed, it returns row and column in the `DL` and `DH` registers. Row and column will be stored in the `orig_x` and `orig_y` fields from the the `boot_params.screen_info` structure.
+
+After `store_cursor_position` executed, `store_video_mode` function will be called. It just gets current video mode and stores it in the `boot_params.screen_info.orig_video_mode`. 
+
+After this, it checks current video mode and sets the `video_segment`. After the BIOS transfers control to the boot sector, the following addresses are for video memory:
 
 ```
 0xB000:0x0000 	32 Kb 	Monochrome Text Video Memory
 0xB800:0x0000 	32 Kb 	Color Text Video Memory
 ```
 
-So we set the `video_segment` variable to `0xb000` if current video mode is MDA, HGC, VGA in monochrome mode or `0xb800` in color mode. After setup of the address of the video segment need to store font size in the `boot_params.screen_info.orig_video_points` with:
+So we set the `video_segment` variable to `0xB000` if current video mode is MDA, HGC, VGA in monochrome mode or `0xB800` in color mode. After setup of the address of the video segment font size needs to be stored in the `boot_params.screen_info.orig_video_points` with:
 
-```C
+```c
 set_fs(0);
 font_size = rdfs16(0x485);
 boot_params.screen_info.orig_video_points = font_size;
 ```
 
-First of all we put 0 to the `FS` register with `set_fs` function. We already saw functions like `set_fs` in the previous part. They are all defined in the [boot.h](https://github.com/0xAX/linux/blob/master/arch/x86/boot/boot.h). Next we read value which located at address `0x485` (this memory location used to get the font size) and save font size in the `boot_params.screen_info.orig_video_points`.
+First of all we put 0 to the `FS` register with `set_fs` function. We already saw functions like `set_fs` in the previous part. They are all defined in the [boot.h](https://github.com/0xAX/linux/blob/master/arch/x86/boot/boot.h). Next we read value which is located at address `0x485` (this memory location is used to get the font size) and save font size in the `boot_params.screen_info.orig_video_points`.
 
-The next we get amount of columns and rows by address `0x44a` and stores they in the `boot_params.screen_info.orig_video_cols` and `boot_params.screen_info.orig_video_lines`. After this, execution of the `store_mode_params` is finished.
+```
+ x = rdfs16(0x44a);
+ y = (adapter == ADAPTER_CGA) ? 25 : rdfs8(0x484)+1;
+```
 
-The next we can see `save_screen` function which just saves screen content to the heap. This function collects all data which we got in the previous functions like rows and columns amount and etc... to the `saved_screen` structure, which defined as:
+Next we get amount of columns by `0x44a` and rows by address `0x484` and store them in the `boot_params.screen_info.orig_video_cols` and `boot_params.screen_info.orig_video_lines`. After this, execution of the `store_mode_params` is finished.
 
-```C
+Next we can see `save_screen` function which just saves screen content to the heap. This function collects all data which we got in the previous functions like rows and columns amount etc. and stores it in the `saved_screen` structure, which is defined as:
+
+```c
 static struct saved_screen {
 	int x, y;
 	int curx, cury;
@@ -156,9 +165,9 @@ static struct saved_screen {
 } saved;
 ```
 
-It checks that heap has free space for it with:
+It then checks whether the heap has free space for it with:
 
-```C
+```c
 if (!heap_free(saved.x*saved.y*sizeof(u16)+512))
 		return;
 ```
@@ -167,7 +176,7 @@ and allocates space in the heap if it is enough and stores `saved_screen` in it.
 
 The next call is `probe_cards(0)` from the [arch/x86/boot/video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L33). It goes over all video_cards and collects number of modes provided by the cards. Here is the interesting moment, we can see the loop:
 
-```C
+```c
 for (card = video_cards; card < video_cards_end; card++) {
   /* collecting number of modes here */
 }
@@ -175,7 +184,7 @@ for (card = video_cards; card < video_cards_end; card++) {
 
 but `video_cards` not declared anywhere. Answer is simple: Every video mode presented in the x86 kernel setup code has definition like this:
 
-```C
+```c
 static __videocard video_vga = {
 	.card_name	= "VGA",
 	.probe		= vga_probe,
@@ -185,13 +194,13 @@ static __videocard video_vga = {
 
 where `__videocard` is a macro:
 
-```C
+```c
 #define __videocard struct card_info __attribute__((used,section(".videocards")))
 ```
 
 which means that `card_info` structure:
 
-```C
+```c
 struct card_info {
 	const char *card_name;
 	int (*set_mode)(struct mode_info *mode);
@@ -204,7 +213,7 @@ struct card_info {
 };
 ```
 
-is in the `.videocards` segment. Let's look on the [arch/x86/boot/setup.ld](https://github.com/0xAX/linux/blob/master/arch/x86/boot/setup.ld) linker file, we can see there:
+is in the `.videocards` segment. Let's look in the [arch/x86/boot/setup.ld](https://github.com/0xAX/linux/blob/master/arch/x86/boot/setup.ld) linker file, we can see there:
 
 ```
 	.videocards	: {
@@ -216,13 +225,13 @@ is in the `.videocards` segment. Let's look on the [arch/x86/boot/setup.ld](http
 
 It means that `video_cards` is just memory address and all `card_info` structures are placed in this  segment. It means that all `card_info` structures are placed between `video_cards` and `video_cards_end`, so we can use it in a loop to go over all of it.  After `probe_cards` executed we have all structures like `static __videocard video_vga` with filled `nmodes` (number of video modes).
 
-After that `probe_cards` executed, we move to the main loop in the `setup_video` function. There is infinite loop which tries to setup video mode with the `set_mode` function or prints menu if we passed `vid_mode=ask` to the kernel command line or video mode is undefined. 
+After `probe_cards` execution is finished, we move to the main loop in the `set_video` function. There is infinite loop which tries to setup video mode with the `set_mode` function or prints a menu if we passed `vid_mode=ask` to the kernel command line or video mode is undefined. 
 
-The `set_mode` function is defined in the [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) and gets only one parameter - `mode` which is number of video mode (we got it or from the menu or in the start of the `setup_video`, from kernel setup header). 
+The `set_mode` function is defined in the [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) and gets only one parameter, `mode` which is the number of video mode (we got it or from the menu or in the start of the `setup_video`, from kernel setup header). 
 
-`set_mode` function checks the `mode` and calls `raw_set_mode` function. The `raw_set_mode` calls `set_mode` function for selected card. We can get access to this function from the `card_info` structure, every video mode defines this structure with filled value which depends on video mode (for example for `vga` it is `video_vga.set_mode` function, see above example of `card_info` structure for `vga`). `video_vga.set_mode` is `vga_set_mode`, which checks vga mode and call function depend on mode:
+`set_mode` function checks the `mode` and calls `raw_set_mode` function. The `raw_set_mode` calls `set_mode` function for selected card i.e. `card->set_mode(struct mode_info*)`. We can get access to this function from the `card_info` structure, every video mode defines this structure with values filled depending upon the video mode (for example for `vga` it is `video_vga.set_mode` function, see above example of `card_info` structure for `vga`). `video_vga.set_mode` is `vga_set_mode`, which checks the vga mode and calls the respective function:
 
-```C
+```c
 static int vga_set_mode(struct mode_info *mode)
 {
 	vga_set_basic_mode();
@@ -256,12 +265,18 @@ static int vga_set_mode(struct mode_info *mode)
 }
 ```
 
-Every function which setups video mode, just call `0x10` BIOS interruption with certain value in the `AH` register. After this we have set video mode and now we can switch to the protected mode.
+Every function which setups video mode, just calls `0x10` BIOS interrupt with certain value in the `AH` register.
+
+After we have set video mode, we pass it to the `boot_params.hdr.vid_mode`.
+
+Next `vesa_store_edid` is called. This function simply stores the [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) (**E**xtended **D**isplay **I**dentification **D**ata) information for kernel use. After this `store_mode_params` is called again. Lastly, if `do_restore` is set, screen is restored to an earlier state.
+
+After this we have set video mode and now we can switch to the protected mode.
 
 Last preparation before transition into protected mode
 --------------------------------------------------------------------------------
 
-We can see the last function call - `go_to_protected_mode` in the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As comment says: `Do the last things and invoke protected mode`, so let's see last preparation and switch into the protected mode.
+We can see the last function call - `go_to_protected_mode` in the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As comment says: `Do the last things and invoke protected mode`, so let's see these last things and switch into the protected mode.
 
 `go_to_protected_mode` defined in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104). It contains some functions which make last preparations before we can jump into protected mode, so let's look on it and try to understand what they do and how it works.
 
@@ -539,3 +554,4 @@ Links
 * [GCC designated inits](https://gcc.gnu.org/onlinedocs/gcc-4.1.2/gcc/Designated-Inits.html)
 * [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
 * [Previous part](linux-bootstrap-2.md)
+
