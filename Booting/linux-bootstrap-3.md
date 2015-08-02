@@ -126,9 +126,15 @@ Setup video mode
 Now we can move directly to video mode initialization. We stopped at the `RESET_HEAP()` call in the `set_video` function. Next is the call to  `store_mode_params` which stores video mode parameters in the `boot_params.screen_info` structure which is defined in the [include/uapi/linux/screen_info.h](https://github.com/0xAX/linux/blob/master/include/uapi/linux/screen_info.h).
 
 If we will look at `store_mode_params` function, we can see that it starts with the call to `store_cursor_position` function. As you can understand from the function name, it gets information about cursor and stores it.
+<<<<<<< HEAD
 
 First of all `store_cursor_position` initializes two variables which has type - `biosregs`, with `AH = 0x3` and calls `0x10` BIOS interruption. After interruption successfully executed, it returns row and column in the `DL` and `DH` registers. Row and column will be stored in the `orig_x` and `orig_y` fields from the the `boot_params.screen_info` structure.
 
+=======
+
+First of all `store_cursor_position` initializes two variables which has type - `biosregs`, with `AH = 0x3` and calls `0x10` BIOS interruption. After interruption successfully executed, it returns row and column in the `DL` and `DH` registers. Row and column will be stored in the `orig_x` and `orig_y` fields from the the `boot_params.screen_info` structure.
+
+>>>>>>> e10c624957b2e01a8b2182ac9e6e5684c13dbde6
 After `store_cursor_position` executed, `store_video_mode` function will be called. It just gets current video mode and stores it in the `boot_params.screen_info.orig_video_mode`. 
 
 After this, it checks current video mode and sets the `video_segment`. After the BIOS transfers control to the boot sector, the following addresses are for video memory:
@@ -276,7 +282,11 @@ After this we have set video mode and now we can switch to the protected mode.
 Last preparation before transition into protected mode
 --------------------------------------------------------------------------------
 
+<<<<<<< HEAD
 We can see the last function call - `go_to_protected_mode` in the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As the comment says: `Do the last things and invoke protected mode`, so let's see these last things and switch into the protected mode.
+=======
+We can see the last function call - `go_to_protected_mode` in the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As comment says: `Do the last things and invoke protected mode`, so let's see these last things and switch into the protected mode.
+>>>>>>> e10c624957b2e01a8b2182ac9e6e5684c13dbde6
 
 `go_to_protected_mode` defined in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104). It contains some functions which make last preparations before we can jump into protected mode, so let's look on it and try to understand what they do and how it works.
 
@@ -584,3 +594,4 @@ Links
 * [GCC designated inits](https://gcc.gnu.org/onlinedocs/gcc-4.1.2/gcc/Designated-Inits.html)
 * [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
 * [Previous part](linux-bootstrap-2.md)
+
