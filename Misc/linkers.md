@@ -189,7 +189,7 @@ $ readelf -d factorial | grep \(INIT\)
  0x000000000000000c (INIT)               0x4003a8
  ```
 
-So, the address of the `main` function is the `0000000000400506` and it is offset from the `.init` section. As we can see from the output, the address of the `factorial` function is `0x0000000000400537` and binary code for the call of the `factorial` function now is `e8 18 00 00 00`. We already knwo that `e8` is opcode for the `call` instruction, the next `18 00 00 00` (note that address represented as little endian for the `x86_64`, in other words it is `00 00 00 18`) is the offset from the `callq` to the `factorial` function:
+So, the address of the `main` function is the `0000000000400506` and it is offset from the `.init` section. As we can see from the output, the address of the `factorial` function is `0x0000000000400537` and binary code for the call of the `factorial` function now is `e8 18 00 00 00`. We already know that `e8` is opcode for the `call` instruction, the next `18 00 00 00` (note that address represented as little endian for the `x86_64`, in other words it is `00 00 00 18`) is the offset from the `callq` to the `factorial` function:
 
 ```python
 >>> hex(0x40051a + 0x18 + 0x5) == hex(0x400537)
