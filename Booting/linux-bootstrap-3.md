@@ -472,9 +472,9 @@ Next we get pointer to the GDT with:
 gdt.ptr = (u32)&boot_gdt + (ds() << 4);
 ```
 
-Here we just get address of `boot_gdt` and add it to address of data segment shifted on 4 (remember we're in the real mode now).
+Here we just get address of `boot_gdt` and add it to address of data segment left-shifted by 4 bits (remember we're in the real mode now).
 
-In the last we execute `lgdtl` instruction to load GDT into GDTR register:
+Lastly we execute `lgdtl` instruction to load GDT into GDTR register:
 
 ```c
 asm volatile("lgdtl %0" : : "m" (gdt));
@@ -485,23 +485,27 @@ Actual transition into protected mode
 
 It is the end of `go_to_protected_mode` function. We loaded IDT, GDT, disable interruptions and now can switch CPU into protected mode. The last step we call `protected_mode_jump` function with two parameters:
 
-```C
+```c
 protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
 ```
 
-which defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26). It takes two parameters:
+which is defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26). It takes two parameters:
 
 * address of protected mode entry point
 * address of `boot_params`
 
-Let's look inside `protected_mode_jump`. As i wrote above, you can find it in the `arch/x86/boot/pmjump.S`. First parameter will be in `eax` register and second is in `edx`. First of all we put address of `boot_params` to the `esi` register and address of code segment register `cs` (0x1000) to the `bx`. After this we shift `bx` on 4 and add address of label `2` to it (we will have physical address of label `2` in the `bx` after it) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
+Let's look inside `protected_mode_jump`. As I wrote above, you can find it in the `arch/x86/boot/pmjump.S`. First parameter will be in `eax` register and second is in `edx`.
+
+First of all we put address of `boot_params` in the `esi` register and address of code segment register `cs` (0x1000) in the `bx`. After this we shift `bx` by 4 bits and add address of label `2` to it (we will have physical address of label `2` in the `bx` after it) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
 
 ```assembly
 movw	$__BOOT_DS, %cx
 movw	$__BOOT_TSS, %di
 ```
 
-As you can read above `GDT_ENTRY_BOOT_CS` has index 2 and every GDT entry is 8 byte, so `CS` will be `2 * 8 = 16`, `__BOOT_DS` is 24 and etc... Next we set `PE` (Protection Enable) bit in the `CR0` control register:
+As you can read above `GDT_ENTRY_BOOT_CS` has index 2 and every GDT entry is 8 byte, so `CS` will be `2 * 8 = 16`, `__BOOT_DS` is 24 etc.
+
+Next we set `PE` (Protection Enable) bit in the `CR0` control register:
 
 ```assembly
 movl	%cr0, %edx
@@ -517,16 +521,20 @@ and make long jump to the protected mode:
 	.word	__BOOT_CS
 ```
 
-where `0x66` is the operand-size prefix, which allows to mix 16-bit and 32-bit code, `0xea` - is the jump opcode, `in_pm32` is the segment offset and `__BOOT_CS` is the segment.
+where
+* `0x66` is the operand-size prefix which allows to mix 16-bit and 32-bit code,
+* `0xea` - is the jump opcode,
+* `in_pm32` is the segment offset
+* `__BOOT_CS` is the code segment.
 
-After this we are in the protected mode:
+After this we are finally in the protected mode:
 
 ```assembly
 .code32
 .section ".text32","ax"
 ```
 
-Let's look on the first steps in the protected mode. First of all we setup data segment with:
+Let's look at the first steps in the protected mode. First of all we setup data segment with:
 
 ```assembly
 movl	%ecx, %ds
@@ -536,7 +544,7 @@ movl	%ecx, %gs
 movl	%ecx, %ss
 ```
 
-if you read with attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. Now we fill with it all segment registers besides `cs` (`cs` is already `__BOOT_CS`). Next we zero out all general purpose registers besides `eax` with:
+If you read with attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. Now we fill with it all segment registers besides `cs` (`cs` is already `__BOOT_CS`). Next we zero out all general purpose registers besides `eax` with:
 
 ```assembly
 xorl	%ecx, %ecx
@@ -552,16 +560,18 @@ And jump to the 32-bit entry point in the end:
 jmpl	*%eax
 ```
 
-remember that `eax` contains address of the 32-bit entry (we passed it as first parameter into `protected_mode_jump`). That's all we're in the protected mode and stops before it's entry point. What is happening after we joined in the 32-bit entry point we will see in the next part.
+Remember that `eax` contains address of the 32-bit entry (we passed it as first parameter into `protected_mode_jump`).
+
+That's all we're in the protected mode and stop at it's entry point. What happens next, we will see in the next part.
 
 Conclusion
 --------------------------------------------------------------------------------
 
 It is the end of the third part about linux kernel internals. In next part we will see first steps in the protected mode and transition into the [long mode](http://en.wikipedia.org/wiki/Long_mode).
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes, please send me a PR with corrections at [linux-internals](https://github.com/0xAX/linux-internals).**
 
 Links
 --------------------------------------------------------------------------------
@@ -574,5 +584,3 @@ Links
 * [GCC designated inits](https://gcc.gnu.org/onlinedocs/gcc-4.1.2/gcc/Designated-Inits.html)
 * [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
 * [Previous part](linux-bootstrap-2.md)
-
-
