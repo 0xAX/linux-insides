@@ -1,5 +1,5 @@
 Kernel booting process. Part 3.
-===============================
+==========================================================
 
 Video mode initialization and transition to protected mode
 ----------------------------------------------------------
@@ -9,11 +9,11 @@ This is the third part of the `Kernel booting process` series. In the previous [
 - preparation before switching into the protected mode,
 - transition to protected mode
 
-**NOTE: If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also there are a couple of [links](linux-bootstrap-2.md#links) which can help you.**
+**NOTE** If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also there are a couple of [links](linux-bootstrap-2.md#links) which can help you.
 
-As i wrote above, we will start from the `set_video` function which defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
+As I wrote above, we will start from the `set_video` function which defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
 
-```c
+```C
 u16 mode = boot_params.hdr.vid_mode;
 ```
 
@@ -60,21 +60,21 @@ Heap API
 
 After we have `vid_mode` from the `boot_params.hdr` in the `set_video` function we can see call to `RESET_HEAP` function. `RESET_HEAP` is a macro which defined in the [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199). It is defined as:
 
-```c
+```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-If you have read the second part, you will remember that we initialized the heap with the [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function. We have a couple of utility functions for heap which are defined in the `boot.h`. They are:
+If you have read the second part, you will remember that we initialized the heap with the [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function. We have a couple of utility functions for heap which are defined in `boot.h`. They are:
 
-```c
-RESET_HEAP()
+```C
+#define RESET_HEAP()
 ```
 
 As we saw just above it resets the heap by setting the `HEAP` variable equal to `_end`, where `_end` is just `extern char _end[];`
 
 Next is `GET_HEAP` macro:
 
-```c
+```C
 #define GET_HEAP(type, n) \
 	((type *)__get_heap(sizeof(type),__alignof__(type),(n)))
 ```
@@ -87,7 +87,7 @@ for heap allocation. It calls internal function `__get_heap` with 3 parameters:
 
 Implementation of `__get_heap` is:
 
-```c
+```C
 static inline char *__get_heap(size_t s, size_t a, size_t n)
 {
 	char *tmp;
@@ -101,7 +101,7 @@ static inline char *__get_heap(size_t s, size_t a, size_t n)
 
 and further we will see its usage, something like:
 
-```c
+```C
 saved.data = GET_HEAP(u16, saved.x * saved.y);
 ```
 
@@ -140,7 +140,7 @@ After this, it checks current video mode and sets the `video_segment`. After the
 
 So we set the `video_segment` variable to `0xB000` if current video mode is MDA, HGC, VGA in monochrome mode or `0xB800` in color mode. After setup of the address of the video segment font size needs to be stored in the `boot_params.screen_info.orig_video_points` with:
 
-```c
+```C
 set_fs(0);
 font_size = rdfs16(0x485);
 boot_params.screen_info.orig_video_points = font_size;
@@ -157,7 +157,7 @@ Next we get amount of columns by `0x44a` and rows by address `0x484` and store t
 
 Next we can see `save_screen` function which just saves screen content to the heap. This function collects all data which we got in the previous functions like rows and columns amount etc. and stores it in the `saved_screen` structure, which is defined as:
 
-```c
+```C
 static struct saved_screen {
 	int x, y;
 	int curx, cury;
@@ -167,7 +167,7 @@ static struct saved_screen {
 
 It then checks whether the heap has free space for it with:
 
-```c
+```C
 if (!heap_free(saved.x*saved.y*sizeof(u16)+512))
 		return;
 ```
@@ -176,7 +176,7 @@ and allocates space in the heap if it is enough and stores `saved_screen` in it.
 
 The next call is `probe_cards(0)` from the [arch/x86/boot/video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L33). It goes over all video_cards and collects number of modes provided by the cards. Here is the interesting moment, we can see the loop:
 
-```c
+```C
 for (card = video_cards; card < video_cards_end; card++) {
   /* collecting number of modes here */
 }
@@ -184,7 +184,7 @@ for (card = video_cards; card < video_cards_end; card++) {
 
 but `video_cards` not declared anywhere. Answer is simple: Every video mode presented in the x86 kernel setup code has definition like this:
 
-```c
+```C
 static __videocard video_vga = {
 	.card_name	= "VGA",
 	.probe		= vga_probe,
@@ -194,13 +194,13 @@ static __videocard video_vga = {
 
 where `__videocard` is a macro:
 
-```c
+```C
 #define __videocard struct card_info __attribute__((used,section(".videocards")))
 ```
 
 which means that `card_info` structure:
 
-```c
+```C
 struct card_info {
 	const char *card_name;
 	int (*set_mode)(struct mode_info *mode);
@@ -231,7 +231,7 @@ The `set_mode` function is defined in the [video-mode.c](https://github.com/0xAX
 
 `set_mode` function checks the `mode` and calls `raw_set_mode` function. The `raw_set_mode` calls `set_mode` function for selected card i.e. `card->set_mode(struct mode_info*)`. We can get access to this function from the `card_info` structure, every video mode defines this structure with values filled depending upon the video mode (for example for `vga` it is `video_vga.set_mode` function, see above example of `card_info` structure for `vga`). `video_vga.set_mode` is `vga_set_mode`, which checks the vga mode and calls the respective function:
 
-```c
+```C
 static int vga_set_mode(struct mode_info *mode)
 {
 	vga_set_basic_mode();
@@ -296,7 +296,7 @@ Interrupt is a signal to the CPU which is emitted by hardware or software. After
 
 Let's get back to the code. We can see that second line is writing `0x80` (disabled bit) byte to the `0x70` (CMOS Address register). After that call to the `io_delay` function occurs. `io_delay` causes a small delay and looks like:
 
-```c
+```C
 static inline void io_delay(void)
 {
 	const u16 DELAY_PORT = 0x80;
@@ -308,7 +308,7 @@ Outputting any byte to the port `0x80` should delay exactly 1 microsecond. So we
 
 The next function is `enable_a20`, which enables [A20 line](http://en.wikipedia.org/wiki/A20_line). This function is defined in the [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/a20.c) and it tries to enable A20 gate with different methods. The first is `a20_test_short` function which checks is A20 already enabled or not with `a20_test` function:
 
-```c
+```C
 static int a20_test(int loops)
 {
 	int ok = 0;
@@ -346,14 +346,14 @@ die:
 ```
 
 After the A20 gate is successfully enabled, `reset_coprocessor` function is called:
- ```c
+ ```C
 outb(0, 0xf0);
 outb(0, 0xf1);
 ```
 This function clears the Math Coprocessor by writing `0` to `0xf0` and then resets it by writing `0` to `0xf1`.
 
 After this `mask_all_interrupts` function is called:
-```c
+```C
 outb(0xff, 0xa1);       /* Mask all interrupts on the secondary PIC */
 outb(0xfb, 0x21);       /* Mask all but cascade on the primary PIC */
 ```
@@ -366,7 +366,7 @@ Setup Interrupt Descriptor Table
 
 Now we setup the Interrupt Descriptor table (IDT). `setup_idt`:
 
-```c
+```C
 static void setup_idt(void)
 {
 	static const struct gdt_ptr null_idt = {0, 0};
@@ -375,7 +375,7 @@ static void setup_idt(void)
 ```
 
 which setups the Interrupt Descriptor Table (describes interrupt handlers and etc.). For now IDT is not installed (we will see it later), but now we just load IDT with `lidtl` instruction. `null_idt` contains address and size of IDT, but now they are just zero. `null_idt` is a `gdt_ptr` structure, it as defined as:
-```c
+```C
 struct gdt_ptr {
 	u16 len;
 	u32 ptr;
@@ -389,7 +389,7 @@ Setup Global Descriptor Table
 
 Next is the setup of Global Descriptor Table (GDT). We can see `setup_gdt` function which sets up GDT (you can read about it in the [Kernel booting process. Part 2.](linux-bootstrap-2.md#protected-mode)). There is definition of the `boot_gdt` array in this function, which contains definition of the three segments:
 
-```c
+```C
 	static const u64 boot_gdt[] __attribute__((aligned(16))) = {
 		[GDT_ENTRY_BOOT_CS] = GDT_ENTRY(0xc09b, 0, 0xfffff),
 		[GDT_ENTRY_BOOT_DS] = GDT_ENTRY(0xc093, 0, 0xfffff),
@@ -398,7 +398,7 @@ Next is the setup of Global Descriptor Table (GDT). We can see `setup_gdt` funct
 ```
 
 For code, data and TSS (Task State Segment). We will not use task state segment for now, it was added there to make Intel VT happy as we can see in the comment line (if you're interesting you can find commit which describes it - [here](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31)). Let's look on `boot_gdt`. First of all note that it has `__attribute__((aligned(16)))` attribute. It means that this structure will be aligned by 16 bytes. Let's look at a simple example:
-```c
+```C
 #include <stdio.h>
 
 struct aligned {
@@ -460,7 +460,7 @@ You can read more about every bit in the previous [post](linux-bootstrap-2.md) o
 
 After this we get length of GDT with:
 
-```c
+```C
 gdt.len = sizeof(boot_gdt)-1;
 ```
 
@@ -468,7 +468,7 @@ We get size of `boot_gdt` and subtract 1 (the last valid address in the GDT).
 
 Next we get pointer to the GDT with:
 
-```c
+```C
 gdt.ptr = (u32)&boot_gdt + (ds() << 4);
 ```
 
@@ -476,7 +476,7 @@ Here we just get address of `boot_gdt` and add it to address of data segment lef
 
 Lastly we execute `lgdtl` instruction to load GDT into GDTR register:
 
-```c
+```C
 asm volatile("lgdtl %0" : : "m" (gdt));
 ```
 
@@ -485,7 +485,7 @@ Actual transition into protected mode
 
 It is the end of `go_to_protected_mode` function. We loaded IDT, GDT, disable interruptions and now can switch CPU into protected mode. The last step we call `protected_mode_jump` function with two parameters:
 
-```c
+```C
 protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
 ```
 
