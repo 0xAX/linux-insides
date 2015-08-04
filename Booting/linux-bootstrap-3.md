@@ -1,8 +1,8 @@
 Kernel booting process. Part 3.
-==========================================================
+================================================================================
 
 Video mode initialization and transition to protected mode
-----------------------------------------------------------
+--------------------------------------------------------------------------------
 
 This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call of the `set_video` routine from the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). In this part, we will see:
 - video mode initialization in the kernel setup code,
