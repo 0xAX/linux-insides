@@ -9,7 +9,7 @@ This is the fifth part of the `Kernel booting process` series. We saw transition
 Preparation before kernel decompression
 --------------------------------------------------------------------------------
 
-We stoped right before jump on 64-bit entry point - `startup_64` which located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) source code file. We already saw the jump to the `startup_64` in the `startup_32`:
+We stopped right before jump on 64-bit entry point - `startup_64` which located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) source code file. We already saw the jump to the `startup_64` in the `startup_32`:
 
 ```assembly
 	pushl	$__KERNEL_CS
