@@ -1,7 +1,7 @@
 Interrupts and Interrupt Handling. Part 9.
 ================================================================================
 
-Introduction to deferred interrupts (Softirq, Tasklets and irqs)
+Introduction to deferred interrupts (Softirq, Tasklets and Workqueues)
 --------------------------------------------------------------------------------
 
 It is the ninth part of the [linux-insides](https://www.gitbook.com/book/0xax/linux-insides/details) book and in the previous [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
