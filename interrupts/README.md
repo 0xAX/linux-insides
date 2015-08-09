@@ -10,3 +10,4 @@ You will find a couple of posts which describes an interrupts and an exceptions 
 * [Handling Non-Maskable interrupts](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-6.md) - describes handling of non-maskable interrupts and the rest of interrupts handlers from the architecture-specific part.
 * [Dive into external hardware interrupts](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-7.md) - this part describes early initialization of code which is related to handling of external hardware interrupts.
 * [Non-early initialization of the IRQs](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-8.md) - this part describes non-early initialization of code which is related to handling of external hardware interrupts.
+* [Softirq, Tasklets and Workqueues](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-9.md) - this part describes softirqs, tasklets and workqueues concepts.
