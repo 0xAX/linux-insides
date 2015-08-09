@@ -1,7 +1,7 @@
 Interrupts and Interrupt Handling. Part 9.
 ================================================================================
 
-Introduction to deferred interrupts (Softirq, Tasklets and Workqueues)
+Introduction to deferred interrupts (Softirq, Tasklets and irqs)
 --------------------------------------------------------------------------------
 
 It is the ninth part of the [linux-insides](https://www.gitbook.com/book/0xax/linux-insides/details) book and in the previous [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
@@ -258,7 +258,7 @@ struct tasklet_head {
 };
 ```
 
-The `tasklet_struct` structure defined in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h) and represents the `Tasklet`. Previously we did not see this word in this book. Let's try to understand what is it `tasklet`. In short words, the tasklet is a thread that has no context and stack. Actually, the tasklet is an one of mechanisms to handle deferred interrupt. Let's look on the implementation if the `tasklet_struct` structure:
+The `tasklet_struct` structure defined in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h) and represents the `Tasklet`. Previously we did not see this word in this book. Let's try to understand what is it `tasklet`. Actually, the tasklet is an one of mechanisms to handle deferred interrupt. Let's look on the implementation if the `tasklet_struct` structure:
 
 ```C
 struct tasklet_struct
