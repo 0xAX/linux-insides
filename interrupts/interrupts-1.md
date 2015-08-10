@@ -16,7 +16,7 @@ We have already heard of the word `interrupt` in several parts of this book. We 
 
 We will then continue to dig deeper into the details of `interrupts` and how the Linux kernel handles them.
 
-So..., First of all what is an interrupt? An interrupt is an `event` which is emitted by software or hardware when its needs the CPU's attention. For example, we press a button on the keyboard and what do we expect next? What should the operating system and computer do after this? To simplify matters assume that each peripheral device has an interrupt line to the CPU. A device can use it to signal an interrupt to the CPU. However interrupts are not signaled directly to the CPU. In the old machines there was a [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) which is a chip responsible for sequentially processing multiple interrupt requests from multiple devices. In the new machines there is an [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) commonly known as - `APIC`. An `APIC` consists of two separate devices:
+So..., First of all what is an interrupt? An interrupt is an `event` which is raised by software or hardware when its needs the CPU's attention. For example, we press a button on the keyboard and what do we expect next? What should the operating system and computer do after this? To simplify matters assume that each peripheral device has an interrupt line to the CPU. A device can use it to signal an interrupt to the CPU. However interrupts are not signaled directly to the CPU. In the old machines there was a [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) which is a chip responsible for sequentially processing multiple interrupt requests from multiple devices. In the new machines there is an [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) commonly known as - `APIC`. An `APIC` consists of two separate devices:
 
 * `Local APIC`
 * `I/O APIC`
@@ -505,14 +505,11 @@ If you will have any questions or suggestions write me a comment or ping me at [
 Links
 --------------------------------------------------------------------------------
 
+* [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)
 * [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [protected mode](http://en.wikipedia.org/wiki/Protected_mode)
 * [long mode](http://en.wikipedia.org/wiki/Long_mode)
 * [kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks)
-* [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)
-* [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
-* [long mode](http://en.wikipedia.org/wiki/Long_mode)
-* [protected mode](http://en.wikipedia.org/wiki/Protected_mode)
 * [Task State Segement](http://en.wikipedia.org/wiki/Task_state_segment)
 * [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation)
 * [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register)
