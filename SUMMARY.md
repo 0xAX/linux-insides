@@ -27,6 +27,7 @@
     * [Dive into external hardware interrupts](interrupts/interrupts-7.md)
     * [Initialization of external hardware interrupts structures](interrupts/interrupts-8.md)
     * [Softirq, Tasklets and Workqueues](interrupts/interrupts-9.md)
+    * [Last part]()
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
