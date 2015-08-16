@@ -1,14 +1,14 @@
-Process of the Linux kernel building
+Process of the Linux Kernel building
 ================================================================================
 
 Introduction
 --------------------------------------------------------------------------------
 
-I won't tell you how to build and install a custom Linux kernel on your machine. If you need help with this, you can find many [resources](https://encrypted.google.com/search?q=building+linux+kernel#q=building+linux+kernel+from+source+code) that will help you do it. Instead, we will learn what occurs when you type `make` in the directory of the Linux kernel source code.
+I won't tell you how to build and install a custom Linux Kernel on your machine. If you need help with this, you can find many [resources](https://encrypted.google.com/search?q=building+linux+kernel#q=building+linux+kernel+from+source+code) that will help you do it. Instead, we will learn what occurs when you execute `make` in the root directory of the Linux Kernel source code.
 
-When I started to study the source code of the Linux kernel, the [makefile](https://github.com/torvalds/linux/blob/master/Makefile) was the first file that I opened. And it was scary :). The [makefile](https://en.wikipedia.org/wiki/Make_%28software%29) contained `1591` lines of code  when I wrote this and this was the [4.2.0-rc3](https://github.com/torvalds/linux/commit/52721d9d3334c1cb1f76219a161084094ec634dc) release.
+When I started to study the source code of the Linux Kernel, the [makefile](https://github.com/torvalds/linux/blob/master/Makefile) was the first file that I opened. And it was scary :). The [makefile](https://en.wikipedia.org/wiki/Make_%28software%29) contained `1591` lines of code  when I wrote this and this was the [4.2.0-rc3](https://github.com/torvalds/linux/commit/52721d9d3334c1cb1f76219a161084094ec634dc) release.
 
-This makefile is the the top makefile in the Linux kernel source code and kernel build starts here. Yes, it is big, but moreover, if you've read the source code of the Linux kernel you can noted that all directories with a source code has an own makefile. Of course it is not real to describe how each source files compiled and linked. So, we will see compilation only for the standard case. You will not find here building of the kernel's documentation, cleaning of the kernel source code, [tags](https://en.wikipedia.org/wiki/Ctags) generation, [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler) related stuff and etc. We will start from the `make` execution with the standard kernel configuration file and will finish with the building of the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage).
+This makefile is the top makefile in the Linux Kernel source code and the Kernel building starts here. Yes, it is big, but moreover, if you've read the source code of the Linux Kernel you can find that all directories with source code have their own makefile. Of course it is not real to describe how each source files compile and linke. So, we will see compilation only for the standard case. You will not find here building of the kernel's documentation, cleaning of the Kernel source code, [tags](https://en.wikipedia.org/wiki/Ctags) generation, [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler) related stuff and etc. We will start from the `make` execution with the standard kernel configuration file and will finish with the building of the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage).
 
 It would be good if you're already familiar with the [make](https://en.wikipedia.org/wiki/Make_%28software%29) util, but I will anyway try to describe all code that will be in this part.
 
