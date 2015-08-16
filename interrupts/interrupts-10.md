@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 10.
 Last part
 -------------------------------------------------------------------------------
 
-This is tenth part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about interrupts and interrupts handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) we saw a little about deferred interrupts and releate concepts like `softirq`, `tasklet` and `workqeue`. In this part we will continue to dive into this theme and now is time to see on the real hardware driver.
+This is tenth part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about interrupts and interrupt handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) we saw a little about deferred interrupts and releate concepts like `softirq`, `tasklet` and `workqeue`. In this part we will continue to dive into this theme and now is time to see on the real hardware driver.
 
 Let's consider serial driver of the [StrongARM** SA-110/21285 Evaluation Board](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf) board for example and will look how this driver requests an [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) line, 
 what happens when an interrupt is triggered and etc. The source code of this driver placed in the [drivers/tty/serial/21285.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/21285.c) source code file. Ok, we have source code, let's start.
@@ -12,7 +12,7 @@ what happens when an interrupt is triggered and etc. The source code of this dri
 Initialization of a kernel module
 --------------------------------------------------------------------------------
 
-We will start to consider this driver as we do it as usual we did it with all new concepts that we saw in this book. We will start to consider it from the intialization. As you already can know, Linux kernel provides two macros for initialization and finalization of a driver or a kernel module:
+We will start to consider this driver as we usually did it with all new concepts that we saw in this book. We will start to consider it from the intialization. As you already may know, the Linux kernel provides two macros for initialization and finalization of a driver or a kernel module:
 
 * `module_init`;
 * `module_exit`.
