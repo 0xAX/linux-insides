@@ -9,7 +9,7 @@ This is tenth part of the [chapter](http://0xax.gitbooks.io/linux-insides/conten
 Let's consider serial driver of the [StrongARM** SA-110/21285 Evaluation Board](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf) board for example and will look how this driver requests an [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) line, 
 what happens when an interrupt is triggered and etc. The source code of this driver placed in the [drivers/tty/serial/21285.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/21285.c) source code file. Ok, we have source code, let's start.
 
-Module initialization
+Initialization of a kernel module
 --------------------------------------------------------------------------------
 
 We will start to consider this driver as we do it as usual we did it with all new concepts that we saw in this book. We will start to consider it from the intialization. As you already can know, Linux kernel provides two macros for initialization and finalization of a driver or a kernel module:
