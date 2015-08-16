@@ -4,7 +4,9 @@ Process of the Linux kernel building
 Introduction
 --------------------------------------------------------------------------------
 
-I will not tell you how to build and install custom Linux kernel on your machine, you can find many many [resources](https://encrypted.google.com/search?q=building+linux+kernel#q=building+linux+kernel+from+source+code) that will help you to do it. Instead, we will know what does occur when you are typed `make` in the directory with Linux kernel source code in this part. When I just started to learn source code of the Linux kernel, the [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) file was a first file that I've opened. And it was scary :) This [makefile](https://en.wikipedia.org/wiki/Make_%28software%29) contains `1591` lines of code at the time when I wrote this part and it was [third](https://github.com/torvalds/linux/commit/52721d9d3334c1cb1f76219a161084094ec634dc) release candidate.
+I won't tell you how to build and install a custom Linux kernel on your machine. If you need help with this, you can find many [resources](https://encrypted.google.com/search?q=building+linux+kernel#q=building+linux+kernel+from+source+code) that will help you do it. Instead, we will learn what occurs when you type `make` in the directory of the Linux kernel source code.
+
+When I started to study the source code of the Linux kernel, the [makefile](https://github.com/torvalds/linux/blob/master/Makefile) was the first file that I opened. And it was scary :). The [makefile](https://en.wikipedia.org/wiki/Make_%28software%29) contained `1591` lines of code  when I wrote this and this was the [4.2.0-rc3](https://github.com/torvalds/linux/commit/52721d9d3334c1cb1f76219a161084094ec634dc) release.
 
 This makefile is the the top makefile in the Linux kernel source code and kernel build starts here. Yes, it is big, but moreover, if you've read the source code of the Linux kernel you can noted that all directories with a source code has an own makefile. Of course it is not real to describe how each source files compiled and linked. So, we will see compilation only for the standard case. You will not find here building of the kernel's documentation, cleaning of the kernel source code, [tags](https://en.wikipedia.org/wiki/Ctags) generation, [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler) related stuff and etc. We will start from the `make` execution with the standard kernel configuration file and will finish with the building of the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage).
 
@@ -15,8 +17,8 @@ So let's start.
 Preparation before the kernel compilation
 ---------------------------------------------------------------------------------
 
-There are many things to preparate before the kernel compilation will be started. The main point here is to find and configure 
-the type of compilation, to parse command line arguments that are passed to the `make` util and etc. So let's dive into the top `Makefile` of the Linux kernel.
+There are many things to prepare before the kernel compilation will be started. The main point here is to find and configure 
+The type of compilation, to parse command line arguments that are passed to the `make` util and etc. So let's dive into the top `Makefile` of the Linux kernel.
 
 The Linux kernel top `Makefile` is responsible for building two major products: [vmlinux](https://en.wikipedia.org/wiki/Vmlinux) (the resident kernel image) and the modules (any module files). The [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) of the Linux kernel starts from the definition of the following variables:
 
@@ -85,7 +87,7 @@ We check the `KBUILD_SRC` that represent top directory of the source code of the
 * Store value of the `KBUILD_OUTPUT` in the temp `saved-output` variable;
 * Try to create given output directory;
 * Check that directory created, in other way print error;
-* If custom output directory created sucessfully, execute `make` again with the new directory (see `-C` option).
+* If custom output directory created successfully, execute `make` again with the new directory (see `-C` option).
 
 The next `ifeq` statements checks that `C` or `M` options was passed to the make: 
 
@@ -116,7 +118,7 @@ obj		:= $(objtree)
 export srctree objtree VPATH
 ```
 
-That tells to `Makefile` that source tree of the Linux kernel will be in the current directory where `make` command was executed. After this we set `objtree` and other variables to this directory and export these variables. The next step is the getting value for the `SUBARCH` variable that will represent tewhat the underlying archicecture is:
+That tells to `Makefile` that source tree of the Linux kernel will be in the current directory where `make` command was executed. After this we set `objtree` and other variables to this directory and export these variables. The next step is the getting value for the `SUBARCH` variable that will represent what the underlying architecture is:
 
 ```Makefile
 SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
@@ -300,7 +302,7 @@ prepare1: prepare2 $(version_h) include/generated/utsrelease.h \
 prepare2: prepare3 outputmakefile asm-generic
 ```
 
-The first `prepare0` expands to the `archprepare` that exapnds to the `archheaders` and `archscripts` that defined in the `x86_64` specific [Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile). Let's look on it. The `x86_64` specific makefile starts from the definition of the variables that are related to the archicteture-specific configs ([defconfig](https://github.com/torvalds/linux/tree/master/arch/x86/configs) and etc.). After this it defines flags for the compiling of the [16-bit](https://en.wikipedia.org/wiki/Real_mode) code, calculating of the `BITS` variable that can be `32` for `i386` or `64` for the `x86_64` flags for the assembly source code, flags for the linker and many many more (all definitions you can find in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile)). The first target is `archheaders` in the makefile generates syscall table:
+The first `prepare0` expands to the `archprepare` that expands to the `archheaders` and `archscripts` that defined in the `x86_64` specific [Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile). Let's look on it. The `x86_64` specific makefile starts from the definition of the variables that are related to the architecture-specific configs ([defconfig](https://github.com/torvalds/linux/tree/master/arch/x86/configs) and etc.). After this it defines flags for the compiling of the [16-bit](https://en.wikipedia.org/wiki/Real_mode) code, calculating of the `BITS` variable that can be `32` for `i386` or `64` for the `x86_64` flags for the assembly source code, flags for the linker and many many more (all definitions you can find in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile)). The first target is `archheaders` in the makefile generates syscall table:
 
 ```Makefile
 archheaders:
@@ -380,7 +382,7 @@ Note on the `build`. It defined in the [scripts/Kbuild.include](https://github.c
 build := -f $(srctree)/scripts/Makefile.build obj
 ```
 
-or in our case it is current source directory - `.`:
+Or in our case it is current source directory - `.`:
 
 ```Makefile
 $(Q)$(MAKE) -f $(srctree)/scripts/Makefile.build obj=.

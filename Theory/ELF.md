@@ -1,7 +1,7 @@
 Executable and Linkable Format
 ================================================================================
 
-ELF (Executable and Linkable Format) is a standard file format for executable files and shared libraries. Linux as many UNIX-like operating systems uses this format. Let's look on structure of the ELF-64 Object File Format  and some defintions in the linux kernel source code related with it.
+ELF (Executable and Linkable Format) is a standard file format for executable files and shared libraries. Linux, as well as, many UNIX-like operating systems uses this format. Let's look on structure of the ELF-64 Object File Format  and some defintions in the linux kernel source code related with it.
 
 An ELF object file consists of the following parts:
 
@@ -16,7 +16,7 @@ Now let's look closer on these components.
 It's located in the beginning of the object file. It's main point is to locate all other parts of the object file. File header contains following fields:
 
 * ELF identification - array of bytes which helps to identify the file as an ELF object file and also provides information about general object file characteristic;
-* Object file type - identifies the object file type. This field can describe that ELF file is relocatable object file, executable file, etc...;
+* Object file type - identifies the object file type. This field can describe that ELF file is a relocatable object file, executable file, etc...;
 * Target architecture;
 * Version of the object file format;
 * Virtual address of the program entry point;
@@ -51,7 +51,7 @@ This structure defined in the [elf.h](https://github.com/torvalds/linux/blob/mas
 
 **Sections**
 
-All data stores in a sections in an Elf object file. Sections identified by index in the section header table. Section header contains following fields:
+All data is stored in sections in an Elf object file. Sections identified by index in the section header table. Section header contains following fields:
 
 * Section name;
 * Section type;
@@ -102,12 +102,12 @@ in the linux kernel source code.
 
 `elf64_phdr` defined in the same [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h).
 
-And ELF object file also contains other fields/structures which you can find in the [Documentation](http://downloads.openwatcom.org/ftp/devel/docs/elf-64-gen.pdf). Better let's look on the `vmlinux`.
+And ELF object file also contains other fields/structures which you can find in the [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf). Now let's look on the `vmlinux`.
 
 vmlinux
 --------------------------------------------------------------------------------
 
-`vmlinux` is relocatable ELF object file too. So we can look on it with the `readelf` util. First of all let's look on a header:
+`vmlinux` is relocatable ELF object file too. So we can look at it with the `readelf` util. First of all let's look on a header:
 
 ```
 $ readelf -h  vmlinux
@@ -213,4 +213,4 @@ Program Headers:
 
 Here we can see five segments with sections list. All of these sections you can find in the generated linker script at - `arch/x86/kernel/vmlinux.lds`.
 
-That's all. Of course it's not a full description of ELF(Executable and	Linkable Format), but if you are interested in it, you can find documentation - [here](ftp://ftp.openwatcom.org/pub/devel/docs/elf-64-gen.pdf)
+That's all. Of course it's not a full description of ELF(Executable and	Linkable Format), but if you are interested in it, you can find documentation - [here](http://www.uclibc.org/docs/elf-64-gen.pdf)

@@ -16,7 +16,7 @@ We have already heard of the word `interrupt` in several parts of this book. We 
 
 We will then continue to dig deeper into the details of `interrupts` and how the Linux kernel handles them.
 
-So..., First of all what is an interrupt? An interrupt is an `event` which is emitted by software or hardware when its needs the CPU's attention. For example, we press a button on the keyboard and what do we expect next? What should the operating system and computer do after this? To simplify matters assume that each peripheral device has an interrupt line to the CPU. A device can use it to signal an interrupt to the CPU. However interrupts are not signaled directly to the CPU. In the old machines there was a [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) which is a chip responsible for sequentially processing multiple interrupt requests from multiple devices. In the new machines there is an [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) commonly known as - `APIC`. An `APIC` consists of two separate devices:
+So..., First of all what is an interrupt? An interrupt is an `event` which is raised by software or hardware when its needs the CPU's attention. For example, we press a button on the keyboard and what do we expect next? What should the operating system and computer do after this? To simplify matters assume that each peripheral device has an interrupt line to the CPU. A device can use it to signal an interrupt to the CPU. However interrupts are not signaled directly to the CPU. In the old machines there was a [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) which is a chip responsible for sequentially processing multiple interrupt requests from multiple devices. In the new machines there is an [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) commonly known as - `APIC`. An `APIC` consists of two separate devices:
 
 * `Local APIC`
 * `I/O APIC`
@@ -25,13 +25,13 @@ The first - `Local APIC` is located on each CPU core. The local APIC is responsi
 
 The second - `I/O APIC` provides multi-processor interrupt management. It is used to distribute external interrupts among the CPU cores. More about the local and I/O APICs will be covered later in this chapter. As you can understand, interrupts can occur at any time. When an interrupt occurs, the  operating system must handle it immediately. But what does it mean `to handle an interrupt`? When an interrupt occurs, the  operating system must ensure the following steps:
 
-* The kernel must pause execution of the current process; (preempt current task)
+* The kernel must pause execution of the current process; (preempt current task);
 * The kernel must search for the handler of the interrupt and transfer control (execute interrupt handler);
-* After the interrupt handler completes execution, the interrupted process can resume execution;
+* After the interrupt handler completes execution, the interrupted process can resume execution.
 
 Of course there are numerous intricacies involved in this procedure of handling interrupts. But the above 3 steps form the basic skeleton of the procedure.
 
-Addresses of each of the interrupt handlers are maintained in a special location referred to as the - `Interrupt Descriptor Table` or `IDT`. The processor uses an unique number for recognizing the type of interruption or exception. This number is called - `vector number`. A vector number is an index in the `IDT`. There is limited amount of the vector numbers and it can be from `0` to `255`. You can note the following range-check upon the vector number within the Linux kernel source-code:
+Addresses of each of the interrupt handlers are maintained in a special location referred to as the - `Interrupt Descriptor Table` or `IDT`. The processor uses a unique number for recognizing the type of interruption or exception. This number is called - `vector number`. A vector number is an index in the `IDT`. There is limited amount of the vector numbers and it can be from `0` to `255`. You can note the following range-check upon the vector number within the Linux kernel source-code:
 
 ```C
 BUG_ON((unsigned)n > 0xFF);
@@ -505,14 +505,11 @@ If you will have any questions or suggestions write me a comment or ping me at [
 Links
 --------------------------------------------------------------------------------
 
+* [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)
 * [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [protected mode](http://en.wikipedia.org/wiki/Protected_mode)
 * [long mode](http://en.wikipedia.org/wiki/Long_mode)
 * [kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks)
-* [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)
-* [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
-* [long mode](http://en.wikipedia.org/wiki/Long_mode)
-* [protected mode](http://en.wikipedia.org/wiki/Protected_mode)
 * [Task State Segement](http://en.wikipedia.org/wiki/Task_state_segment)
 * [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation)
 * [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register)
