@@ -47,7 +47,7 @@ and will be called by the [initcall](http://kernelnewbies.org/Documents/Initcall
 * `arch_initcall`
 * `subsys_initcall`
 * `fs_initcall`
-* `rootfs_initcal`
+* `rootfs_initcall`
 * `device_initcall`
 * `late_initcall`
 
