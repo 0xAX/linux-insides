@@ -111,7 +111,7 @@ if (ret == 0)
 return ret;
 ```
 
-That's all. Our driver is initialized. When an `uart` port will be oppend with the call of the `uart_open` function from the [drivers/tty/serial/serial_core.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/serial_core.c), it will call the `uart_startup` function to start up the serial port. This function will call the `startup` function that is part of the `uart_ops` structure. Each `uart` driver has the definition of this structure, in our case it is:
+That's all. Our driver is initialized. When an `uart` port will be opened with the call of the `uart_open` function from the [drivers/tty/serial/serial_core.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/serial_core.c), it will call the `uart_startup` function to start up the serial port. This function will call the `startup` function that is part of the `uart_ops` structure. Each `uart` driver has the definition of this structure, in our case it is:
 
 ```C
 static struct uart_ops serial21285_ops = {
@@ -149,7 +149,7 @@ static int serial21285_startup(struct uart_port *port)
 }
 ```
 
-First of all about `TX` and `RX`. A serial bus of a device consists of just two wires: one for sending data and another for receiving. As such, serial devices should have two serial pins: the receiver - `RX`, and the transmitter - `TX`. With the call of first two macros: `tx_enabled` and `rx_enabled`, we enable these wires. The following part of these function is the greatest interest for us. Note on `request_irq` functions. This function registers an interrupt handler and enable a given interrupt line. Let's look at the implementation of this function and get into the details. This function defined in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h) header file and looks as:
+First of all about `TX` and `RX`. A serial bus of a device consists of just two wires: one for sending data and another for receiving. As such, serial devices should have two serial pins: the receiver - `RX`, and the transmitter - `TX`. With the call of first two macros: `tx_enabled` and `rx_enabled`, we enable these wires. The following part of these function is the greatest interest for us. Note on `request_irq` functions. This function registers an interrupt handler and enables a given interrupt line. Let's look at the implementation of this function and get into the details. This function defined in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h) header file and looks as:
 
 ```C
 static inline int __must_check
@@ -210,7 +210,7 @@ int request_threaded_irq(unsigned int irq, irq_handler_t handler,
 }
 ```
 
-We arelady saw the `irqaction` and the `irq_desc` structures in this chapter. The first structure represents per interrupt action descriptor and contains pointers to the interrupt handler, name of the device, interrupt number and etc. The second structure represents a descriptor of an interrupt and contains pointer to the `irqaction`, interrupt flags and etc. Note that the `request_threaded_irq` function called by the `request_irq` with the additioanal parameter: `irq_handler_t thread_fn`. If this parameter is not `NULL`, the `irq` thread will be created and the given `irq` handler will be executed in this thread. In the next step we need to make following checks:
+We arelady saw the `irqaction` and the `irq_desc` structures in this chapter. The first structure represents per interrupt action descriptor and contains pointers to the interrupt handler, name of the device, interrupt number, etc. The second structure represents a descriptor of an interrupt and contains pointer to the `irqaction`, interrupt flags, etc. Note that the `request_threaded_irq` function called by the `request_irq` with the additioanal parameter: `irq_handler_t thread_fn`. If this parameter is not `NULL`, the `irq` thread will be created and the given `irq` handler will be executed in this thread. In the next step we need to make following checks:
 
 ```C
 if (((irqflags & IRQF_SHARED) && !dev_id) ||
@@ -261,7 +261,7 @@ if (!action)
     return -ENOMEM;
 ```
 
-More about `kzalloc` will be in the separate chapter about [memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) in the Linux kernel. As we allocated space for the `irqaction`, we start to initialize this structure with the values of interrupt handler, interrupt flags, device name and etc:
+More about `kzalloc` will be in the separate chapter about [memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) in the Linux kernel. As we allocated space for the `irqaction`, we start to initialize this structure with the values of interrupt handler, interrupt flags, device name, etc:
 
 ```C
 action->handler = handler;
@@ -301,7 +301,7 @@ And fill the rest of the given interrupt descriptor fields in the end. So, our `
 Prepare to handle an interrupt
 --------------------------------------------------------------------------------
 
-In the previous paragraph we saw the requesting of the irq line for the given interrupt descriptor and registration of the `irqaction` structure for the given interrupt. We already know that when an interrupt event occurs, an interrupt controller notifies the processor about this event and processor tries to find appropriate interrupt gate for this interrupt. If you have read the eight [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html) of this chapter, you may remember the `native_init_IRQ` function. This function makes initialization of the local [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). The following part of this function is the most interesting part for us right now: 
+In the previous paragraph we saw the requesting of the irq line for the given interrupt descriptor and registration of the `irqaction` structure for the given interrupt. We already know that when an interrupt event occurs, an interrupt controller notifies the processor about this event and processor tries to find appropriate interrupt gate for this interrupt. If you have read the eighth [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html) of this chapter, you may remember the `native_init_IRQ` function. This function makes initialization of the local [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). The following part of this function is the most interesting part for us right now: 
 
 ```C
 for_each_clear_bit_from(i, used_vectors, first_system_vector) {
@@ -398,7 +398,7 @@ static inline void generic_handle_irq_desc(unsigned int irq, struct irq_desc *de
 }
 ```
 
-But stop... What is it `handle_irq` and why do we call our interrupt handler from the interrupt descriptor when we know that `irqaction` points to the actual interrupt handler? Actually the `irq_desc->handle_irq` is a high level API for the calling interrupt handler routine. It setups during initialization of the [device tree](https://en.wikipedia.org/wiki/Device_tree) and [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) initialization. The kernel selects correct function and call chain of the `irq->action(s)` there. In this way, the `serial21285_tx_chars` or the `serial21285_rx_chars` function will be executed after an interrupt will occur.
+But stop... What is it `handle_irq` and why do we call our interrupt handler from the interrupt descriptor when we know that `irqaction` points to the actual interrupt handler? Actually the `irq_desc->handle_irq` is a high-level API for the calling interrupt handler routine. It setups during initialization of the [device tree](https://en.wikipedia.org/wiki/Device_tree) and [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) initialization. The kernel selects correct function and call chain of the `irq->action(s)` there. In this way, the `serial21285_tx_chars` or the `serial21285_rx_chars` function will be executed after an interrupt will occur.
 
 In the end of the `do_IRQ` function we call the `irq_exit` function that will exit from the interrupt context, the `set_irq_regs` with the old userspace registers and return:
 
@@ -408,12 +408,12 @@ set_irq_regs(old_regs);
 return 1;
 ```
 
-We already knwo that when an `IRQ` finishes its work, deferred interrupts will be executed if they exist.
+We already know that when an `IRQ` finishes its work, deferred interrupts will be executed if they exist.
 
 Exit from interrupt
 --------------------------------------------------------------------------------
 
-Ok, the interrupt handler finsihed its execution and now we must return from the interrupt. When the work of the `do_IRQ` function will be finsihed, we will return back to the assembler code in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) to the `ret_from_intr` label. First of all we disable interrupts with the `DISABLE_INTERRUPTS` macro that expands to the `cli` instruction and decrement value of the `irq_count` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable. Remember, this variable had value - `1`, when we was in interrupt context:
+Ok, the interrupt handler finished its execution and now we must return from the interrupt. When the work of the `do_IRQ` function will be finsihed, we will return back to the assembler code in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) to the `ret_from_intr` label. First of all we disable interrupts with the `DISABLE_INTERRUPTS` macro that expands to the `cli` instruction and decrement value of the `irq_count` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable. Remember, this variable had value - `1`, when we were in interrupt context:
 
 ```assembly
 DISABLE_INTERRUPTS(CLBR_NONE)
@@ -448,7 +448,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the tenth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and as you have read in the beginning of this part - it is the last part of this chapter. This chapter started from the explanation of the theory of interrupts and we have learned what is it interrupt and kinds of interrupts, then we saw exceptions and handling of this kind of interrupts, deferred interrupts and finally we looked on the hardware interrupts and thanlding of their in this part. Of course, this part and even this chapter does not cover full aspects of interrupts and interrupt handling in the Linux kernel. It is not real to do this. At least for me. It was the big part, I don't know how about you, but it was really big for me. This theme is much bigger than this chapter and I am not sure that somewhere there is a book that covers it. We have missed many part and aspects of interrupts and interrupt handling, but I think it will be good point to dive in the kernel code related to the interrupts and interrupts handling.
+It is the end of the tenth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and as you have read in the beginning of this part - it is the last part of this chapter. This chapter started from the explanation of the theory of interrupts and we have learned what is it interrupt and kinds of interrupts, then we saw exceptions and handling of this kind of interrupts, deferred interrupts and finally we looked on the hardware interrupts and thanlding of their in this part. Of course, this part and even this chapter does not cover full aspects of interrupts and interrupt handling in the Linux kernel. It is not realistic to do this. At least for me. It was the big part, I don't know how about you, but it was really big for me. This theme is much bigger than this chapter and I am not sure that somewhere there is a book that covers it. We have missed many part and aspects of interrupts and interrupt handling, but I think it will be good point to dive in the kernel code related to the interrupts and interrupts handling.
 
 If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
