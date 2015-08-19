@@ -1,29 +1,29 @@
 Executable and Linkable Format
 ================================================================================
 
-ELF (Executable and Linkable Format) is a standard file format for executable files and shared libraries. Linux, as well as, many UNIX-like operating systems uses this format. Let's look on structure of the ELF-64 Object File Format  and some defintions in the linux kernel source code related with it.
+ELF (Executable and Linkable Format) is a standard file format for executable files, object code, shared libraries, and core dumps. Linux, as well as, many other UNIX-like operating systems uses this format. Let's look on the structure of ELF-64 File Format and some defintions in the linux kernel source code related with it.
 
-An ELF object file consists of the following parts:
+An ELF file consists of the following parts:
 
-* ELF header - describes the main characteristics of the object file: type, CPU architecture, the virtual address of the entry point, the size and offset the remaining parts, etc...;
-* Program header table - listing the available segments and their attributes. Program header table need loaders for placing sections of the file as virtual memory segments;
-* Section header table - contains description of the sections.
+* ELF header - describes the main characteristics of the object file: type, CPU architecture, virtual address of the entry point, size and offset of the remaining parts, etc...;
+* Program header table - lists the available segments and their attributes. Program header table needs loaders for placing sections of this file as virtual memory segments;
+* Section header table - contains the description of sections.
 
 Now let's look closer on these components.
 
 **ELF header**
 
-It's located in the beginning of the object file. It's main point is to locate all other parts of the object file. File header contains following fields:
+It's located in the beginning of the object file. Its main point is to locate all other parts of the object file. ELF header contains following fields:
 
-* ELF identification - array of bytes which helps to identify the file as an ELF object file and also provides information about general object file characteristic;
-* Object file type - identifies the object file type. This field can describe that ELF file is a relocatable object file, executable file, etc...;
+* ELF identification - array of bytes which helps identify this file as an ELF file and also provides information about general object file characteristics;
+* Object file type - identifies the object file type. This field can describe whether this file is a relocatable file or executable file, etc...;
 * Target architecture;
 * Version of the object file format;
 * Virtual address of the program entry point;
 * File offset of the program header table;
 * File offset of the section header table;
-* Size of an ELF header;
-* Size of a program header table entry;
+* Size of the ELF header;
+* Size of the program header table entry;
 * and other fields...
 
 You can find `elf64_hdr` structure which presents ELF64 header in the linux kernel source code:
@@ -47,11 +47,11 @@ typedef struct elf64_hdr {
 } Elf64_Ehdr;
 ```
 
-This structure defined in the [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h)
+This structure defines in the [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h)
 
 **Sections**
 
-All data is stored in sections in an Elf object file. Sections identified by index in the section header table. Section header contains following fields:
+All data is stored in sections in an Elf file. Sections are identified by index in the section header table. Section header contains following fields:
 
 * Section name;
 * Section type;
@@ -64,7 +64,7 @@ All data is stored in sections in an Elf object file. Sections identified by ind
 * Address alignment boundary;
 * Size of entries, if section has table;
 
-And presented with the following `elf64_shdr` structure in the linux kernel:
+And presented with the following `elf64_shdr` structure in the linux kernel source code:
 
 ```C
 typedef struct elf64_shdr {
@@ -83,7 +83,7 @@ typedef struct elf64_shdr {
 
 **Program header table**
 
-All sections are grouped into segments in an executable or shared object file. Program header is an array of structures which describe every segment. It looks like:
+All sections are grouped into segments in an executable file or shared library. Program header table is an array of structures which describe every segment. It looks like:
 
 ```C
 typedef struct elf64_phdr {
@@ -98,16 +98,14 @@ typedef struct elf64_phdr {
 } Elf64_Phdr;
 ```
 
-in the linux kernel source code.
+`elf64_phdr` structure defines in the same [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h).
 
-`elf64_phdr` defined in the same [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h).
-
-And ELF object file also contains other fields/structures which you can find in the [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf). Now let's look on the `vmlinux`.
+And ELF file also contains other fields/structures which you can find in the [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf). Now let's look on the `vmlinux`.
 
 vmlinux
 --------------------------------------------------------------------------------
 
-`vmlinux` is relocatable ELF object file too. So we can look at it with the `readelf` util. First of all let's look on a header:
+`vmlinux` is an ELF file too. So we can look at it with the `readelf` util. First of all, let's look on the elf header of vmlinux:
 
 ```
 $ readelf -h  vmlinux
@@ -144,15 +142,15 @@ ffffffff80000000 - ffffffffa0000000 (=512 MB)  kernel text mapping, from phys 0
 So we can find it in the `vmlinux` with:
 
 ```
-readelf -s vmlinux | grep ffffffff81000000
+$ readelf -s vmlinux | grep ffffffff81000000
      1: ffffffff81000000     0 SECTION LOCAL  DEFAULT    1 
  65099: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 _text
  90766: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 startup_64
 ```
 
-Note that here is address of the `startup_64` routine is not `ffffffff80000000`, but `ffffffff81000000` and now i'll explain why.
+Note that ,the address of `startup_64` routine is not `ffffffff80000000`, but `ffffffff81000000`. Now I'll explain why.
 
-We can see following definition in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
+We can see the following definition in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
 
 ```
     . = __START_KERNEL;
@@ -176,10 +174,11 @@ Where `__START_KERNEL` is:
 
 `__START_KERNEL_map` is the value from documentation - `ffffffff80000000` and `__PHYSICAL_START` is `0x1000000`. That's why address of the `startup_64` is `ffffffff81000000`.
 
-And the last we can get program headers from `vmlinux` with the following command:
+At last we can get program headers from `vmlinux` with the following command:
 
 ```
-readelf -l vmlinux
+
+$ readelf -l vmlinux
 
 Elf file type is EXEC (Executable file)
 Entry point 0x1000000
