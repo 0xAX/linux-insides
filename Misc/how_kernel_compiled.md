@@ -18,9 +18,9 @@ Preparation before the kernel compilation
 ---------------------------------------------------------------------------------
 
 There are many things to prepare before the kernel compilation can be started. The main point here is to find and configure
-The type of compilation, to parse command line arguments that are passed to `make`, etc... So let's dive into the top `Makefile` of the Linux kernel.
+the type of compilation, to parse command line arguments that are passed to `make`, etc... So let's dive into the top `Makefile` of Linux kernel.
 
-The Linux kernel top `Makefile` is responsible for building two major products: [vmlinux](https://en.wikipedia.org/wiki/Vmlinux) (the resident kernel image) and the modules (any module files). The [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) of the Linux kernel starts with the definition of the following variables:
+The top `Makefile` of Linux kernel is responsible for building two major products: [vmlinux](https://en.wikipedia.org/wiki/Vmlinux) (the resident kernel image) and the modules (any module files). The [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) of the Linux kernel starts with the definition of following variables:
 
 ```Makefile
 VERSION = 4
@@ -30,13 +30,13 @@ EXTRAVERSION = -rc3
 NAME = Hurr durr I'ma sheep
 ```
 
-These variables determine the current version of the Linux kernel and are used in the different places, for example in the forming of the `KERNELVERSION` variable:
+These variables determine the current version of Linux kernel and are used in different places, for example in the forming of the `KERNELVERSION` variable in the same `Makefile`:
 
 ```Makefile
 KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
 ```
 
-After this we can see a couple of `ifeq` conditionals that check some of the parameters passed to `make`. The Linux kernel `makefiles` provides a special `make help` target that prints all available targets and some of the command line arguments that can be passed to `make`. For example: `make V=1` - provides verbose builds. The first `ifeq` checks if the `V=n` option is passed to make:
+After this we can see a couple of `ifeq` conditions that check some of the parameters passed to `make`. The Linux kernel `makefiles` provides a special `make help` target that prints all available targets and some of the command line arguments that can be passed to `make`. For example : `make V=1` => verbose build. The first `ifeq` checks whether the `V=n` option is passed to `make`:
 
 ```Makefile
 ifeq ("$(origin V)", "command line")
