@@ -66,3 +66,4 @@ Thank you to all contributors:
 * [Waqar Ahmed](https://github.com/Waqar144)
 * [Ian Miell](https://github.com/ianmiell)
 * [DongLiang Mu](https://github.com/mudongliang)
+* [Johan Manuel](https://github.com/29jm)
