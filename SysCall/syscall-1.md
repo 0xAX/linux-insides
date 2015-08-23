@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 }
 ```
 
-There are no `fopen`, `fgets`, `printf` and `fclose` system calls in the Linux kernel, but `open`, `read` `write` and `close` instead. I think you know that these four functions `fopen`, `fgets`, `printf` and `fclose` are just functions that defined in the `C` [standard library](https://en.wikipedia.org/wiki/GNU_C_Library). Actually these functions are wrappers for the system calls. We do not call system calls directly in our code, but using [wrapper](https://en.wikipedia.org/wiki/Wrapper_function) functions from the standard library. The main reason of this is simple: system call must be performed quickly, very quickly. As a system call must be quickly, it must be small. The standard library takes responsibility to call system call with the correct set parameters and makes different check before it will call the given system call. Let's compile our program with the following command:
+There are no `fopen`, `fgets`, `printf` and `fclose` system calls in the Linux kernel, but `open`, `read` `write` and `close` instead. I think you know that these four functions `fopen`, `fgets`, `printf` and `fclose` are just functions that defined in the `C` [standard library](https://en.wikipedia.org/wiki/GNU_C_Library). Actually these functions are wrappers for the system calls. We do not call system calls directly in our code, but using [wrapper](https://en.wikipedia.org/wiki/Wrapper_function) functions from the standard library. The main reason of this is simple: system call must be performed quickly, very quickly. As a system call must be quick, it must be small. The standard library takes responsibility to call system call with the correct set parameters and makes different check before it will call the given system call. Let's compile our program with the following command:
 
 ```
 $ gcc test.c -o test
@@ -382,7 +382,7 @@ This is the end of the first part about system calls concept in the Linux kernel
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------
