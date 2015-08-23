@@ -1,4 +1,4 @@
-System call in the Linux kernel. Part 1.
+System calls in the Linux kernel. Part 1.
 ================================================================================
 
 Introduction
@@ -8,12 +8,12 @@ This post opens new chapter in [linux-insides](http://0xax.gitbooks.io/linux-ins
 
 Before we will start to dive into the implementation of the system calls related stuff in the Linux kernel source code, it is good to know some theory about system calls. Let's do it in the following paragraph.
 
-System calls. What is it?
+System call. What is it?
 --------------------------------------------------------------------------------
 
 A system call is just an userspace request of a kernel service. Yes, the operating system kernel provides many services. When your program wants to write/read to/from a file, start to listen for connections on a [socket](https://en.wikipedia.org/wiki/Network_socket), delete or create directory, or even to finish its work, a program uses a system call. In another words, a system call is just a [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) function that is placed in the kernel space and an user program can ask kernel to do something via this function.
 
-The Linux kernel provides a set of this function and each architecture provides its own set. For example: the [x86_64](https://en.wikipedia.org/wiki/X86-64) provides [322](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl) system calls and the [x86](https://en.wikipedia.org/wiki/X86) provides [358](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl) different system calls. Ok, a system call is just a function. Let's look on a simple `Hello wrold` example that written in assembly programming language:
+The Linux kernel provides a set of these functions and each architecture provides its own set. For example: the [x86_64](https://en.wikipedia.org/wiki/X86-64) provides [322](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl) system calls and the [x86](https://en.wikipedia.org/wiki/X86) provides [358](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl) different system calls. Ok, a system call is just a function. Let's look on a simple `Hello wrold` example that written in assembly programming language:
 
 ```assembly
 .data
