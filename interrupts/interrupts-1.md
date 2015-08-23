@@ -374,33 +374,7 @@ for_each_possible_cpu(cpu) {
 }
 ```
 
-Here we go over all the CPUs on-by-one and setup `irq_stack_ptr`. This turns out to be equal to the top of the interrupt stack minus `64`. Why `64`? If you remember, we set the stack canary in the beginning of the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) with the call of the `boot_init_stack_canary` function:
-
-```C
-static __always_inline void boot_init_stack_canary(void)
-{
-    u64 canary;
-    ...
-    ...
-    ...
-
-#ifdef CONFIG_X86_64
-    BUILD_BUG_ON(offsetof(union irq_stack_union, stack_canary) != 40);
-#endif
-    //
-    // getting canary value here
-    //
-
-    this_cpu_write(irq_stack_union.stack_canary, canary);
-    ...
-    ...
-    ...
-}
-```
-
-Note that `canary` is `64` bits value. That's why we need to subtract `64` from the size of the interrupt stack to avoid overlapping with the stack canary value. Initialization of the `irq_stack_union.gs_base` is in the `load_percpu_segment` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c):
-
-TODO maybe more about the wrmsl
+Here we go over all the CPUs on-by-one and setup `irq_stack_ptr`. This turns out to be equal to the top of the interrupt stack minus `64`. Why `64`?TODO  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c) source code file is following:
 
 ```C
 void load_percpu_segment(int cpu)
