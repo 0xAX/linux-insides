@@ -131,7 +131,7 @@ In the first line of the `strace` output, we can see [execve](https://github.com
 
 for the first six parameters of a function. If a function has more than six arguments, other parameters will be placed on the stack.
 
-We do not use system calls in our code directly, but anyway our program uses it when we want to print something, check access to a file or just write or read something to it.
+We do not use system calls in our code directly, but our program uses it when we want to print something, check access to a file or just write or read something to it.
 
 For example:
 
