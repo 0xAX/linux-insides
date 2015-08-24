@@ -378,7 +378,7 @@ We have seen the partial implementation of one system call provided by the Linux
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the first part about system calls concept in the Linux kernel. We have covered the theory of system calls so far and in the next part we will continue to dive into this topic, touching Linux kernel code which is related to system calls.
+This concludes the first part covering system call concepts in the Linux kernel. We have covered the theory of system calls so far and in the next part we will continue to dive into this topic, touching Linux kernel code related to system calls.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new).
 
