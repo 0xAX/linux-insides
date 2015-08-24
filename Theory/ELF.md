@@ -1,22 +1,22 @@
 Executable and Linkable Format
 ================================================================================
 
-ELF (Executable and Linkable Format) is a standard file format for executable files and shared libraries. Linux and many UNIX-like operating systems uses this format. Let's look at the structure of the ELF-64 Object File Format and some definitions in the linux kernel source code which related with it.
+ELF (Executable and Linkable Format) is a standard file format for executable files, object code, shared libraries and core dumps. Linux and many UNIX-like operating systems use this format. Let's look at the structure of the ELF-64 Object File Format and some definitions in the linux kernel source code which related with it.
 
 An ELF object file consists of the following parts:
 
 * ELF header - describes the main characteristics of the object file: type, CPU architecture, the virtual address of the entry point, the size and offset of the remaining parts, etc...;
-* Program header table - öists the available segments and their attributes. Program header table need loaders for placing sections of the file as virtual memory segments;
+* Program header table - lists the available segments and their attributes. Program header table need loaders for placing sections of the file as virtual memory segments;
 * Section header table - contains the description of the sections.
 
 Now let's have a closer look on these components.
 
 **ELF header**
 
-The ELF header is located at the beginning of the object file. It's main purpose is to locate all other parts of the object file. File header contain the following fields:
+The ELF header is located at the beginning of the object file. Its main purpose is to locate all other parts of the object file. The File header contains the following fields:
 
-* ELF identification - array of bytes which helps to identify the file as an ELF object file and also provides information about general object file characteristic;
-* Object file type - identifies the object file type. This field can describe that ELF file is a relocatable object file, a executable file, etc...;
+* ELF identification - array of bytes which helps identify the file as an ELF object file and also provides information about general object file characteristic;
+* Object file type - identifies the object file type. This field can describe that ELF file is a relocatable object file, an executable file, etc...;
 * Target architecture;
 * Version of the object file format;
 * Virtual address of the program entry point;
