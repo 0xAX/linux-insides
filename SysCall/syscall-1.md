@@ -4,16 +4,16 @@ System calls in the Linux kernel. Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-This post opens new chapter in [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) book and as you may understand from the title, this chapter will devoted to the [System call](https://en.wikipedia.org/wiki/System_call) concept in the Linux kernel. The choice of the topic for this chapter is not accidental. In the previous [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we saw interrupts and interrupt handling. Concept of system calls is very similar to interrupts, because the most common way to implement system calls as software interrupts. We will see many different aspects that are related to the system call concept. For example, we will learn what's happening when a system call occurs from userspace, we will see implementation of a couple system call handlers in the Linux kernel, [VDSO](https://en.wikipedia.org/wiki/VDSO) and [vsyscall](https://lwn.net/Articles/446528/) concepts and many many more.
+This post opens up a new chapter in [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) book and as you may understand from the title, this chapter will be devoted to the [System call](https://en.wikipedia.org/wiki/System_call) concept in the Linux kernel. The choice of topic for this chapter is not accidental. In the previous [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we saw interrupts and interrupt handling. The concept of system calls is very similar to that of interrupts. This is because the most common way to implement system calls is as software interrupts. We will see many different aspects that are related to the system call concept. For example, we will learn what's happening when a system call occurs from userspace, we will see an implementation of a couple system call handlers in the Linux kernel, [VDSO](https://en.wikipedia.org/wiki/VDSO) and [vsyscall](https://lwn.net/Articles/446528/) concepts and many many more.
 
-Before we will start to dive into the implementation of the system calls related stuff in the Linux kernel source code, it is good to know some theory about system calls. Let's do it in the following paragraph.
+Before we start to dive into the implementation of the system calls related stuff in the Linux kernel source code, it is good to know some theory about system calls. Let's do it in the following paragraph.
 
 System call. What is it?
 --------------------------------------------------------------------------------
 
-A system call is just an userspace request of a kernel service. Yes, the operating system kernel provides many services. When your program wants to write to or read from a file, start to listen for connections on a [socket](https://en.wikipedia.org/wiki/Network_socket), delete or create directory, or even to finish its work, a program uses a system call. In another words, a system call is just a [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) function that is placed in the kernel space and an user program can ask kernel to do something via this function.
+A system call is just a userspace request of a kernel service. Yes, the operating system kernel provides many services. When your program wants to write to or read from a file, starts to listen for connections on a [socket](https://en.wikipedia.org/wiki/Network_socket), delete or create a directory, or even to finish its work, a program uses a system call. In another words, a system call is just a [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) function that is placed in the kernel space and a user program can ask the kernel to do something via this function.
 
-The Linux kernel provides a set of these functions and each architecture provides its own set. For example: the [x86_64](https://en.wikipedia.org/wiki/X86-64) provides [322](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl) system calls and the [x86](https://en.wikipedia.org/wiki/X86) provides [358](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl) different system calls. Ok, a system call is just a function. Let's look on a simple `Hello world` example that written in assembly programming language:
+The Linux kernel provides a set of these functions and each architecture provides its own set. For example: the [x86_64](https://en.wikipedia.org/wiki/X86-64) provides [322](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl) system calls and the [x86](https://en.wikipedia.org/wiki/X86) provides [358](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl) different system calls. Ok, a system call is just a function. Let's look on a simple `Hello world` example that's written in the assembly programming language:
 
 ```assembly
 .data
@@ -37,14 +37,14 @@ _start:
     syscall
 ```
 
-We can compile with the following commands:
+We can compile the above with the following commands:
 
 ```
 $ gcc -c test.S
 $ ld -o test test.o
 ```
 
-and run it with the:
+and run it as follows:
 
 ```
 ./test
@@ -56,7 +56,7 @@ Ok, what do we see here? This simple code represents `Hello world` assembly prog
 * `.data`
 * `.text`
 
-The first section - `.data` stores initialized data of our program (`Hello world` string and its length in our case). The second section - `.text` contains code of our program. We can split the code of our program into two parts: first part will be before first `syscall` instruction and the second part will be between first and second `syscall` instructions. First of all what does the `syscall` instruction in our code and generally? As we can read in the [64-ia-32-architectures-software-developer-vol-2b-manual](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html):
+The first section - `.data` stores initialized data of our program (`Hello world` string and its length in our case). The second section - `.text` contains the code of our program. We can split the code of our program into two parts: first part will be before the first `syscall` instruction and the second part will be between first and second `syscall` instructions. First of all what does the `syscall` instruction do in our code and generally? As we can read in the [64-ia-32-architectures-software-developer-vol-2b-manual](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html):
 
 ```
 SYSCALL invokes an OS system-call handler at privilege level 0. It does so by
@@ -76,7 +76,7 @@ by those selector values correspond to the fixed values loaded into the descript
 caches; the SYSCALL instruction does not ensure this correspondence.
 ```
 
-and we are initilizing `syscalls` by the writing of the `entry_SYSCALL_64` that defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembler file and represents `SYSCALL` instruction entry to the `IA32_STAR` [Model specific register](https://en.wikipedia.org/wiki/Model-specific_register):
+and we are initializing `syscalls` by the writing of the `entry_SYSCALL_64` that defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembler file and represents `SYSCALL` instruction entry to the `IA32_STAR` [Model specific register](https://en.wikipedia.org/wiki/Model-specific_register):
 
 ```C
 wrmsrl(MSR_LSTAR, entry_SYSCALL_64);
@@ -84,7 +84,7 @@ wrmsrl(MSR_LSTAR, entry_SYSCALL_64);
 
 in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c) source code file.
 
-So, the `syscall` instruction invokes a handler of a given system call. But how it knows, what's handler to call? Actually it gets this information from the general purpose [registers](https://en.wikipedia.org/wiki/Processor_register). As you can see in the system call [table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl), each system call has an unique number. In our example, first system call is - `write` that writes data to the given file. Let's look in the system call table and try to find `write` system call. As we can see, the [write](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L10) system call has number - `1`. We pass number of this system call through `rax` register in our example. The next general purpose registers: `%rdi`, `%rsi` and `%rdx` takes parameters of the `write` syscall. In our case, they are [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) (`1` is [stdout](https://en.wikipedia.org/wiki/Standard_streams#Standard_output_.28stdout.29) in our case), second parameter is the pointer to our string, and the third is size of data. Yes, you heard right. Parameters for a system call. As I already wrote above, a system call is a just `C` function in the kernel space. In our case first system call is write. This system call defined in the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and looks like:
+So, the `syscall` instruction invokes a handler of a given system call. But how does it know which handler to call? Actually it gets this information from the general purpose [registers](https://en.wikipedia.org/wiki/Processor_register). As you can see in the system call [table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl), each system call has an unique number. In our example, first system call is - `write` that writes data to the given file. Let's look in the system call table and try to find `write` system call. As we can see, the [write](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L10) system call has number - `1`. We pass the number of this system call through the `rax` register in our example. The next general purpose registers: `%rdi`, `%rsi` and `%rdx` take parameters of the `write` syscall. In our case, they are [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) (`1` is [stdout](https://en.wikipedia.org/wiki/Standard_streams#Standard_output_.28stdout.29) in our case), second parameter is the pointer to our string, and the third is size of data. Yes, you heard right. Parameters for a system call. As I already wrote above, a system call is a just `C` function in the kernel space. In our case first system call is write. This system call defined in the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and looks like:
 
 ```C
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
@@ -96,7 +96,7 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 }
 ```
 
-Or in another words:
+Or in other words:
 
 ```C
 ssize_t write(int fd, const void *buf, size_t nbytes);
@@ -108,7 +108,7 @@ The second part of our example is the same, but we call other system call. In th
 
 * Return value
 
-and handles exit of our program. We can pass program name of our program to the [strace](https://en.wikipedia.org/wiki/Strace) util and we will see our system calls:
+and handles the way our program exits. We can pass the program name of our program to the [strace](https://en.wikipedia.org/wiki/Strace) util and we will see our system calls:
 
 ```
 $ strace test
@@ -120,7 +120,7 @@ _exit(0)                                = ?
 +++ exited with 0 +++
 ```
 
-In the first file of the `strace` output, we can see [execve](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L68) system call that executes our program, and the second and third are system calls that we have used in our program: `write` and `exit`. Note that we pass parameter through the general purpose registers in our example. The order of the registers is not not accidental. Order of the registers defined by the following agreement - [x86-64 calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions). This and other agreement for the `x86_64` architecture explained in the special document - [System V Application Binary Interface. PDF](http://www.x86-64.org/documentation/abi.pdf). In a general way, argument(s) of a function are placed either in registers or pushed on the stack. The right order is:
+In the first file of the `strace` output, we can see [execve](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L68) system call that executes our program, and the second and third are system calls that we have used in our program: `write` and `exit`. Note that we pass the parameter through the general purpose registers in our example. The order of the registers is not not accidental. The order of the registers is defined by the following agreement - [x86-64 calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions). This and other agreement for the `x86_64` architecture explained in the special document - [System V Application Binary Interface. PDF](http://www.x86-64.org/documentation/abi.pdf). In a general way, argument(s) of a function are placed either in registers or pushed on the stack. The right order is:
 
 * `rdi`;
 * `rsi`;
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
 }
 ```
 
-There are no `fopen`, `fgets`, `printf` and `fclose` system calls in the Linux kernel, but `open`, `read` `write` and `close` instead. I think you know that these four functions `fopen`, `fgets`, `printf` and `fclose` are just functions that defined in the `C` [standard library](https://en.wikipedia.org/wiki/GNU_C_Library). Actually these functions are wrappers for the system calls. We do not call system calls directly in our code, but using [wrapper](https://en.wikipedia.org/wiki/Wrapper_function) functions from the standard library. The main reason of this is simple: system call must be performed quickly, very quickly. As a system call must be quick, it must be small. The standard library takes responsibility to call system call with the correct set parameters and makes different check before it will call the given system call. Let's compile our program with the following command:
+There are no `fopen`, `fgets`, `printf` and `fclose` system calls in the Linux kernel, but `open`, `read` `write` and `close` instead. I think you know that these four functions `fopen`, `fgets`, `printf` and `fclose` are just functions that defined in the `C` [standard library](https://en.wikipedia.org/wiki/GNU_C_Library). Actually these functions are wrappers for the system calls. We do not call system calls directly in our code, but using [wrapper](https://en.wikipedia.org/wiki/Wrapper_function) functions from the standard library. The main reason of this is simple: a system call must be performed quickly, very quickly. As a system call must be quick, it must be small. The standard library takes responsibility to perform system calls with the correct set parameters and makes different check before it will call the given system call. Let's compile our program with the following command:
 
 ```
 $ gcc test.c -o test
