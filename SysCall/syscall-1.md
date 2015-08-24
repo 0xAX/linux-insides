@@ -178,7 +178,7 @@ The `ltrace` util displays a set of userspace calls of a program. The `fopen` fu
 write@SYS(1, "Hello World!\n\n", 14) = 14
 ```
 
-Yes, system calls are ubiquitous. Each program needs to open/write/read file, network connection, allocation of memory and many other things that can be provide only by the kernel. The [proc](https://en.wikipedia.org/wiki/Procfs) file system contains special file in a format: `/proc/pid/systemcall` that exposes the system call number and argument registers for the system call currently being executed by the process. For example, first pid that is [systemd](https://en.wikipedia.org/wiki/Systemd) for me uses:
+Yes, system calls are ubiquitous. Each program needs to open/write/read file, network connection, allocate memory and many other things that can be provided only by the kernel. The [proc](https://en.wikipedia.org/wiki/Procfs) file system contains special file in a format: `/proc/pid/systemcall` that exposes the system call number and argument registers for the system call currently being executed by the process. For example, pid 1, that is [systemd](https://en.wikipedia.org/wiki/Systemd) for me:
 
 ```
 $ sudo cat /proc/1/comm
@@ -203,7 +203,7 @@ $ sudo cat /proc/2093/syscall
 
 the system call with the number `270` which is [sys_pselect6](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L279) system call that allows `emacs` to monitor multiple file descriptors.
 
-Now we know a little about system call, what is it and why do we need in it. So let's look on the `write` system that our program used.
+Now we know a little about system call, what is it and why we need in it. So let's look at the `write` system call that our program used.
 
 Implementation of write system call
 --------------------------------------------------------------------------------
