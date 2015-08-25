@@ -338,7 +338,7 @@ static inline struct fd fdget_pos(int fd)
 }
 ```
 
-The main purpose of the `fdget_pos` is convert given file descriptor which is just number to the `fd` strucutre. Through the long chain of function calls, the `fdget_pos` function get the file descriptor table of the current process or in another words `current->files` and tries to find correspnding file descriptor number there. As we got `fd` structure for the given file descriptor number, we check it and return if it does not exist. In other way we get the current position in the file with the call of the `file_pos_read` function that just returns `f_pos` field of the our file:
+The main purpose of the `fdget_pos` is convert given file descriptor which is just number to the `fd` structure. Through the long chain of function calls, the `fdget_pos` function get the file descriptor table of the current process or in another words `current->files` and tries to find corresponding file descriptor number there. As we got `fd` structure for the given file descriptor number, we check it and return if it does not exist. In other way we get the current position in the file with the call of the `file_pos_read` function that just returns `f_pos` field of the our file:
 
 ```C
 static inline loff_t file_pos_read(struct file *file)
