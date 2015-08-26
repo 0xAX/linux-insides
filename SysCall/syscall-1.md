@@ -131,7 +131,7 @@ In the first line of the `strace` output, we can see [execve](https://github.com
 
 for the first six parameters of a function. If a function has more than six arguments, other parameters will be placed on the stack.
 
-We do not use system calls in our code directly, but anyway our program uses it when we want to print something, check access to a file or just write or read something to it.
+We do not use system calls in our code directly, but our program uses it when we want to print something, check access to a file or just write or read something to it.
 
 For example:
 
@@ -178,7 +178,7 @@ The `ltrace` util displays a set of userspace calls of a program. The `fopen` fu
 write@SYS(1, "Hello World!\n\n", 14) = 14
 ```
 
-Yes, system calls are ubiquitous. Each program needs to open/write/read file, network connection, allocation of memory and many other things that can be provide only by the kernel. The [proc](https://en.wikipedia.org/wiki/Procfs) file system contains special file in a format: `/proc/pid/systemcall` that exposes the system call number and argument registers for the system call currently being executed by the process. For example, first pid that is [systemd](https://en.wikipedia.org/wiki/Systemd) for me uses:
+Yes, system calls are ubiquitous. Each program needs to open/write/read file, network connection, allocate memory and many other things that can be provided only by the kernel. The [proc](https://en.wikipedia.org/wiki/Procfs) file system contains special file in a format: `/proc/pid/systemcall` that exposes the system call number and argument registers for the system call currently being executed by the process. For example, pid 1, that is [systemd](https://en.wikipedia.org/wiki/Systemd) for me:
 
 ```
 $ sudo cat /proc/1/comm
@@ -203,12 +203,12 @@ $ sudo cat /proc/2093/syscall
 
 the system call with the number `270` which is [sys_pselect6](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L279) system call that allows `emacs` to monitor multiple file descriptors.
 
-Now we know a little about system call, what is it and why do we need in it. So let's look on the `write` system that our program used.
+Now we know a little about system call, what is it and why we need in it. So let's look at the `write` system call that our program used.
 
 Implementation of write system call
 --------------------------------------------------------------------------------
 
-Let's look on the implementation of this system call directly in the source code of the Linux kernel. As we already know, the `write` system call defined in the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and looks like this:
+Let's look at the implementation of this system call directly in the source code of the Linux kernel. As we already know, the `write` system call is defined in the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and looks like this:
 
 ```C
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
@@ -229,7 +229,7 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 }
 ```
 
-First of all about the `SYSCALL_DEFINE3` macro. This macro defined in the [include/linux/syscalls.h](https://github.com/torvalds/linux/blob/master/include/linux/syscalls.h) header file and expands to the definition of the `sys_name(...)` function. Let's look on this macro:
+First of all, the `SYSCALL_DEFINE3` macro is defined in the [include/linux/syscalls.h](https://github.com/torvalds/linux/blob/master/include/linux/syscalls.h) header file and expands to the definition of the `sys_name(...)` function. Let's look at this macro:
 
 ```C
 #define SYSCALL_DEFINE3(name, ...) SYSCALL_DEFINEx(3, _##name, __VA_ARGS__)
@@ -302,7 +302,7 @@ The first `sys##name` is definition of the syscall handler function with the giv
 asmlinkage long sys_write(unsigned int fd, const char __user * filename, size_t count);
 ```
 
-Now we know a little about system calls definition and we can back to the implementation of the `write` system call. Let's look on the implementation of this system call again:
+Now we know a little about the system call's definition and we can go back to the implementation of the `write` system call. Let's look on the implementation of this system call again:
 
 ```C
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
@@ -323,13 +323,13 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 }
 ```
 
-As we already know and can see on the code, it takes three arguments:
+As we already know and can see from the code, it takes three arguments:
 
 * `fd`    - file descriptor;
 * `buf`   - buffer to write;
 * `count` - length of buffer to write.
 
-and writes data from a buffer declared by the user to a given device or a file. Note that the second parameter `buf`, defined with the `__user` attribute. The main purpose of this attribute is for checking of the Linux kernel code with the [sparse](https://en.wikipedia.org/wiki/Sparse) util. It defined in the [include/linux/compiler.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler.h) header file and depends on the `__CHECKER__` definition in the Linux kernel. That's all about useful meta-information related to our `sys_write` system call, let's try to understand how this system call is implemented. As we can see it starts from the definition of the `f` structure that has `fd` structure type that represent file descriptor in the Linux kernel and we put the result of the call of the `fdget_pos` function. The `fdget_pos` function defined in the same [source](https://github.com/torvalds/linux/blob/master/fs/read_write.c) code file and just expands to the call of the `__to_fd` function:
+and writes data from a buffer declared by the user to a given device or a file. Note that the second parameter `buf`, defined with the `__user` attribute. The main purpose of this attribute is for checking the Linux kernel code with the [sparse](https://en.wikipedia.org/wiki/Sparse) util. It is defined in the [include/linux/compiler.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler.h) header file and depends on the `__CHECKER__` definition in the Linux kernel. That's all about useful meta-information related to our `sys_write` system call, let's try to understand how this system call is implemented. As we can see it starts from the definition of the `f` structure that has `fd` structure type that represent file descriptor in the Linux kernel and we put the result of the call of the `fdget_pos` function. The `fdget_pos` function defined in the same [source](https://github.com/torvalds/linux/blob/master/fs/read_write.c) code file and just expands the call of the `__to_fd` function:
 
 ```C
 static inline struct fd fdget_pos(int fd)
@@ -338,7 +338,7 @@ static inline struct fd fdget_pos(int fd)
 }
 ```
 
-The main purpose of the `fdget_pos` is convert given file descriptor which is just number to the `fd` strucutre. Through the long chain of function calls, the `fdget_pos` function get the file descriptor table of the current process or in another words `current->files` and tries to find correspnding file descriptor number there. As we got `fd` structure for the given file descriptor number, we check it and return if it does not exist. In other way we get the current position in the file with the call of the `file_pos_read` function that just returns `f_pos` field of the our file:
+The main purpose of the `fdget_pos` is to convert the given file descriptor which is just a number to the `fd` structure. Through the long chain of function calls, the `fdget_pos` function gets the file descriptor table of the current process, `current->files`, and tries to find a corresponding file descriptor number there. As we got the `fd` structure for the given file descriptor number, we check it and return if it does not exist. We get the current position in the file with the call of the `file_pos_read` function that just returns `f_pos` field of the our file:
 
 ```C
 static inline loff_t file_pos_read(struct file *file)
@@ -347,14 +347,14 @@ static inline loff_t file_pos_read(struct file *file)
 }
 ```
 
-and call the `vfs_write` function. The `vfs_write` function defined the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and does main work for us - writes given buffer to the given file starting from the given position. We will not dive into details about the `vfs_write` function, because this function is weakly related to the `system call` concept but mostly about [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system) concept which we will see in another chapter. As the `vfs_write` has finished its work, we check the result of it and if it was finished successfully we change the position in the file with the `file_pos_write` function:
+and call the `vfs_write` function. The `vfs_write` function defined the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and does the work for us - writes given buffer to the given file starting from the given position. We will not dive into details about the `vfs_write` function, because this function is weakly related to the `system call` concept but mostly about [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system) concept which we will see in another chapter. After the `vfs_write` has finished its work, we check the result and if it was finished successfully we change the position in the file with the `file_pos_write` function:
 
 ```C
 if (ret >= 0)
 	file_pos_write(f.file, pos);
 ```
 
-that just updates `f_pos` with the given position of the give file:
+that just updates `f_pos` with the given position in the given file:
 
 ```C
 static inline void file_pos_write(struct file *file, loff_t pos)
@@ -363,22 +363,22 @@ static inline void file_pos_write(struct file *file, loff_t pos)
 }
 ```
 
-In the end of the our `write` system call handler, we can see call of the following function:
+At the end of the our `write` system call handler, we can see the call of the following function:
 
 ```C
 fdput_pos(f);
 ```
 
-unlocks the `f_pos_lock` mutex that protects file position during concurrently write from threads that share file descriptor.
+unlocks the `f_pos_lock` mutex that protects file position during concurrent writes from threads that share file descriptor.
 
 That's all.
 
-Just now, we partly saw implementation one of system calls that provided by the Linux kernel. Of course we have missed some parts in the implementation of the `write` system call in this part, because as I already wrote above, we will see only system calls related stuff in this chapter and will not see other stuff related to the other subsystem as [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system) and etc.
+We have seen the partial implementation of one system call provided by the Linux kernel. Of course we have missed some parts in the implementation of the `write` system call, because as I mentioned above, we will see only system calls related stuff in this chapter and will not see other stuff related to other subsystems, such as [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system).
 
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the first part about system calls concept in the Linux kernel. We saw theory about this concept in this part and in the next part we will continue to dive into this topic and start to touch Linux kernel code which is related to the system calls.
+This concludes the first part covering system call concepts in the Linux kernel. We have covered the theory of system calls so far and in the next part we will continue to dive into this topic, touching Linux kernel code related to system calls.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new).
 
