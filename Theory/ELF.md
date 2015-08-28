@@ -146,7 +146,7 @@ ffffffff80000000 - ffffffffa0000000 (=512 MB)  kernel text mapping, from phys 0
 We can then look this address up in the `vmlinux` ELF object with:
 
 ```
-readelf -s vmlinux | grep ffffffff81000000
+$ readelf -s vmlinux | grep ffffffff81000000
      1: ffffffff81000000     0 SECTION LOCAL  DEFAULT    1 
  65099: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 _text
  90766: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 startup_64
