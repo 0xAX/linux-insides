@@ -33,6 +33,7 @@
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
 * [System calls](SysCall/README.md)
     * [Introduction to system calls](SysCall/syscall-1.md)
+    * [How the Linux kernel handles a system call]()
 * [SMP]()
 * [Concepts](Concepts/README.md)
     * [Per-CPU variables](Concepts/per-cpu.md)
