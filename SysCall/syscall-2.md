@@ -1,7 +1,7 @@
 System calls in the Linux kernel. Part 2.
 ================================================================================
 
-How the Linux kernel handles a system call 
+How does the Linux kernel handles a system call 
 --------------------------------------------------------------------------------
 
 The previous [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-1.html) was the first part of the chapter that describes [system call](https://en.wikipedia.org/wiki/System_call) concept in the Linux kernel. We have learned what is it a `system call` in the Linux kernel and in a operating system kernel in general, looked on this concept from the user space and even saw partly implementation of the [write](http://man7.org/linux/man-pages/man2/write.2.html) system call. In this part we will continue dive into this theme and as we usually did it in other chapters of this book - after some theory we will start to sink lower and lower, and go directly to the Linux kernel code.
