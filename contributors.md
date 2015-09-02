@@ -67,3 +67,4 @@ Thank you to all contributors:
 * [Ian Miell](https://github.com/ianmiell)
 * [DongLiang Mu](https://github.com/mudongliang)
 * [Johan Manuel](https://github.com/29jm)
+* [Brian Rak](https://github.com/brakthehack)
