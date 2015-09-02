@@ -122,14 +122,14 @@ GLOBAL(initial_gs)
 	.quad	INIT_PER_CPU_VAR(irq_stack_union)
 ```
 
-We pass `irq_stack_union` symbol to the `INIT_PER_CPU_VAR` macro which just concatenates `init_per_cpu__` prefix with the given symbol. In our case we will get `init_per_cpu__irq_stack_union` symbol. Let's look on the [linker](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) script. There we can see following definition:
+We pass `irq_stack_union` symbol to the `INIT_PER_CPU_VAR` macro which just concatenates the `init_per_cpu__` prefix with the given symbol. In our case we will get the `init_per_cpu__irq_stack_union` symbol. Let's look at the [linker](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) script. There we can see following definition:
 
 ```
 #define INIT_PER_CPU(x) init_per_cpu__##x = x + __per_cpu_load
 INIT_PER_CPU(irq_stack_union);
 ```
 
-It tells us that address of the `init_per_cpu__irq_stack_union` will be `irq_stack_union + __per_cpu_load`. Now we need to understand where are `init_per_cpu__irq_stack_union` and `__per_cpu_load` and what they mean. The first `irq_stack_union` defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h) with the `DECLARE_INIT_PER_CPU` macro which expands to call of the `init_per_cpu_var` macro:
+It tells us that the address of the `init_per_cpu__irq_stack_union` will be `irq_stack_union + __per_cpu_load`. Now we need to understand where `init_per_cpu__irq_stack_union` and `__per_cpu_load` are and what they mean. The first `irq_stack_union` is defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h) with the `DECLARE_INIT_PER_CPU` macro which expands to call the `init_per_cpu_var` macro:
 
 ```C
 DECLARE_INIT_PER_CPU(irq_stack_union);
@@ -140,7 +140,7 @@ DECLARE_INIT_PER_CPU(irq_stack_union);
 #define init_per_cpu_var(var)  init_per_cpu__##var
 ```
 
-If we will expand all macro we will get the same `init_per_cpu__irq_stack_union` as we got after expanding of the `INIT_PER_CPU` macro, but you can note that it is already not just symbol, but variable. Let's look on the `typeof(percpu_var(var))` expression. Our `var` is `irq_stack_union` and `per_cpu_var` macro defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h):
+If we expand all macros we will get the same `init_per_cpu__irq_stack_union` as we got after expanding the `INIT_PER_CPU` macro, but you can note that it is not just a symbol, but a variable. Let's look at the `typeof(per_cpu_var(var))` expression. Our `var` is `irq_stack_union` and the `per_cpu_var` macro is defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h):
 
 ```C
 #define PER_CPU_VAR(var)        %__percpu_seg:var
@@ -154,13 +154,13 @@ where:
 endif
 ```
 
-So, we accessing `gs:irq_stack_union` and geting its type which is `irq_union`. Ok, we defined the first variable and know its address, now let's look on the second `__per_cpu_load` symbol. There are a couple of percpu variables which are located after this symbol. The `__per_cpu_load` defined in the [include/asm-generic/sections.h](https://github.com/torvalds/linux/blob/master/include/asm-generic-sections.h):
+So, we are accessing `gs:irq_stack_union` and geting its type which is `irq_union`. Ok, we defined the first variable and know its address, now let's look at the second `__per_cpu_load` symbol. There are a couple of `per-cpu` variables which are located after this symbol. The `__per_cpu_load` is defined in the [include/asm-generic/sections.h](https://github.com/torvalds/linux/blob/master/include/asm-generic-sections.h):
 
 ```C
 extern char __per_cpu_load[], __per_cpu_start[], __per_cpu_end[];
 ```
 
-and presented base address of the `per-cpu` variables from the data area. So, we know address of the `irq_stack_union`, `__per_cpu_load` and we know that `init_per_cpu__irq_stack_union` must be placed right after `__per_cpu_load`. And we can see it in the [System.map](http://en.wikipedia.org/wiki/System.map):
+and presented base address of the `per-cpu` variables from the data area. So, we know the address of the `irq_stack_union`, `__per_cpu_load` and we know that `init_per_cpu__irq_stack_union` must be placed right after `__per_cpu_load`. And we can see it in the [System.map](http://en.wikipedia.org/wiki/System.map):
 
 ```
 ...
@@ -174,7 +174,7 @@ ffffffff819ed000 A init_per_cpu__irq_stack_union
 ...
 ```
 
-Now we know about `initia_gs`, so let's book to the our code:
+Now we know about `initial_gs`, so let's look at the code:
 
 ```assembly
 movl	$MSR_GS_BASE,%ecx
@@ -183,7 +183,7 @@ movl	initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-Here we specified model specific register with `MSR_GS_BASE`, put 64-bit address of the `initial_gs` to the `edx:eax` pair and execute `wrmsr` instruction for filling the `gs` register with base address of the `init_per_cpu__irq_stack_union` which will be bottom of the interrupt stack. After this we will jump to the C code on the `x86_64_start_kernel` from the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c). In the `x86_64_start_kernel` function we do the last preparations before we jump into the generic and architecture-independent kernel code and on of these preparations is filling of the early `Interrupt Descriptor Table` with the interrupts handlres entries or `early_idt_handlers`. You can remember it, if you have read the part about the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) and can remember following code:
+Here we specified a model specific register with `MSR_GS_BASE`, put the 64-bit address of the `initial_gs` to the `edx:eax` pair and execute the `wrmsr` instruction for filling the `gs` register with the base address of the `init_per_cpu__irq_stack_union` which will be at the bottom of the interrupt stack. After this we will jump to the C code on the `x86_64_start_kernel` from the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c). In the `x86_64_start_kernel` function we do the last preparations before we jump into the generic and architecture-independent kernel code and one of these preparations is filling the early `Interrupt Descriptor Table` with the interrupts handlers entries or `early_idt_handlers`. You can remember it, if you have read the part about the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) and can remember following code:
 
 ```C
 for (i = 0; i < NUM_EXCEPTION_VECTORS; i++)
