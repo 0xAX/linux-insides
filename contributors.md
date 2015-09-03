@@ -68,3 +68,5 @@ Thank you to all contributors:
 * [DongLiang Mu](https://github.com/mudongliang)
 * [Johan Manuel](https://github.com/29jm)
 * [Brian Rak](https://github.com/brakthehack)
+* [Robin Peiremans](https://github.com/rpeiremans)
+
