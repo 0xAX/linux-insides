@@ -301,7 +301,7 @@ call __libc_start_main
 Here we pass address of the entry point to the `.init` and `.fini` section that contain code that starts to execute when the program is ran and the code that executes when program terminates. And in the end we see the call of the `main` function from our program. These three symbols are defined in the [csu/elf-init.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/elf-init.c;hb=1d4bbc54bd4f7d85d774871341b49f4357af1fb7) source code file. The following two object files:
 
 * `crtn.o`;
-* `crtn.i`.
+* `crti.o`.
 
 define the function prologs/epilogs for the .init and .fini sections (with the `_init` and `_fini` symbols respectively).
 
