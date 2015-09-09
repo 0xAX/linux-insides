@@ -216,7 +216,7 @@ no_longmode:
 	jmp     1b
 ```
 
-We set stack, cheked CPU and now can move on the next step.
+We set stack, checked CPU and now can move on the next step.
 
 Calculate relocation address
 --------------------------------------------------------------------------------
