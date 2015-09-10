@@ -206,7 +206,7 @@ hdr:
 	boot_flag:   .word 0xAA55
 ```
 
-The bootloader must fill this and the rest of the headers (only marked as `write` in the Linux boot protocol, for example [this](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) with values which it either got from command line or calculated. We will not see a description and explanation of all fields of the kernel setup header, we will get back to that when the kernel uses them. You can find a description of all fielsd in the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).
+The bootloader must fill this and the rest of the headers (only marked as `write` in the Linux boot protocol, for example [this](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) with values which it either got from command line or calculated. We will not see a description and explanation of all fields of the kernel setup header, we will get back to that when the kernel uses them. You can find a description of all fields in the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).
 
 As we can see in the kernel boot protocol, the memory map will be the following after loading the kernel:
 
