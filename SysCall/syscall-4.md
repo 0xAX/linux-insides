@@ -1,7 +1,7 @@
 System calls in the Linux kernel. Part 4.
 ================================================================================
 
-How the Linux kernel runs a program
+How does the Linux kernel run a program
 --------------------------------------------------------------------------------
 
 This is the fourth part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-3.html) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
