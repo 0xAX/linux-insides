@@ -35,6 +35,7 @@
     * [Introduction to system calls](SysCall/syscall-1.md)
     * [How the Linux kernel handles a system call](SysCall/syscall-2.md)
     * [vsyscall and vDSO](SysCall/syscall-3.md)
+    * [How the Linux kernel runs a program](SysCall/syscall-4.md)
 * [SMP]()
 * [Concepts](Concepts/README.md)
     * [Per-CPU variables](Concepts/per-cpu.md)
