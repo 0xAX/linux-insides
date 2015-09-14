@@ -125,7 +125,7 @@ if (retval)
 
 We need to call this function to eliminate potential leak of the execve'd binary's [file descriptor](https://en.wikipedia.org/wiki/File_descriptor). In the next step we start preparation of the `bprm` that represented by the `struct linux_binprm` structure (defined in the [include/linux/binfmts.h](https://github.com/torvalds/linux/blob/master/linux/binfmts.h) header file). The `linux_binprm` structure is used to hold the arguments that are used when loading binaries. For example it contains `vma` field which has `vm_area_struct` type and represents single memory area over a contiguous interval in a given address space where our application will be loaded, `mm` field which is memory descriptor of the binary, pointer to the top of memory and many other different fields.
 
-First of all we allocate memory for this structur with the `kzalloc` function and check the result of the allocation:
+First of all we allocate memory for this structure with the `kzalloc` function and check the result of the allocation:
 
 ```C
 bprm = kzalloc(sizeof(*bprm), GFP_KERNEL);
