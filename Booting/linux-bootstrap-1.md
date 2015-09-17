@@ -16,17 +16,17 @@ Note that I'm not a professional kernel hacker and I don't write code for the ke
 * Understanding C code
 * Understanding assembly code (AT&T syntax)
 
-Anyway, if you just started to learn some tools, I will try to explain some parts during this and the following posts. Ok, little introduction finished and now we can start to dive into the kernel and low-level stuff.
+Anyway, if you just start to learn some tools, I will try to explain some parts during this and the following posts. Ok, simple introduction finishes and now we can start to dive into the kernel and low-level stuff.
 
 All code is actually for kernel - 3.18. If there are changes, I will update the posts accordingly.
 
 The Magic Power Button, What happens next?
 --------------------------------------------------------------------------------
 
-Despite that this is a series of posts about the Linux kernel, we will not start from the kernel code (at least not in this paragraph). Ok, you pressed the magic power button on your laptop or desktop computer and it started to work. After the motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply), the power supply provides the computer with the proper amount of electricity. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to start the CPU. The CPU resets all leftover data in its registers and sets up predefined values for each of them.
+Despite that this is a series of posts about the Linux kernel, we will not start from the kernel code (at least not in this paragraph). Ok, you press the magic power button on your laptop or desktop computer and it startes to work. After the motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply), the power supply provides the computer with the proper amount of electricity. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to start the CPU. The CPU resets all leftover data in its registers and sets up predefined values for each of them.
 
 
-[80386](https://en.wikipedia.org/wiki/Intel_80386) and later CPU's define the following predefined data in CPU registers after the computer resets:
+[80386](https://en.wikipedia.org/wiki/Intel_80386) and later CPUs define the following predefined data in CPU registers after the computer resets:
 
 ```
 IP          0xfff0
@@ -34,7 +34,7 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode). Let's back up a little to try and understand memory segmentation in this mode. Real mode is supported on all x86-compatible processors, from the [8086](https://en.wikipedia.org/wiki/Intel_8086) all the way to the modern Intel 64-bit CPUs. The 8086 processor had a 20-bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it only has 16-bit registers, and with 16-bit registers the maximum address is 2^16 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all of the address space available. All memory is divided into small, fixed-size segments of 65535 bytes, or 64 KB. Since we cannot address memory above 64 KB with 16 bit registers, an alternate method was devised. An address consists of two parts: the beginning address of the segment and an offset from this address. To get a physical address in memory, we need to multiply the segment part by 16 and add the offset part:
+The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode). Let's back up a little to try and understand memory segmentation in this mode. Real mode is supported on all x86-compatible processors, from the [8086](https://en.wikipedia.org/wiki/Intel_8086) all the way to the modern Intel 64-bit CPUs. The 8086 processor has a 20-bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it only has 16-bit registers, and with 16-bit registers the maximum address is 2^16 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all the address space available. All memory is divided into small, fixed-size segments of 65535 bytes, or 64 KB. Since we cannot address memory above 64 KB with 16 bit registers, an alternate method is devised. An address consists of two parts: the beginning address of the segment and an offset from this address. To get a physical address in memory, we need to multiply the segment part by 16 and add the offset part:
 
 ```
 PhysicalAddress = Segment * 16 + Offset
@@ -56,7 +56,7 @@ But if we take the largest segment part and offset: `0xffff:0xffff`, it will be:
 
 which is 65519 bytes over first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](https://en.wikipedia.org/wiki/A20_line).
 
-Ok, now we know about real mode and memory addressing. Let's get back to register values after reset:
+Ok, now we know about real mode and memory addressing. Let's get back to discuss about register values after reset:
 
 `CS` register consists of two parts: the visible segment selector and hidden base address. We know predefined `CS` base and `IP` value, so the logical address will be:
 
@@ -97,7 +97,7 @@ SECTIONS {
 }
 ```
 
-Now the BIOS starts: after initializing and checking the hardware, it needs to find a bootable device. A boot order is stored in the BIOS configuration, controlling which devices the kernel attempts to boot from. When attempting to boot from a hard drive, the BIOS tries to find a boot sector. On hard drives partitioned with an MBR partition layout, the boot sector is stored in the first 446 bytes of the first sector (which is 512 bytes). The final two bytes of the first sector are `0x55` and `0xaa`, which signals the BIOS that the device is bootable. For example:
+Now the BIOS starts: after initializing and checking the hardware, it needs to find a bootable device. A boot order is stored in the BIOS configuration, controlling which devices the kernel attempts to boot from. When attempting to boot from a hard drive, the BIOS tries to find a boot sector. On hard drives partitioned with an MBR partition layout, the boot sector is stored in the first 446 bytes of the first sector (which is 512 bytes). The final two bytes of the first sector are `0x55` and `0xaa`, which signals the BIOS that this device is bootable. For example:
 
 ```assembly
 ;
@@ -150,14 +150,14 @@ A real-world boot sector has code to continue the boot process and the partition
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-The same as mentioned before. We have only 16 bit general purpose registers, the maximum value of a 16 bit register is `0xffff`, so if we take the largest values the result will be:
+The same as mentioned before. We have only 16 bit general purpose registers, the maximum value of a 16 bit register is `0xffff`, so if we take the largest values, the result will be:
 
 ```python
 >>> hex((0xffff * 16) + 0xffff)
 '0x10ffef'
 ```
 
-Where `0x10ffef` is equal to `1MB + 64KB - 16b`. But a [8086](https://en.wikipedia.org/wiki/Intel_8086) processor, which was the first processor with real mode, had a 20 bit address line and `2^20 = 1048576.0` is 1MB. This means the actual  memory available is 1MB.
+Where `0x10ffef` is equal to `1MB + 64KB - 16b`. But a [8086](https://en.wikipedia.org/wiki/Intel_8086) processor, which is the first processor with real mode, has a 20 bit address line and `2^20 = 1048576` is 1MB. This means the actual  memory available is 1MB.
 
 General real mode's memory map is:
 
@@ -181,14 +181,14 @@ In the beginning of this post I wrote that the first instruction executed by the
 0xFFFE_0000 - 0xFFFF_FFFF: 128 kilobyte ROM mapped into address space
 ```
 
-At the start of execution, the BIOS is not in RAM but in ROM.
+At the start of execution, the BIOS is not in RAM, but in ROM.
 
 Bootloader
 --------------------------------------------------------------------------------
 
 There are a number of bootloaders that can boot Linux, such as [GRUB 2](https://www.gnu.org/software/grub/) and [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which specifies the requirements for bootloaders to implement Linux support. This example will describe GRUB 2.
 
-Now that the BIOS has chosen a boot device and transferred control to the boot sector code, execution starts from [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD). This code is very simple due to the limited amount of space available, and contains a pointer that it uses to jump to the location of GRUB 2's core image. The core image begins with [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD), which is usually stored immediately after the first sector in the unused space before the first partition. The above code loads the rest of the core image into memory, which contains GRUB 2's kernel and drivers for handling filesystems. After loading the rest of the core image, it executes [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c).
+Now that the BIOS has chosen a boot device and transferred control to the boot sector code, execution starts from [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD). This code is very simple due to the limited amount of space available, and contains a pointer which is used to jump to the location of GRUB 2's core image. The core image begins with [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD), which is usually stored immediately after the first sector in the unused space before the first partition. The above code loads the rest of the core image into memory, which contains GRUB 2's kernel and drivers for handling filesystems. After loading the rest of the core image, it executes [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c).
 
 `grub_main` initializes the console, gets the base address for modules, sets the root device, loads/parses the grub configuration file, loads modules etc. At the end of execution, `grub_main` moves grub to normal mode. `grub_normal_execute` (from `grub-core/normal/main.c`) completes the last preparation and shows a menu to select an operating system. When we select one of the grub menu entries, `grub_menu_execute_entry` runs, which executes the grub `boot` command, booting the selected operating system.
 
