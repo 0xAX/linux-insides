@@ -14,7 +14,7 @@ struct list_head {
 };
 ```
 
-You can note that it is different from many lists implementations which you could see. For example this doubly linked list structure from the [glib](http://www.gnu.org/software/libc/):
+You can note that it is different from many lists implementations which you have seen. For example this doubly linked list structure from the [glib](http://www.gnu.org/software/libc/):
 
 ```C
 struct GList {
@@ -35,13 +35,13 @@ struct nmi_desc {
 };
 ```
 
-Let's look at some examples, how `list_head` is used in the kernel. As I already wrote about, there are many, really many different places where lists are used in the kernel. Let's look for example in miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/master/drivers/char/misc.c) for writing small drivers for handling simple hardware or virtual devices. This drivers share major number:
+Let's look at some examples to understand how `list_head` is used in the kernel. As I already wrote about, there are many, really many different places where lists are used in the kernel. Let's look for example in miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/master/drivers/char/misc.c) is used for writing small drivers for handling simple hardware or virtual devices. This drivers share major number:
 
 ```C
 #define MISC_MAJOR              10
 ```
 
-but has own minor number. For example you can see it with:
+but have their own minor number. For example you can see it with:
 
 ```
 ls -l /dev |  grep 10
@@ -67,7 +67,7 @@ crw-------   1 root root     10,  63 Mar 21 12:01 vga_arbiter
 crw-------   1 root root     10, 137 Mar 21 12:01 vhci
 ```
 
-Now let's look how lists are used in the misc device drivers. First of all let's look on `miscdevice` structure:
+Now let's have a close look at how lists are used in the misc device drivers. First of all let's look on `miscdevice` structure:
 
 ```C
 struct miscdevice
@@ -83,7 +83,7 @@ struct miscdevice
 };
 ```
 
-We can see the fourth field in the `miscdevice` structure - `list` which is list of registered devices. In the beginning of the source code file we can see definition of the:
+We can see the fourth field in the `miscdevice` structure - `list` which is a list of registered devices. In the beginning of the source code file we can see the definition of misc_list:
 
 ```C
 static LIST_HEAD(misc_list);
@@ -108,7 +108,7 @@ Now let's look on the `misc_register` function which registers a miscellaneous d
 INIT_LIST_HEAD(&misc->list);
 ```
 
-which does the same that `LIST_HEAD_INIT` macro:
+which does the same as the `LIST_HEAD_INIT` macro:
 
 ```C
 static inline void INIT_LIST_HEAD(struct list_head *list)
@@ -136,7 +136,7 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 It just calls internal function `__list_add` with the 3 given parameters:
 
 * new  - new entry;
-* head - list head after which will be inserted new item;
+* head - list head after which the new item will be inserted
 * head->next - next item after list head.
 
 Implementation of the `__list_add` is pretty simple:
@@ -155,7 +155,7 @@ static inline void __list_add(struct list_head *new,
 
 Here we set new item between `prev` and `next`. So `misc` list which we defined at the start with the `LIST_HEAD_INIT` macro will contain previous and next pointers to the `miscdevice->list`.
 
-There is still only one question how to get list's entry. There is special special macro for this point:
+There is still one question: how to get list's entry. There is a special macro:
 
 ```C
 #define list_entry(ptr, type, member) \
@@ -166,7 +166,7 @@ which gets three parameters:
 
 * ptr - the structure list_head pointer;
 * type - structure type;
-* member - the name of the list_head within the struct; 
+* member - the name of the list_head within the structure;
 
 For example:
 
@@ -174,14 +174,14 @@ For example:
 const struct miscdevice *p = list_entry(v, struct miscdevice, list)
 ```
 
-After this we can access to the any `miscdevice` field with `p->minor` or `p->name` and etc... Let's look on the `list_entry` implementation:
+After this we can access to any `miscdevice` field with `p->minor` or `p->name` and etc... Let's look on the `list_entry` implementation:
 
 ```C
 #define list_entry(ptr, type, member) \
 	container_of(ptr, type, member)
 ```
 
-As we can see it just calls `container_of` macro with the same arguments. For the first look `container_of` looks strange:
+As we can see it just calls `container_of` macro with the same arguments. At first sight, the `container_of` looks strange:
 
 ```C
 #define container_of(ptr, type, member) ({                      \
@@ -189,7 +189,7 @@ As we can see it just calls `container_of` macro with the same arguments. For th
     (type *)( (char *)__mptr - offsetof(type,member) );})
 ```
 
-First of all you can note that it consists from two expressions in curly brackets. Compiler will evaluate the whole block in the curly braces and use the value of the last expression.
+First of all you can note that it consists of two expressions in curly brackets. Compiler will evaluate the whole block in the curly braces and use the value of the last expression.
 
 For example:
 
@@ -230,9 +230,9 @@ The next offsetof macro calculates offset from the beginning of the structure to
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 ```
 
-Let's summarize all about `container_of` macro. `container_of` macro returns address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns it to the `ptr`. Now `ptr` and `__mptr` point to the same address. Technically we don't need this line but its useful for type checking. First line ensures that that given structure (`type` parameter) has a member called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and subtracts it from the structure address. That's all.
+Let's summarize all about `container_of` macro. `container_of` macro returns address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns `ptr` to it. Now `ptr` and `__mptr` point to the same address. Technically we don't need this line but its useful for type checking. First line ensures that that given structure (`type` parameter) has a member called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and subtracts it from the structure address. That's all.
 
-Of course `list_add` and `list_entry` is not only functions which provides `<linux/list.h>`. Implementation of the doubly linked list provides the following API:
+Of course `list_add` and `list_entry` is not the only functions which `<linux/list.h>` provides. Implementation of the doubly linked list provides the following API:
 
 * list_add
 * list_add_tail
