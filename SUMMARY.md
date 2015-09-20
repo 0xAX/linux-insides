@@ -53,6 +53,7 @@
 * [Misc](Misc/README.md)
     * [How kernel compiled](Misc/how_kernel_compiled.md)
     * [Linkers](Misc/linkers.md)
+    * [Linux kernel development](Misc/contribute.md)
     * [Write and Submit your first Linux kernel Patch]()
     * [Data types in the kernel]()
 * [Useful links](LINKS.md)
