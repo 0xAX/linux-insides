@@ -66,7 +66,7 @@ $ git clone git@github.com:torvalds/linux.git
 Actually I'm using my [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute following command:
 
 ```
-$ git check master
+$ git checkout master
 $ git pull upstream master
 ```
 
