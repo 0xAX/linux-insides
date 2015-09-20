@@ -83,7 +83,7 @@ for heap allocation. It calls the internal function `__get_heap` with 3 paramete
 
 * size of a type in bytes, which need be allocated
 * `__alignof__(type)` shows how variables of this type are aligned
-* `n` tells how many bytes to allocate
+* `n` tells how many items to allocate
 
 Implementation of `__get_heap` is:
 
