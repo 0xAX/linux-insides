@@ -1,7 +1,7 @@
 Data Structures in the Linux Kernel
 ========================================================================
 
-Linux kernel provides implementations of a different data structures like linked list, B+ tree, prinority heap and many many more.
+Linux kernel provides implementations of a different data structures like linked list, B+ tree, priority heap and many many more.
 
 This part considers these data structures and algorithms.
 
