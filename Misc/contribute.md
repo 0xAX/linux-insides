@@ -396,10 +396,10 @@ That's all. The patch is sent and now only have to wait feedback from the Linux 
 
 That's all.
 
-Some advices
+Some advice
 --------------------------------------------------------------------------------
 
-In the end of this part I want to give you some advices that will describe what to do and what not to do during development of the Linux kernel:
+In the end of this part I want to give you some advice that will describe what to do and what not to do during development of the Linux kernel:
 
 * Think, Think, Think. And think again before you decided to send a patch.
 
