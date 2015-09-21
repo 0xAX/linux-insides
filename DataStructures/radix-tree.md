@@ -41,9 +41,9 @@ Lets talk about what is `radix tree`. Radix tree is a `compressed trie` where [t
                             +-----------+
 ```
 
-So in this example, we can see the `trie` with keys, `go` and `cat`. The compressed trie or `radix tree` differs from `trie`, such that all intermediates nodes which have only one child are removed.
+So in this example, we can see the `trie` with keys, `go` and `cat`. The compressed trie or `radix tree` differs from `trie` in that all intermediates nodes which have only one child are removed.
 
-Radix tree in linux kernel is the datastructure which maps values to the integer key. It is represented by the following structures from the file [include/linux/radix-tree.h](https://github.com/torvalds/linux/blob/master/include/linux/radix-tree.h):
+Radix tree in linux kernel is the datastructure which maps values to integer keys. It is represented by the following structures from the file [include/linux/radix-tree.h](https://github.com/torvalds/linux/blob/master/include/linux/radix-tree.h):
 
 ```C
 struct radix_tree_root {
@@ -56,14 +56,20 @@ struct radix_tree_root {
 This structure presents the root of a radix tree and contains three fields:
 
 * `height`   - height of the tree;
-* `gfp_mask` - tells how memory allocations are to be performed;
+* `gfp_mask` - tells how memory allocations will be performed;
 * `rnode`    - pointer to the child node.
 
-The first structure we will discuss is `gfp_mask`:
+The first field we will discuss is `gfp_mask`:
 
-Low-level kernel memory allocation functions take a set of flags as - `gfp_mask`, which describes how that allocation is to be performed. These `GFP_` flags which control the allocation process can have following values, (`GF_NOIO` flag) be sleep and wait for memory, (`__GFP_HIGHMEM` flag) is high memory can be used, (`GFP_ATOMIC` flag) is allocation process high-priority and can't sleep etc.
+Low-level kernel memory allocation functions take a set of flags as - `gfp_mask`, which describes how that allocation is to be performed. These `GFP_` flags which control the allocation process can have following values:
 
-The next structure is `rnode`:
+* `GFP_NOIO` - can sleep and wait for memory;
+* `__GFP_HIGHMEM` - high memory can be used;
+* `GFP_ATOMIC` - allocation process is high-priority and can't sleep;
+
+etc.
+
+The next field is `rnode`:
 
 ```C
 struct radix_tree_node {
@@ -83,7 +89,7 @@ struct radix_tree_node {
 };
 ```
 
-This structure contains information about the offset in a parent and height from the bottom, count of the child nodes and fields for accessing and freeing a node. The fields are described below:
+This structure contains information about the offset in a parent and height from the bottom, count of the child nodes and fields for accessing and freeing a node. This fields are described below:
 
 * `path` - offset in parent & height from the bottom;
 * `count` - count of the child nodes;
@@ -92,14 +98,14 @@ This structure contains information about the offset in a parent and height from
 * `rcu_head` - used for freeing a node;
 * `private_list` - used by the user of a tree;
 
-The two last fields of the `radix_tree_node` - `tags` and `slots` are important and interesting. Every node can contains a set of slots which are store pointers to the data. Empty slots in the linux kernel radix tree implementation store `NULL`. Radix tree in the linux kernel also supports tags which are associated with the `tags` fields in the `radix_tree_node` structure. Tags allow to set individual bits on records which are stored in the radix tree.
+The last two fields of the `radix_tree_node` - `tags` and `slots` are important and interesting. Each node can contains a set of slots which are store pointers to the data. Empty slots in the linux kernel radix tree implementation store `NULL`. Radix tree in the linux kernel also supports tags which are associated with the `tags` field in the `radix_tree_node` structure. Tags allow to set individual bits on records which are stored in the radix tree.
 
 Now we know about radix tree structure, time to look on its API.
 
 Linux kernel radix tree API
 ---------------------------------------------------------------------------------
 
-We start from the datastructure intialization. There are two ways to initialize new radix tree. The first is to use `RADIX_TREE` macro:
+We start from the datastructure intialization. There are two ways to initialize a new radix tree. The first is to use `RADIX_TREE` macro:
 
 ```C
 RADIX_TREE(name, gfp_mask);
@@ -140,10 +146,10 @@ do {                                 \
 
 makes the same initialziation with default values as it does `RADIX_TREE_INIT` macro.
 
-The next are two functions for the inserting and deleting records to/from a radix tree:
+The next are two functions for inserting and deleting records to/from a radix tree:
 
 * `radix_tree_insert`;
-* `radix_tree_delete`.
+* `radix_tree_delete`;
 
 The first `radix_tree_insert` function takes three parameters:
 
@@ -173,7 +179,7 @@ unsigned int radix_tree_gang_lookup(struct radix_tree_root *root,
                                     unsigned int max_items);
 ```
 
-and returns number of records, sorted by the keys, starting from the first index. Number of the returned records will be not greater than `max_items` value.
+and returns number of records, sorted by the keys, starting from the first index. Number of the returned records will not be greater than `max_items` value.
 
 And the last `radix_tree_lookup_slot` function will return the slot which will contain the data.
 
