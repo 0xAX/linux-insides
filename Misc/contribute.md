@@ -88,7 +88,7 @@ upstream	https://github.com/torvalds/linux.git (push)
 
 One is of you fork (`origin`) and the second is for main repository (`upstream`).
 
-Now as he we local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way just copy configuration file of the already installed kernel that located in the `/boot` directory:
+Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way just copy configuration file of the already installed kernel that located in the `/boot` directory:
 
 ```
 $ sudo cp /boot/config-$(uname -r) ~/dev/linux/.config
