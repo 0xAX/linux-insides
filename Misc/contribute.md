@@ -444,26 +444,23 @@ Note one important thing that your email must be in the [plain text](https://en.
 
 * The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to the Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Besides these two scripts you can find [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack as you can understand from the script's name, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting uncompressed kernel image, and many others. Besides this `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by the [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
 
-* Subscribe on the Linux kernel mail listing. Yes, there is large flow of letters every day on `lkml`, but it is very useful to read and understand things like current state of the Linux kernel and etc. Besides this there is a [set](http://vger.kernel.org/vger-lists.html) of the mail listings which are related to the different Linux kernel subsystems.
+* Subscribe to the Linux kernel mailing list. There are a large number of letters every day on `lkml`, but it is very useful to read them and understand things such as the current state of the Linux kernel. Other than `lkml` there are [set](http://vger.kernel.org/vger-lists.html) mailing listings which are related to the different Linux kernel subsystems.
 
-* If your patch is not accepted from the first time and you have got feedback from Linux kernel developers, make changes and resend the patch with the `[PATCH vN]` prefix, where `N` is the number of patch version. For example:
+* If your patch is not accepted the first time and you receive feedback from Linux kernel developers, make your changes and resend the patch with the `[PATCH vN]` prefix (where `N` is the number of patch version). For example:
 
 ```
 [PATCH v2] staging/dgap: Use strpbrk() instead of dgap_sindex()
 ```
 
-Also it must contain changelog that will describe all changes changes from previous patch versions.
-
-That's all. Ofcourse, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
+Also it must contain changelog that will describe all changes changes from previous patch versions. Of course, this is not an exhaustive list of requirements for Linux kernel development, but some of the most important items were addressed.
 
 Happy Hacking!
 
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of this part and here we saw all steps from the getting source code of the Linux kernel to sending of a patch to the Linux kernel mailing list. Hope it will help you to join to the Linux kernel community.
-
-If you have any questions or suggestions, write me an [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
+I hope this will help others join the Linux kernel community!
+If you have any questions or suggestions, write me at [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
 
 Please note that English is not my first language, and I am really sorry for any inconvenience. If you find any mistakes please let me know via email or send a PR.
 
