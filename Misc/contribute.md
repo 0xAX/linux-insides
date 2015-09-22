@@ -4,15 +4,15 @@ Linux kernel development
 Introduction
 --------------------------------------------------------------------------------
 
-As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never wrote no one line of low-level code before this moment, of course except a couple of toy `Hello World` examples in the university. It was already long time ago and as I already said I didn't write low-level code at all. Some time ago I'm interested in such things or in other words I understood that I can write programs, but actually I didn't understand how my program is arranged.
+As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in the university. It was already a long time ago and as I already said I didn't write low-level code at all. Some time ago I was interested in such things or in other words I understood that I can write programs, but actually I didn't understand how my program is arranged.
 
-After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many different things. For example: what occurs when the `syscall` instruction executed in my assembler, what occurs when the `printf` function starts to work, how does my program can talk with other computer via network and many many other cases. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers on my questions and I decided to go deeper in my research. I started to learn source code of the Linux kernel and tried to understant things that I'm interested. Source code of the Linux kernel didn't give me answers on **all** of my questions, but now my knowledgesis about the Linux kernel and processes around it is much better.
+After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many other things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work or how can my program talk with other computers via network. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers to my questions and I decided to go deeper in my research. I started to learn from the source code of the Linux kernel and tried to understand the things that I'm interested in. The source code of the Linux kernel didn't give me the answers to **all** of my questions, but now my knowledge about the Linux kernel and the processes around it is much better.
 
-I'm writing this part after nine and a half months since I have started to learn source code of the Linux kernel and publish first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is very easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo become popular and after nine months it has `9096` stars:
+I'm writing this part nine and a half months after I've started to learn from the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
-Yeah, seems that people are interested in the internals of the Linux kernel. Besides this, in all that time that I'm writing `linux-inside`, I have received many questions from different people like: how to start with the Linux kernel, what do I need to start contribute to the Linux kernel and and others like these. Generally people are interested contribute to open source project for different reasons and the Linux kernel is not exception:
+It seems that people are interested in the internals of the Linux kernel. Besides this, in all that time that I'm writing `linux-inside`, I have received many questions from different people like: how to start with the Linux kernel, what do I need to start contribute to the Linux kernel and and others like these. Generally people are interested contribute to open source project for different reasons and the Linux kernel is not exception:
 
 ![google-linux](http://s4.postimg.org/yg9z5zx0d/google_linux.png)
 
@@ -339,7 +339,7 @@ $ git commit -s -v
 
 After the last command an editor will be openned that will be chosen from `$GIT_EDITOR` or `$EDITOR` environment variable. The `-s` command line argument will add `Signed-off-by` line by the committer at the end of the commit log message. You can find this line in the end of each commit message, for example - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771). The main point of this line is the tracking of who did a change. The `-v` option show unified diff between the HEAD commit and what would be committed at the bottom of the commit message. It is not necessary, but very useful sometimes. A couple of words about commit message. Actually a commit message consists from two parts:
 
-The first part is on the first line and contains short descrption of changes. It starts from the `[PATCH]` prefix followed by a subsystem, driver or architecture name and after `:` symbol short description. In our case it will be something like this:
+The first part is on the first line and contains short description of changes. It starts from the `[PATCH]` prefix followed by a subsystem, driver or architecture name and after `:` symbol short description. In our case it will be something like this:
 
 ```
 [PATCH] staging/dgap: Use strpbrk() instead of dgap_sindex()
@@ -352,9 +352,9 @@ The <linux/string.h> provides strpbrk() function that does the same that the
 dgap_sindex(). Let's use already defined function instead of writing custom.
 ```
 
-And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in details. Do not just write a commit message like: `Custom function removed`, you need to describe what are yowhat you are did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
+And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in details. Do not just write a commit message like: `Custom function removed`, you need to describe what you did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
 
-After we have commited changes time to generate patch. We can do it with the `format-patch` command:
+After we have committed changes time to generate patch. We can do it with the `format-patch` command:
 
 ```
 $ git format-patch master 
@@ -380,7 +380,7 @@ devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM)
 linux-kernel@vger.kernel.org (open list)
 ```
 
-Yout will see the set of the names and related emails. Now we can send our patch with:
+You will see the set of the names and related emails. Now we can send our patch with:
 
 ```
 $ git send-email --to "Lidza Louina <lidza.louina@gmail.com>" \
@@ -454,7 +454,7 @@ Note one important thing that your email must be in the [plain text](https://en.
 
 Also it must contain changelog that will describe all changes changes from previous patch versions.
 
-That's all. Ofcourse, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
+That's all. Of course, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
 
 Happy Hacking!
 
