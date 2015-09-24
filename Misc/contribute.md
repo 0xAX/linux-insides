@@ -6,9 +6,9 @@ Introduction
 
 As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never wrote no one line of low-level code before this moment, of course except a couple of toy `Hello World` examples in the university. It was already long time ago and as I already said I didn't write low-level code at all. Some time ago I'm interested in such things or in other words I understood that I can write programs, but actually I didn't understand how my program is arranged.
 
-After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many different things. For example: what occurs when the `syscall` instruction executed in my assembler, what occurs when the `printf` function starts to work, how does my program can talk with other computer via network and many many other cases. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers on my questions and I decided to go deeper in my research. I started to learn source code of the Linux kernel and tried to understant things that I'm interested. Source code of the Linux kernel didn't give me answers on **all** of my questions, but now my knowledgesis  about th Linux kernel and processes around it is much better.
+After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many different things. For example: what occurs when the `syscall` instruction executed in my assembler, what occurs when the `printf` function starts to work, how does my program can talk with other computer via network and many many other cases. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers on my questions and I decided to go deeper in my research. I started to learn source code of the Linux kernel and tried to understant things that I'm interested. Source code of the Linux kernel didn't give me answers on **all** of my questions, but now my knowledgesis about the Linux kernel and processes around it is much better.
 
-I'm writing this part after nine and a half months since I have started to learn source code of the Linux kernel and publish first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is very easy to forget what does this or that part of the Linux kernel mean and how does it implemented. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo become popular and after nine months it has `9096` stars:
+I'm writing this part after nine and a half months since I have started to learn source code of the Linux kernel and publish first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is very easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo become popular and after nine months it has `9096` stars:
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
@@ -23,54 +23,54 @@ Let's start.
 How to start with Linux kernel
 ---------------------------------------------------------------------------------
 
-First of all let's look how to get, build and run Linux kernel. Actually you can run your custom build of the Linux kernel in two ways:
+First of all let's look how to get, build and run the Linux kernel. Actually you can run your custom build of the Linux kernel in two ways:
 
-* Run the Linux kernel on virtual machine;
+* Run the Linux kernel on a virtual machine;
 * Run the Linux kernel on real hardware.
 
-I'll provide description for both methods. Before we will start to do something with the Linux kernel, we need to get it. There are a couple of ways how to do it. All depends on your purpose. If you just want update the current version of the Linux kernel on your computer, you can use instruction for your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
+I'll provide descriptions for both methods. Before we will start to do something with the Linux kernel, we need to get it. There are a couple of ways how to do it. All depends on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific for your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
 
-In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will need just execute following commands:
+In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade the version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will just need to execute the following commands:
 
 ```
 $ sudo add-apt-repository ppa:kernel-ppa/ppa
 $ sudo apt-get update
 ```
 
-After this execute this command
+After this execute this command:
 
 ```
 $ apt-cache showpkg linux-headers
 ```
 
-and choose version of the Linux kernel in which you are interested. In the end execute next command and replace `${version}` with the version that you chose in the output of the previous command:
+and choose the version of the Linux kernel in which you are interested. In the end execute the next command and replace `${version}` with the version that you chose in the output of the previous command:
 
 ```
 $ sudo apt-get install linux-headers-${version} linux-headers-${version}-generic linux-image-${version}-generic --fix-missing
 ```
 
-and reboot your system. After the reboot you will see new kernel in the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) menu.
+and reboot your system. After the reboot you will see the new kernel in the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) menu.
 
-In other way if you are interested in the Linux kernel development, you will need to get the source code of the Linux kernel. You can find it on the [kernel.org](https://kernel.org/) website and download an archive with the Linux kernel source code. Actually Linux kernel development process fully built around `git` [version control system](https://en.wikipedia.org/wiki/Version_control). So you can get it with `git` from the `kernel.org`:
+In the other way if you are interested in the Linux kernel development, you will need to get the source code of the Linux kernel. You can find it on the [kernel.org](https://kernel.org/) website and download an archive with the Linux kernel source code. Actually the Linux kernel development process is fully built around `git` [version control system](https://en.wikipedia.org/wiki/Version_control). So you can get it with `git` from the `kernel.org`:
 
 ```
 $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 ```
 
-I don't know how about you, but I prefer `github`. There is [mirror](https://github.com/torvalds/linux) of the Linux kernel mainline repository, so you can clone it with:
+I don't know how about you, but I prefer `github`. There is a [mirror](https://github.com/torvalds/linux) of the Linux kernel mainline repository, so you can clone it with:
 
 ```
 $ git clone git@github.com:torvalds/linux.git
 ```
 
-Actually I'm using my [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute following command:
+Actually I'm using my [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute the following command:
 
 ```
 $ git check master
 $ git pull upstream master
 ```
 
-Note that remote name of the main repository is `upstream`. To add new remote with the main linux repository you can execute:
+Note that the remote name of the main repository is `upstream`. To add a new remote with the main linux repository you can execute:
 
 ```
 git remote add upstream git@github.com:torvalds/linux.git
@@ -86,35 +86,35 @@ upstream	https://github.com/torvalds/linux.git (fetch)
 upstream	https://github.com/torvalds/linux.git (push)
 ```
 
-One is of you fork (`origin`) and the second is for main repository (`upstream`).
+One is of you fork (`origin`) and the second is for the main repository (`upstream`).
 
-Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way just copy configuration file of the already installed kernel that located in the `/boot` directory:
+Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way is to just copy the configuration file of the already installed kernel that is located in the `/boot` directory:
 
 ```
 $ sudo cp /boot/config-$(uname -r) ~/dev/linux/.config
 ```
 
-If your current Linux kernel was built with the support for access to the `/proc/config.gz`, you can copy your actual kernel configuration file with the:
+If your current Linux kernel was built with the support for access to the `/proc/config.gz` file, you can copy your actual kernel configuration file with this command:
 
 ```
 $ cat /proc/config.gz | gunzip > ~/dev/linux/.config
 ```
 
-If you are not satisfied with the standard kernel configuration that provided by the maintainers of your distro, you can configure the Linux kernel manually. There are a couple of ways to do it. The Linux kernel root [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) provides a set of targets that allow you to configure it. For example `menuconfig` provides menu-driven interface for the kernel configuration:
+If you are not satisfied with the standard kernel configuration that is provided by the maintainers of your distro, you can configure the Linux kernel manually. There are a couple of ways to do it. The Linux kernel root [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) provides a set of targets that allows you to configure it. For example `menuconfig` provides a menu-driven interface for the kernel configuration:
 
 ![menuconfig](http://s21.postimg.org/zcz48p7yf/menucnonfig.png)
 
-The `defconfig` argument that generates default kernel configuration file for the current architecture, for example [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig). You can pass `ARCH` command line argument to the `make` to build `defconfig` for the given architecture:
+The `defconfig` argument generates the default kernel configuration file for the current architecture, for example [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig). You can pass the `ARCH` command line argument to `make` to build `defconfig` for the given architecture:
 
 ```
 $ make ARCH=arm64 defconfig
 ```
 
-The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments that allow to generate new configuration file where all options will be disabled, enabled and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
+The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to generate a new configuration file where all options will be disabled, enabled and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
 
 ![nconfig](http://s29.postimg.org/hpghikp4n/nconfig.png)
 
-And even `randconfig` to generate random Linux kernel configuration file. I will not write how to configure the Linux kernel, which options to enable and what does not, because there no sense to do it by two reasons: First of all I do not know your hardware and the second if you are know your hardware, It remains only to find out how to use programs for kernel configuration, but all of they are pretty simple to use.
+And even `randconfig` to generate random Linux kernel configuration file. I will not write how to configure the Linux kernel, which options to enable and what not, because there is no sense to do it by two reasons: First of all I do not know your hardware and the second if you know your hardware, it remains only to find out how to use programs for kernel configuration, but all of them are pretty simple to use.
 
 Ok, for this moment we got the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is just execute:
 
@@ -222,7 +222,7 @@ $ make menuconfig
 $ make -j4
 ```
 
-The `bysybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) and etc. In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
+The `busybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) and etc. In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
 
 ![busysbox menu](http://s18.postimg.org/sj92uoweh/busybox.png)
 
