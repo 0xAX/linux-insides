@@ -114,7 +114,7 @@ The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to gene
 
 ![nconfig](http://s29.postimg.org/hpghikp4n/nconfig.png)
 
-And even `randconfig` to generate random Linux kernel configuration file. I will not write how to configure the Linux kernel, which options to enable and what not, because there is no sense to do it by two reasons: First of all I do not know your hardware and the second if you know your hardware, it remains only to find out how to use programs for kernel configuration, but all of them are pretty simple to use.
+And even `randconfig` to generate random Linux kernel configuration file. I will not write how to configure the Linux kernel, which options to enable and what not, because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
 
 Ok, for this moment we got the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is just execute:
 
@@ -160,7 +160,7 @@ $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu- defconfig
 $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu-
 ```
 
-As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now we have compiled kernel and we can install it on our computer or just run it with emulator.
+As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now we have compiled kernel and we can either install it on our computer or just run it in an emulator.
 
 Installing Linux kernel
 --------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ and directly the kernel itself:
 $ sudo make install
 ```
 
-From this moment we have installed new version of the Linux kernel and now we must tell about it to the `bootloader`. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two types of the Linux distor: Fedora and Ubuntu. There are two different ways how to update [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
+From this moment we have installed new version of the Linux kernel and now we must tell the `bootloader` about it. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two differnet Linux distros: Fedora and Ubuntu. There are two different ways to update the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
 
 ```shell
 #!/bin/bash
@@ -240,7 +240,7 @@ $ make -j4
 $ sudo make install
 ```
 
-Ok, the `busysbox` is installed from this moment and we can start to build our `initrd`. For doing this we go to the previous `initrd` directory and:
+Ok, the `busybox` is installed from this moment and we can start to build our `initrd`. Do do this, we go to the previous `initrd` directory and:
 
 ```
 $ cd ..
@@ -267,7 +267,7 @@ Now we can create an archive that will be our `initrd`:
 $ find . -print0 | cpio --null -ov --format=newc | gzip -9 > ~/dev/initrd_x86_64.gz
 ```
 
-From this moment we can run our kernel in the virtual machine. As I already wrote I prefer [qemu](https://en.wikipedia.org/wiki/QEMU) for this. We can run our kernel with the following command:
+We can now run our kernel in the virtual machine. As I already wrote I prefer [qemu](https://en.wikipedia.org/wiki/QEMU) for this. We can run our kernel with the following command:
 
 ```
 $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86_64/boot/bzImage -initrd ~/dev/initrd_x86_64.gz -append "root=/dev/sda1 ignore_loglevel"
@@ -312,7 +312,7 @@ static char *dgap_sindex(char *string, char *group)
 }
 ```
 
-on the `295` line. This function looks for a match of any character in the group, and returns that position. During research of source code of the Linux kernel, I have noted that [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) source code file contains implementation of the `strpbrk` function that does the same that `dgap_sinidex`. This is good idea to not use custom implementation of a function that already exists. So we can remove the `dgap_sindex` function from the [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) source code file and use the `strpbrk` instead.
+on the `295` line. This function looks for a match of any character in the group, and returns that position. During research of source code of the Linux kernel, I have noted that [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) source code file contains implementation of the `strpbrk` function that does the same that `dgap_sinidex`. It is not a good idea to use a custom implementation of a function that already exists. So we can remove the `dgap_sindex` function from the [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) source code file and use the `strpbrk` instead.
 
 First of all let's create new `git` branch based on the current master that synced with the Linux kernel mainline repo:
 
@@ -352,7 +352,7 @@ The <linux/string.h> provides strpbrk() function that does the same that the
 dgap_sindex(). Let's use already defined function instead of writing custom.
 ```
 
-And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in details. Do not just write a commit message like: `Custom function removed`, you need to describe what are yowhat you are did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
+And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in detail. Do not just write a commit message like: `Custom function removed`, you need to describe what you are did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
 
 After we have commited changes time to generate patch. We can do it with the `format-patch` command:
 
@@ -367,7 +367,7 @@ We've passed name of the branch (`master` in this case) to the `format-patch` co
 $ git format-patch master --stdout > dgap-patch-1.patch
 ```
 
-The last step after we have generated our patch is just to send it to the Linux kernel mail listing. Of course you can use any email client, but the `Git` provides special command for this: `git send-email`. Before you will send your patch, you need to know where to send it. Yes, you can send it just to the Linux kernel mail listing address which is `linux-kernel@vger.kernel.org`, but there is a high probability that the patch will be ignored, because as you already may know there is the large flow of messages on the Linux kernel mail listing. The better way will be send to a maintainer of subsystem where you have made changes. We can find maintainer and other related guys who has touched the code with the `get_maintainer.pl` script. All of you need is just pass file or directory where you wrote a code. Go to the root directory with source code of the Linux kernel and execute it:
+The last step after we have generated our patch is just to send it to the Linux kernel mail listing. Of course you can use any email client, but the `Git` provides special command for this: `git send-email`. Before you will send your patch, you need to know where to send it. Yes, you can send it just to the Linux kernel mail listing address which is `linux-kernel@vger.kernel.org`, but there is a high probability that the patch will be ignored, because as you may already know there is the large flow of messages on the Linux kernel mail listing. The better way will be send to a maintainer of subsystem where you have made changes. We can find maintainer and other related guys who has touched the code with the `get_maintainer.pl` script. All of you need is just pass file or directory where you wrote a code. Go to the root directory with source code of the Linux kernel and execute it:
 
 ```
 $ ./scripts/get_maintainer.pl -f drivers/staging/dgap/dgap.c
@@ -403,9 +403,9 @@ In the end of this part I want to give you some advice that will describe what t
 
 * Think, Think, Think. And think again before you decided to send a patch.
 
-* Each time when you have changed something int Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that even does not compiled.
+* Each time when you have changed something int Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that don't even compile.
 
-* The Linux kernel has coding style [guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle) and you need to comply with its. There is great script which can help to check you changes. This script is - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl). Just pass source code file with changes to it and you will see:
+* The Linux kernel has a coding style [guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle) and you need to comply with it. There is great script which can help to check your changes. This script is - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl). Just pass source code file with changes to it and you will see:
 
 ```
 $ ./scripts/checkpatch.pl -f drivers/staging/dgap/dgap.c
@@ -420,7 +420,7 @@ CHECK: spaces preferred around that '|' (ctx:VxV)
 
 ```
 
-Also you can see problem places with the help of the `git diff`:
+Also you can see problematic places with the help of the `git diff`:
 
 ![git diff](http://oi60.tinypic.com/2u91rgn.jpg)
 
@@ -440,9 +440,9 @@ You need to pass `message-id` as value of the `--in-reply-to` option that you ca
 
 Note one important thing that your email must be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally this two `git` commands: `send-email` and `format-patch` are very useful during development, look on the documentation for this commands and you will find many interesting and useful options: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
 
-* Do not be surprised if you do not get an answer right away after you will send your patch. Maintainers are people too and people can sometimes be busy
+* Do not be surprised if you do not get an answer right away after you will send your patch. Maintainers are people too and people can sometimes be busy.
 
-* The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to the Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Besides these two scripts you can find [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack as you can understand from the script's name, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting uncompressed kernel image, and many others. Besides this `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by the [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
+* The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to the Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Besides these two, you can find [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack as you can understand from the script's name, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting uncompressed kernel image, and many others. Besides this `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
 
 * Subscribe on the Linux kernel mail listing. Yes, there is large flow of letters every day on `lkml`, but it is very useful to read and understand things like current state of the Linux kernel and etc. Besides this there is a [set](http://vger.kernel.org/vger-lists.html) of the mail listings which are related to the different Linux kernel subsystems.
 
@@ -454,7 +454,7 @@ Note one important thing that your email must be in the [plain text](https://en.
 
 Also it must contain changelog that will describe all changes changes from previous patch versions.
 
-That's all. Ofcourse, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
+That's all. Of course, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
 
 Happy Hacking!
 
