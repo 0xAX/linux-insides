@@ -324,7 +324,7 @@ Actually this is the first code that runs (aside from the previous jump instruct
 It means that segment registers will have following values after kernel setup starts:
 
 ```
-fs = es = ds = ss = 0x1000
+gs = fs = es = ds = ss = 0x1000
 cs = 0x1020
 ```
 
@@ -347,7 +347,7 @@ First of all it ensures that `ds` and `es` segment registers point to the same a
 ```assembly
 	movw	%ds, %ax
 	movw	%ax, %es
-	cli	
+	cli
 ```
 
 As I wrote earlier, grub2 loads kernel setup code at address `0x10000` and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
