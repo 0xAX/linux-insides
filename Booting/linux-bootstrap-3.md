@@ -37,11 +37,11 @@ vga=<mode>
 	line is parsed.
 ```
 
-So we can add `vga` option to the grub or another bootloader configuration file and it will pass this option to the kernel command line. This option can have different values as we can mentioned in the description, for example it can be an integer number `0xFFFD` or `ask`. If you pass `ask` t `vga`, you will see a menu like this:
+So we can add `vga` option to the grub or another bootloader configuration file and it will pass this option to the kernel command line. This option can have different values as we can mentioned in the description, for example it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you will see a menu like this:
 
 ![video mode setup menu](http://oi59.tinypic.com/ejcz81.jpg)
 
-which will ask to select a video mode. We will look at it's implementation, but before diving into the implementation we have to look at some other things.
+which will ask to select a video mode. We will look at its implementation, but before diving into the implementation we have to look at some other things.
 
 Kernel data types
 --------------------------------------------------------------------------------
@@ -79,11 +79,11 @@ Next is `GET_HEAP` macro:
 	((type *)__get_heap(sizeof(type),__alignof__(type),(n)))
 ```
 
-for heap allocation. It calls internal function `__get_heap` with 3 parameters:
+for heap allocation. It calls the internal function `__get_heap` with 3 parameters:
 
 * size of a type in bytes, which need be allocated
-* `__alignof__(type)` shows how type of variable is aligned
-* `n` tells how many bytes to allocate
+* `__alignof__(type)` shows how variables of this type are aligned
+* `n` tells how many items to allocate
 
 Implementation of `__get_heap` is:
 
@@ -567,7 +567,7 @@ That's all we're in the protected mode and stop at it's entry point. What happen
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the third part about linux kernel internals. In next part we will see first steps in the protected mode and transition into the [long mode](http://en.wikipedia.org/wiki/Long_mode).
+This is the end of the third part about linux kernel internals. In next part we will see first steps in the protected mode and transition into the [long mode](http://en.wikipedia.org/wiki/Long_mode).
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
