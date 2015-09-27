@@ -4,9 +4,9 @@ Timers in the Linux kernel. Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-This is yet another post that opens new chapter in the [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) book. The previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) was a list part of the chapter that describes [system call](https://en.wikipedia.org/wiki/System_call) concept and now time is to start new chapter. As you can understand from the post's title, this chapter will be devoted to the `timers` and `time management` in the Linux kernel. The choice of topic for the current chapter is not accidental. Timers and generally tim management are very important and widely used in the Linux kernel. The Linux kernel uses timers for various tasks, different timeouts for example in [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) implementation, the kernel must know current time, scheduling asynchronous functions, next event interrupt scheduling and many many more.
+This is yet another post that opens new chapter in the [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) book. The previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) was a list part of the chapter that describes [system call](https://en.wikipedia.org/wiki/System_call) concept and now time is to start new chapter. As you can understand from the post's title, this chapter will be devoted to the `timers` and `time management` in the Linux kernel. The choice of topic for the current chapter is not accidental. Timers and generally time management are very important and widely used in the Linux kernel. The Linux kernel uses timers for various tasks, different timeouts for example in [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) implementation, the kernel must know current time, scheduling asynchronous functions, next event interrupt scheduling and many many more.
 
-So, we will start to learn implementation of the different time management related stuff in this part. We will see different types of timers and how how do different Linux kernel subsystems use them. As always we will start from the earliest part of the Linux kernel and will go through initialization process of the Linux kernel. We already did it in the special [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) which describes initialization process of the Linux kernel, but as you may remember we missied some things there. And one of these is initialization of timers.
+So, we will start to learn implementation of the different time management related stuff in this part. We will see different types of timers and how do different Linux kernel subsystems use them. As always we will start from the earliest part of the Linux kernel and will go through initialization process of the Linux kernel. We already did it in the special [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) which describes initialization process of the Linux kernel, but as you may remember we missied some things there. And one of these is initialization of timers.
 
 Let's start.
 
@@ -25,7 +25,7 @@ x86_init.timers.wallclock_init();
 
 We already saw `x86_init` structure in the chapter that describes initialization of the Linux kernel. This structure contains pointers to the default setup functions for the different platforms like [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms), [Intel CE4100](http://www.wpgholdings.com/epaper/US/newsRelease_20091215/255874.pdf) and etc. The `x86_init` structure defined in the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c#L36) and as you can see it determines standard PC hardware by default.
 
-As we can see, the `x86_init` structure has `x86_init_ops` type that provides a set of functions for platform specific setup like reserviing standard resources, platform specific memory setup, initialization of interrupt handlers and etc. This structure looks like: 
+As we can see, the `x86_init` structure has `x86_init_ops` type that provides a set of functions for platform specific setup like reserviing standard resources, platform specific memory setup, initialization of interrupt handlers and etc. This structure looks like:
 
 ```C
 struct x86_init_ops {
@@ -63,7 +63,7 @@ struct x86_init_ops x86_init __initdata = {
 }
 ```
 
-Where the `x86_init_noop` is just function that does not nothing:
+Where the `x86_init_noop` is just a function that does nothing:
 
 ```C
 void __cpuinit x86_init_noop(void) { }
@@ -128,7 +128,7 @@ This definition is very similar to the `jiffy` in the Linux kernel. There is glo
 extern unsigned long volatile __jiffy_data jiffies;
 ```
 
-during initialization process. This global variable will be incremented each time each time during timer interrupt. Besides this, near the `jiffies` variable we can see definition of the similar variable
+during initialization process. This global variable will be incremented each time during timer interrupt. Besides this, near the `jiffies` variable we can see definition of the similar variable
 
 ```C
 extern u64 jiffies_64;
@@ -172,7 +172,7 @@ I don't know how about you, but this not full description didn't give me almost 
 
 For example `x86` has on-chip a 64-bit counter that is called [Time Stamp  Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) and its frequency can be equal to processor frequency. Or for example [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) that consists of a `64-bit` counter of at least `10 MHz` frequency. Two different timers and they are both for `x86`. If we will add timers from other architectures, this only makes this problem more complex. The Linux kernel provides `clocksource` concept to solve the problem.
 
-The clocksource concept represented by the `clocksource` structure in the Linux kernel. This structure defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header file and contains a couple of fields that describe a time counter. For example it contains - `name` field which is the name of a counter, `flags` field that describes different properties of a counter, pointers to the `suspend` and `resume` functions, and many more. 
+The clocksource concept represented by the `clocksource` structure in the Linux kernel. This structure defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header file and contains a couple of fields that describe a time counter. For example it contains - `name` field which is the name of a counter, `flags` field that describes different properties of a counter, pointers to the `suspend` and `resume` functions, and many more.
 
 Let's look on the `clocksource` structure for jiffies that defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file:
 
@@ -251,13 +251,13 @@ by default, and the `shift` is
 #endif
 ```
 
-The `jiffies` clock source uses the `NSEC_PER_JIFFY` multiplier conversion to specify the nanosecond over cycle ratio. Note that values of the  `JIFFIES_SHIFT` and `NSEC_PER_JIFFY` depend on `HZ` value. The `HZ` represents the frequency of the system timer. This macro defined in the [include/asm-generic/param.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/param.h) and depends on the `CONFIG_HZ` kernel configuration option. The value of `HZ` differs for each supported architecture, but for `x86` it defined like:
+The `jiffies` clock source uses the `NSEC_PER_JIFFY` multiplier conversion to specify the nanosecond over cycle ratio. Note that values of the  `JIFFIES_SHIFT` and `NSEC_PER_JIFFY` depend on `HZ` value. The `HZ` represents the frequency of the system timer. This macro defined in the [include/asm-generic/param.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/param.h) and depends on the `CONFIG_HZ` kernel configuration option. The value of `HZ` differs for each supported architecture, but for `x86` it's defined like:
 
 ```C
 #define HZ		CONFIG_HZ
 ```
 
-Where `CONFIG_HZ` can be on of following values:
+Where `CONFIG_HZ` can be one of the following values:
 
 ![HZ](http://s9.postimg.org/xy85r3jrj/image.png)
 
@@ -273,7 +273,7 @@ register_refined_jiffies(CLOCK_TICK_RATE);
 
 function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L842) source code file.
 
-As I already wrote, the main purpose of the `register_refined_jiffies` function is to register `refined_jiffies` clocksource. We already saw the `clocksource_jiffies` structure represents standard `jiffies` clock source. Now, if you will look in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file, you will find yet another clock source definition:
+As I already wrote, the main purpose of the `register_refined_jiffies` function is to register `refined_jiffies` clocksource. We already saw the `clocksource_jiffies` structure represents standard `jiffies` clock source. Now, if you look in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file, you will find yet another clock source definition:
 
 ```C
 struct clocksource refined_jiffies;
@@ -417,7 +417,7 @@ Links
 
 * [system call](https://en.wikipedia.org/wiki/System_call)
 * [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
-* [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) 
+* [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [cgroups](https://en.wikipedia.org/wiki/Cgroups)
 * [bss](https://en.wikipedia.org/wiki/.bss)
 * [initrd](https://en.wikipedia.org/wiki/Initrd)
