@@ -154,7 +154,7 @@ Note that there is `std` instruction before data copying, it sets `DF` flag and 
 
 In the end we clear `DF` flag with `cld` instruction and restore `boot_params` structure to the `rsi`.
 
-After it we get `.text` section address address and jump to it:
+After it we get `.text` section address and jump to it:
 
 ```assembly
 	leaq	relocated(%rbx), %rax

@@ -4,11 +4,11 @@ Linux kernel development
 Introduction
 --------------------------------------------------------------------------------
 
-As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never wrote no one line of low-level code before this moment, of course except a couple of toy `Hello World` examples in the university. It was already long time ago and as I already said I didn't write low-level code at all. Some time ago I'm interested in such things or in other words I understood that I can write programs, but actually I didn't understand how my program is arranged.
+As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I hadn't written even one line of low-level code before this moment, of course except a couple of toy `Hello World` examples in the university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things, or in other words, I understood that I can write programs, but actually I didn't understand how my program is arranged.
 
-After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many different things. For example: what occurs when the `syscall` instruction executed in my assembler, what occurs when the `printf` function starts to work, how does my program can talk with other computer via network and many many other cases. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers on my questions and I decided to go deeper in my research. I started to learn source code of the Linux kernel and tried to understant things that I'm interested. Source code of the Linux kernel didn't give me answers on **all** of my questions, but now my knowledgesis  about th Linux kernel and processes around it is much better.
+After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But I didn't understand many different things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work, how does my program talk with other computers via a network and many many other cases. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me the answers to my questions, and I decided to go deeper in my research. I started to learn the source code of the Linux kernel and tried to understand things that interest me. The source code of the Linux kernel didn't give me answers on **all** of my questions, but now my knowledge about the Linux kernel and processes around it is much better.
 
-I'm writing this part after nine and a half months since I have started to learn source code of the Linux kernel and publish first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is very easy to forget what does this or that part of the Linux kernel mean and how does it implemented. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo become popular and after nine months it has `9096` stars:
+I'm writing this part nine and a half months after I started learning the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. It now contains forty parts, and that is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know, the Linux kernel is very huge piece of code and it is very easy to forget what it does, what this or that part of the Linux kernel means, and how it implements things. But soon, the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
@@ -23,54 +23,54 @@ Let's start.
 How to start with Linux kernel
 ---------------------------------------------------------------------------------
 
-First of all let's look how to get, build and run Linux kernel. Actually you can run your custom build of the Linux kernel in two ways:
+First of all let's look how to get, build and run the Linux kernel. Actually you can run your custom build of the Linux kernel in two ways:
 
-* Run the Linux kernel on virtual machine;
+* Run the Linux kernel on a virtual machine;
 * Run the Linux kernel on real hardware.
 
-I'll provide description for both methods. Before we will start to do something with the Linux kernel, we need to get it. There are a couple of ways how to do it. All depends on your purpose. If you just want update the current version of the Linux kernel on your computer, you can use instruction for your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
+I'll provide descriptions for both methods. Before we will start to do something with the Linux kernel, we need to get it. There are a couple of ways how to do it. All depends on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific for your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
 
-In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will need just execute following commands:
+In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade the version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will just need to execute the following commands:
 
 ```
 $ sudo add-apt-repository ppa:kernel-ppa/ppa
 $ sudo apt-get update
 ```
 
-After this execute this command
+After this execute this command:
 
 ```
 $ apt-cache showpkg linux-headers
 ```
 
-and choose version of the Linux kernel in which you are interested. In the end execute next command and replace `${version}` with the version that you chose in the output of the previous command:
+and choose the version of the Linux kernel in which you are interested. In the end execute the next command and replace `${version}` with the version that you chose in the output of the previous command:
 
 ```
 $ sudo apt-get install linux-headers-${version} linux-headers-${version}-generic linux-image-${version}-generic --fix-missing
 ```
 
-and reboot your system. After the reboot you will see new kernel in the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) menu.
+and reboot your system. After the reboot you will see the new kernel in the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) menu.
 
-In other way if you are interested in the Linux kernel development, you will need to get the source code of the Linux kernel. You can find it on the [kernel.org](https://kernel.org/) website and download an archive with the Linux kernel source code. Actually Linux kernel development process fully built around `git` [version control system](https://en.wikipedia.org/wiki/Version_control). So you can get it with `git` from the `kernel.org`:
+In the other way if you are interested in the Linux kernel development, you will need to get the source code of the Linux kernel. You can find it on the [kernel.org](https://kernel.org/) website and download an archive with the Linux kernel source code. Actually the Linux kernel development process is fully built around `git` [version control system](https://en.wikipedia.org/wiki/Version_control). So you can get it with `git` from the `kernel.org`:
 
 ```
 $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 ```
 
-I don't know how about you, but I prefer `github`. There is [mirror](https://github.com/torvalds/linux) of the Linux kernel mainline repository, so you can clone it with:
+I don't know how about you, but I prefer `github`. There is a [mirror](https://github.com/torvalds/linux) of the Linux kernel mainline repository, so you can clone it with:
 
 ```
 $ git clone git@github.com:torvalds/linux.git
 ```
 
-Actually I'm using my [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute following command:
+Actually I'm using my [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute the following command:
 
 ```
-$ git check master
+$ git checkout master
 $ git pull upstream master
 ```
 
-Note that remote name of the main repository is `upstream`. To add new remote with the main linux repository you can execute:
+Note that the remote name of the main repository is `upstream`. To add a new remote with the main linux repository you can execute:
 
 ```
 git remote add upstream git@github.com:torvalds/linux.git
@@ -86,35 +86,35 @@ upstream	https://github.com/torvalds/linux.git (fetch)
 upstream	https://github.com/torvalds/linux.git (push)
 ```
 
-One is of you fork (`origin`) and the second is for main repository (`upstream`).
+One is of you fork (`origin`) and the second is for the main repository (`upstream`).
 
-Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way just copy configuration file of the already installed kernel that located in the `/boot` directory:
+Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way is to just copy the configuration file of the already installed kernel that is located in the `/boot` directory:
 
 ```
 $ sudo cp /boot/config-$(uname -r) ~/dev/linux/.config
 ```
 
-If your current Linux kernel was built with the support for access to the `/proc/config.gz`, you can copy your actual kernel configuration file with the:
+If your current Linux kernel was built with the support for access to the `/proc/config.gz` file, you can copy your actual kernel configuration file with this command:
 
 ```
 $ cat /proc/config.gz | gunzip > ~/dev/linux/.config
 ```
 
-If you are not satisfied with the standard kernel configuration that provided by the maintainers of your distro, you can configure the Linux kernel manually. There are a couple of ways to do it. The Linux kernel root [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) provides a set of targets that allow you to configure it. For example `menuconfig` provides menu-driven interface for the kernel configuration:
+If you are not satisfied with the standard kernel configuration that is provided by the maintainers of your distro, you can configure the Linux kernel manually. There are a couple of ways to do it. The Linux kernel root [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) provides a set of targets that allows you to configure it. For example `menuconfig` provides a menu-driven interface for the kernel configuration:
 
 ![menuconfig](http://s21.postimg.org/zcz48p7yf/menucnonfig.png)
 
-The `defconfig` argument that generates default kernel configuration file for the current architecture, for example [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig). You can pass `ARCH` command line argument to the `make` to build `defconfig` for the given architecture:
+The `defconfig` argument generates the default kernel configuration file for the current architecture, for example [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig). You can pass the `ARCH` command line argument to `make` to build `defconfig` for the given architecture:
 
 ```
 $ make ARCH=arm64 defconfig
 ```
 
-The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments that allow to generate new configuration file where all options will be disabled, enabled and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
+The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to generate a new configuration file where all options will be disabled, enabled and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
 
 ![nconfig](http://s29.postimg.org/hpghikp4n/nconfig.png)
 
-And even `randconfig` to generate random Linux kernel configuration file. I will not write how to configure the Linux kernel, which options to enable and what does not, because there no sense to do it by two reasons: First of all I do not know your hardware and the second if you are know your hardware, It remains only to find out how to use programs for kernel configuration, but all of they are pretty simple to use.
+And even `randconfig` to generate random Linux kernel configuration file. I will not write how to configure the Linux kernel, which options to enable and what not, because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
 
 Ok, for this moment we got the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is just execute:
 
@@ -160,7 +160,7 @@ $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu- defconfig
 $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu-
 ```
 
-As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now we have compiled kernel and we can install it on our computer or just run it with emulator.
+As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now we have compiled kernel and we can either install it on our computer or just run it in an emulator.
 
 Installing Linux kernel
 --------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ and directly the kernel itself:
 $ sudo make install
 ```
 
-From this moment we have installed new version of the Linux kernel and now we must tell about it to the `bootloader`. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two types of the Linux distor: Fedora and Ubuntu. There are two different ways how to update [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
+From this moment we have installed new version of the Linux kernel and now we must tell the `bootloader` about it. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two differnet Linux distros: Fedora and Ubuntu. There are two different ways to update the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
 
 ```shell
 #!/bin/bash
@@ -222,7 +222,7 @@ $ make menuconfig
 $ make -j4
 ```
 
-The `bysybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) and etc. In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
+The `busybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) and etc. In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
 
 ![busysbox menu](http://s18.postimg.org/sj92uoweh/busybox.png)
 
@@ -240,7 +240,7 @@ $ make -j4
 $ sudo make install
 ```
 
-Ok, the `busysbox` is installed from this moment and we can start to build our `initrd`. For doing this we go to the previous `initrd` directory and:
+Ok, the `busybox` is installed from this moment and we can start to build our `initrd`. Do do this, we go to the previous `initrd` directory and:
 
 ```
 $ cd ..
@@ -267,7 +267,7 @@ Now we can create an archive that will be our `initrd`:
 $ find . -print0 | cpio --null -ov --format=newc | gzip -9 > ~/dev/initrd_x86_64.gz
 ```
 
-From this moment we can run our kernel in the virtual machine. As I already wrote I prefer [qemu](https://en.wikipedia.org/wiki/QEMU) for this. We can run our kernel with the following command:
+We can now run our kernel in the virtual machine. As I already wrote I prefer [qemu](https://en.wikipedia.org/wiki/QEMU) for this. We can run our kernel with the following command:
 
 ```
 $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86_64/boot/bzImage -initrd ~/dev/initrd_x86_64.gz -append "root=/dev/sda1 ignore_loglevel"
@@ -312,7 +312,7 @@ static char *dgap_sindex(char *string, char *group)
 }
 ```
 
-on the `295` line. This function looks for a match of any character in the group, and returns that position. During research of source code of the Linux kernel, I have noted that [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) source code file contains implementation of the `strpbrk` function that does the same that `dgap_sinidex`. This is good idea to not use custom implementation of a function that already exists. So we can remove the `dgap_sindex` function from the [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) source code file and use the `strpbrk` instead.
+on the `295` line. This function looks for a match of any character in the group, and returns that position. During research of source code of the Linux kernel, I have noted that [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) source code file contains implementation of the `strpbrk` function that does the same that `dgap_sinidex`. It is not a good idea to use a custom implementation of a function that already exists. So we can remove the `dgap_sindex` function from the [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) source code file and use the `strpbrk` instead.
 
 First of all let's create new `git` branch based on the current master that synced with the Linux kernel mainline repo:
 
@@ -352,7 +352,7 @@ The <linux/string.h> provides strpbrk() function that does the same that the
 dgap_sindex(). Let's use already defined function instead of writing custom.
 ```
 
-And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in details. Do not just write a commit message like: `Custom function removed`, you need to describe what are yowhat you are did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
+And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in detail. Do not just write a commit message like: `Custom function removed`, you need to describe what you are did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
 
 After we have commited changes time to generate patch. We can do it with the `format-patch` command:
 
@@ -367,7 +367,7 @@ We've passed name of the branch (`master` in this case) to the `format-patch` co
 $ git format-patch master --stdout > dgap-patch-1.patch
 ```
 
-The last step after we have generated our patch is just to send it to the Linux kernel mail listing. Of course you can use any email client, but the `Git` provides special command for this: `git send-email`. Before you will send your patch, you need to know where to send it. Yes, you can send it just to the Linux kernel mail listing address which is `linux-kernel@vger.kernel.org`, but there is a high probability that the patch will be ignored, because as you already may know there is the large flow of messages on the Linux kernel mail listing. The better way will be send to a maintainer of subsystem where you have made changes. We can find maintainer and other related guys who has touched the code with the `get_maintainer.pl` script. All of you need is just pass file or directory where you wrote a code. Go to the root directory with source code of the Linux kernel and execute it:
+The last step after we have generated our patch is just to send it to the Linux kernel mail listing. Of course you can use any email client, but the `Git` provides special command for this: `git send-email`. Before you will send your patch, you need to know where to send it. Yes, you can send it just to the Linux kernel mail listing address which is `linux-kernel@vger.kernel.org`, but there is a high probability that the patch will be ignored, because as you may already know there is the large flow of messages on the Linux kernel mail listing. The better way will be send to a maintainer of subsystem where you have made changes. We can find maintainer and other related guys who has touched the code with the `get_maintainer.pl` script. All of you need is just pass file or directory where you wrote a code. Go to the root directory with source code of the Linux kernel and execute it:
 
 ```
 $ ./scripts/get_maintainer.pl -f drivers/staging/dgap/dgap.c
@@ -403,9 +403,9 @@ In the end of this part I want to give you some advice that will describe what t
 
 * Think, Think, Think. And think again before you decided to send a patch.
 
-* Each time when you have changed something int Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that even does not compiled.
+* Each time when you have changed something int Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that don't even compile.
 
-* The Linux kernel has coding style [guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle) and you need to comply with its. There is great script which can help to check you changes. This script is - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl). Just pass source code file with changes to it and you will see:
+* The Linux kernel has a coding style [guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle) and you need to comply with it. There is great script which can help to check your changes. This script is - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl). Just pass source code file with changes to it and you will see:
 
 ```
 $ ./scripts/checkpatch.pl -f drivers/staging/dgap/dgap.c
@@ -420,7 +420,7 @@ CHECK: spaces preferred around that '|' (ctx:VxV)
 
 ```
 
-Also you can see problem places with the help of the `git diff`:
+Also you can see problematic places with the help of the `git diff`:
 
 ![git diff](http://oi60.tinypic.com/2u91rgn.jpg)
 
@@ -440,9 +440,9 @@ You need to pass `message-id` as value of the `--in-reply-to` option that you ca
 
 Note one important thing that your email must be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally this two `git` commands: `send-email` and `format-patch` are very useful during development, look on the documentation for this commands and you will find many interesting and useful options: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
 
-* Do not be surprised if you do not get an answer right away after you will send your patch. Maintainers are people too and people can sometimes be busy
+* Do not be surprised if you do not get an answer right away after you will send your patch. Maintainers are people too and people can sometimes be busy.
 
-* The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to the Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Besides these two scripts you can find [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack as you can understand from the script's name, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting uncompressed kernel image, and many others. Besides this `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by the [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
+* The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to the Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Besides these two, you can find [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack as you can understand from the script's name, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting uncompressed kernel image, and many others. Besides this `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
 
 * Subscribe on the Linux kernel mail listing. Yes, there is large flow of letters every day on `lkml`, but it is very useful to read and understand things like current state of the Linux kernel and etc. Besides this there is a [set](http://vger.kernel.org/vger-lists.html) of the mail listings which are related to the different Linux kernel subsystems.
 
@@ -454,7 +454,7 @@ Note one important thing that your email must be in the [plain text](https://en.
 
 Also it must contain changelog that will describe all changes changes from previous patch versions.
 
-That's all. Ofcourse, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
+That's all. Of course, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
 
 Happy Hacking!
 
