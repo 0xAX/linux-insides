@@ -33,6 +33,8 @@
     * [How the Linux kernel handles a system call](SysCall/syscall-2.md)
     * [vsyscall and vDSO](SysCall/syscall-3.md)
     * [How the Linux kernel runs a program](SysCall/syscall-4.md)
+* [Timers and time management](Timers/README.md)
+    * [Introduction](Timers/timers-1.md)	
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
