@@ -72,3 +72,4 @@ Thank you to all contributors:
 * [xiaoqiang zhao](https://github.com/hitmoon)
 * [aouelete](https://github.com/aouelete)
 * [Dennis Birkholz](https://github.com/dennisbirkholz)
+* [Anton Tyurin](https://github.com/noxiouz)
