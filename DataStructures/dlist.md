@@ -124,7 +124,7 @@ In the next step after the device is created with the `device_create` function, 
 list_add(&misc->list, &misc_list);
 ```
 
-Kernel `list.h` provides this API for the addition of a new entry to the list. Let's look at it's implementation:
+Kernel `list.h` provides this API for the addition of a new entry to the list. Let's look at its implementation:
 
 ```C
 static inline void list_add(struct list_head *new, struct list_head *head)
