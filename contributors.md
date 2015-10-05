@@ -70,4 +70,6 @@ Thank you to all contributors:
 * [Brian Rak](https://github.com/brakthehack)
 * [Robin Peiremans](https://github.com/rpeiremans)
 * [xiaoqiang zhao](https://github.com/hitmoon)
+* [aouelete](https://github.com/aouelete)
 * [Dennis Birkholz](https://github.com/dennisbirkholz)
+* [Anton Tyurin](https://github.com/noxiouz)

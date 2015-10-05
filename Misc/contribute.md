@@ -277,6 +277,8 @@ $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86
 
 From now we can run the Linux kernel in the virtual machine and this means that we can begin to change and test the kernel.
 
+Consider using [ivandaviov/minimal](https://github.com/ivandavidov/minimal) to automate the process of generating initrd.
+
 Getting started with the Linux Kernel Development
 ---------------------------------------------------------------------------------
 
@@ -403,7 +405,7 @@ In the end of this part I want to give you some advice that will describe what t
 
 * Think, Think, Think. And think again before you decided to send a patch.
 
-* Each time when you have changed something int Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that don't even compile.
+* Each time when you have changed something in the Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that don't even compile.
 
 * The Linux kernel has a coding style [guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle) and you need to comply with it. There is great script which can help to check your changes. This script is - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl). Just pass source code file with changes to it and you will see:
 
@@ -438,7 +440,7 @@ You need to pass `message-id` as value of the `--in-reply-to` option that you ca
 
 ![send-email](http://oi60.tinypic.com/2mhd8wo.jpg)
 
-Note one important thing that your email must be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally this two `git` commands: `send-email` and `format-patch` are very useful during development, look on the documentation for this commands and you will find many interesting and useful options: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
+Note one important thing that your email must be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally these two `git` commands: `send-email` and `format-patch` are very useful during development, look on the documentation for this commands and you will find many interesting and useful options: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
 
 * Do not be surprised if you do not get an answer right away after you will send your patch. Maintainers are people too and people can sometimes be busy.
 

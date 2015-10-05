@@ -44,3 +44,9 @@ Other architectures
 ------------------------
 
 * [PowerPC and Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
+
+Useful links
+------------------------
+
+* [Linux x86 Program Start Up](http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html)
+* [Memory Layout in Program Execution (32 bits)](http://fgiasson.com/articles/memorylayout.txt)
