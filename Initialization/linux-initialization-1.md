@@ -122,7 +122,7 @@ The first step before we started to setup identity paging, need to correct follo
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-Here we need to correct `early_level4_pgt` and other addresses of the page table directories, because as I wrote above, kernel can't be run at the default `0x1000000` address. `rbp` register contains actual address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what these labels means. First of all let's look on their definition:
+Here we need to correct `early_level4_pgt` and other addresses of the page table directories, because as I wrote above, kernel can't be run at the default `0x1000000` address. `rbp` register contains actual address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look on their definition:
 
 ```assembly
 NEXT_PAGE(early_level4_pgt)
@@ -398,7 +398,7 @@ As we loaded new Global Descriptor Table, we reload segments as we did it every 
 	movl %eax,%gs
 ```
 
-After all of these steps we set up `gs` register that it post to the `irqstack` (we will see information about it in the next parts):
+After all of these steps we set up `gs` register that it post to the `irqstack` (we will see information about it in the upcoming parts):
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -508,7 +508,7 @@ This is the end of the first part about linux kernel initialization.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new).
 
-In the next part we will see initialization of the early interruption handlers, kernel space memory mapping and many many more.
+In the next part we will see initialization of the early interruption handlers, kernel space memory mapping and a lot more.
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-insides).**
 
