@@ -73,3 +73,4 @@ Thank you to all contributors:
 * [aouelete](https://github.com/aouelete)
 * [Dennis Birkholz](https://github.com/dennisbirkholz)
 * [Anton Tyurin](https://github.com/noxiouz)
+* [Bogdan Kulbida](https://github.com/kulbida)
