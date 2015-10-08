@@ -6,7 +6,7 @@ vsyscalls and vDSO
 
 This is the third part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) that describes system calls in the Linux kernel and we saw preparations after a system call caused by an userspace application and process of handling of a system call in the previous [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html). In this part we will look at two concepts that are very close to the system call concept, they are called `vsyscall` and `vdso`.
 
-We already know what is a `system call`. This is special routine in the Linux kernel which userspace application asks to do privileged tasks, like to read or to write to a file, to open a socket and etc. As you maybe know, invoking a system call is an expensive operation in the Linux kernel, because the processor must interrupt the currently executing task and switch context to kernel mode, subsequently jumping again into userspace after the system call handler finishes its work. These two mechanisms - `vsyscall` and `vdso` are designed to speed up this process for certain system calls and in this part we will try to understand how these mechanisms are arranged.
+We already know what is a `system call`. This is special routine in the Linux kernel which userspace application asks to do privileged tasks, like to read or to write to a file, to open a socket and etc. As you may know, invoking a system call is an expensive operation in the Linux kernel, because the processor must interrupt the currently executing task and switch context to kernel mode, subsequently jumping again into userspace after the system call handler finishes its work. These two mechanisms - `vsyscall` and `vdso` are designed to speed up this process for certain system calls and in this part we will try to understand how these mechanisms work.
 
 Introduction to vsyscalls
 --------------------------------------------------------------------------------
@@ -36,7 +36,7 @@ static inline void map_vsyscall(void) {}
 #endif
 ```
 
-As we can read in the help text, the `CONFIG_X86_VSYSCALL_EMULATION` configuration option: `Enable vsyscall emulation`. Why emulate `vsyscall`? Actually, the `vsyscall` is a legacy [ABI](https://en.wikipedia.org/wiki/Application_binary_interface) due to the security reasons. Virtual system calls have fixed addresses, meaning that `vsyscall` page is still at the same location every time and the location of this page is determined in the `map_vsyscall` function. Let's look on the implementation of this function: 
+As we can read in the help text, the `CONFIG_X86_VSYSCALL_EMULATION` configuration option: `Enable vsyscall emulation`. Why emulate `vsyscall`? Actually, the `vsyscall` is a legacy [ABI](https://en.wikipedia.org/wiki/Application_binary_interface) due to security reasons. Virtual system calls have fixed addresses, meaning that `vsyscall` page is still at the same location every time and the location of this page is determined in the `map_vsyscall` function. Let's look on the implementation of this function: 
 
 ```C
 void __init map_vsyscall(void)
