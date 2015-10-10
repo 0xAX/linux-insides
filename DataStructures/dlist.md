@@ -4,9 +4,9 @@ Data Structures in the Linux Kernel
 Doubly linked list
 --------------------------------------------------------------------------------
 
-Linux kernel provides its own doubly linked list implementation which you can find in the [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h). We will start `Data Structures in the Linux kernel` from the doubly linked list data structure. Why? Because it is very popular in the kernel, just try to [search](http://lxr.free-electrons.com/ident?i=list_head)
+The Linux kernel provides its own doubly linked list implementation which you can find in the [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h). We will start off `Data Structures in the Linux kernel` by discussing the doubly linked list data structure. Why? Because it is a highly used stucture within the kernel. You can try to [search](http://lxr.free-electrons.com/ident?i=list_head) for it to see for yourself.
 
-First of all let's look on the main structure:
+First of all let's look at the main structure:
 
 ```C
 struct list_head {
@@ -14,7 +14,7 @@ struct list_head {
 };
 ```
 
-You can note that it is different from many lists implementations which you have seen. For example this doubly linked list structure from the [glib](http://www.gnu.org/software/libc/):
+You can note that it is different from many lists implementations you may have seen. For example this doubly linked list structure from [glib](http://www.gnu.org/software/libc/):
 
 ```C
 struct GList {
@@ -24,7 +24,7 @@ struct GList {
 };
 ```
 
-Usually a linked list structure contains a pointer to the item. Linux kernel implementation of the list does not. So the main question is - `where does the list store the data?`. The actual implementation of lists in the kernel is - `Intrusive list`. An intrusive linked list does not contain data in its nodes - A node just contains pointers to the next and previous node and list nodes part of the data that are added to the list. This makes the data structure generic, so it does not care about entry data type anymore.
+Usually a linked list structure uses pointers to reference the item being stored. The Linux kernel implementation of the linked list does not. So the main question is - `where does the list store the data?`. The actual implementation of lists in the kernel is - `Intrusive list`. An intrusive linked list does not contain data in its nodes - A node just contains pointers to the next and previous node and list nodes part of the data that are added to the list. This makes the data structure generic, so it does not care about entry data type anymore.
 
 For example:
 
@@ -35,7 +35,7 @@ struct nmi_desc {
 };
 ```
 
-Let's look at some examples to understand how `list_head` is used in the kernel. As I already wrote about, there are many, really many different places where lists are used in the kernel. Let's look for example in miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/master/drivers/char/misc.c) is used for writing small drivers for handling simple hardware or virtual devices. This drivers share major number:
+Let's look at some examples to understand how `list_head` is used in the kernel. As I have previously mentioned, there are many different places where lists are used within the kernel. For example, take a look at miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/master/drivers/char/misc.c) is used for writing small drivers for handling simple hardware or virtual devices. This drivers share major number:
 
 ```C
 #define MISC_MAJOR              10
@@ -118,13 +118,13 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 }
 ```
 
-In the next step after device created with the `device_create` function we add it to the miscellaneous devices list with:
+In the next step after the device is created with the `device_create` function, we add it to the miscellaneous devices list with:
 
 ```
 list_add(&misc->list, &misc_list);
 ```
 
-Kernel `list.h` provides this API for the addition of new entry to the list. Let's look on it's implementation:
+Kernel `list.h` provides this API for the addition of a new entry to the list. Let's look at its implementation:
 
 ```C
 static inline void list_add(struct list_head *new, struct list_head *head)
@@ -135,8 +135,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 
 It just calls internal function `__list_add` with the 3 given parameters:
 
-* new  - new entry;
-* head - list head after which the new item will be inserted
+* new  - new entry.
+* head - list head after which the new item will be inserted.
 * head->next - next item after list head.
 
 Implementation of the `__list_add` is pretty simple:
@@ -153,7 +153,7 @@ static inline void __list_add(struct list_head *new,
 }
 ```
 
-Here we set new item between `prev` and `next`. So `misc` list which we defined at the start with the `LIST_HEAD_INIT` macro will contain previous and next pointers to the `miscdevice->list`.
+Here we set new item between `prev` and `next`. So the `misc` list which we defined at the start with the `LIST_HEAD_INIT` macro will contain previous and next pointers to the `miscdevice->list`.
 
 There is still one question: how to get list's entry. There is a special macro:
 
@@ -189,7 +189,7 @@ As we can see it just calls `container_of` macro with the same arguments. At fir
     (type *)( (char *)__mptr - offsetof(type,member) );})
 ```
 
-First of all you can note that it consists of two expressions in curly brackets. Compiler will evaluate the whole block in the curly braces and use the value of the last expression.
+First of all you can note that it consists of two expressions in curly brackets. The compiler will evaluate the whole block in the curly braces and use the value of the last expression.
 
 For example:
 
@@ -205,7 +205,7 @@ int main() {
 
 will print `2`.
 
-The next point is `typeof`, it's simple. As you can understand from its name, it just returns the type of the given variable. When I first saw the implementation of the `container_of` macro, the strangest thing for me was the zero in the `((type *)0)` expression. Actually this pointer magic calculates the offset of the given field from the address of the structure, but as we have `0` here, it will be just a zero offset alongwith the field width. Let's look at a simple example:
+The next point is `typeof`, it's simple. As you can understand from its name, it just returns the type of the given variable. When I first saw the implementation of the `container_of` macro, the strangest thing I found was the zero in the `((type *)0)` expression. Actually this pointer magic calculates the offset of the given field from the address of the structure, but as we have `0` here, it will be just a zero offset along with the field width. Let's look at a simple example:
 
 ```C
 #include <stdio.h>
@@ -224,13 +224,13 @@ int main() {
 
 will print `0x5`.
 
-The next offsetof macro calculates offset from the beginning of the structure to the given structure's field. Its implementation is very similar to the previous code:
+The next `offsetof` macro calculates offset from the beginning of the structure to the given structure's field. Its implementation is very similar to the previous code:
 
 ```C
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 ```
 
-Let's summarize all about `container_of` macro. `container_of` macro returns address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns `ptr` to it. Now `ptr` and `__mptr` point to the same address. Technically we don't need this line but its useful for type checking. First line ensures that that given structure (`type` parameter) has a member called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and subtracts it from the structure address. That's all.
+Let's summarize all about `container_of` macro. The `container_of` macro returns the address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns `ptr` to it. Now `ptr` and `__mptr` point to the same address. Technically we don't need this line but it's useful for type checking. The first line ensures that the given structure (`type` parameter) has a member called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and subtracts it from the structure address. That's all.
 
 Of course `list_add` and `list_entry` is not the only functions which `<linux/list.h>` provides. Implementation of the doubly linked list provides the following API:
 
