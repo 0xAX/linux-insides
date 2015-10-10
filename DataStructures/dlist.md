@@ -4,9 +4,9 @@ Data Structures in the Linux Kernel
 Doubly linked list
 --------------------------------------------------------------------------------
 
-The Linux kernel provides its own doubly linked list implementation which you can find in the [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h). We will start off `Data Structures in the Linux kernel` by discussing the doubly linked list data structure. Why? Because it is a highly used stucture within the kernel. You can try to [search](http://lxr.free-electrons.com/ident?i=list_head) for it to see for yourself.
+Linux kernel provides its own implementation of doubly linked list, which you can find in the [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h). We will start `Data Structures in the Linux kernel` from the doubly linked list data structure. Why? Because it is very popular in the kernel, just try to [search](http://lxr.free-electrons.com/ident?i=list_head)
 
-First of all let's look at the main structure:
+First of all, let's look on the main structure in the [include/linux/types.h](https://github.com/torvalds/linux/blob/master/include/linux/types.h):
 
 ```C
 struct list_head {
@@ -14,7 +14,7 @@ struct list_head {
 };
 ```
 
-You can note that it is different from many lists implementations you may have seen. For example this doubly linked list structure from [glib](http://www.gnu.org/software/libc/):
+You can note that it is different from many implementations of doubly linked list which you have seen. For example, this doubly linked list structure from the [glib](http://www.gnu.org/software/libc/) library looks like :
 
 ```C
 struct GList {
@@ -24,7 +24,7 @@ struct GList {
 };
 ```
 
-Usually a linked list structure uses pointers to reference the item being stored. The Linux kernel implementation of the linked list does not. So the main question is - `where does the list store the data?`. The actual implementation of lists in the kernel is - `Intrusive list`. An intrusive linked list does not contain data in its nodes - A node just contains pointers to the next and previous node and list nodes part of the data that are added to the list. This makes the data structure generic, so it does not care about entry data type anymore.
+Usually a linked list structure contains a pointer to the item. The implementation of linked list in Linux kernel does not. So the main question is - `where does the list store the data?`. The actual implementation of linked list in the kernel is - `Intrusive list`. An intrusive linked list does not contain data in its nodes - A node just contains pointers to the next and previous node and list nodes part of the data that are added to the list. This makes the data structure generic, so it does not care about entry data type anymore.
 
 For example:
 
@@ -35,7 +35,7 @@ struct nmi_desc {
 };
 ```
 
-Let's look at some examples to understand how `list_head` is used in the kernel. As I have previously mentioned, there are many different places where lists are used within the kernel. For example, take a look at miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/master/drivers/char/misc.c) is used for writing small drivers for handling simple hardware or virtual devices. This drivers share major number:
+Let's look at some examples to understand how `list_head` is used in the kernel. As I already wrote about, there are many, really many different places where lists are used in the kernel. Let's look for an example in miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/master/drivers/char/misc.c) is used for writing small drivers for handling simple hardware or virtual devices. Those drivers share same major number:
 
 ```C
 #define MISC_MAJOR              10
@@ -67,7 +67,7 @@ crw-------   1 root root     10,  63 Mar 21 12:01 vga_arbiter
 crw-------   1 root root     10, 137 Mar 21 12:01 vhci
 ```
 
-Now let's have a close look at how lists are used in the misc device drivers. First of all let's look on `miscdevice` structure:
+Now let's have a close look at how lists are used in the misc device drivers. First of all, let's look on `miscdevice` structure:
 
 ```C
 struct miscdevice
@@ -89,14 +89,14 @@ We can see the fourth field in the `miscdevice` structure - `list` which is a li
 static LIST_HEAD(misc_list);
 ```
 
-which expands to definition of the variables with `list_head` type:
+which expands to the definition of variables with `list_head` type:
 
 ```C
 #define LIST_HEAD(name) \
 	struct list_head name = LIST_HEAD_INIT(name)
 ```
 
-and initializes it with the `LIST_HEAD_INIT` macro which set previous and next entries:
+and initializes it with the `LIST_HEAD_INIT` macro, which sets previous and next entries with the address of variable - name:
 
 ```C
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
@@ -118,7 +118,7 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 }
 ```
 
-In the next step after the device is created with the `device_create` function, we add it to the miscellaneous devices list with:
+In the next step after a device is created by the `device_create` function, we add it to the miscellaneous devices list with:
 
 ```
 list_add(&misc->list, &misc_list);
@@ -153,7 +153,7 @@ static inline void __list_add(struct list_head *new,
 }
 ```
 
-Here we set new item between `prev` and `next`. So the `misc` list which we defined at the start with the `LIST_HEAD_INIT` macro will contain previous and next pointers to the `miscdevice->list`.
+Here we add a new item between `prev` and `next`. So `misc` list which we defined at the start with the `LIST_HEAD_INIT` macro will contain previous and next pointers to the `miscdevice->list`.
 
 There is still one question: how to get list's entry. There is a special macro:
 
@@ -243,5 +243,7 @@ Of course `list_add` and `list_entry` is not the only functions which `<linux/li
 * list_empty
 * list_cut_position
 * list_splice
+* list_for_each
+* list_for_each_entry
 
 and many more.
