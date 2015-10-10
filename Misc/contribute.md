@@ -428,7 +428,7 @@ Also you can see problematic places with the help of the `git diff`:
 
 * [Linus doesn't accept github pull requests](https://github.com/torvalds/linux/pull/17#issuecomment-5654674)
 
-* If your change consists from some different and not too closely related changes, you need to split your changes. Each change must in a separate commit. The `git format-patch` command will generate patches for each commit and subject of each patch will contain `vN` prefix where the `N` is the number of the patch. If you are planning to send not patch, but series of patches, will be good if you will pass `--cover-letter` option to the `git format-patch` command. This will generate additional file that will contain cover letter that you can use to describe what your patchset changes. Also it is good idea to use `--in-reply-to` option in the `git send-email` command. This option allows you to send your patchseries in reply to the your cover message, so the structure of the your patch will be look like this for a maintainer:
+* If your change consists from some different and unrelated changes, you need to split the changes via separate commits. The `git format-patch` command will generate patches for each commit and the subject of each patch will contain a `vN` prefix where the `N` is the number of the patch. If you are planning to send a series of patches it will be helpful to pass the `--cover-letter` option to the `git format-patch` command. This will generate an additional file that will contain the cover letter that you can use to describe what your patchset changes. It is also a good idea to use the `--in-reply-to` option in the `git send-email` command. This option allows you to send your patch series in reply to your cover message. The structure of the your patch will look like this for a maintainer:
 
 ```
 |--> cover letter
@@ -436,36 +436,31 @@ Also you can see problematic places with the help of the `git diff`:
   |----> patch_2
 ```
 
-You need to pass `message-id` as value of the `--in-reply-to` option that you can find in the output of the `git send-email`:
+You need to pass `message-id` as an argument of the `--in-reply-to` option that you can find in the output of the `git send-email`:
 
-![send-email](http://oi60.tinypic.com/2mhd8wo.jpg)
+It's important that your email be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally, `send-email` and `format-patch` are very useful during development, so look at the documentation for the commands and you'll find some useful options such as: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
 
-Note one important thing that your email must be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally these two `git` commands: `send-email` and `format-patch` are very useful during development, look on the documentation for this commands and you will find many interesting and useful options: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
+* Do not be surprised if you do not get an immediate answer after you send your patch. Maintainers can be very busy.
 
-* Do not be surprised if you do not get an answer right away after you will send your patch. Maintainers are people too and people can sometimes be busy.
+* The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Outside of those scripts, you can find the [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting an uncompressed kernel image, and many others. Outside of the `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
 
-* The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to the Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Besides these two, you can find [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack as you can understand from the script's name, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting uncompressed kernel image, and many others. Besides this `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
+* Subscribe to the Linux kernel mailing list. There are a large number of letters every day on `lkml`, but it is very useful to read them and understand things such as the current state of the Linux kernel. Other than `lkml` there are [set](http://vger.kernel.org/vger-lists.html) mailing listings which are related to the different Linux kernel subsystems.
 
-* Subscribe on the Linux kernel mail listing. Yes, there is large flow of letters every day on `lkml`, but it is very useful to read and understand things like current state of the Linux kernel and etc. Besides this there is a [set](http://vger.kernel.org/vger-lists.html) of the mail listings which are related to the different Linux kernel subsystems.
-
-* If your patch is not accepted from the first time and you have got feedback from Linux kernel developers, make changes and resend the patch with the `[PATCH vN]` prefix, where `N` is the number of patch version. For example:
+* If your patch is not accepted the first time and you receive feedback from Linux kernel developers, make your changes and resend the patch with the `[PATCH vN]` prefix (where `N` is the number of patch version). For example:
 
 ```
 [PATCH v2] staging/dgap: Use strpbrk() instead of dgap_sindex()
 ```
 
-Also it must contain changelog that will describe all changes changes from previous patch versions.
-
-That's all. Of course, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
+Also it must contain changelog that will describe all changes changes from previous patch versions. Of course, this is not an exhaustive list of requirements for Linux kernel development, but some of the most important items were addressed.
 
 Happy Hacking!
 
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of this part and here we saw all steps from the getting source code of the Linux kernel to sending of a patch to the Linux kernel mailing list. Hope it will help you to join to the Linux kernel community.
-
-If you have any questions or suggestions, write me an [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
+I hope this will help others join the Linux kernel community!
+If you have any questions or suggestions, write me at [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
 
 Please note that English is not my first language, and I am really sorry for any inconvenience. If you find any mistakes please let me know via email or send a PR.
 
