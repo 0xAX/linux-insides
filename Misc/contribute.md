@@ -6,7 +6,7 @@ Introduction
 
 As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I hadn't written even one line of low-level code before this moment, of course except a couple of toy `Hello World` examples in the university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things, or in other words, I understood that I can write programs, but actually I didn't understand how my program is arranged.
 
-After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But I didn't understand many different things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work, how does my program talk with other computers via a network and many many other cases. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me the answers to my questions, and I decided to go deeper in my research. I started to learn the source code of the Linux kernel and tried to understand things that interest me. The source code of the Linux kernel didn't give me answers on **all** of my questions, but now my knowledge about the Linux kernel and processes around it is much better.
+After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many different things. For example: what occurs when the `syscall` instruction executed in my assembler, what occurs when the `printf` function starts to work, how does my program can talk with other computer via network and many many other cases. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers on my questions and I decided to go deeper in my research. I started to learn source code of the Linux kernel and tried to understant things that I'm interested. Source code of the Linux kernel didn't give me answers on **all** of my questions, but now my knowledge of Linux kernel and processes around it is much better.
 
 I'm writing this part nine and a half months after I started learning the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. It now contains forty parts, and that is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know, the Linux kernel is very huge piece of code and it is very easy to forget what it does, what this or that part of the Linux kernel means, and how it implements things. But soon, the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
 
@@ -199,7 +199,7 @@ echo -e "Distributive: ${Green}${DISTRIBUTIVE}${Color_Off}"
 
 if [[ "$DISTRIBUTIVE" == "Fedora" ]] ;
 then
-    su -c 'grub2-mkconfig -o /boot/grub2/grub.cfg' 
+    su -c 'grub2-mkconfig -o /boot/grub2/grub.cfg'
 else
     sudo update-grub
 fi
@@ -254,10 +254,10 @@ copy `busybox` fields to the `bin`, `sbin` and other directories. Now we need to
 
 ```shell
 #!/bin/sh
- 
+
 mount -t proc none /proc
 mount -t sysfs none /sys
- 
+
 exec /bin/sh
 ```
 
@@ -359,7 +359,7 @@ And the `Sign-off-by` line in the end of the commit message. Note that each line
 After we have commited changes time to generate patch. We can do it with the `format-patch` command:
 
 ```
-$ git format-patch master 
+$ git format-patch master
 0001-staging-dgap-Use-strpbrk-instead-of-dgap_sindex.patch
 ```
 
