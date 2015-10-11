@@ -14,7 +14,7 @@ In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting
 jmpl	*%eax
 ```
 
-Remind that `eax` register contains the address of the 32-bit entry point. We can read about this point from the linux kernel x86 boot protocol:
+Recall that `eax` register contains the address of the 32-bit entry point. We can read about this point from the linux kernel x86 boot protocol:
 
 ```
 When using bzImage, the protected-mode kernel was relocated to 0x100000

@@ -4,15 +4,15 @@ Linux kernel development
 Introduction
 --------------------------------------------------------------------------------
 
-As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I hadn't written even one line of low-level code before this moment, of course except a couple of toy `Hello World` examples in the university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things, or in other words, I understood that I can write programs, but actually I didn't understand how my program is arranged.
+As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in the university. It was already a long time ago and as I already said I didn't write low-level code at all. Some time ago I was interested in such things or in other words I understood that I can write programs, but actually I didn't understand how my program is arranged.
 
-After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But I didn't understand many different things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work, how does my program talk with other computers via a network and many many other cases. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me the answers to my questions, and I decided to go deeper in my research. I started to learn the source code of the Linux kernel and tried to understand things that interest me. The source code of the Linux kernel didn't give me answers on **all** of my questions, but now my knowledge about the Linux kernel and processes around it is much better.
+After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many other things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work or how can my program talk with other computers via network. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers to my questions and I decided to go deeper in my research. I started to learn from the source code of the Linux kernel and tried to understand the things that I'm interested in. The source code of the Linux kernel didn't give me the answers to **all** of my questions, but now my knowledge about the Linux kernel and the processes around it is much better.
 
-I'm writing this part nine and a half months after I started learning the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. It now contains forty parts, and that is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know, the Linux kernel is very huge piece of code and it is very easy to forget what it does, what this or that part of the Linux kernel means, and how it implements things. But soon, the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
+I'm writing this part nine and a half months after I've started to learn from the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
-Yeah, seems that people are interested in the internals of the Linux kernel. Besides this, in all that time that I'm writing `linux-inside`, I have received many questions from different people like: how to start with the Linux kernel, what do I need to start contribute to the Linux kernel and and others like these. Generally people are interested contribute to open source project for different reasons and the Linux kernel is not exception:
+It seems that people are interested in the internals of the Linux kernel. Besides this, in all that time that I'm writing `linux-inside`, I have received many questions from different people like: how to start with the Linux kernel, what do I need to start contribute to the Linux kernel and and others like these. Generally people are interested contribute to open source project for different reasons and the Linux kernel is not exception:
 
 ![google-linux](http://s4.postimg.org/yg9z5zx0d/google_linux.png)
 
@@ -199,7 +199,7 @@ echo -e "Distributive: ${Green}${DISTRIBUTIVE}${Color_Off}"
 
 if [[ "$DISTRIBUTIVE" == "Fedora" ]] ;
 then
-    su -c 'grub2-mkconfig -o /boot/grub2/grub.cfg' 
+    su -c 'grub2-mkconfig -o /boot/grub2/grub.cfg'
 else
     sudo update-grub
 fi
@@ -254,10 +254,10 @@ copy `busybox` fields to the `bin`, `sbin` and other directories. Now we need to
 
 ```shell
 #!/bin/sh
- 
+
 mount -t proc none /proc
 mount -t sysfs none /sys
- 
+
 exec /bin/sh
 ```
 
@@ -341,7 +341,7 @@ $ git commit -s -v
 
 After the last command an editor will be openned that will be chosen from `$GIT_EDITOR` or `$EDITOR` environment variable. The `-s` command line argument will add `Signed-off-by` line by the committer at the end of the commit log message. You can find this line in the end of each commit message, for example - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771). The main point of this line is the tracking of who did a change. The `-v` option show unified diff between the HEAD commit and what would be committed at the bottom of the commit message. It is not necessary, but very useful sometimes. A couple of words about commit message. Actually a commit message consists from two parts:
 
-The first part is on the first line and contains short descrption of changes. It starts from the `[PATCH]` prefix followed by a subsystem, driver or architecture name and after `:` symbol short description. In our case it will be something like this:
+The first part is on the first line and contains short description of changes. It starts from the `[PATCH]` prefix followed by a subsystem, driver or architecture name and after `:` symbol short description. In our case it will be something like this:
 
 ```
 [PATCH] staging/dgap: Use strpbrk() instead of dgap_sindex()
@@ -354,12 +354,12 @@ The <linux/string.h> provides strpbrk() function that does the same that the
 dgap_sindex(). Let's use already defined function instead of writing custom.
 ```
 
-And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in detail. Do not just write a commit message like: `Custom function removed`, you need to describe what you are did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
+And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in details. Do not just write a commit message like: `Custom function removed`, you need to describe what you did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
 
-After we have commited changes time to generate patch. We can do it with the `format-patch` command:
+After we have committed changes time to generate patch. We can do it with the `format-patch` command:
 
 ```
-$ git format-patch master 
+$ git format-patch master
 0001-staging-dgap-Use-strpbrk-instead-of-dgap_sindex.patch
 ```
 
@@ -382,7 +382,7 @@ devel@driverdev.osuosl.org (open list:STAGING SUBSYSTEM)
 linux-kernel@vger.kernel.org (open list)
 ```
 
-Yout will see the set of the names and related emails. Now we can send our patch with:
+You will see the set of the names and related emails. Now we can send our patch with:
 
 ```
 $ git send-email --to "Lidza Louina <lidza.louina@gmail.com>" \
@@ -428,7 +428,7 @@ Also you can see problematic places with the help of the `git diff`:
 
 * [Linus doesn't accept github pull requests](https://github.com/torvalds/linux/pull/17#issuecomment-5654674)
 
-* If your change consists from some different and not too closely related changes, you need to split your changes. Each change must in a separate commit. The `git format-patch` command will generate patches for each commit and subject of each patch will contain `vN` prefix where the `N` is the number of the patch. If you are planning to send not patch, but series of patches, will be good if you will pass `--cover-letter` option to the `git format-patch` command. This will generate additional file that will contain cover letter that you can use to describe what your patchset changes. Also it is good idea to use `--in-reply-to` option in the `git send-email` command. This option allows you to send your patchseries in reply to the your cover message, so the structure of the your patch will be look like this for a maintainer:
+* If your change consists from some different and unrelated changes, you need to split the changes via separate commits. The `git format-patch` command will generate patches for each commit and the subject of each patch will contain a `vN` prefix where the `N` is the number of the patch. If you are planning to send a series of patches it will be helpful to pass the `--cover-letter` option to the `git format-patch` command. This will generate an additional file that will contain the cover letter that you can use to describe what your patchset changes. It is also a good idea to use the `--in-reply-to` option in the `git send-email` command. This option allows you to send your patch series in reply to your cover message. The structure of the your patch will look like this for a maintainer:
 
 ```
 |--> cover letter
@@ -436,36 +436,31 @@ Also you can see problematic places with the help of the `git diff`:
   |----> patch_2
 ```
 
-You need to pass `message-id` as value of the `--in-reply-to` option that you can find in the output of the `git send-email`:
+You need to pass `message-id` as an argument of the `--in-reply-to` option that you can find in the output of the `git send-email`:
 
-![send-email](http://oi60.tinypic.com/2mhd8wo.jpg)
+It's important that your email be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally, `send-email` and `format-patch` are very useful during development, so look at the documentation for the commands and you'll find some useful options such as: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
 
-Note one important thing that your email must be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally these two `git` commands: `send-email` and `format-patch` are very useful during development, look on the documentation for this commands and you will find many interesting and useful options: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
+* Do not be surprised if you do not get an immediate answer after you send your patch. Maintainers can be very busy.
 
-* Do not be surprised if you do not get an answer right away after you will send your patch. Maintainers are people too and people can sometimes be busy.
+* The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Outside of those scripts, you can find the [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting an uncompressed kernel image, and many others. Outside of the `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
 
-* The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to the Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Besides these two, you can find [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack as you can understand from the script's name, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting uncompressed kernel image, and many others. Besides this `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
+* Subscribe to the Linux kernel mailing list. There are a large number of letters every day on `lkml`, but it is very useful to read them and understand things such as the current state of the Linux kernel. Other than `lkml` there are [set](http://vger.kernel.org/vger-lists.html) mailing listings which are related to the different Linux kernel subsystems.
 
-* Subscribe on the Linux kernel mail listing. Yes, there is large flow of letters every day on `lkml`, but it is very useful to read and understand things like current state of the Linux kernel and etc. Besides this there is a [set](http://vger.kernel.org/vger-lists.html) of the mail listings which are related to the different Linux kernel subsystems.
-
-* If your patch is not accepted from the first time and you have got feedback from Linux kernel developers, make changes and resend the patch with the `[PATCH vN]` prefix, where `N` is the number of patch version. For example:
+* If your patch is not accepted the first time and you receive feedback from Linux kernel developers, make your changes and resend the patch with the `[PATCH vN]` prefix (where `N` is the number of patch version). For example:
 
 ```
 [PATCH v2] staging/dgap: Use strpbrk() instead of dgap_sindex()
 ```
 
-Also it must contain changelog that will describe all changes changes from previous patch versions.
-
-That's all. Of course, these are not all the subtleties of the Linux kernel development collected in this part, but some of the most important.
+Also it must contain changelog that will describe all changes changes from previous patch versions. Of course, this is not an exhaustive list of requirements for Linux kernel development, but some of the most important items were addressed.
 
 Happy Hacking!
 
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of this part and here we saw all steps from the getting source code of the Linux kernel to sending of a patch to the Linux kernel mailing list. Hope it will help you to join to the Linux kernel community.
-
-If you have any questions or suggestions, write me an [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
+I hope this will help others join the Linux kernel community!
+If you have any questions or suggestions, write me at [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
 
 Please note that English is not my first language, and I am really sorry for any inconvenience. If you find any mistakes please let me know via email or send a PR.
 

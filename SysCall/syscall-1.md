@@ -11,7 +11,7 @@ Before we start to dive into the implementation of the system calls related stuf
 System call. What is it?
 --------------------------------------------------------------------------------
 
-A system call is just a userspace request of a kernel service. Yes, the operating system kernel provides many services. When your program wants to write to or read from a file, starts to listen for connections on a [socket](https://en.wikipedia.org/wiki/Network_socket), delete or create a directory, or even to finish its work, a program uses a system call. In another words, a system call is just a [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) function that is placed in the kernel space and a user program can ask the kernel to do something via this function.
+A system call is just a userspace request of a kernel service. Yes, the operating system kernel provides many services. When your program wants to write to or read from a file, start to listen for connections on a [socket](https://en.wikipedia.org/wiki/Network_socket), delete or create directory, or even to finish its work, a program uses a system call. In another words, a system call is just a [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) function that is placed in the kernel space and an user program can ask kernel to do something via this function.
 
 The Linux kernel provides a set of these functions and each architecture provides its own set. For example: the [x86_64](https://en.wikipedia.org/wiki/X86-64) provides [322](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl) system calls and the [x86](https://en.wikipedia.org/wiki/X86) provides [358](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl) different system calls. Ok, a system call is just a function. Let's look on a simple `Hello world` example that's written in the assembly programming language:
 
@@ -184,7 +184,7 @@ Yes, system calls are ubiquitous. Each program needs to open/write/read file, ne
 $ sudo cat /proc/1/comm
 systemd
 
-$ sudo cat /proc/1/syscall 
+$ sudo cat /proc/1/syscall
 232 0x4 0x7ffdf82e11b0 0x1f 0xffffffff 0x100 0x7ffdf82e11bf 0x7ffdf82e11a0 0x7f9114681193
 ```
 
@@ -197,7 +197,7 @@ $ ps ax | grep emacs
 $ sudo cat /proc/2093/comm
 emacs
 
-$ sudo cat /proc/2093/syscall 
+$ sudo cat /proc/2093/syscall
 270 0xf 0x7fff068a5a90 0x7fff068a5b10 0x0 0x7fff068a59c0 0x7fff068a59d0 0x7fff068a59b0 0x7f777dd8813c
 ```
 

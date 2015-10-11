@@ -14,7 +14,7 @@ struct list_head {
 };
 ```
 
-You can note that it is different from many implementations of doubly linked list which you have seen. For example, this doubly linked list structure from the [glib](http://www.gnu.org/software/libc/) looks like :
+You can note that it is different from many implementations of doubly linked list which you have seen. For example, this doubly linked list structure from the [glib](http://www.gnu.org/software/libc/) library looks like :
 
 ```C
 struct GList {
@@ -118,13 +118,13 @@ static inline void INIT_LIST_HEAD(struct list_head *list)
 }
 ```
 
-In the next step after device is created by the `device_create` function, we add it to the miscellaneous devices list with:
+In the next step after a device is created by the `device_create` function, we add it to the miscellaneous devices list with:
 
 ```
 list_add(&misc->list, &misc_list);
 ```
 
-Kernel `list.h` provides this API for the addition of new entry to the list. Let's look on it's implementation:
+Kernel `list.h` provides this API for the addition of a new entry to the list. Let's look at its implementation:
 
 ```C
 static inline void list_add(struct list_head *new, struct list_head *head)
@@ -135,8 +135,8 @@ static inline void list_add(struct list_head *new, struct list_head *head)
 
 It just calls internal function `__list_add` with the 3 given parameters:
 
-* new  - new entry;
-* head - list head after which the new item will be inserted
+* new  - new entry.
+* head - list head after which the new item will be inserted.
 * head->next - next item after list head.
 
 Implementation of the `__list_add` is pretty simple:
@@ -189,7 +189,7 @@ As we can see it just calls `container_of` macro with the same arguments. At fir
     (type *)( (char *)__mptr - offsetof(type,member) );})
 ```
 
-First of all you can note that it consists of two expressions in curly brackets. Compiler will evaluate the whole block in the curly braces and use the value of the last expression.
+First of all you can note that it consists of two expressions in curly brackets. The compiler will evaluate the whole block in the curly braces and use the value of the last expression.
 
 For example:
 
@@ -205,7 +205,7 @@ int main() {
 
 will print `2`.
 
-The next point is `typeof`, it's simple. As you can understand from its name, it just returns the type of the given variable. When I first saw the implementation of the `container_of` macro, the strangest thing for me was the zero in the `((type *)0)` expression. Actually this pointer magic calculates the offset of the given field from the address of the structure, but as we have `0` here, it will be just a zero offset alongwith the field width. Let's look at a simple example:
+The next point is `typeof`, it's simple. As you can understand from its name, it just returns the type of the given variable. When I first saw the implementation of the `container_of` macro, the strangest thing I found was the zero in the `((type *)0)` expression. Actually this pointer magic calculates the offset of the given field from the address of the structure, but as we have `0` here, it will be just a zero offset along with the field width. Let's look at a simple example:
 
 ```C
 #include <stdio.h>
@@ -224,13 +224,13 @@ int main() {
 
 will print `0x5`.
 
-The next offsetof macro calculates offset from the beginning of the structure to the given structure's field. Its implementation is very similar to the previous code:
+The next `offsetof` macro calculates offset from the beginning of the structure to the given structure's field. Its implementation is very similar to the previous code:
 
 ```C
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 ```
 
-Let's summarize all about `container_of` macro. `container_of` macro returns address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns `ptr` to it. Now `ptr` and `__mptr` point to the same address. Technically we don't need this line but its useful for type checking. First line ensures that that given structure (`type` parameter) has a member called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and subtracts it from the structure address. That's all.
+Let's summarize all about `container_of` macro. The `container_of` macro returns the address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns `ptr` to it. Now `ptr` and `__mptr` point to the same address. Technically we don't need this line but it's useful for type checking. The first line ensures that the given structure (`type` parameter) has a member called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and subtracts it from the structure address. That's all.
 
 Of course `list_add` and `list_entry` is not the only functions which `<linux/list.h>` provides. Implementation of the doubly linked list provides the following API:
 

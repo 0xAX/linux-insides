@@ -72,7 +72,7 @@ As mentioned above the GDT contains `segment descriptors` which describe memory 
 ------------------------------------------------------------
 ```
 
-Don't worry, I know it looks a little scary after real mode, but it's easy. For example LIMIT 15:0 means that bit 0-15 of the Descriptor contain the value for the limit. The rest of it is in LIMIT 16:19. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
+Don't worry, I know it looks a little scary after real mode, but it's easy. For example LIMIT 15:0 means that bit 0-15 of the Descriptor contain the value for the limit. The rest of it is in LIMIT 19:16. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
 
 1. Limit[20-bits] is at 0-15,16-19 bits. It defines `length_of_segment - 1`. It depends on `G`(Granularity) bit.
 
