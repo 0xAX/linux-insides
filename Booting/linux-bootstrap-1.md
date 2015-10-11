@@ -83,7 +83,7 @@ reset_vector:
 	...
 ```
 
-Here we can see the jump instruction [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9 to the address `_start - ( . + 2)`, and we can see that the `reset` section is 16 bytes and starts at `0xfffffff0`:
+Here we can see the jmp instruction [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9 and its destination address - `_start - ( . + 2)`, and we can see that the `reset` section is 16 bytes and starts at `0xfffffff0`:
 
 ```
 SECTIONS {
