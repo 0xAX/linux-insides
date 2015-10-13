@@ -74,3 +74,4 @@ Thank you to all contributors:
 * [Dennis Birkholz](https://github.com/dennisbirkholz)
 * [Anton Tyurin](https://github.com/noxiouz)
 * [Bogdan Kulbida](https://github.com/kulbida)
+* [Matt Hudgins](https://github.com/mhudgins)
