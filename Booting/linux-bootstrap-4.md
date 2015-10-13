@@ -175,7 +175,7 @@ Now we can setup the stack and verify CPU that it has support of the long mode a
 Stack setup and CPU verification
 --------------------------------------------------------------------------------
 
-The next we can see assembly code which setups new stack for kernel decompression:
+Next we can see assembly code which sets up a new stack for kernel decompression:
 
 ```assembly
 	movl	$boot_stack_end, %eax
@@ -183,7 +183,7 @@ The next we can see assembly code which setups new stack for kernel decompressio
 	movl	%eax, %esp
 ```
 
-`boots_stack_end` is in the `.bss` section, we can see definition of it in the end of `head_64.S`:
+`boots_stack_end` is in the `.bss` section. We can see the definition of it in the end of `head_64.S`:
 
 ```assembly
 	.bss
@@ -195,9 +195,9 @@ boot_stack:
 boot_stack_end:
 ```
 
-First of all we put address of the `boot_stack_end` into `eax` register and add to it value of the `ebp` (remember that `ebp` now contains address where we loaded - `0x100000`). In the end we just put `eax` value into `esp` and that's all, we have correct stack pointer.
+First of all we put the address of `boot_stack_end` into the `eax` register and add to it value of `ebp` (remember that `ebp` now contains the address where we loaded - `0x100000`). In the end we just put the `eax` value into `esp` and that's all, we have a correct stack pointer.
 
-The next step is CPU verification. Need to check that CPU has support of `long mode` and `SSE`:
+The next step is CPU verification. We need to check that the CPU supports `long mode` and `SSE`:
 
 ```assembly
 	call	verify_cpu
@@ -205,9 +205,9 @@ The next step is CPU verification. Need to check that CPU has support of `long m
 	jnz	no_longmode
 ```
 
-It just calls `verify_cpu` function from the [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) which contains a couple of calls of the `cpuid` instruction. `cpuid` is instruction which is used for getting information about processor. In our case it checks long mode and SSE support and returns `0` on success or `1` on fail in the `eax` register. 
+It just calls `verify_cpu` function from [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) which contains a couple of calls to the `cpuid` instruction. `cpuid` is the instruction which is used for getting information about the processor. In our case it checks long mode and SSE support and returns `0` on success or `1` on fail in the `eax` register. 
 
-If `eax` is not zero, we jump to the `no_longmode` label which just stops the CPU with `hlt` instruction while any hardware interrupt will not happen.
+If `eax` is not zero, we jump to the `no_longmode` label which just stops the CPU with a `hlt` instruction while any hardware interrupt will not happen.
 
 ```assembly
 no_longmode:
@@ -216,7 +216,7 @@ no_longmode:
 	jmp     1b
 ```
 
-We set stack, checked CPU and now can move on the next step.
+We set stack, checked CPU and now can move on to the next step.
 
 Calculate relocation address
 --------------------------------------------------------------------------------
