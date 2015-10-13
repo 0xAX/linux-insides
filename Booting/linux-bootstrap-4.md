@@ -221,7 +221,7 @@ We set stack, checked CPU and now can move on the next step.
 Calculate relocation address
 --------------------------------------------------------------------------------
 
-The next step is calculating relocation address for decompression if need. We can see following assembly code:
+The next step is calculating relocation address for decompression if needed. We can see the following assembly code:
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
@@ -239,7 +239,7 @@ The next step is calculating relocation address for decompression if need. We ca
 	addl	$z_extract_offset, %ebx
 ```
 
-First of all note on `CONFIG_RELOCATABLE` macro. This configuration option defined in the [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) and as we can read from it's description:
+First of all note on `CONFIG_RELOCATABLE` macro. This configuration option is defined in the [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) and as we can read from it's description:
 
 ```
 This builds a kernel image that retains relocation information
@@ -250,11 +250,11 @@ it has been loaded at and the compile time physical address
 (CONFIG_PHYSICAL_START) is used as the minimum location.
 ```
 
-In short words, this code calculates address where to move kernel for decompression put it to `ebx` register if the kernel is relocatable or bzimage will decompress itself above `LOAD_PHYSICAL_ADDR`.
+In short words, this code calculates the address to move the kernel to for decompression put it into the `ebx` register if the kernel is relocatable or bzimage will decompress itself above `LOAD_PHYSICAL_ADDR`.
 
-Let's look on the code. If we have `CONFIG_RELOCATABLE=n` in our kernel configuration file, it just puts `LOAD_PHYSICAL_ADDR` to the `ebx` register and adds `z_extract_offset` to `ebx`. As `ebx` is zero for now, it will contain `z_extract_offset`. Now let's try to understand these two values.
+Let's look at the code. If we have `CONFIG_RELOCATABLE=n` in our kernel configuration file, it just puts `LOAD_PHYSICAL_ADDR` into the `ebx` register and adds `z_extract_offset` to `ebx`. As `ebx` is zero for now, it will contain `z_extract_offset`. Now let's try to understand these two values.
 
-`LOAD_PHYSICAL_ADDR` is the macro which defined in the [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) and it looks like this:
+`LOAD_PHYSICAL_ADDR` is the macro which defined in [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) and it looks like this:
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -262,22 +262,22 @@ Let's look on the code. If we have `CONFIG_RELOCATABLE=n` in our kernel configur
 				& ~(CONFIG_PHYSICAL_ALIGN - 1))
 ```
 
-Here we calculates aligned address where kernel is loaded (`0x100000` or 1 megabyte in our case). `PHYSICAL_ALIGN` is an alignment value to which kernel should be aligned, it ranges from `0x200000` to `0x1000000` for x86_64. With the default values we will get 2 megabytes in the `LOAD_PHYSICAL_ADDR`:
+Here we calculate the aligned address where the kernel is loaded (`0x100000` or 1 megabyte in our case). `PHYSICAL_ALIGN` is an alignment value to which the kernel should be aligned, and it ranges from `0x200000` to `0x1000000` for x86_64. With the default values we will get 2 megabytes in the `LOAD_PHYSICAL_ADDR`:
 
 ```python
 >>> 0x100000 + (0x200000 - 1) & ~(0x200000 - 1)
 2097152
 ```
 
-After that we got alignment unit, we adds `z_extract_offset` (which is `0xe5c000` in my case) to the 2 megabytes. In the end we will get 17154048 byte offset. You can find `z_extract_offset` in the `arch/x86/boot/compressed/piggy.S`. This file generated in compile time by [mkpiggy](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/mkpiggy.c) program.
+After we retrieve the alignment unit, we add `z_extract_offset` (which is `0xe5c000` in my case) to the 2 megabytes. In the end we will get 17154048 bytes offset. You can find `z_extract_offset` in `arch/x86/boot/compressed/piggy.S`. This file is generated in compile time by the [mkpiggy](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/mkpiggy.c) program.
 
 Now let's try to understand the code if `CONFIG_RELOCATABLE` is `y`. 
 
-First of all we put `ebp` value to the `ebx` (remember that `ebp` contains address where we loaded) and `kernel_alignment` field from kernel setup header to the `eax` register. `kernel_alignment`  is a physical address of alignment required for the kernel. Next we do the same as in the previous case (when kernel is not relocatable), but we just use value of the `kernel_alignment` field as align unit and `ebx` (address where we loaded) as base address instead of `CONFIG_PHYSICAL_ALIGN` and `LOAD_PHYSICAL_ADDR`. 
+First of all we put the `ebp` value into `ebx` (remember that `ebp` contains address where we loaded) and `kernel_alignment` field from kernel setup header into the `eax` register. `kernel_alignment`  is a physical address of alignment required for the kernel. Next we do the same as in the previous case (when kernel is not relocatable), but we just use the value of the `kernel_alignment` field as the align unit and `ebx` (address where we loaded) as the base address instead of `CONFIG_PHYSICAL_ALIGN` and `LOAD_PHYSICAL_ADDR`. 
 
-After that we calculated address, we compare it with `LOAD_PHYSICAL_ADDR` and add `z_extract_offset` to it again or put `LOAD_PHYSICAL_ADDR` in the `ebx` if calculated address is less than we need.
+After we calculate the address, we compare it with `LOAD_PHYSICAL_ADDR` and add `z_extract_offset` to it again or put `LOAD_PHYSICAL_ADDR` in the `ebx` if the calculated address is less than we need.
 
-After all of this calculation we will have `ebp` which contains address where we loaded and `ebx` with address where to move kernel for decompression.
+After all of this calculation we will have `ebp` which contains the address where we loaded and `ebx` with the address to which the kernel will be moved for decompression.
 
 Preparation before entering long mode
 --------------------------------------------------------------------------------
