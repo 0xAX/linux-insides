@@ -322,17 +322,17 @@ Now we are almost finished with all preparations before we can move into 64-bit 
 Long mode
 --------------------------------------------------------------------------------
 
-Long mode is the native mode for x86_64 processors. First of all let's look on some difference between `x86_64` and `x86`.
+Long mode is the native mode for x86_64 processors. First of all let's look at some differences between `x86_64` and `x86`.
 
-It provides some features as:
+It provides features such as:
 
 * New 8 general purpose registers from `r8` to `r15` + all general purpose registers are 64-bit now
 * 64-bit instruction pointer - `RIP`
 * New operating mode - Long mode
 * 64-Bit Addresses and Operands
-* RIP Relative Addressing (we will see example if it in the next parts)
+* RIP Relative Addressing (we will see an example if it in the next parts)
 
-Long mode is an extension of legacy protected mode. It consists from two sub-modes:
+Long mode is an extension of legacy protected mode. It consists of two sub-modes:
 
 * 64-bit mode
 * compatibility mode
@@ -340,11 +340,11 @@ Long mode is an extension of legacy protected mode. It consists from two sub-mod
 To switch into 64-bit mode we need to do following things:
 
 * enable PAE (we already did it, see above)
-* build page tables and load the address of top level page table into `cr3` register 
+* build page tables and load the address of the top level page table into the `cr3` register 
 * enable `EFER.LME`
 * enable paging
 
-We already enabled `PAE` with setting the PAE bit in the `cr4` register. Now let's look on paging.
+We already enabled `PAE` by setting the PAE bit in the `cr4` register. Now let's look at paging.
 
 Early page tables initialization
 --------------------------------------------------------------------------------

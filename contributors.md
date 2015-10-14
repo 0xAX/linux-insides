@@ -74,4 +74,8 @@ Thank you to all contributors:
 * [Dennis Birkholz](https://github.com/dennisbirkholz)
 * [Anton Tyurin](https://github.com/noxiouz)
 * [Bogdan Kulbida](https://github.com/kulbida)
+<<<<<<< HEAD
 * [Matt Hudgins](https://github.com/mhudgins)
+=======
+* [Ruth Grace Wong](https://github.com/ruthgrace)
+>>>>>>> fixed grammar mistakes in linux-bootstrap-4.md, Long mode section
