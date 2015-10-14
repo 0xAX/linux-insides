@@ -9,7 +9,7 @@ This is the fifth part of the `Kernel booting process` series. We saw transition
 Preparation before kernel decompression
 --------------------------------------------------------------------------------
 
-We stopped right before jump on 64-bit entry point - `startup_64` which located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) source code file. We already saw the jump to the `startup_64` in the `startup_32`:
+We stopped right before the jump on the 64-bit entry point - `startup_64` which is located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) source code file. We already saw the jump to the `startup_64` in the `startup_32`:
 
 ```assembly
 	pushl	$__KERNEL_CS
@@ -24,7 +24,7 @@ We stopped right before jump on 64-bit entry point - `startup_64` which located 
 	lret
 ```
 
-in the previous part, `startup_64` starts to work. Since we loaded the new Global Descriptor Table and there was CPU transition in other mode (64-bit mode in our case), we can see setup of the data segments:
+in the previous part, `startup_64` starts to work. Since we loaded the new Global Descriptor Table and there was CPU transition in other mode (64-bit mode in our case), we can see the setup of the data segments:
 
 ```assembly
 	.code64
@@ -38,9 +38,9 @@ ENTRY(startup_64)
 	movl	%eax, %gs
 ```
 
-in the beginning of the `startup_64`. All segment registers besides `cs` points now to the `ds` which is `0x18` (if you don't understand why it is `0x18`, read the previous part).
+in the beginning of the `startup_64`. All segment registers besides `cs` now point to the `ds` which is `0x18` (if you don't understand why it is `0x18`, read the previous part).
 
-The next step is computation of difference between where kernel was compiled and where it was loaded:
+The next step is computation of difference between where the kernel was compiled and where it was loaded:
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
@@ -58,9 +58,9 @@ The next step is computation of difference between where kernel was compiled and
 	leaq	z_extract_offset(%rbp), %rbx
 ```
 
-`rbp` contains decompressed kernel start address and after this code executed `rbx` register will contain address where to relocate the kernel code for decompression. We already saw code like this in the `startup_32` ( you can read about it in the previous part - [Calculate relocation address](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#calculate-relocation-address)), but we need to do this calculation again because bootloader can use 64-bit boot protocol and `startup_32` just will not be executed in this case.
+`rbp` contains the decompressed kernel start address and after this code executes `rbx` register will contain address to relocate the kernel code for decompression. We already saw code like this in the `startup_32` ( you can read about it in the previous part - [Calculate relocation address](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#calculate-relocation-address)), but we need to do this calculation again because the bootloader can use 64-bit boot protocol and `startup_32` just will not be executed in this case.
 
-In the next step we can see setup of the stack and reset of flags register:
+In the next step we can see setup of the stack and reset of the flags register:
 
 ```assembly
 	leaq	boot_stack_end(%rbx), %rsp
@@ -84,7 +84,7 @@ boot_stack_end:
 
 It located in the `.bss` section right before `.pgtable`. You can look at [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) to find it.
 
-As we set the stack, now we can copy the compressed kernel to the address that we got above, when we calculated the relocation address of the decompressed kernel. Let's look on this code:
+As we set the stack, now we can copy the compressed kernel to the address that we got above, when we calculated the relocation address of the decompressed kernel. Let's look at this code:
 
 ```assembly
 	pushq	%rsi
@@ -98,9 +98,9 @@ As we set the stack, now we can copy the compressed kernel to the address that w
 	popq	%rsi
 ```
 
-First of all we push `rsi` to the stack. We need save value of `rsi`, because this register now stores pointer to the `boot_params` real mode structure (you must remember this structure, we filled it in the start of kernel setup). In the end of this code we'll restore pointer to the `boot_params` into `rsi` again. 
+First of all we push `rsi` to the stack. We need save the value of `rsi`, because this register now stores a pointer to the `boot_params` real mode structure (you must remember this structure, we filled it in the start of kernel setup). In the end of this code we'll restore the pointer to the `boot_params` into `rsi` again. 
 
-The next two `leaq` instructions calculates effective address of the `rip` and `rbx` with `_bss - 8` offset and put it to the `rsi` and `rdi`. Why we calculate this addresses? Actually compressed kernel image located between this copying code (from `startup_32` to the current code) and the decompression code. You can verify this by looking on the linker script - [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S):
+The next two `leaq` instructions calculates effective address of the `rip` and `rbx` with `_bss - 8` offset and put it to the `rsi` and `rdi`. Why do we calculate these addresses? Actually the compressed kernel image is located between this copying code (from `startup_32` to the current code) and the decompression code. You can verify this by looking at the linker script - [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S):
 
 ```
 	. = 0;
@@ -146,15 +146,15 @@ relocated:
 ...
 ```
 
-And `.rodata..compressed` contains compressed kernel image. 
+And `.rodata..compressed` contains the compressed kernel image. 
 
 So `rsi` will contain `rip` relative address of the `_bss - 8` and `rdi` will contain relocation relative address of the ``_bss - 8`. As we store these addresses in register, we put the address of `_bss` to the `rcx` register. As you can see in the `vmlinux.lds.S`, it located in the end of all sections with the setup/kernel code. Now we can start to copy data from `rsi` to `rdi` by 8 bytes with `movsq` instruction. 
 
-Note that there is `std` instruction before data copying, it sets `DF` flag and it means that `rsi` and `rdi` will be decremeted or in other words, we will crbxopy bytes in backwards. 
+Note that there is `std` instruction before data copying, it sets `DF` flag and it means that `rsi` and `rdi` will be decremented or in other words, we will copy bytes in backwards. 
 
 In the end we clear `DF` flag with `cld` instruction and restore `boot_params` structure to the `rsi`.
 
-After it we get `.text` section address and jump to it:
+After this we get `.text` section address and jump to it:
 
 ```assembly
 	leaq	relocated(%rbx), %rax
