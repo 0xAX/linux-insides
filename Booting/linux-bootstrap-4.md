@@ -430,7 +430,7 @@ Our early page table structure are done, it maps 4 gigabytes of memory and now w
 
 That's all now we can see transition to the long mode.
 
-Transition to the long mode
+Transition to long mode
 --------------------------------------------------------------------------------
 
 First of all we need to set the `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
