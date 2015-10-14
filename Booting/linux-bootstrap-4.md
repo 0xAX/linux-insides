@@ -349,17 +349,17 @@ We already enabled `PAE` with setting the PAE bit in the `cr4` register. Now let
 Early page tables initialization
 --------------------------------------------------------------------------------
 
-Before we can move in the 64-bit mode, we need to build page tables, so, let's look on building of early 4G boot page tables. 
+Before we can move into 64-bit mode, we need to build page tables, so, let's look at the building of early 4G boot page tables. 
 
 **NOTE: I will not describe theory of virtual memory here, if you need to know more about it, see links in the end**
 
-Linux kernel uses 4-level paging, and generally we build 6 page tables:
+The Linux kernel uses 4-level paging, and generally we build 6 page tables:
 
 * One PML4 table
 * One PDP  table
 * Four Page Directory tables
 
-Let's look on the implementation of it. First of all we clear buffer for the page tables in the memory. Every table is 4096 bytes, so we need 24 kilobytes buffer:
+Let's look at the implementation of it. First of all we clear the buffer for the page tables in memory. Every table is 4096 bytes, so we need 24 kilobytes buffer:
 
 ```assembly
 	leal	pgtable(%ebx), %edi
@@ -368,7 +368,7 @@ Let's look on the implementation of it. First of all we clear buffer for the pag
 	rep	stosl
 ```
 
-We put address which stored in `ebx` (remember that `ebx` contains the address where to relocate kernel for decompression) with `pgtable` offset to the `edi` register. `pgtable` defined in the end of `head_64.S` and looks:
+We put the address stored in `ebx` (remember that `ebx` contains the address to relocate the kernel for decompression) with `pgtable` offset to the `edi` register. `pgtable` is defined in the end of `head_64.S` and looks:
 
 ```assembly
 	.section ".pgtable","a",@nobits
@@ -377,9 +377,9 @@ pgtable:
 	.fill 6*4096, 1, 0
 ```
 
-It is in the `.pgtable` section and it size is 24 kilobytes. After we put address to the `edi`, we zero out `eax` register and writes zeros to the buffer with `rep stosl` instruction.
+It is in the `.pgtable` section and its size is 24 kilobytes. After we put the address in `edi`, we zero out the `eax` register and write zeros to the buffer with the `rep stosl` instruction.
 
-Now we can build top level page table - `PML4` with:
+Now we can build the top level page table - `PML4` - with:
 
 ```assembly
 	leal	pgtable + 0(%ebx), %edi
@@ -387,9 +387,9 @@ Now we can build top level page table - `PML4` with:
 	movl	%eax, 0(%edi)
 ```
 
-Here we get address which stored in the `ebx` with `pgtable` offset and put it to the `edi`. Next we put this address with offset `0x1007` to the `eax` register. `0x1007` is 4096 bytes (size of the PML4) + 7 (PML4 entry flags - `PRESENT+RW+USER`) and puts `eax` to the `edi`. After this manipulations `edi` will contain the address of the first Page Directory Pointer Entry with flags - `PRESENT+RW+USER`.
+Here we get the address stored in the `ebx` with `pgtable` offset and put it in `edi`. Next we put this address with offset `0x1007` in the `eax` register. `0x1007` is 4096 bytes (size of the PML4) + 7 (PML4 entry flags - `PRESENT+RW+USER`) and puts `eax` in `edi`. After this manipulation `edi` will contain the address of the first Page Directory Pointer Entry with flags - `PRESENT+RW+USER`.
 
-In the next step we build 4 Page Directory entry in the Page Directory Pointer table, where first entry will be with `0x7` flags and other with `0x8`:
+In the next step we build 4 Page Directory entries in the Page Directory Pointer table, where the first entry will be with `0x7` flags and the others with `0x8`:
 
 ```assembly
 	leal	pgtable + 0x1000(%ebx), %edi
@@ -402,11 +402,11 @@ In the next step we build 4 Page Directory entry in the Page Directory Pointer t
 	jnz	1b
 ```
 
-We put base address of the page directory pointer table to the `edi` and address of the first page directory pointer entry to the `eax`. Put `4` to the `ecx` register, it will be counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register. 
+We put the base address of the page directory pointer table in `edi` and the address of the first page directory pointer entry in `eax`. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register. 
 
-After this `edi` will contain address of the first page directory pointer entry with flags `0x7`. Next we just calculates address of following page directory pointer entries with flags `0x8` and writes their addresses to the `edi`.
+After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries with flags `0x8` and write their addresses to `edi`.
 
-The next step is building of `2048` page table entries by 2 megabytes:
+The next step is building the `2048` page table entries by 2 megabytes:
 
 ```assembly
 	leal	pgtable + 0x2000(%ebx), %edi
@@ -419,16 +419,16 @@ The next step is building of `2048` page table entries by 2 megabytes:
 	jnz	1b
 ```
 
-Here we do almost the same that in the previous example, just first entry will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ` and all another with `0x8`. In the end we will have 2048 pages by 2 megabytes.
+Here we do almost the same as in the previous example, except the first entry will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ` and all other entries with `0x8`. In the end we will have 2048 pages by 2 megabytes.
 
-Our early page table structure are done, it maps 4 gigabytes of memory and now we can put address of the high-level page table - `PML4` to the `cr3` control register:
+Our early page table structure are done, it maps 4 gigabytes of memory and now we can put the address of the high-level page table - `PML4` - in `cr3` control register:
 
 ```assembly
 	leal	pgtable(%ebx), %eax
 	movl	%eax, %cr3
 ```
 
-That's all now we can see transition to the long mode.
+That's all. Now we can see transition to the long mode.
 
 Transition to the long mode
 --------------------------------------------------------------------------------
