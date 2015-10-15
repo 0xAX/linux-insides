@@ -164,7 +164,7 @@ After it we get `.text` section address and jump to it:
 Last preparation before kernel decompression
 --------------------------------------------------------------------------------
 
-`.text` sections start with the `relocated` label. For the start there is clearing of the `bss` section with:
+The `.text` section starts with the `relocated` label. For the start there is clearing of the `bss` section with:
 
 ```assembly
 	xorl	%eax, %eax
