@@ -89,10 +89,10 @@ endif
 
 Now we know where to start, so let's do it.
 
-Reload the segments if need
+Reload the segments if needed
 --------------------------------------------------------------------------------
 
-As i wrote above, we start in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S). First of all we can see before `startup_32` definition:
+As I wrote above, we start in [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S). First of all we can see before the `startup_32` definition:
 
 ```assembly
     __HEAD
@@ -100,7 +100,7 @@ As i wrote above, we start in the [arch/x86/boot/compressed/head_64.S](https://g
 ENTRY(startup_32)
 ```
 
-`__HEAD` defined in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) and looks as:
+`__HEAD` is defined in [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) and looks like:
 
 ```C
 #define __HEAD		.section	".head.text","ax"
@@ -119,17 +119,17 @@ SECTIONS
 	}
 ```
 
-Note on `. = 0;`. `.` is a special variable of linker - location counter. Assigning a value to it, is an offset relative to the offset of the segment. As we assign zero to it, we can read from comments:
+Note on `. = 0;`. `.` is a special variable of linker - location counter. The value assigned to it is an offset relative to the offset of the segment. As we assign zero to it, we can read from comments:
 
 ```
 Be careful parts of head_64.S assume startup_32 is at address 0.
 ```
 
-Ok, now we know where we are, and now the best time to look inside the `startup_32` function. 
+Ok, now we know where we are, and now is the best time to look inside the `startup_32` function. 
 
-In the start of the `startup_32` we can see the `cld` instruction which clears `DF` flag. After this, string operations like `stosb` and other will increment the index registers `esi` or `edi`.
+In the start of `startup_32` we can see the `cld` instruction which clears the `DF` flag. After this, string operations like `stosb` and others will increment the index registers `esi` or `edi`.
 
-The Next we can see the check of `KEEP_SEGMENTS` flag from `loadflags`. If you remember we already saw `loadflags` in the `arch/x86/boot/head.S` (there we checked flag `CAN_USE_HEAP`). Now we need to check `KEEP_SEGMENTS` flag. We can find description of this flag in the linux boot protocol:
+Next we can see the check of the `KEEP_SEGMENTS` flag from `loadflags`. If you remember we already saw `loadflags` in the `arch/x86/boot/head.S` (there we checked flag `CAN_USE_HEAP`). Now we need to check the `KEEP_SEGMENTS` flag. We can find a description of this flag in the linux boot protocol:
 
 ```
 Bit 6 (write): KEEP_SEGMENTS
@@ -140,7 +140,7 @@ Bit 6 (write): KEEP_SEGMENTS
 	a base of 0 (or the equivalent for their environment).
 ```
 	
-and if `KEEP_SEGMENTS` is not set, we need to set `ds`, `ss` and `es` registers to flat segment with base 0. That we do:
+and if `KEEP_SEGMENTS` is not set, we need to set `ds`, `ss` and `es` registers to a flat segment with base 0. That we do:
 
 ```C
 	testb $(1 << 6), BP_loadflags(%esi)
@@ -155,9 +155,9 @@ and if `KEEP_SEGMENTS` is not set, we need to set `ds`, `ss` and `es` registers 
 
 remember that `__BOOT_DS` is `0x18` (index of data segment in the Global Descriptor Table). If `KEEP_SEGMENTS` is not set, we jump to the label `1f` or update segment registers with `__BOOT_DS` if this flag is set. 
 
-If you read previous the [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), you can remember that we already updated segment registers in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S), so why we need to set up it again? Actually linux kernel has also 32-bit boot protocol, so `startup_32` can be first function which will be executed right after a bootloader transfers control to the kernel.
+If you read the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), you can remember that we already updated segment registers in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S), so why do we need to set up it again? Actually linux kernel also has the 32-bit boot protocol, so `startup_32` can be the first function which will be executed right after a bootloader transfers control to the kernel.
 
-As we checked `KEEP_SEGMENTS` flag and put the correct value to the segment registers, next step is calculate difference between where we loaded and compiled to run (remember that `setup.ld.S` contains `. = 0` at the start of the section):
+As we checked the `KEEP_SEGMENTS` flag and put the correct value to the segment registers, the next step is to calculate difference between where we loaded and compiled to run (remember that `setup.ld.S` contains `. = 0` at the start of the section):
 
 ```assembly
 	leal	(BP_scratch+4)(%esi), %esp
@@ -166,11 +166,11 @@ As we checked `KEEP_SEGMENTS` flag and put the correct value to the segment regi
 	subl	$1b, %ebp
 ```
 
-Here `esi` register contains address of the [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) structure. `boot_params` contains special field `scratch` with offset `0x1e4`. We are getting address of the `scratch` field + 4 bytes and put it to the `esp` register (we will use it as stack for these calculations). After this we can see call instruction and `1f` label as operand of it. What does it mean `call`? It means that it pushes `ebp` value in the stack, next `esp` value, next function arguments and return address in the end. After this we pop return address from the stack into `ebp` register (`ebp` will contain return address) and subtract address of the previous label `1`. 
+Here the `esi` register contains the address of the [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) structure. `boot_params` contains a special field `scratch` with offset `0x1e4`. We are getting the address of the `scratch` field + 4 bytes and puting it in the `esp` register (we will use it as stack for these calculations). After this we can see the call instruction and `1f` label as its operand. What does `call` mean? It means that it pushes the `ebp` value into the stack, then the `esp` value, then the function arguments and returns the address in the end. After this we pop return address from the stack into `ebp` register (`ebp` will contain return address) and subtract address of the previous label `1`. 
 
 After this we have address where we loaded in the `ebp` - `0x100000`.
 
-Now we can setup the stack and verify CPU that it has support of the long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions).
+Now we can setup the stack and verify that the CPU supports long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions).
 
 Stack setup and CPU verification
 --------------------------------------------------------------------------------
