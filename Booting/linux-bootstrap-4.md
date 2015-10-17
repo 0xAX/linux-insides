@@ -282,7 +282,7 @@ After all of this calculation we will have `ebp` which contains the address wher
 Preparation before entering long mode
 --------------------------------------------------------------------------------
 
-Now we need to do the last preparations before we can see transition to the 64-bit mode. At first we need to update Global Descriptor Table for this:
+Now we need to do the last preparations before we can see the transition to 64-bit mode. At first we need to update the Global Descriptor Table for this:
 
 ```assembly
 	leal	gdt(%ebp), %eax
@@ -290,9 +290,9 @@ Now we need to do the last preparations before we can see transition to the 64-b
 	lgdt	gdt(%ebp)
 ```
 
-Here we put the address from `ebp` with `gdt` offset to `eax` register, next we put this address into `ebp` with offset `gdt+2` and load Global Descriptor Table with the `lgdt` instruction. 
+Here we put the address from `ebp` with `gdt` offset into the `eax` register, next we put this address into `ebp` with offset `gdt+2` and load the Global Descriptor Table with the `lgdt` instruction. 
 
-Let's look on Global Descriptor Table definition:
+Let's look at the Global Descriptor Table definition:
 
 ```assembly
 	.data
@@ -307,9 +307,9 @@ gdt:
 	.quad   0x0000000000000000	/* TS continued */
 ```
 
-It defined in the same file in the `.data` section. It contains 5 descriptors: null descriptor, for kernel code segment, kernel data segment and two task descriptors. We already loaded GDT in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), we're doing almost the same here, but descriptors with `CS.L = 1` and `CS.D = 0` for execution in the 64 bit mode.
+It is defined in the same file as the `.data` section. It contains 5 descriptors: null descriptor, for kernel code segment, kernel data segment and two task descriptors. We already loaded the GDT in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), we're doing almost the same here, but descriptors with `CS.L = 1` and `CS.D = 0` for execution in 64 bit mode.
 
-After we have loaded Global Descriptor Table, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) mode with putting value of `cr4` register into `eax`, setting 5 bit in it and load it again in the `cr4` :
+After we have loaded the Global Descriptor Table, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) mode by putting the value of the `cr4` register into `eax`, setting 5 bit in it and loading it again into `cr4` :
 
 ```assembly
 	movl	%cr4, %eax
@@ -317,7 +317,7 @@ After we have loaded Global Descriptor Table, we must enable [PAE](http://en.wik
 	movl	%eax, %cr4
 ```
 
-Now we finished almost with all preparations before we can move into 64-bit mode. The last step is to build page tables, but before some information about long mode.
+Now we are almost finished with all preparations before we can move into 64-bit mode. The last step is to build page tables, but before that, here is some information about long mode.
 
 Long mode
 --------------------------------------------------------------------------------
