@@ -384,10 +384,10 @@ struct gdt_ptr {
 
 where we can see - 16-bit length(`len`) of IDT and 32-bit pointer to it (More details about IDT and interruptions we will see in the next posts). ` __attribute__((packed))` means here that size of `gdt_ptr` minimum as required. So size of the `gdt_ptr` will be 6 bytes here or 48 bits. (Next we will load pointer to the `gdt_ptr` to the `GDTR` register and you might remember from the previous post that it is 48-bits in size).
 
-Setup Global Descriptor Table
+Set up Global Descriptor Table
 --------------------------------------------------------------------------------
 
-Next is the setup of Global Descriptor Table (GDT). We can see `setup_gdt` function which sets up GDT (you can read about it in the [Kernel booting process. Part 2.](linux-bootstrap-2.md#protected-mode)). There is definition of the `boot_gdt` array in this function, which contains definition of the three segments:
+Next is the setup of the Global Descriptor Table (GDT). We can see the `setup_gdt` function which sets up GDT (you can read about it in the [Kernel booting process. Part 2.](linux-bootstrap-2.md#protected-mode)). There is a definition of the `boot_gdt` array in this function, which contains the definition of the three segments:
 
 ```C
 	static const u64 boot_gdt[] __attribute__((aligned(16))) = {
@@ -397,7 +397,7 @@ Next is the setup of Global Descriptor Table (GDT). We can see `setup_gdt` funct
 	};
 ```
 
-For code, data and TSS (Task State Segment). We will not use task state segment for now, it was added there to make Intel VT happy as we can see in the comment line (if you're interesting you can find commit which describes it - [here](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31)). Let's look on `boot_gdt`. First of all note that it has `__attribute__((aligned(16)))` attribute. It means that this structure will be aligned by 16 bytes. Let's look at a simple example:
+For code, data and TSS (Task State Segment). We will not use the task state segment for now, it was added there to make Intel VT happy as we can see in the comment line (if you're interested you can find commit which describes it - [here](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31)). Let's look at `boot_gdt`. First of all note that it has the `__attribute__((aligned(16)))` attribute. It means that this structure will be aligned by 16 bytes. Let's look at a simple example:
 ```C
 #include <stdio.h>
 
@@ -421,7 +421,7 @@ int main(void)
 }
 ```
 
-Technically structure which contains one `int` field, must be 4 bytes, but here `aligned` structure will be 16 bytes:
+Technically a structure which contains one `int` field must be 4 bytes, but here `aligned` structure will be 16 bytes:
 
 ```
 $ gcc test.c -o test && test
@@ -431,13 +431,13 @@ Aligned - 16
 
 `GDT_ENTRY_BOOT_CS` has index - 2 here, `GDT_ENTRY_BOOT_DS` is `GDT_ENTRY_BOOT_CS + 1` and etc. It starts from 2, because first is a mandatory null descriptor (index - 0) and the second is not used (index - 1).
 
-`GDT_ENTRY` is a macro which takes flags, base and limit and builds GDT entry. For example let's look on the code segment entry. `GDT_ENTRY` takes following values:
+`GDT_ENTRY` is a macro which takes flags, base and limit and builds GDT entry. For example let's look at the code segment entry. `GDT_ENTRY` takes following values:
 
 * base  - 0
 * limit - 0xfffff
 * flags - 0xc09b
 
-What does it mean? Segment's base address is 0, limit (size of segment) is - `0xffff` (1 MB). Let's look on flags. It is `0xc09b` and it will be:
+What does this mean? The segment's base address is 0, and the limit (size of segment) is - `0xffff` (1 MB). Let's look at the flags. It is `0xc09b` and it will be:
 
 ```
 1100 0000 1001 1011
@@ -458,23 +458,23 @@ in binary. Let's try to understand what every bit means. We will go through all 
 
 You can read more about every bit in the previous [post](linux-bootstrap-2.md) or in the [Intel® 64 and IA-32 Architectures Software Developer's Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html).
 
-After this we get length of GDT with:
+After this we get the length of the GDT with:
 
 ```C
 gdt.len = sizeof(boot_gdt)-1;
 ```
 
-We get size of `boot_gdt` and subtract 1 (the last valid address in the GDT).
+We get the size of `boot_gdt` and subtract 1 (the last valid address in the GDT).
 
-Next we get pointer to the GDT with:
+Next we get a pointer to the GDT with:
 
 ```C
 gdt.ptr = (u32)&boot_gdt + (ds() << 4);
 ```
 
-Here we just get address of `boot_gdt` and add it to address of data segment left-shifted by 4 bits (remember we're in the real mode now).
+Here we just get the address of `boot_gdt` and add it to the address of the data segment left-shifted by 4 bits (remember we're in the real mode now).
 
-Lastly we execute `lgdtl` instruction to load GDT into GDTR register:
+Lastly we execute the `lgdtl` instruction to load the GDT into the GDTR register:
 
 ```C
 asm volatile("lgdtl %0" : : "m" (gdt));
