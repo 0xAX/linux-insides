@@ -58,7 +58,7 @@ If you read source code of the kernel, you'll see these very often and so it wil
 Heap API
 --------------------------------------------------------------------------------
 
-After we have `vid_mode` from the `boot_params.hdr` in the `set_video` function we can see call to `RESET_HEAP` function. `RESET_HEAP` is a macro which defined in the [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199). It is defined as:
+After we have `vid_mode` from `boot_params.hdr` in the `set_video` function we can see a call to the `RESET_HEAP` function. `RESET_HEAP` is a macro which is defined in [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199). It is defined as:
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
@@ -70,9 +70,9 @@ If you have read the second part, you will remember that we initialized the heap
 #define RESET_HEAP()
 ```
 
-As we saw just above it resets the heap by setting the `HEAP` variable equal to `_end`, where `_end` is just `extern char _end[];`
+As we saw just above, it resets the heap by setting the `HEAP` variable equal to `_end`, where `_end` is just `extern char _end[];`
 
-Next is `GET_HEAP` macro:
+Next is the `GET_HEAP` macro:
 
 ```C
 #define GET_HEAP(type, n) \
@@ -105,7 +105,7 @@ and further we will see its usage, something like:
 saved.data = GET_HEAP(u16, saved.x * saved.y);
 ```
 
-Let's try to understand how `__get_heap` works. We can see here that `HEAP` (which is equal to `_end` after `RESET_HEAP()`) is the address of aligned memory according to `a` parameter. After it we save memory address from `HEAP` to the `tmp` variable, move `HEAP` to the end of allocated block and return `tmp` which is start address of allocated memory.
+Let's try to understand how `__get_heap` works. We can see here that `HEAP` (which is equal to `_end` after `RESET_HEAP()`) is the address of aligned memory according to the `a` parameter. After this we save the memory address from `HEAP` to the `tmp` variable, move `HEAP` to the end of the allocated block and return `tmp` which is the start address of allocated memory.
 
 And the last function is:
 
@@ -118,7 +118,7 @@ static inline bool heap_free(size_t n)
 
 which subtracts value of the `HEAP` from the `heap_end` (we calculated it in the previous [part](linux-bootstrap-2.md)) and returns 1 if there is enough memory for `n`.
 
-That's all. Now we have simple API for heap and can setup video mode.
+That's all. Now we have a simple API for heap and can setup video mode.
 
 Setup video mode
 --------------------------------------------------------------------------------
