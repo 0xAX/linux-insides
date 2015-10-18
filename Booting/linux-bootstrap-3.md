@@ -276,13 +276,13 @@ After this we have set video mode and now we can switch to the protected mode.
 Last preparation before transition into protected mode
 --------------------------------------------------------------------------------
 
-We can see the last function call - `go_to_protected_mode` in the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As the comment says: `Do the last things and invoke protected mode`, so let's see these last things and switch into the protected mode.
+We can see the last function call - `go_to_protected_mode` - in [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As the comment says: `Do the last things and invoke protected mode`, so let's see these last things and switch into protected mode.
 
-`go_to_protected_mode` defined in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104). It contains some functions which make last preparations before we can jump into protected mode, so let's look on it and try to understand what they do and how it works.
+`go_to_protected_mode` is defined in [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104). It contains some functions which make the last preparations before we can jump into protected mode, so let's look at it and try to understand what they do and how it works.
 
-First is the call to `realmode_switch_hook` function in the `go_to_protected_mode`. This function invokes real mode switch hook if it is present and disables [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Hooks are used if bootloader runs in a hostile environment. You can read more about hooks in the [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**).
+First is the call to the `realmode_switch_hook` function in `go_to_protected_mode`. This function invokes the real mode switch hook if it is present and disables [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Hooks are used if the bootloader runs in a hostile environment. You can read more about hooks in the [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**).
 
-`readlmode_swtich` hook presents pointer to the 16-bit real mode far subroutine which disables non-maskable interrupts. After `realmode_switch` hook (it isn't present for me) is checked, disabling of Non-Maskable Interrupts(NMI) occurs:
+The `realmode_switch` hook presents a pointer to the 16-bit real mode far subroutine which disables non-maskable interrupts. After `realmode_switch` hook (it isn't present for me) is checked, disabling of Non-Maskable Interrupts(NMI) occurs:
 
 ```assembly
 asm volatile("cli");
@@ -290,11 +290,11 @@ outb(0x80, 0x70);	/* Disable NMI */
 io_delay();
 ```
 
-At first there is inline assembly instruction with `cli` instruction which clears the interrupt flag (`IF`). After this, external interrupts are disabled. Next line disables NMI (non-maskable interrupt).
+At first there is an inline assembly instruction with a `cli` instruction which clears the interrupt flag (`IF`). After this, external interrupts are disabled. The next line disables NMI (non-maskable interrupt).
 
-Interrupt is a signal to the CPU which is emitted by hardware or software. After getting signal, CPU suspends current instructions sequence, saves its state and transfers control to the interrupt handler. After interrupt handler has finished it's work, it transfers control to the interrupted instruction. Non-maskable interrupts (NMI) are interrupts which are always processed, independently of permission. It cannot be ignored and is typically used to signal for non-recoverable hardware errors. We will not dive into details of interrupts now, but will discuss it in the next posts.
+An interrupt is a signal to the CPU which is emitted by hardware or software. After getting the signal, the CPU suspends the current instruction sequence, saves its state and transfers control to the interrupt handler. After the interrupt handler has finished it's work, it transfers control to the interrupted instruction. Non-maskable interrupts (NMI) are interrupts which are always processed, independently of permission. It cannot be ignored and is typically used to signal for non-recoverable hardware errors. We will not dive into details of interrupts now, but will discuss it in the next posts.
 
-Let's get back to the code. We can see that second line is writing `0x80` (disabled bit) byte to the `0x70` (CMOS Address register). After that call to the `io_delay` function occurs. `io_delay` causes a small delay and looks like:
+Let's get back to the code. We can see that second line is writing `0x80` (disabled bit) byte to `0x70` (CMOS Address register). After that, a call to the `io_delay` function occurs. `io_delay` causes a small delay and looks like:
 
 ```C
 static inline void io_delay(void)
@@ -306,7 +306,7 @@ static inline void io_delay(void)
 
 Outputting any byte to the port `0x80` should delay exactly 1 microsecond. So we can write any value (value from `AL` register in our case) to the `0x80` port. After this delay `realmode_switch_hook` function has finished execution and we can move to the next function.
 
-The next function is `enable_a20`, which enables [A20 line](http://en.wikipedia.org/wiki/A20_line). This function is defined in the [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/a20.c) and it tries to enable A20 gate with different methods. The first is `a20_test_short` function which checks is A20 already enabled or not with `a20_test` function:
+The next function is `enable_a20`, which enables [A20 line](http://en.wikipedia.org/wiki/A20_line). This function is defined in [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/a20.c) and it tries to enable the A20 gate with different methods. The first is the `a20_test_short` function which checks if A20 is already enabled or not with the `a20_test` function:
 
 ```C
 static int a20_test(int loops)
@@ -332,11 +332,11 @@ static int a20_test(int loops)
 }
 ```
 
-First of all we put `0x0000` to the `FS` register and `0xffff` to the `GS` register. Next we read value by address `A20_TEST_ADDR` (it is `0x200`) and put this value into `saved` variable and `ctr`.
+First of all we put `0x0000` in the `FS` register and `0xffff` in the `GS` register. Next we read the value in address `A20_TEST_ADDR` (it is `0x200`) and put this value into the `saved` variable and `ctr`.
 
-Next we write updated `ctr` value into `fs:gs` with `wrfs32` function, then delay for 1ms, and then read the value into the `GS` register by address `A20_TEST_ADDR+0x10`, if it's not zero we already have enabled A20 line. If A20 is disabled, we try to enable it with a different method which you can find in the `a20.c`. For example with call of `0x15` BIOS interrupt with `AH=0x2041` etc.
+Next we write an updated `ctr` value into `fs:gs` with the `wrfs32` function, then delay for 1ms, and then read the value from the `GS` register by address `A20_TEST_ADDR+0x10`, if it's not zero we already have enabled the A20 line. If A20 is disabled, we try to enable it with a different method which you can find in the `a20.c`. For example with call of `0x15` BIOS interrupt with `AH=0x2041` etc.
 
-If `enabled_a20` function finished with fail, print an error message and call function `die`. You can remember it from the first source code file where we started - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
+If the `enabled_a20` function finished with fail, print an error message and call function `die`. You can remember it from the first source code file where we started - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
 
 ```assembly
 die:
@@ -345,21 +345,21 @@ die:
 	.size	die, .-die
 ```
 
-After the A20 gate is successfully enabled, `reset_coprocessor` function is called:
+After the A20 gate is successfully enabled, the `reset_coprocessor` function is called:
  ```C
 outb(0, 0xf0);
 outb(0, 0xf1);
 ```
 This function clears the Math Coprocessor by writing `0` to `0xf0` and then resets it by writing `0` to `0xf1`.
 
-After this `mask_all_interrupts` function is called:
+After this, the `mask_all_interrupts` function is called:
 ```C
 outb(0xff, 0xa1);       /* Mask all interrupts on the secondary PIC */
 outb(0xfb, 0x21);       /* Mask all but cascade on the primary PIC */
 ```
 This masks all interrupts on the secondary PIC (Programmable Interrupt Controller) and primary PIC except for IRQ2 on the primary PIC.
 
-And after all of these preparations, we can see actual transition into protected mode.
+And after all of these preparations, we can see the actual transition into protected mode.
 
 Setup Interrupt Descriptor Table
 --------------------------------------------------------------------------------
