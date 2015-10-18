@@ -46,7 +46,7 @@ We can see here that `cs` register contains - `0x10` (as you can remember from t
 32-bit entry point
 --------------------------------------------------------------------------------
 
-We can find definition of the 32-bit entry point in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
+We can find the definition of the 32-bit entry point in [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 	__HEAD
@@ -58,14 +58,14 @@ ENTRY(startup_32)
 ENDPROC(startup_32)
 ```
 
-First of all why `compressed` directory? Actually `bzimage` is a gzipped `vmlinux + header + kernel setup code`. We saw the kernel setup code in the all of previous parts. So, the main goal of the `head_64.S` is to prepare for entering long mode, enter into it and decompress the kernel. We will see all of these steps besides kernel decompression in this part.
+First of all why `compressed` directory? Actually `bzimage` is a gzipped `vmlinux + header + kernel setup code`. We saw the kernel setup code in all of the previous parts. So, the main goal of the `head_64.S` is to prepare for entering long mode, enter into it and decompress the kernel. We will see all of these steps besides kernel decompression in this part.
 
 Also you can note that there are two files in the `arch/x86/boot/compressed` directory:
 
 * head_32.S
 * head_64.S
 
-We will see only `head_64.S` because we are learning linux kernel for `x86_64`. `head_32.S` even not compiled in our case. Let's look on the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile), we can see there following target:
+We will see only `head_64.S` because we are learning linux kernel for `x86_64`. `head_32.S` even not compiled in our case. Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile). We can see there the following target:
 
 ```Makefile
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
@@ -175,7 +175,7 @@ Now we can setup the stack and verify that the CPU supports long mode and [SSE](
 Stack setup and CPU verification
 --------------------------------------------------------------------------------
 
-The next we can see assembly code which setups new stack for kernel decompression:
+Next we can see assembly code which sets up a new stack for kernel decompression:
 
 ```assembly
 	movl	$boot_stack_end, %eax
@@ -183,7 +183,7 @@ The next we can see assembly code which setups new stack for kernel decompressio
 	movl	%eax, %esp
 ```
 
-`boots_stack_end` is in the `.bss` section, we can see definition of it in the end of `head_64.S`:
+`boots_stack_end` is in the `.bss` section. We can see the definition of it in the end of `head_64.S`:
 
 ```assembly
 	.bss
@@ -195,9 +195,9 @@ boot_stack:
 boot_stack_end:
 ```
 
-First of all we put address of the `boot_stack_end` into `eax` register and add to it value of the `ebp` (remember that `ebp` now contains address where we loaded - `0x100000`). In the end we just put `eax` value into `esp` and that's all, we have correct stack pointer.
+First of all we put the address of `boot_stack_end` into the `eax` register and add to it value of `ebp` (remember that `ebp` now contains the address where we loaded - `0x100000`). In the end we just put the `eax` value into `esp` and that's all, we have a correct stack pointer.
 
-The next step is CPU verification. Need to check that CPU has support of `long mode` and `SSE`:
+The next step is CPU verification. We need to check that the CPU supports `long mode` and `SSE`:
 
 ```assembly
 	call	verify_cpu
@@ -205,9 +205,9 @@ The next step is CPU verification. Need to check that CPU has support of `long m
 	jnz	no_longmode
 ```
 
-It just calls `verify_cpu` function from the [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) which contains a couple of calls of the `cpuid` instruction. `cpuid` is instruction which is used for getting information about processor. In our case it checks long mode and SSE support and returns `0` on success or `1` on fail in the `eax` register. 
+It just calls `verify_cpu` function from [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) which contains a couple of calls to the `cpuid` instruction. `cpuid` is the instruction which is used for getting information about the processor. In our case it checks long mode and SSE support and returns `0` on success or `1` on fail in the `eax` register. 
 
-If `eax` is not zero, we jump to the `no_longmode` label which just stops the CPU with `hlt` instruction while any hardware interrupt will not happen.
+If `eax` is not zero, we jump to the `no_longmode` label which just stops the CPU with a `hlt` instruction while any hardware interrupt will not happen.
 
 ```assembly
 no_longmode:
@@ -216,12 +216,12 @@ no_longmode:
 	jmp     1b
 ```
 
-We set stack, checked CPU and now can move on the next step.
+We set stack, checked CPU and now can move on to the next step.
 
 Calculate relocation address
 --------------------------------------------------------------------------------
 
-The next step is calculating relocation address for decompression if need. We can see following assembly code:
+The next step is calculating relocation address for decompression if needed. We can see the following assembly code:
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
@@ -239,7 +239,7 @@ The next step is calculating relocation address for decompression if need. We ca
 	addl	$z_extract_offset, %ebx
 ```
 
-First of all note on `CONFIG_RELOCATABLE` macro. This configuration option defined in the [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) and as we can read from it's description:
+First of all note on `CONFIG_RELOCATABLE` macro. This configuration option is defined in the [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) and as we can read from it's description:
 
 ```
 This builds a kernel image that retains relocation information
@@ -250,11 +250,11 @@ it has been loaded at and the compile time physical address
 (CONFIG_PHYSICAL_START) is used as the minimum location.
 ```
 
-In short words, this code calculates address where to move kernel for decompression put it to `ebx` register if the kernel is relocatable or bzimage will decompress itself above `LOAD_PHYSICAL_ADDR`.
+In short words, this code calculates the address to move the kernel to for decompression put it into the `ebx` register if the kernel is relocatable or bzimage will decompress itself above `LOAD_PHYSICAL_ADDR`.
 
-Let's look on the code. If we have `CONFIG_RELOCATABLE=n` in our kernel configuration file, it just puts `LOAD_PHYSICAL_ADDR` to the `ebx` register and adds `z_extract_offset` to `ebx`. As `ebx` is zero for now, it will contain `z_extract_offset`. Now let's try to understand these two values.
+Let's look at the code. If we have `CONFIG_RELOCATABLE=n` in our kernel configuration file, it just puts `LOAD_PHYSICAL_ADDR` into the `ebx` register and adds `z_extract_offset` to `ebx`. As `ebx` is zero for now, it will contain `z_extract_offset`. Now let's try to understand these two values.
 
-`LOAD_PHYSICAL_ADDR` is the macro which defined in the [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) and it looks like this:
+`LOAD_PHYSICAL_ADDR` is the macro which defined in [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) and it looks like this:
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -262,27 +262,27 @@ Let's look on the code. If we have `CONFIG_RELOCATABLE=n` in our kernel configur
 				& ~(CONFIG_PHYSICAL_ALIGN - 1))
 ```
 
-Here we calculates aligned address where kernel is loaded (`0x100000` or 1 megabyte in our case). `PHYSICAL_ALIGN` is an alignment value to which kernel should be aligned, it ranges from `0x200000` to `0x1000000` for x86_64. With the default values we will get 2 megabytes in the `LOAD_PHYSICAL_ADDR`:
+Here we calculate the aligned address where the kernel is loaded (`0x100000` or 1 megabyte in our case). `PHYSICAL_ALIGN` is an alignment value to which the kernel should be aligned, and it ranges from `0x200000` to `0x1000000` for x86_64. With the default values we will get 2 megabytes in the `LOAD_PHYSICAL_ADDR`:
 
 ```python
 >>> 0x100000 + (0x200000 - 1) & ~(0x200000 - 1)
 2097152
 ```
 
-After that we got alignment unit, we adds `z_extract_offset` (which is `0xe5c000` in my case) to the 2 megabytes. In the end we will get 17154048 byte offset. You can find `z_extract_offset` in the `arch/x86/boot/compressed/piggy.S`. This file generated in compile time by [mkpiggy](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/mkpiggy.c) program.
+After we retrieve the alignment unit, we add `z_extract_offset` (which is `0xe5c000` in my case) to the 2 megabytes. In the end we will get 17154048 bytes offset. You can find `z_extract_offset` in `arch/x86/boot/compressed/piggy.S`. This file is generated in compile time by the [mkpiggy](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/mkpiggy.c) program.
 
 Now let's try to understand the code if `CONFIG_RELOCATABLE` is `y`. 
 
-First of all we put `ebp` value to the `ebx` (remember that `ebp` contains address where we loaded) and `kernel_alignment` field from kernel setup header to the `eax` register. `kernel_alignment`  is a physical address of alignment required for the kernel. Next we do the same as in the previous case (when kernel is not relocatable), but we just use value of the `kernel_alignment` field as align unit and `ebx` (address where we loaded) as base address instead of `CONFIG_PHYSICAL_ALIGN` and `LOAD_PHYSICAL_ADDR`. 
+First of all we put the `ebp` value into `ebx` (remember that `ebp` contains address where we loaded) and `kernel_alignment` field from kernel setup header into the `eax` register. `kernel_alignment`  is a physical address of alignment required for the kernel. Next we do the same as in the previous case (when kernel is not relocatable), but we just use the value of the `kernel_alignment` field as the align unit and `ebx` (address where we loaded) as the base address instead of `CONFIG_PHYSICAL_ALIGN` and `LOAD_PHYSICAL_ADDR`. 
 
-After that we calculated address, we compare it with `LOAD_PHYSICAL_ADDR` and add `z_extract_offset` to it again or put `LOAD_PHYSICAL_ADDR` in the `ebx` if calculated address is less than we need.
+After we calculate the address, we compare it with `LOAD_PHYSICAL_ADDR` and add `z_extract_offset` to it again or put `LOAD_PHYSICAL_ADDR` in the `ebx` if the calculated address is less than we need.
 
-After all of this calculation we will have `ebp` which contains address where we loaded and `ebx` with address where to move kernel for decompression.
+After all of this calculation we will have `ebp` which contains the address where we loaded and `ebx` with the address to which the kernel will be moved for decompression.
 
 Preparation before entering long mode
 --------------------------------------------------------------------------------
 
-Now we need to do the last preparations before we can see transition to the 64-bit mode. At first we need to update Global Descriptor Table for this:
+Now we need to do the last preparations before we can see the transition to 64-bit mode. At first we need to update the Global Descriptor Table for this:
 
 ```assembly
 	leal	gdt(%ebp), %eax
@@ -290,9 +290,9 @@ Now we need to do the last preparations before we can see transition to the 64-b
 	lgdt	gdt(%ebp)
 ```
 
-Here we put the address from `ebp` with `gdt` offset to `eax` register, next we put this address into `ebp` with offset `gdt+2` and load Global Descriptor Table with the `lgdt` instruction. 
+Here we put the address from `ebp` with `gdt` offset into the `eax` register, next we put this address into `ebp` with offset `gdt+2` and load the Global Descriptor Table with the `lgdt` instruction. 
 
-Let's look on Global Descriptor Table definition:
+Let's look at the Global Descriptor Table definition:
 
 ```assembly
 	.data
@@ -307,9 +307,9 @@ gdt:
 	.quad   0x0000000000000000	/* TS continued */
 ```
 
-It defined in the same file in the `.data` section. It contains 5 descriptors: null descriptor, for kernel code segment, kernel data segment and two task descriptors. We already loaded GDT in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), we're doing almost the same here, but descriptors with `CS.L = 1` and `CS.D = 0` for execution in the 64 bit mode.
+It is defined in the same file as the `.data` section. It contains 5 descriptors: null descriptor, for kernel code segment, kernel data segment and two task descriptors. We already loaded the GDT in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), we're doing almost the same here, but descriptors with `CS.L = 1` and `CS.D = 0` for execution in 64 bit mode.
 
-After we have loaded Global Descriptor Table, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) mode with putting value of `cr4` register into `eax`, setting 5 bit in it and load it again in the `cr4` :
+After we have loaded the Global Descriptor Table, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) mode by putting the value of the `cr4` register into `eax`, setting 5 bit in it and loading it again into `cr4` :
 
 ```assembly
 	movl	%cr4, %eax
@@ -317,7 +317,7 @@ After we have loaded Global Descriptor Table, we must enable [PAE](http://en.wik
 	movl	%eax, %cr4
 ```
 
-Now we finished almost with all preparations before we can move into 64-bit mode. The last step is to build page tables, but before some information about long mode.
+Now we are almost finished with all preparations before we can move into 64-bit mode. The last step is to build page tables, but before that, here is some information about long mode.
 
 Long mode
 --------------------------------------------------------------------------------

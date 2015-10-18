@@ -164,7 +164,7 @@ After this we get `.text` section address and jump to it:
 Last preparation before kernel decompression
 --------------------------------------------------------------------------------
 
-`.text` sections starts with the `relocated` label. For the start there is clearing of the `bss` section with:
+The `.text` section starts with the `relocated` label. For the start there is clearing of the `bss` section with:
 
 ```assembly
 	xorl	%eax, %eax
@@ -194,7 +194,7 @@ In the end we can see the call of the `decompress_kernel` routine:
 	popq	%rsi
 ```
 
-Again we save `rsi` with pointer to `boot_params` structure and call `decompress_kernel` from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) with seven arguments. All arguments will be passed through the registers. We finished all preparation and now can look on the kernel decompression.
+Again we save `rsi` with a pointer to the `boot_params` structure and call `decompress_kernel` from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) with seven arguments. All arguments will be passed through the registers. We finished all preparation and now can look on the kernel decompression.
 
 Kernel decompression
 --------------------------------------------------------------------------------
