@@ -23,7 +23,7 @@ All code is actually for kernel - 3.18. If there are changes, I will update the 
 The Magic Power Button, What happens next?
 --------------------------------------------------------------------------------
 
-Despite that this is a series of posts about the Linux kernel, we will not start from the kernel code (at least not in this paragraph). Ok, you press the magic power button on your laptop or desktop computer and it startes to work. After the motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply), the power supply provides the computer with the proper amount of electricity. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to start the CPU. The CPU resets all leftover data in its registers and sets up predefined values for each of them.
+Despite that this is a series of posts about the Linux kernel, we will not start from the kernel code (at least not in this paragraph). Ok, you press the magic power button on your laptop or desktop computer and it starts to work. After the motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply), the power supply provides the computer with the proper amount of electricity. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to start the CPU. The CPU resets all leftover data in its registers and sets up predefined values for each of them.
 
 
 [80386](https://en.wikipedia.org/wiki/Intel_80386) and later CPUs define the following predefined data in CPU registers after the computer resets:
