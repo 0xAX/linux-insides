@@ -430,10 +430,10 @@ Our early page table structure are done, it maps 4 gigabytes of memory and now w
 
 That's all. Now we can see transition to the long mode.
 
-Transition to the long mode
+Transition to long mode
 --------------------------------------------------------------------------------
 
-First of all we need to set `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
+First of all we need to set the `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
 
 ```assembly
 	movl	$MSR_EFER, %ecx
@@ -442,16 +442,16 @@ First of all we need to set `EFER.LME` flag in the [MSR](http://en.wikipedia.org
 	wrmsr
 ```
 
-Here we put `MSR_EFER` flag (which defined in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7)) to the `ecx` register and call `rdmsr` instruction which reads [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executed, we will have result data in the `edx:eax` which depends on `ecx` value. We check  `EFER_LME` bit with `btsl` instruction and write data from `eax` to the `MSR` register with `wrmsr` instruction.
+Here we put the `MSR_EFER` flag (which is defined in [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7)) in the `ecx` register and call `rdmsr` instruction which reads the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executes, we will have the resulting data in `edx:eax` which depends on the `ecx` value. We check the `EFER_LME` bit with the `btsl` instruction and write data from `eax` to the `MSR` register with the `wrmsr` instruction.
 
-In next step we push address of the kernel segment code to the stack (we defined it in the GDT) and put address of the `startup_64` routine to the `eax`.
+In the next step we push the address of the kernel segment code to the stack (we defined it in the GDT) and put the address of the `startup_64` routine in `eax`.
 
 ```assembly
 	pushl	$__KERNEL_CS
 	leal	startup_64(%ebp), %eax
 ```
 
-After this we push this address to the stack and enable paging with setting `PG` and `PE` bits in the `cr0` register:
+After this we push this address to the stack and enable paging by setting `PG` and `PE` bits in the `cr0` register:
 
 ```assembly
 	movl	$(X86_CR0_PG | X86_CR0_PE), %eax
@@ -464,9 +464,9 @@ and call:
 lret
 ```
 
-Remember that we pushed address of the `startup_64` function to the stack in the previous step, and after `lret` instruction, CPU extracts address of it and jumps there. 
+Remember that we pushed the address of the `startup_64` function to the stack in the previous step, and after the `lret` instruction, the CPU extracts the address of it and jumps there. 
 
-After all of these steps we're finally in the 64-bit mode:
+After all of these steps we're finally in 64-bit mode:
 
 ```assembly
 	.code64
