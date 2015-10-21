@@ -4,14 +4,14 @@ Kernel booting process. Part 3.
 Video mode initialization and transition to protected mode
 --------------------------------------------------------------------------------
 
-This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call of the `set_video` routine from the [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). In this part, we will see:
+This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call of the `set_video` routine from [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). In this part, we will see:
 - video mode initialization in the kernel setup code,
-- preparation before switching into the protected mode,
+- preparation before switching into protected mode,
 - transition to protected mode
 
 **NOTE** If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also there are a couple of [links](linux-bootstrap-2.md#links) which can help you.
 
-As I wrote above, we will start from the `set_video` function which defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
+As I wrote above, we will start from the `set_video` function which is defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
 
 ```C
 u16 mode = boot_params.hdr.vid_mode;
@@ -37,7 +37,7 @@ vga=<mode>
 	line is parsed.
 ```
 
-So we can add `vga` option to the grub or another bootloader configuration file and it will pass this option to the kernel command line. This option can have different values as we can mentioned in the description, for example it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you will see a menu like this:
+So we can add `vga` option to the grub or another bootloader configuration file and it will pass this option to the kernel command line. This option can have different values as mentioned in the description. For example, it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you will see a menu like this:
 
 ![video mode setup menu](http://oi59.tinypic.com/ejcz81.jpg)
 
