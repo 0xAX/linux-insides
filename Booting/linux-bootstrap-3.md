@@ -46,14 +46,14 @@ which will ask to select a video mode. We will look at its implementation, but b
 Kernel data types
 --------------------------------------------------------------------------------
 
-Earlier we saw definitions of different data types like `u16` etc. in the kernel setup code. Let's look on a couple of data types provided by the kernel:
+Earlier we saw definitions of different data types like `u16` etc. in the kernel setup code. Let's look at a couple of data types provided by the kernel:
 
 
 | Type | char | short | int | long | u8 | u16 | u32 | u64 |
 |------|------|-------|-----|------|----|-----|-----|-----|
 | Size |  1   |   2   |  4  |   8  |  1 |  2  |  4  |  8  |
 
-If you read source code of the kernel, you'll see these very often and so it will be good to remember them.
+If you the read source code of the kernel, you'll see these very often and so it will be good to remember them.
 
 Heap API
 --------------------------------------------------------------------------------
