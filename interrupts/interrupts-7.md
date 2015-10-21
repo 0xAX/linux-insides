@@ -438,7 +438,7 @@ It is the end of the seventh part of the [Interrupts and Interrupt Handling](htt
 
 If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
 
 Links
 --------------------------------------------------------------------------------

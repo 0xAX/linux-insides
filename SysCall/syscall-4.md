@@ -22,7 +22,7 @@ In this part we will consider the way when we just launch an application from th
 
 ![ls shell](http://s14.postimg.org/d6jgidc7l/Screenshot_from_2015_09_07_17_31_55.png)
 
-Let's consider what does occur when we launch an application from the shell, what does shell do when we write program name, what does Linux kernel do etc. But before we will start to consider these interesting things, I want to warn that this book is about the Linux kernel. That's why we will see Linux kernel internals related stuff mostly in this part. We will not consider in details what does shell do, we will not consider complex cases, for example subshells etc.
+Let's consider what does occur when we launch an application from the shell, what does shell do when we write program name, what does Linux kernel do etc. But before we will start to consider these interesting things, I want to warn that this book is about the Linux kernel. That's why we will see Linux kernel insides related stuff mostly in this part. We will not consider in details what does shell do, we will not consider complex cases, for example subshells etc.
 
 My default shell is - [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29), so I will consider how do bash shell launches a program. So let's start. The `bash` shell as well as any program that written with [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) programming language starts from the [main](https://en.wikipedia.org/wiki/Entry_point) function. If you will look on the source code of the `bash` shell, you will find the `main` function in the [shell.c](https://github.com/bminor/bash/blob/master/shell.c#L357) source code file. This function makes many different things before the main thread loop of the `bash` started to work. For example this function:
 
@@ -396,7 +396,7 @@ Conclusion
 
 This is the end of the fourth and last part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from an user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run an user program.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new).
+If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
