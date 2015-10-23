@@ -76,3 +76,4 @@ Thank you to all contributors:
 * [Bogdan Kulbida](https://github.com/kulbida)
 * [Matt Hudgins](https://github.com/mhudgins)
 * [Ruth Grace Wong](https://github.com/ruthgrace)
+* [Jeremy Lacomis](https://github.com/jlacomis)
