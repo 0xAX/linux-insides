@@ -4,7 +4,7 @@ Linux kernel development
 Introduction
 --------------------------------------------------------------------------------
 
-As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in the university. It was already a long time ago and as I already said I didn't write low-level code at all. Some time ago I was interested in such things or in other words I understood that I can write programs, but actually I didn't understand how my program is arranged.
+As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things. I understood that I can write programs, but didn't actually understand how my program is arranged.
 
 After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many other things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work or how can my program talk with other computers via network. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers to my questions and I decided to go deeper in my research. I started to learn from the source code of the Linux kernel and tried to understand the things that I'm interested in. The source code of the Linux kernel didn't give me the answers to **all** of my questions, but now my knowledge about the Linux kernel and the processes around it is much better.
 
@@ -12,23 +12,23 @@ I'm writing this part nine and a half months after I've started to learn from th
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
-It seems that people are interested in the internals of the Linux kernel. Besides this, in all that time that I'm writing `linux-inside`, I have received many questions from different people like: how to start with the Linux kernel, what do I need to start contribute to the Linux kernel and and others like these. Generally people are interested contribute to open source project for different reasons and the Linux kernel is not exception:
+It seems that people are interested in the internals of the Linux kernel. Besides this, in all the time that I have been writing `linux-insides`, I have received many questions from different people about how to begin contributing to the Linux kernel. Generally people are interested in contributing to open source projects and the Linux kernel is not an exception:
 
 ![google-linux](http://s4.postimg.org/yg9z5zx0d/google_linux.png)
 
-So, seems that people are interested about Linux kernel development process. I thought it will be strange if the book about the Linux kernel will not contain a part that will describe how to take a part in the Linux kernel development and that's why I decided to write it. You will not find information about why you should be interested in contributing to the Linux kernel in this part. I see many benefits to learn source code of the Linux kernel. I don't know how about you, that's why I have no answer on this question. But if you are interested how to start with Linux kernel development, this part is for you.
+So, it seems that people are interested in the Linux kernel development process. I thought it would be strange if a book about the Linux kernel would not contain a part describing how to take a part in the Linux kernel development and that's why I decided to write it. You will not find information about why you should be interested in contributing to the Linux kernel in this part. But if you are interested how to start with Linux kernel development, this part is for you.
 
 Let's start.
 
 How to start with Linux kernel
 ---------------------------------------------------------------------------------
 
-First of all let's look how to get, build and run the Linux kernel. Actually you can run your custom build of the Linux kernel in two ways:
+First of all, let's see how to get, build, and run the Linux kernel. You can run your custom build of the Linux kernel in two ways:
 
 * Run the Linux kernel on a virtual machine;
 * Run the Linux kernel on real hardware.
 
-I'll provide descriptions for both methods. Before we will start to do something with the Linux kernel, we need to get it. There are a couple of ways how to do it. All depends on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific for your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
+I'll provide descriptions for both methods. Before we start doing anything with the Linux kernel, we need to get it. There are a couple of ways how to do it. It  depends on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific for your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
 
 In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade the version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will just need to execute the following commands:
 
@@ -63,14 +63,14 @@ I don't know how about you, but I prefer `github`. There is a [mirror](https://g
 $ git clone git@github.com:torvalds/linux.git
 ```
 
-Actually I'm using my [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute the following command:
+I  use my own [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute the following command:
 
 ```
 $ git checkout master
 $ git pull upstream master
 ```
 
-Note that the remote name of the main repository is `upstream`. To add a new remote with the main linux repository you can execute:
+Note that the remote name of the main repository is `upstream`. To add a new remote with the main Linux repository you can execute:
 
 ```
 git remote add upstream git@github.com:torvalds/linux.git
@@ -116,7 +116,7 @@ The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to gene
 
 And even `randconfig` to generate random Linux kernel configuration file. I will not write how to configure the Linux kernel, which options to enable and what not, because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
 
-Ok, for this moment we got the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is just execute:
+OK, we now have the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is to just execute:
 
 ```
 $ make
@@ -142,7 +142,7 @@ CRC 82703414
 Kernel: arch/x86/boot/bzImage is ready  (#73)
 ```
 
-command. To increase the speed of kernel compilation you can pass `-jN` command line argument to the `make` util, where `N` specifies the number of commands to run simultaneously:
+To increase the speed of kernel compilation you can pass `-jN` command line argument to `make`, where `N` specifies the number of commands to run simultaneously:
 
 ```
 $ make -j8
@@ -153,14 +153,14 @@ If you want to build Linux kernel for an architecture that differs from your cur
 * `ARCH` command line argument and the name of the target architecture;
 * `CROSS_COMPILER` command line argument and the cross-compiler tool prefix;
 
-For example if we want to compile the Linux kernel for the [arm64](https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features) with default kernel cnofiguration file, we need to execute following command:
+For example if we want to compile the Linux kernel for the [arm64](https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features) with default kernel configuration file, we need to execute following command:
 
 ```
 $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu- defconfig
 $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu-
 ```
 
-As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now we have compiled kernel and we can either install it on our computer or just run it in an emulator.
+As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now that we have compiled the kernel, we can either install it on our computer or just run it in an emulator.
 
 Installing Linux kernel
 --------------------------------------------------------------------------------
@@ -187,7 +187,7 @@ and directly the kernel itself:
 $ sudo make install
 ```
 
-From this moment we have installed new version of the Linux kernel and now we must tell the `bootloader` about it. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two differnet Linux distros: Fedora and Ubuntu. There are two different ways to update the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
+From this moment we have installed new version of the Linux kernel and now we must tell the `bootloader` about it. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two different Linux distros: Fedora and Ubuntu. There are two different ways to update the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
 
 ```shell
 #!/bin/bash
@@ -222,7 +222,7 @@ $ make menuconfig
 $ make -j4
 ```
 
-The `busybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) and etc. In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
+`busybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities). In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
 
 ![busysbox menu](http://s18.postimg.org/sj92uoweh/busybox.png)
 
@@ -240,7 +240,7 @@ $ make -j4
 $ sudo make install
 ```
 
-Ok, the `busybox` is installed from this moment and we can start to build our `initrd`. Do do this, we go to the previous `initrd` directory and:
+Now that `busybox` is installed, we can begin building our `initrd`. To do this, we go to the previous `initrd` directory and:
 
 ```
 $ cd ..
@@ -282,9 +282,9 @@ Consider using [ivandaviov/minimal](https://github.com/ivandavidov/minimal) to a
 Getting started with the Linux Kernel Development
 ---------------------------------------------------------------------------------
 
-The main point of this paragraph is answer on two questions: What to do and what not to do before you will send your first patch to the Linux kernel. Please, do not confuse this `to do` with `todo`. I have no answer what you can fix in the Linux kernel. I just want to tell you my workflow during experimenting with the Linux kernel source code.
+The main point of this paragraph is to answer two questions: What to do and what not to do before sending your first patch to the Linux kernel. Please, do not confuse this `to do` with `todo`. I have no answer what you can fix in the Linux kernel. I just want to tell you my workflow during experimenting with the Linux kernel source code.
 
-First of all I'm trying to pull last updates from the Linus's repo with the following commands:
+First of all I pull the latest updates from Linus's repo with the following commands:
 
 ```
 $ git checkout master
@@ -293,7 +293,7 @@ $ git pull upstream master
 
 After this my local repository with the Linux kernel source code is synced with the [mainline](https://github.com/torvalds/linux) repository. Now we can make some changes in the source code. As I already wrote, I have no advice for you where you can start and what `TODO` in the Linux kernel. But the best place for newbies is `staging` tree. In other words the set of drivers from the [drivers/staging](https://github.com/torvalds/linux/tree/master/drivers/staging). The maintainer of the `staging` tree is [Greg Kroah-Hartman](https://en.wikipedia.org/wiki/Greg_Kroah-Hartman) and the `staging` tree is that place where your trivial patch can be accepted. Let's look on a simple example that describes how to generate patch, check it and send to the [Linux kernel mail listing](https://lkml.org/).
 
-If we will look on the driver for the [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) based devices, we will see `dgap_sindex` function:
+If we will look on the driver for the [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) based devices, we will see the `dgap_sindex` function on line 295:
 
 ```C
 static char *dgap_sindex(char *string, char *group)
@@ -314,7 +314,7 @@ static char *dgap_sindex(char *string, char *group)
 }
 ```
 
-on the `295` line. This function looks for a match of any character in the group, and returns that position. During research of source code of the Linux kernel, I have noted that [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) source code file contains implementation of the `strpbrk` function that does the same that `dgap_sinidex`. It is not a good idea to use a custom implementation of a function that already exists. So we can remove the `dgap_sindex` function from the [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) source code file and use the `strpbrk` instead.
+This function looks for a match of any character in the group, and returns that position. During research of source code of the Linux kernel, I have noted that [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) source code file contains implementation of the `strpbrk` function that does the same that `dgap_sinidex`. It is not a good idea to use a custom implementation of a function that already exists. So we can remove the `dgap_sindex` function from the [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) source code file and use the `strpbrk` instead.
 
 First of all let's create new `git` branch based on the current master that synced with the Linux kernel mainline repo:
 
@@ -339,7 +339,7 @@ $ git add .
 $ git commit -s -v
 ```
 
-After the last command an editor will be openned that will be chosen from `$GIT_EDITOR` or `$EDITOR` environment variable. The `-s` command line argument will add `Signed-off-by` line by the committer at the end of the commit log message. You can find this line in the end of each commit message, for example - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771). The main point of this line is the tracking of who did a change. The `-v` option show unified diff between the HEAD commit and what would be committed at the bottom of the commit message. It is not necessary, but very useful sometimes. A couple of words about commit message. Actually a commit message consists from two parts:
+After the last command an editor will be opened that will be chosen from `$GIT_EDITOR` or `$EDITOR` environment variable. The `-s` command line argument will add `Signed-off-by` line by the committer at the end of the commit log message. You can find this line in the end of each commit message, for example - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771). The main point of this line is the tracking of who did a change. The `-v` option show unified diff between the HEAD commit and what would be committed at the bottom of the commit message. It is not necessary, but very useful sometimes. A couple of words about commit message. Actually a commit message consists from two parts:
 
 The first part is on the first line and contains short description of changes. It starts from the `[PATCH]` prefix followed by a subsystem, driver or architecture name and after `:` symbol short description. In our case it will be something like this:
 
