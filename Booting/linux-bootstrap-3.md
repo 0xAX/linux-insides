@@ -58,7 +58,7 @@ If you read source code of the kernel, you'll see these very often and so it wil
 Heap API
 --------------------------------------------------------------------------------
 
-After we have `vid_mode` from `boot_params.hdr` in the `set_video` function we can see a call to the `RESET_HEAP` function. `RESET_HEAP` is a macro which is defined in [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199). It is defined as:
+After we get `vid_mode` from `boot_params.hdr` in the `set_video` function, we can see the call to the `RESET_HEAP` function. `RESET_HEAP` is a macro which is defined in [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199). It is defined as:
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
