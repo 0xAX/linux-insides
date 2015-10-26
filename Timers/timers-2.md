@@ -192,7 +192,7 @@ for the `x86` architectures. Where the `vDSO` clock mode can be one of the:
 
 The last three fields are `wd_list`, `cs_last` and the `wd_last` depends on the `CONFIG_CLOCKSOURCE_WATCHDOG` kernel configuration option. First of all let's try to understand what is it `whatchdog`. In a simple words, watchdog is a timer that is used for detection of the computer malfunctions and recovering from it. All of these three fields contain watchdog related data that is used by the `clocksource` framework. If we will grep the Linux kernel source code, we will see that only [arch/x86/KConfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig#L54) kernel configuration file contains the `CONFIG_CLOCKSOURCE_WATCHDOG` kernel configuration option. So, why do `x86` and `x86_64` need in [watchdog](https://en.wikipedia.org/wiki/Watchdog_timer)? You already may know that all `x86` processors has special 64-bit register - [time stamp counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). This register contains number of [cycles](https://en.wikipedia.org/wiki/Clock_rate) since the reset. Sometimes the time stamp counter needs to be verified against another clock source. We will not see initialization of the `watchdog` timer in this part, before this we must learn more about timers.
 
-That's all. From this moment we know all fields of the `clocksource` structure. This knowledge will help us to learn internals of the `clocksource` framework.
+That's all. From this moment we know all fields of the `clocksource` structure. This knowledge will help us to learn insides of the `clocksource` framework.
 
 New clock source registration
 --------------------------------------------------------------------------------
