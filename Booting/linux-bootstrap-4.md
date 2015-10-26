@@ -322,17 +322,17 @@ Now we are almost finished with all preparations before we can move into 64-bit 
 Long mode
 --------------------------------------------------------------------------------
 
-Long mode is the native mode for x86_64 processors. First of all let's look on some difference between `x86_64` and `x86`.
+Long mode is the native mode for x86_64 processors. First of all let's look at some differences between `x86_64` and `x86`.
 
-It provides some features as:
+It provides features such as:
 
 * New 8 general purpose registers from `r8` to `r15` + all general purpose registers are 64-bit now
 * 64-bit instruction pointer - `RIP`
 * New operating mode - Long mode
 * 64-Bit Addresses and Operands
-* RIP Relative Addressing (we will see example if it in the next parts)
+* RIP Relative Addressing (we will see an example if it in the next parts)
 
-Long mode is an extension of legacy protected mode. It consists from two sub-modes:
+Long mode is an extension of legacy protected mode. It consists of two sub-modes:
 
 * 64-bit mode
 * compatibility mode
@@ -340,26 +340,26 @@ Long mode is an extension of legacy protected mode. It consists from two sub-mod
 To switch into 64-bit mode we need to do following things:
 
 * enable PAE (we already did it, see above)
-* build page tables and load the address of top level page table into `cr3` register 
+* build page tables and load the address of the top level page table into the `cr3` register 
 * enable `EFER.LME`
 * enable paging
 
-We already enabled `PAE` with setting the PAE bit in the `cr4` register. Now let's look on paging.
+We already enabled `PAE` by setting the PAE bit in the `cr4` register. Now let's look at paging.
 
 Early page tables initialization
 --------------------------------------------------------------------------------
 
-Before we can move in the 64-bit mode, we need to build page tables, so, let's look on building of early 4G boot page tables. 
+Before we can move into 64-bit mode, we need to build page tables, so, let's look at the building of early 4G boot page tables. 
 
 **NOTE: I will not describe theory of virtual memory here, if you need to know more about it, see links in the end**
 
-Linux kernel uses 4-level paging, and generally we build 6 page tables:
+The Linux kernel uses 4-level paging, and generally we build 6 page tables:
 
 * One PML4 table
 * One PDP  table
 * Four Page Directory tables
 
-Let's look on the implementation of it. First of all we clear buffer for the page tables in the memory. Every table is 4096 bytes, so we need 24 kilobytes buffer:
+Let's look at the implementation of it. First of all we clear the buffer for the page tables in memory. Every table is 4096 bytes, so we need 24 kilobytes buffer:
 
 ```assembly
 	leal	pgtable(%ebx), %edi
@@ -368,7 +368,7 @@ Let's look on the implementation of it. First of all we clear buffer for the pag
 	rep	stosl
 ```
 
-We put address which stored in `ebx` (remember that `ebx` contains the address where to relocate kernel for decompression) with `pgtable` offset to the `edi` register. `pgtable` defined in the end of `head_64.S` and looks:
+We put the address stored in `ebx` (remember that `ebx` contains the address to relocate the kernel for decompression) with `pgtable` offset to the `edi` register. `pgtable` is defined in the end of `head_64.S` and looks:
 
 ```assembly
 	.section ".pgtable","a",@nobits
@@ -377,9 +377,9 @@ pgtable:
 	.fill 6*4096, 1, 0
 ```
 
-It is in the `.pgtable` section and it size is 24 kilobytes. After we put address to the `edi`, we zero out `eax` register and writes zeros to the buffer with `rep stosl` instruction.
+It is in the `.pgtable` section and its size is 24 kilobytes. After we put the address in `edi`, we zero out the `eax` register and write zeros to the buffer with the `rep stosl` instruction.
 
-Now we can build top level page table - `PML4` with:
+Now we can build the top level page table - `PML4` - with:
 
 ```assembly
 	leal	pgtable + 0(%ebx), %edi
@@ -387,9 +387,9 @@ Now we can build top level page table - `PML4` with:
 	movl	%eax, 0(%edi)
 ```
 
-Here we get address which stored in the `ebx` with `pgtable` offset and put it to the `edi`. Next we put this address with offset `0x1007` to the `eax` register. `0x1007` is 4096 bytes (size of the PML4) + 7 (PML4 entry flags - `PRESENT+RW+USER`) and puts `eax` to the `edi`. After this manipulations `edi` will contain the address of the first Page Directory Pointer Entry with flags - `PRESENT+RW+USER`.
+Here we get the address stored in the `ebx` with `pgtable` offset and put it in `edi`. Next we put this address with offset `0x1007` in the `eax` register. `0x1007` is 4096 bytes (size of the PML4) + 7 (PML4 entry flags - `PRESENT+RW+USER`) and puts `eax` in `edi`. After this manipulation `edi` will contain the address of the first Page Directory Pointer Entry with flags - `PRESENT+RW+USER`.
 
-In the next step we build 4 Page Directory entry in the Page Directory Pointer table, where first entry will be with `0x7` flags and other with `0x8`:
+In the next step we build 4 Page Directory entries in the Page Directory Pointer table, where the first entry will be with `0x7` flags and the others with `0x8`:
 
 ```assembly
 	leal	pgtable + 0x1000(%ebx), %edi
@@ -402,11 +402,11 @@ In the next step we build 4 Page Directory entry in the Page Directory Pointer t
 	jnz	1b
 ```
 
-We put base address of the page directory pointer table to the `edi` and address of the first page directory pointer entry to the `eax`. Put `4` to the `ecx` register, it will be counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register. 
+We put the base address of the page directory pointer table in `edi` and the address of the first page directory pointer entry in `eax`. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register. 
 
-After this `edi` will contain address of the first page directory pointer entry with flags `0x7`. Next we just calculates address of following page directory pointer entries with flags `0x8` and writes their addresses to the `edi`.
+After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries with flags `0x8` and write their addresses to `edi`.
 
-The next step is building of `2048` page table entries by 2 megabytes:
+The next step is building the `2048` page table entries by 2 megabytes:
 
 ```assembly
 	leal	pgtable + 0x2000(%ebx), %edi
@@ -419,21 +419,21 @@ The next step is building of `2048` page table entries by 2 megabytes:
 	jnz	1b
 ```
 
-Here we do almost the same that in the previous example, just first entry will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ` and all another with `0x8`. In the end we will have 2048 pages by 2 megabytes.
+Here we do almost the same as in the previous example, except the first entry will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ` and all other entries with `0x8`. In the end we will have 2048 pages by 2 megabytes.
 
-Our early page table structure are done, it maps 4 gigabytes of memory and now we can put address of the high-level page table - `PML4` to the `cr3` control register:
+Our early page table structure are done, it maps 4 gigabytes of memory and now we can put the address of the high-level page table - `PML4` - in `cr3` control register:
 
 ```assembly
 	leal	pgtable(%ebx), %eax
 	movl	%eax, %cr3
 ```
 
-That's all now we can see transition to the long mode.
+That's all. Now we can see transition to the long mode.
 
-Transition to the long mode
+Transition to long mode
 --------------------------------------------------------------------------------
 
-First of all we need to set `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
+First of all we need to set the `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
 
 ```assembly
 	movl	$MSR_EFER, %ecx
@@ -442,16 +442,16 @@ First of all we need to set `EFER.LME` flag in the [MSR](http://en.wikipedia.org
 	wrmsr
 ```
 
-Here we put `MSR_EFER` flag (which defined in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7)) to the `ecx` register and call `rdmsr` instruction which reads [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executed, we will have result data in the `edx:eax` which depends on `ecx` value. We check  `EFER_LME` bit with `btsl` instruction and write data from `eax` to the `MSR` register with `wrmsr` instruction.
+Here we put the `MSR_EFER` flag (which is defined in [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7)) in the `ecx` register and call `rdmsr` instruction which reads the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executes, we will have the resulting data in `edx:eax` which depends on the `ecx` value. We check the `EFER_LME` bit with the `btsl` instruction and write data from `eax` to the `MSR` register with the `wrmsr` instruction.
 
-In next step we push address of the kernel segment code to the stack (we defined it in the GDT) and put address of the `startup_64` routine to the `eax`.
+In the next step we push the address of the kernel segment code to the stack (we defined it in the GDT) and put the address of the `startup_64` routine in `eax`.
 
 ```assembly
 	pushl	$__KERNEL_CS
 	leal	startup_64(%ebp), %eax
 ```
 
-After this we push this address to the stack and enable paging with setting `PG` and `PE` bits in the `cr0` register:
+After this we push this address to the stack and enable paging by setting `PG` and `PE` bits in the `cr0` register:
 
 ```assembly
 	movl	$(X86_CR0_PG | X86_CR0_PE), %eax
@@ -464,9 +464,9 @@ and call:
 lret
 ```
 
-Remember that we pushed address of the `startup_64` function to the stack in the previous step, and after `lret` instruction, CPU extracts address of it and jumps there. 
+Remember that we pushed the address of the `startup_64` function to the stack in the previous step, and after the `lret` instruction, the CPU extracts the address of it and jumps there. 
 
-After all of these steps we're finally in the 64-bit mode:
+After all of these steps we're finally in 64-bit mode:
 
 ```assembly
 	.code64

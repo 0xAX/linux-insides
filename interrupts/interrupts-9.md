@@ -22,7 +22,7 @@ Interrupts may have different important characteristics and there are two among 
 * Handler of an interrupt must execute quickly;
 * Sometime an interrupt handler must do a large amount of work.
 
-As you can understand, it is almost impossible to make so that both characteristics were valid. Because of these, previously the handling of interrupts was splitted into two parts:
+As you can understand, it is almost impossible to make so that both characteristics were valid. Because of these, previously the handling of interrupts was split into two parts:
 
 * Top half;
 * Bottom half;

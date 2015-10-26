@@ -206,7 +206,7 @@ ENDPROC(memcpy)
 
 Yeah, we just moved to C code and now assembly again :) First of all we can see that `memcpy` and other routines which are defined here, start and end with the two macros: `GLOBAL` and `ENDPROC`. `GLOBAL` is described in [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h) which defines `globl` directive and the label for it. `ENDPROC` is described in [include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h) which marks `name` symbol as function name and ends with the size of the `name` symbol.
 
-Implementation of `memcpy` is easy. At first, it pushes values from `si` and `di` registers to the stack because their values will change during the `memcpy`, so it pushes them on the stack to preserve their values. `memcpy` (and other functions in copy.S) use `fastcall` calling conventions. So it gets its incoming parameters from the `ax`, `dx` and `cx` registers.  Calling `memcpy` looks like this:
+Implementation of `memcpy` is easy. At first, it pushes values from `si` and `di` registers to the stack to preserve their values because they will change during the `memcpy`. `memcpy` (and other functions in copy.S) use `fastcall` calling conventions. So it gets its incoming parameters from the `ax`, `dx` and `cx` registers.  Calling `memcpy` looks like this:
 
 ```c
 memcpy(&boot_params.hdr, &hdr, sizeof hdr);
