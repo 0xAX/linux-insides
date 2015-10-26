@@ -12,7 +12,7 @@ I'm writing this part nine and a half months after I've started to learn from th
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
-It seems that people are interested in the internals of the Linux kernel. Besides this, in all the time that I have been writing `linux-insides`, I have received many questions from different people about how to begin contributing to the Linux kernel. Generally people are interested in contributing to open source projects and the Linux kernel is not an exception:
+It seems that people are interested in the insides of the Linux kernel. Besides this, in all the time that I have been writing `linux-insides`, I have received many questions from different people about how to begin contributing to the Linux kernel. Generally people are interested in contributing to open source projects and the Linux kernel is not an exception:
 
 ![google-linux](http://s4.postimg.org/yg9z5zx0d/google_linux.png)
 

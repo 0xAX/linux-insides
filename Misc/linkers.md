@@ -627,7 +627,7 @@ Please note that English is not my first language, and I am really sorry for any
 Links
 -----------------
 
-* [Book about Linux kernel internals](http://0xax.gitbooks.io/linux-insides/content/)
+* [Book about Linux kernel insides](http://0xax.gitbooks.io/linux-insides/content/)
 * [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29)
 * [object files](https://en.wikipedia.org/wiki/Object_file)
 * [glibc](https://en.wikipedia.org/wiki/GNU_C_Library)
