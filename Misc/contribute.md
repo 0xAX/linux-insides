@@ -28,7 +28,7 @@ First of all, let's see how to get, build, and run the Linux kernel. You can run
 * Run the Linux kernel on a virtual machine;
 * Run the Linux kernel on real hardware.
 
-I'll provide descriptions for both methods. Before we start doing anything with the Linux kernel, we need to get it. There are a couple of ways how to do it. It  depends on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific for your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
+I'll provide descriptions for both methods. Before we start doing anything with the Linux kernel, we need to get it. There are a couple of ways to do this depending on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific to your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
 
 In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade the version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will just need to execute the following commands:
 
