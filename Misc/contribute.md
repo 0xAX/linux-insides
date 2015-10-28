@@ -86,7 +86,7 @@ upstream	https://github.com/torvalds/linux.git (fetch)
 upstream	https://github.com/torvalds/linux.git (push)
 ```
 
-One is of you fork (`origin`) and the second is for the main repository (`upstream`).
+One is of your fork (`origin`) and the second is for the main repository (`upstream`).
 
 Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way is to just copy the configuration file of the already installed kernel that is located in the `/boot` directory:
 
@@ -110,11 +110,11 @@ The `defconfig` argument generates the default kernel configuration file for the
 $ make ARCH=arm64 defconfig
 ```
 
-The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to generate a new configuration file where all options will be disabled, enabled and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
+The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to generate a new configuration file where all options will be disabled, enabled, and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
 
 ![nconfig](http://s29.postimg.org/hpghikp4n/nconfig.png)
 
-And even `randconfig` to generate random Linux kernel configuration file. I will not write how to configure the Linux kernel, which options to enable and what not, because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
+And even `randconfig` to generate random Linux kernel configuration file. I will not write about how to configure the Linux kernel or which options to enable because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
 
 OK, we now have the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is to just execute:
 
