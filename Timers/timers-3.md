@@ -42,7 +42,7 @@ void __init tick_init(void)
 
 As you can understand from the paragraph's title, we are interesting only in the `tick_broadcast_init` function for now. This function defined in the [kernel/time/tick-broadcast.c](https://github.com/torvalds/linux/blob/master/kernel/time/tick-broadcast.c) source code file and executes initialization of the `tick broadcast` framework related data structures. Before we will look on the implementation of the `tick_broadcast_init` function and will try to understand what does this function do, we need to know about `tick broadcast` framework.
 
-Main point of a central processor is to execute programs. But somtimes a processor may be in a special state when it is not being used by any program. This special state is called - [idle](https://en.wikipedia.org/wiki/Idle_%28CPU%29). When the processor has no anything to execute, the Linux kernel launches `idle` task. We already saw a little about this in the last part of the [Linux kernel initialization process](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-10.html). When the Linux kernel will finish all initialization processes in the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file, it will call the `rest_init` function from the same source code file. Main point of this function is to launch kernel `init` thread and the `kthreadd` thread, to call the `schedule` function to start task scheduling and to go to sleep by calling the `cpu_idle_loop` function that defined in the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/master/kernel/sched/idle.c) source code file.
+Main point of a central processor is to execute programs. But sometimes a processor may be in a special state when it is not being used by any program. This special state is called - [idle](https://en.wikipedia.org/wiki/Idle_%28CPU%29). When the processor has no anything to execute, the Linux kernel launches `idle` task. We already saw a little about this in the last part of the [Linux kernel initialization process](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-10.html). When the Linux kernel will finish all initialization processes in the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file, it will call the `rest_init` function from the same source code file. Main point of this function is to launch kernel `init` thread and the `kthreadd` thread, to call the `schedule` function to start task scheduling and to go to sleep by calling the `cpu_idle_loop` function that defined in the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/master/kernel/sched/idle.c) source code file.
 
 The `cpu_idle_loop` function represents infinite loop which checks the need for rescheduling on each iteration. After the scheduller will fins something to execute, the `idle` process will finish its work and the control will be moved to a new runnable task with the call of the `schedule_preempt_disabled` function:
 
@@ -145,7 +145,7 @@ So, the last three `cpumasks` are:
 
 We have initialized six `cpumasks` in the `tick broadcast` framework, and now we can proceed to implementation of this framework.
 
-The `tick boradcast` framework
+The `tick broadcast` framework
 --------------------------------------------------------------------------------
 
 Hardware may provide some clock source devices. When a processor sleeps and its local timer stopped, there must be additional clock source device that will handle awakening of a processor. The Linux kernel uses these `special` clock source devices which can raise an interrupt at a specified time. We already know that such timers called `clock events` devices in the Linux kernel. Besides `clock events` devices. Actually, each processor in the system has its own local timer which is programmed to issue interrupt at the time of the next deferred task. Also these timers can be programmed to do a periodical job, like updating `jiffies` and etc. These timers represented by the `tick_device` structure in the Linux kernel. This structure defined in the [kernel/time/tick-sched.h](https://github.com/torvalds/linux/blob/master/kernel/time/tick-sched.h) header file and looks:
@@ -174,7 +174,7 @@ Each `clock events` device in the system registers itself by the call of the `cl
 tick_install_broadcast_device(newdev);
 ```
 
-function that cheks that the given `clock event` device can be broadcast device and install it, if the given device can be broadcast device. Let's look on the implementation of the `tick_install_broadcast_device` function:
+function that checks that the given `clock event` device can be broadcast device and install it, if the given device can be broadcast device. Let's look on the implementation of the `tick_install_broadcast_device` function:
 
 ```C
 void tick_install_broadcast_device(struct clock_event_device *dev)
@@ -414,7 +414,7 @@ That's all. This is the end of the `tick_nohz_init` function. After this `NO_HZ`
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the third part of the chapter that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `clocksource` concept in the Linux kernel which represents framework for managing different clock source in a interrupt and hardware characteristics independent way. We continued to look on the Linux kernel initialization process in a time management context in this part and got acquainted with two new concepts for us: the `tick broadcast` framework and `tick-less` mode. The first concept helps the Linux kernel to deal with processors which which are in deep sleep and the second concept represents the mode in which kernel may work to improve power management of `idle` processors.
+This is the end of the third part of the chapter that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `clocksource` concept in the Linux kernel which represents framework for managing different clock source in a interrupt and hardware characteristics independent way. We continued to look on the Linux kernel initialization process in a time management context in this part and got acquainted with two new concepts for us: the `tick broadcast` framework and `tick-less` mode. The first concept helps the Linux kernel to deal with processors which are in deep sleep and the second concept represents the mode in which kernel may work to improve power management of `idle` processors.
 
 In the next part we will continue to dive into timer management related things in the Linux kernel and will see new concept for us - `timers`.
 
