@@ -29,7 +29,7 @@ startup_64:
 	...
 ```
 
-We can see definition of the `startup_64` routine and it defined in the `__HEAD` section, which is just:
+We can see definition of the `startup_64` routine that is defined in the `__HEAD` section, which is just:
 
 ```C
 #define __HEAD		.section	".head.text","ax"
@@ -113,7 +113,7 @@ Okay, we did some early checks and now we can move on.
 Fix base addresses of page tables
 --------------------------------------------------------------------------------
 
-The first step before we started to setup identity paging, need to correct following addresses:
+The first step before we start to setup identity paging is to correct following addresses:
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -122,7 +122,7 @@ The first step before we started to setup identity paging, need to correct follo
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-Here we need to correct `early_level4_pgt` and other addresses of the page table directories, because as I wrote above, kernel can't be run at the default `0x1000000` address. `rbp` register contains actual address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look on their definition:
+Here we need to correct `early_level4_pgt` and other addresses of the page table directories, because as I wrote above, kernel can't be run at the default `0x1000000` address. `rbp` register contains actual address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
 
 ```assembly
 NEXT_PAGE(early_level4_pgt)
@@ -149,16 +149,16 @@ NEXT_PAGE(level1_fixmap_pgt)
 
 Looks hard, but it is not true.
 
-First of all let's look on the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use first 511 `early_level4_pgt` entries. And after this we can see `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look on `_PAGE_TABLE`, it is just page entry access rights:
+First of all let's look at the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use first 511 `early_level4_pgt` entries. And after this we can see `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look at `_PAGE_TABLE`, it is just page entry access rights:
 
 ```C
 #define _PAGE_TABLE     (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER | \
                          _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-more about it, you can read in the [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) post.
+You can read more about it in the [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) post.
 
-`level3_kernel_pgt` - stores entries which map kernel space. At the start of it's definition, we can see that it filled with zeros `L3_START_KERNEL` times. Here `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After it we can see definition of two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
+`level3_kernel_pgt` - stores entries which map kernel space. At the start of it's definition, we can see that it is filled with zeros `L3_START_KERNEL` times. Here `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After it, we can see definition of two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
 
 ```C
 #define _KERNPG_TABLE   (_PAGE_PRESENT | _PAGE_RW | _PAGE_ACCESSED | \
@@ -169,7 +169,7 @@ access rights. The second - `level2_fixmap_pgt` is a virtual addresses which can
 
 The next `level2_kernel_pgt` calls `PDMS` macro which creates 512 megabytes from the `__START_KERNEL_map` for kernel text (after these 512 megabytes will be modules memory space).
 
-Now we know Let's back to our code which is in the beginning of the section. Remember that `rbp` contains actual physical address of the `_text` section. We just add this address to the base address of the page tables, that they'll have correct addresses:
+Now that we know this, let's get back to the code which is described at the beginning of the section. Remember that `rbp` contains actual physical address of the `_text` section. We just add this address to the base address of the page tables, that they'll have correct addresses:
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -178,7 +178,7 @@ Now we know Let's back to our code which is in the beginning of the section. Rem
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-At the first line we add `rbp` to the `early_level4_pgt`, at the second line we add `rbp` to the `level2_kernel_pgt`, at the third line we add `rbp` to the `level2_fixmap_pgt` and add `rbp` to the `level1_fixmap_pgt`.
+In the first line we add `rbp` to the `early_level4_pgt`, in the second line we add `rbp` to the `level2_kernel_pgt`, in the third line we add `rbp` to the `level2_fixmap_pgt` and add `rbp` to the `level1_fixmap_pgt`.
 
 After all of this we will have:
 
@@ -187,7 +187,7 @@ early_level4_pgt[511] -> level3_kernel_pgt[0]
 level3_kernel_pgt[510] -> level2_kernel_pgt[0]
 level3_kernel_pgt[511] -> level2_fixmap_pgt[0]
 level2_kernel_pgt[0]   -> 512 MB kernel mapping
-level2_fixmap_pgt[506] -> level1_fixmap_pgt 
+level2_fixmap_pgt[506] -> level1_fixmap_pgt
 ```
 
 As we corrected base addresses of the page tables, we can start to build it.
@@ -195,14 +195,14 @@ As we corrected base addresses of the page tables, we can start to build it.
 Identity mapping setup
 --------------------------------------------------------------------------------
 
-Now we can see set up the identity mapping early page tables. Identity Mapped Paging is a virtual addresses which are mapped to physical addresses that have the same value, `1 : 1`. Let's look on it in details. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
+Now we can see the set up of identity mapping of early page tables. In Identity Mapped Paging, virtual addresses  are mapped to physical addresses that have the same value, `1 : 1`. Let's look at it in detail. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
 
 ```assembly
 	leaq	_text(%rip), %rdi
 	leaq	early_level4_pgt(%rip), %rbx
 ```
 
-After this we store physical address of the `_text` in the `rax` and get the index of the page global directory entry which stores `_text` address, by shifting `_text` address on the `PGDIR_SHIFT`: 
+After this we store physical address of the `_text` in the `rax` and get the index of the page global directory entry which stores `_text` address, by shifting `_text` address on the `PGDIR_SHIFT`:
 
 ```assembly
 	movq	%rdi, %rax
@@ -221,7 +221,7 @@ where `PGDIR_SHIFT` is `39`. `PGDIR_SHFT` indicates the mask for page global dir
 #define PMD_SHIFT       21
 ```
 
-After this we put the address of the first `level3_kernel_pgt` to the `rdx` with the `_KERNPG_TABLE` access rights (see above) and fill the `early_level4_pgt` with the 2 `level3_kernel_pgt` entries.
+After this we put the address of the first `level3_kernel_pgt` in the `rdx` with the `_KERNPG_TABLE` access rights (see above) and fill the `early_level4_pgt` with the 2 `level3_kernel_pgt` entries.
 
 After this we add `4096` (size of the `early_level4_pgt`) to the `rdx` (it now contains the address of the first entry of the `level3_kernel_pgt`) and put `rdi` (it now contains physical address of the `_text`)  to the `rax`. And after this we write addresses of the two page upper directory entries to the `level3_kernel_pgt`:
 
@@ -249,7 +249,7 @@ In the next step we write addresses of the page middle directory entries to the 
 	jne	1b
 ```
 
-Here we put the address of the `level2_kernel_pgt` to the `rdi` and address of the page table entry to the `r8` register. Next we check the present bit in the `level2_kernel_pgt` and if it is zero we're moving to the next page by adding 8 bytes to `rdi` which contaitns address of the `level2_kernel_pgt`. After this we compare it with `r8` (contains address of the page table entry) and go back to label `1` or move forward.
+Here we put the address of the `level2_kernel_pgt` to the `rdi` and address of the page table entry to the `r8` register. Next we check the present bit in the `level2_kernel_pgt` and if it is zero we're moving to the next page by adding 8 bytes to `rdi` which contains address of the `level2_kernel_pgt`. After this we compare it with `r8` (contains address of the page table entry) and go back to label `1` or move forward.
 
 In the next step we correct `phys_base` physical address with `rbp` (contains physical address of the `_text`), put physical address of the `early_level4_pgt` and jump to label `1`:
 
@@ -259,12 +259,12 @@ In the next step we correct `phys_base` physical address with `rbp` (contains ph
 	jmp 1f
 ```
 
-where `phys_base` mathes the first entry of the `level2_kernel_pgt` which is 512 MB kernel mapping.
+where `phys_base` matches the first entry of the `level2_kernel_pgt` which is 512 MB kernel mapping.
 
-Last preparations 
+Last preparations
 --------------------------------------------------------------------------------
 
-After that we jumped to the label `1` we enable `PAE`, `PGE` (Paging Global Extension) and put the physical address of the `phys_base` (see above) to the `rax` register and fill `cr3` register with it:
+After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extension) and put the physical address of the `phys_base` (see above) to the `rax` register and fill `cr3` register with it:
 
 ```assembly
 1:
@@ -275,7 +275,7 @@ After that we jumped to the label `1` we enable `PAE`, `PGE` (Paging Global Exte
 	movq	%rax, %cr3
 ```
 
-In the next step we check that CPU support [NX](http://en.wikipedia.org/wiki/NX_bit) bit with:
+In the next step we check that CPU supports [NX](http://en.wikipedia.org/wiki/NX_bit) bit with:
 
 ```assembly
 	movl	$0x80000001, %eax
@@ -309,7 +309,7 @@ The result will be in the `edx:eax`. General view of the `EFER` is following:
  --------------------------------------------------------------------------------
 ```
 
-We will not see all fields in details here, but we will learn about this and other `MSRs` in the special part about. As we read `EFER` to the `edx:eax`, we checks `_EFER_SCE` or zero bit which is `System Call Extensions` with `btsl` instruction and set it to one. By the setting `SCE` bit we enable `SYSCALL` and `SYSRET` instructions. In the next step we check 20th bit in the `edi`, remember that this register stores result of the `cpuid` (see above). If `20` bit is set (`NX` bit) we just write `EFER_SCE` to the model specific register. 
+We will not see all fields in details here, but we will learn about this and other `MSRs` in a special part about it. As we read `EFER` to the `edx:eax`, we check `_EFER_SCE` or zero bit which is `System Call Extensions` with `btsl` instruction and set it to one. By the setting `SCE` bit we enable `SYSCALL` and `SYSRET` instructions. In the next step we check 20th bit in the `edi`, remember that this register stores result of the `cpuid` (see above). If `20` bit is set (`NX` bit) we just write `EFER_SCE` to the model specific register.
 
 ```assembly
 	btsl	$_EFER_SCE, %eax
@@ -337,13 +337,13 @@ early_gdt_descr_base:
 	.quad	INIT_PER_CPU_VAR(gdt_page)
 ```
 
-We need to reload Global Descriptor Table because now kernel works in the userspace addresses, but soon kernel will work in it's own space. Now let's look on `early_gdt_descr` definition. Global Descriptor Table contains 32 entries:
+We need to reload Global Descriptor Table because now kernel works in the userspace addresses, but soon kernel will work in it's own space. Now let's look at the definition of `early_gdt_descr`. Global Descriptor Table contains 32 entries:
 
 ```C
 #define GDT_ENTRIES 32
 ```
 
-for kernel code, data, thread local storage segments and etc... it's simple. Now let's look on the `early_gdt_descr_base`. First of `gdt_page` defined as:
+for kernel code, data, thread local storage segments and etc... it's simple. Now let's look at the `early_gdt_descr_base`. First of `gdt_page` defined as:
 
 ```C
 struct gdt_page {
@@ -351,7 +351,7 @@ struct gdt_page {
 } __attribute__((aligned(PAGE_SIZE)));
 ```
 
-in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h). It contains one field `gdt` which is array of the `desc_struct` structures which defined as:
+in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h). It contains one field `gdt` which is array of the `desc_struct` structure which is defined as:
 
 ```C
 struct desc_struct {
@@ -370,7 +370,7 @@ struct desc_struct {
  } __attribute__((packed));
 ```
 
-and presents familiar to us GDT descriptor. Also we can note that `gdt_page` structure aligned to `PAGE_SIZE` which is 4096 bytes. It means that `gdt` will occupy one page. Now let's try to understand what is it `INIT_PER_CPU_VAR`. `INIT_PER_CPU_VAR` is a macro which defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h) and just concats `init_per_cpu__` with the given parameter:
+and presents familiar to us GDT descriptor. Also we can note that `gdt_page` structure aligned to `PAGE_SIZE` which is 4096 bytes. It means that `gdt` will occupy one page. Now let's try to understand what is `INIT_PER_CPU_VAR`. `INIT_PER_CPU_VAR` is a macro which defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h) and just concats `init_per_cpu__` with the given parameter:
 
 ```C
 #define INIT_PER_CPU_VAR(var) init_per_cpu__##var
@@ -413,7 +413,7 @@ where `MSR_GS_BASE` is:
 #define MSR_GS_BASE             0xc0000101
 ```
 
-We need to put `MSR_GS_BASE` to the `ecx` register and load data from the `eax` and `edx` (which are point to the `initial_gs`) with `wrmsr` instruction. We don't use `cs`, `fs`, `ds` and `ss` segment registers for addressation in the 64-bit mode, but `fs` and `gs` registers can be used. `fs` and `gs` have a hidden part (as we saw it in the real mode for `cs`) and this part contains descriptor which mapped to Model specific registers. So we can see above `0xc0000101` is a `gs.base` MSR address. 
+We need to put `MSR_GS_BASE` to the `ecx` register and load data from the `eax` and `edx` (which are point to the `initial_gs`) with `wrmsr` instruction. We don't use `cs`, `fs`, `ds` and `ss` segment registers for addressation in the 64-bit mode, but `fs` and `gs` registers can be used. `fs` and `gs` have a hidden part (as we saw it in the real mode for `cs`) and this part contains descriptor which mapped to Model specific registers. So we can see above `0xc0000101` is a `gs.base` MSR address.
 
 In the next step we put the address of the real mode bootparam structure to the `rdi` (remember `rsi` holds pointer to this structure from the start) and jump to the C code with:
 
@@ -425,7 +425,7 @@ In the next step we put the address of the real mode bootparam structure to the 
 	lretq
 ```
 
-Here we put the address of the `initial_code` to the `rax` and push fake address, `__KERNEL_CS` and the address of the `initial_code` to the stack. After this we can see `lretq` instruction which means that after it return address will be extracted from stack (now there is address of the `initial_code`) and jump there. `initial_code` defined in the same source code file and looks:
+Here we put the address of the `initial_code` to the `rax` and push fake address, `__KERNEL_CS` and the address of the `initial_code` to the stack. After this we can see `lretq` instruction which means that after it return address will be extracted from stack (now there is address of the `initial_code`) and jump there. `initial_code` is defined in the same source code file and looks:
 
 ```assembly
 	__REFDATA
@@ -437,7 +437,7 @@ Here we put the address of the `initial_code` to the `rax` and push fake address
 	...
 ```
 
-As we can see `initial_code` contains address of the `x86_64_start_kernel`, which defined in the [arch/x86/kerne/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c) and looks like this:
+As we can see `initial_code` contains address of the `x86_64_start_kernel`, which is defined in the [arch/x86/kerne/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c) and looks like this:
 
 ```C
 asmlinkage __visible void __init x86_64_start_kernel(char * real_mode_data) {
@@ -475,7 +475,7 @@ There are checks for different things like virtual addresses of modules space is
 #define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
 ```
 
-Let's try to understand this trick works. Let's take for example first condition: `MODULES_VADDR < __START_KERNEL_map`. `!!conditions` is the same that `condition != 0`. So it means if `MODULES_VADDR < __START_KERNEL_map` is true, we will get `1` in the `!!(condition)` or zero if not. After `2*!!(condition)` we will get or `2` or `0`. In the end of calculations we can get two different behaviors:
+Let's try to understand how this trick works. Let's take for example first condition: `MODULES_VADDR < __START_KERNEL_map`. `!!conditions` is the same that `condition != 0`. So it means if `MODULES_VADDR < __START_KERNEL_map` is true, we will get `1` in the `!!(condition)` or zero if not. After `2*!!(condition)` we will get or `2` or `0`. In the end of calculations we can get two different behaviors:
 
 * We will have compilation error, because try to get size of the char array with negative index (as can be in our case, because `MODULES_VADDR` can't be less than `__START_KERNEL_map` will be in our case);
 * No compilation errors.
