@@ -361,10 +361,10 @@ This masks all interrupts on the secondary PIC (Programmable Interrupt Controlle
 
 And after all of these preparations, we can see the actual transition into protected mode.
 
-Setup Interrupt Descriptor Table
+Set up Interrupt Descriptor Table
 --------------------------------------------------------------------------------
 
-Now we setup the Interrupt Descriptor table (IDT). `setup_idt`:
+Now we set up the Interrupt Descriptor table (IDT). `setup_idt`:
 
 ```C
 static void setup_idt(void)
@@ -374,7 +374,7 @@ static void setup_idt(void)
 }
 ```
 
-which setups the Interrupt Descriptor Table (describes interrupt handlers and etc.). For now IDT is not installed (we will see it later), but now we just load IDT with `lidtl` instruction. `null_idt` contains address and size of IDT, but now they are just zero. `null_idt` is a `gdt_ptr` structure, it as defined as:
+which sets up the Interrupt Descriptor Table (describes interrupt handlers and etc.). For now the IDT is not installed (we will see it later), but now we just the load IDT with the `lidtl` instruction. `null_idt` contains address and size of IDT, but now they are just zero. `null_idt` is a `gdt_ptr` structure, it as defined as:
 ```C
 struct gdt_ptr {
 	u16 len;
@@ -382,7 +382,7 @@ struct gdt_ptr {
 } __attribute__((packed));
 ```
 
-where we can see - 16-bit length(`len`) of IDT and 32-bit pointer to it (More details about IDT and interruptions we will see in the next posts). ` __attribute__((packed))` means here that size of `gdt_ptr` minimum as required. So size of the `gdt_ptr` will be 6 bytes here or 48 bits. (Next we will load pointer to the `gdt_ptr` to the `GDTR` register and you might remember from the previous post that it is 48-bits in size).
+where we can see the 16-bit length(`len`) of the IDT and the 32-bit pointer to it (More details about the IDT and interruptions will be seen in the next posts). ` __attribute__((packed))` means that the size of `gdt_ptr` is the minimum required size. So the size of the `gdt_ptr` will be 6 bytes here or 48 bits. (Next we will load the pointer to the `gdt_ptr` to the `GDTR` register and you might remember from the previous post that it is 48-bits in size).
 
 Setup Global Descriptor Table
 --------------------------------------------------------------------------------
