@@ -122,7 +122,7 @@ As we can see the first bit(bit 43) is `0` for a _data_ segment and `1` for a _c
   * if E(bit 42) is 0, expand up other wise expand down. Read more [here](http://www.sudleyplace.com/dpmione/expanddown.html).
   * if W(bit 41)(for Data Segments) is 1, write access is allowed otherwise not. Note that read access is always allowed on data segments.
   * A(bit 40) - Whether the segment is accessed by processor or not.
-  * C(bit 43) is conforming bit(for code selectors). If C is 1, the segment code can be executed from a lower level privilege for e.g user level. If C is 0, it can only be executed from the same privilege level.
+  * C(bit 43) is conforming bit(for code selectors). If C is 1, the segment code can be executed from a lower level privilege e.g. user level. If C is 0, it can only be executed from the same privilege level.
   * R(bit 41)(for code segments). If 1 read access to segment is allowed otherwise not. Write access is never allowed to code segments.
 
 4. DPL[2-bits] (Descriptor Privilege Level) is at bits 45-46. It defines the privilege level of the segment. It can be 0-3 where 0 is the most privileged.
