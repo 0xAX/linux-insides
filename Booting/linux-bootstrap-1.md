@@ -321,7 +321,7 @@ Actually this is the first code that runs (aside from the previous jump instruct
   state.cs = segment + 0x20;
 ```
 
-It means that segment registers will have following values after kernel setup starts:
+It means that segment registers will have the following values after kernel setup starts:
 
 ```
 gs = fs = es = ds = ss = 0x1000
@@ -333,8 +333,8 @@ in my case when the kernel is loaded at `0x10000`.
 After the jump to `start_of_setup`, it needs to do the following:
 
 * Be sure that all values of all segment registers are equal
-* Setup correct stack if needed
-* Setup [bss](https://en.wikipedia.org/wiki/.bss)
+* Set up correct stack if needed
+* Set up [bss](https://en.wikipedia.org/wiki/.bss)
 * Jump to C code at [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)
 
 Let's look at the implementation.
