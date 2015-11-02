@@ -293,7 +293,7 @@ $ git pull upstream master
 
 After this my local repository with the Linux kernel source code is synced with the [mainline](https://github.com/torvalds/linux) repository. Now we can make some changes in the source code. As I already wrote, I have no advice for you where you can start and what `TODO` in the Linux kernel. But the best place for newbies is `staging` tree. In other words the set of drivers from the [drivers/staging](https://github.com/torvalds/linux/tree/master/drivers/staging). The maintainer of the `staging` tree is [Greg Kroah-Hartman](https://en.wikipedia.org/wiki/Greg_Kroah-Hartman) and the `staging` tree is that place where your trivial patch can be accepted. Let's look on a simple example that describes how to generate patch, check it and send to the [Linux kernel mail listing](https://lkml.org/).
 
-If we will look in the driver for the [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) based devices, we will see the `dgap_sindex` function on line 295:
+If we look in the driver for the [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) based devices, we will see the `dgap_sindex` function on line 295:
 
 ```C
 static char *dgap_sindex(char *string, char *group)
@@ -369,7 +369,7 @@ We've passed name of the branch (`master` in this case) to the `format-patch` co
 $ git format-patch master --stdout > dgap-patch-1.patch
 ```
 
-The last step after we have generated our patch is just to send it to the Linux kernel mail listing. Of course you can use any email client, but the `Git` provides special command for this: `git send-email`. Before you will send your patch, you need to know where to send it. Yes, you can send it just to the Linux kernel mail listing address which is `linux-kernel@vger.kernel.org`, but there is a high probability that the patch will be ignored, because as you may already know there is the large flow of messages on the Linux kernel mail listing. The better way will be send to a maintainer of subsystem where you have made changes. We can find maintainer and other related guys who has touched the code with the `get_maintainer.pl` script. All of you need is just pass file or directory where you wrote a code. Go to the root directory with source code of the Linux kernel and execute it:
+The last step after we have generated our patch is to send it to the Linux kernel mailing list. Of course, you can use any email client, `git` provides a special command for this: `git send-email`. Before you send your patch, you need to know where to send it. Yes, you can just send it to the Linux kernel mailing list address which is `linux-kernel@vger.kernel.org`, but it is very likely that the patch will be ignored, because of the large flow of messages. The better choice would be to send the patch to the maintainers of the subsystem where you have made changes. To find the names of these maintainers use the `get_maintainer.pl` script. All you need to do is pass the file or directory where you wrote code.
 
 ```
 $ ./scripts/get_maintainer.pl -f drivers/staging/dgap/dgap.c
@@ -394,7 +394,7 @@ $ git send-email --to "Lidza Louina <lidza.louina@gmail.com>" \
   --cc "linux-kernel@vger.kernel.org"
 ```
 
-That's all. The patch is sent and now only have to wait feedback from the Linux kernel developers. After you will sent a patch and a maintainer accepted it, you will find it in the maintainer's repository (for example [patch](https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/commit/?h=staging-testing&id=b9f7f1d0846f15585b8af64435b6b706b25a5c0b) that you saw in this part) and after some time a maintainer will send pull request to Linus and you will see your patch in the mainline repository.
+That's all. The patch is sent and now you only have to wait for feedback from the Linux kernel developers. After you send a patch and a maintainer accepts it, you will find it in the maintainer's repository (for example [patch](https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/commit/?h=staging-testing&id=b9f7f1d0846f15585b8af64435b6b706b25a5c0b) that you saw in this part) and after some time the maintainer will send a pull request to Linus and you will see your patch in the mainline repository.
 
 That's all.
 
@@ -403,7 +403,7 @@ Some advice
 
 In the end of this part I want to give you some advice that will describe what to do and what not to do during development of the Linux kernel:
 
-* Think, Think, Think. And think again before you decided to send a patch.
+* Think, Think, Think. And think again before you decide to send a patch.
 
 * Each time when you have changed something in the Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that don't even compile.
 
