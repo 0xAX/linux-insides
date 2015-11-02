@@ -483,20 +483,20 @@ asm volatile("lgdtl %0" : : "m" (gdt));
 Actual transition into protected mode
 --------------------------------------------------------------------------------
 
-It is the end of `go_to_protected_mode` function. We loaded IDT, GDT, disable interruptions and now can switch CPU into protected mode. The last step we call `protected_mode_jump` function with two parameters:
+This is the end of the `go_to_protected_mode` function. We loaded IDT, GDT, disable interruptions and now can switch the CPU into protected mode. The last step is calling the `protected_mode_jump` function with two parameters:
 
 ```C
 protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
 ```
 
-which is defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26). It takes two parameters:
+which is defined in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26). It takes two parameters:
 
 * address of protected mode entry point
 * address of `boot_params`
 
-Let's look inside `protected_mode_jump`. As I wrote above, you can find it in the `arch/x86/boot/pmjump.S`. First parameter will be in `eax` register and second is in `edx`.
+Let's look inside `protected_mode_jump`. As I wrote above, you can find it in `arch/x86/boot/pmjump.S`. The first parameter will be in the `eax` register and second is in `edx`.
 
-First of all we put address of `boot_params` in the `esi` register and address of code segment register `cs` (0x1000) in the `bx`. After this we shift `bx` by 4 bits and add address of label `2` to it (we will have physical address of label `2` in the `bx` after it) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
+First of all we put the address of `boot_params` in the `esi` register and the address of code segment register `cs` (0x1000) in `bx`. After this we shift `bx` by 4 bits and add the address of label `2` to it (we will have the physical address of label `2` in the `bx` after this) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
 
 ```assembly
 movw	$__BOOT_DS, %cx
@@ -505,7 +505,7 @@ movw	$__BOOT_TSS, %di
 
 As you can read above `GDT_ENTRY_BOOT_CS` has index 2 and every GDT entry is 8 byte, so `CS` will be `2 * 8 = 16`, `__BOOT_DS` is 24 etc.
 
-Next we set `PE` (Protection Enable) bit in the `CR0` control register:
+Next we set the `PE` (Protection Enable) bit in the `CR0` control register:
 
 ```assembly
 movl	%cr0, %edx
@@ -513,7 +513,7 @@ orb	$X86_CR0_PE, %dl
 movl	%edx, %cr0
 ```
 
-and make long jump to the protected mode:
+and make a long jump to protected mode:
 
 ```assembly
 	.byte	0x66, 0xea
@@ -522,7 +522,7 @@ and make long jump to the protected mode:
 ```
 
 where
-* `0x66` is the operand-size prefix which allows to mix 16-bit and 32-bit code,
+* `0x66` is the operand-size prefix which allows us to mix 16-bit and 32-bit code,
 * `0xea` - is the jump opcode,
 * `in_pm32` is the segment offset
 * `__BOOT_CS` is the code segment.
@@ -534,7 +534,7 @@ After this we are finally in the protected mode:
 .section ".text32","ax"
 ```
 
-Let's look at the first steps in the protected mode. First of all we setup data segment with:
+Let's look at the first steps in protected mode. First of all we set up the data segment with:
 
 ```assembly
 movl	%ecx, %ds
@@ -544,7 +544,7 @@ movl	%ecx, %gs
 movl	%ecx, %ss
 ```
 
-If you read with attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. Now we fill with it all segment registers besides `cs` (`cs` is already `__BOOT_CS`). Next we zero out all general purpose registers besides `eax` with:
+If you paid attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. Now we fill it with all segment registers besides `cs` (`cs` is already `__BOOT_CS`). Next we zero out all general purpose registers besides `eax` with:
 
 ```assembly
 xorl	%ecx, %ecx
@@ -560,9 +560,9 @@ And jump to the 32-bit entry point in the end:
 jmpl	*%eax
 ```
 
-Remember that `eax` contains address of the 32-bit entry (we passed it as first parameter into `protected_mode_jump`).
+Remember that `eax` contains the address of the 32-bit entry (we passed it as first parameter into `protected_mode_jump`).
 
-That's all we're in the protected mode and stop at it's entry point. What happens next, we will see in the next part.
+That's all. We're in the protected mode and stop at it's entry point. We will see what happens next in the next part.
 
 Conclusion
 --------------------------------------------------------------------------------
