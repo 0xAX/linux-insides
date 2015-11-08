@@ -16,7 +16,7 @@ As the Intel manual says:
 
 > Paging provides a mechanism for implementing a conventional demand-paged, virtual-memory system where sections of a program’s execution environment are mapped into physical memory as needed.
 
-So... In this post I will try to explain the theory behind paging. Of course it will be closely related to the `x86_64` version of the linux kernel for, but we will not go into too much details (at least in this post).
+So... In this post I will try to explain the theory behind paging. Of course it will be closely related to the `x86_64` version of the linux kernel, but we will not go into too much details (at least in this post).
 
 Enabling paging
 --------------------------------------------------------------------------------
@@ -80,13 +80,13 @@ These fields have the following meanings:
 
 * Bits 2:0 - ignored;
 * Bits 51:12 - stores the address of the top level paging structure;
-* Bit 3 and 4 - PWT or Page-Level Writethrough and PCD or Page-level cache disable indicate. These bits control the way the page or Page Table is handled by the hardware cache; 
+* Bit 3 and 4 - PWT or Page-Level Writethrough and PCD or Page-level cache disable indicate. These bits control the way the page or Page Table is handled by the hardware cache;
 * Reserved - reserved must be 0;
 * Bits 63:52 - reserved must be 0.
 
 The linear address translation address is following:
 
-* A given linear address arrives to the [MMU](http://en.wikipedia.org/wiki/Memory_management_unit) instead of memory bus. 
+* A given linear address arrives to the [MMU](http://en.wikipedia.org/wiki/Memory_management_unit) instead of memory bus.
 * 64-bit linear address splits on some parts. Only low 48 bits are significant, it means that `2^48` or 256 TBytes of linear-address space may be accessed at any given time.
 * `cr3` register stores the address of the 4 top-level paging structure.
 * `47:39` bits of the given linear address stores an index into the paging structure level-4, `38:30` bits stores index into the paging structure level-3, `29:21` bits stores an index into the paging structure level-2, `20:12` bits stores an index into the paging structure level-1 and `11:0` bits provide the byte offset into the physical page.
@@ -236,7 +236,7 @@ In binary it will be:
 This virtual address is split in parts as described above:
 
 * `63:48` - bits not used;
-* `47:39` - bits of the given linear address stores an index into the paging structure level-4; 
+* `47:39` - bits of the given linear address stores an index into the paging structure level-4;
 * `38:30` - bits stores index into the paging structure level-3;
 * `29:21` - bits stores an index into the paging structure level-2;
 * `20:12` - bits stores an index into the paging structure level-1;

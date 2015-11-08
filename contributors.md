@@ -77,3 +77,4 @@ Thank you to all contributors:
 * [Matt Hudgins](https://github.com/mhudgins)
 * [Ruth Grace Wong](https://github.com/ruthgrace)
 * [Jeremy Lacomis](https://github.com/jlacomis)
+* [Dubyah](https://github.com/Dubyah)
