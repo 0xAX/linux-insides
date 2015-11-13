@@ -452,7 +452,7 @@ It's important that your email be in the [plain text](https://en.wikipedia.org/w
 [PATCH v2] staging/dgap: Use strpbrk() instead of dgap_sindex()
 ```
 
-Also it must contain changelog that will describe all changes changes from previous patch versions. Of course, this is not an exhaustive list of requirements for Linux kernel development, but some of the most important items were addressed.
+Also it must contain a changelog that describes all changes from previous patch versions. Of course, this is not an exhaustive list of requirements for Linux kernel development, but some of the most important items were addressed.
 
 Happy Hacking!
 
