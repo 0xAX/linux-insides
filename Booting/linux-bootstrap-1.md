@@ -342,7 +342,7 @@ Let's look at the implementation.
 Segment registers align
 --------------------------------------------------------------------------------
 
-First of all it ensures that `ds` and `es` segment registers point to the same address and disables interrupts with `cli` instruction:
+First of all it ensures that `ds` and `es` segment registers point to the same address and disables interrupts with the `cli` instruction:
 
 ```assembly
 	movw	%ds, %ax
@@ -366,7 +366,7 @@ _start:
 	lretw
 ```
 
-push `ds` value to stack, and address of [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) label and execute `lretw` instruction. When we call `lretw`, it loads address of label `6` into the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter) register and `cs` with value of `ds`. After this we will have `ds` and `cs` with the same values.
+push `ds` value to the stack with the address of the [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) label and execute `lretw` instruction. When we call `lretw`, it loads address of label `6` into the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter) register and `cs` with the value of `ds`. After this `ds` and `cs` will have the same values.
 
 Stack Setup
 --------------------------------------------------------------------------------
