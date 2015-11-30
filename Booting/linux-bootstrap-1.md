@@ -465,13 +465,13 @@ First of all the [__bss_start](https://github.com/torvalds/linux/blob/master/arc
 Jump to main
 --------------------------------------------------------------------------------
 
-That's all, we have the stack, BSS so we can jump to the `main()` C function:
+That's all, we have the stack and BSS so we can jump to the `main()` C function:
 
 ```assembly
 	calll main
 ```
 
-The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). What this does, you can read in the next part.
+The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). You can read about what this does in the next part.
 
 Conclusion
 --------------------------------------------------------------------------------
