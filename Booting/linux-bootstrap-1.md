@@ -97,7 +97,7 @@ SECTIONS {
 }
 ```
 
-Now the BIOS starts: after initializing and checking the hardware, it needs to find a bootable device. A boot order is stored in the BIOS configuration, controlling which devices the kernel attempts to boot from. When attempting to boot from a hard drive, the BIOS tries to find a boot sector. On hard drives partitioned with an MBR partition layout, the boot sector is stored in the first 446 bytes of the first sector (which is 512 bytes). The final two bytes of the first sector are `0x55` and `0xaa`, which signals the BIOS that this device is bootable. For example:
+Now the BIOS starts: after initializing and checking the hardware, it needs to find a bootable device. A boot order is stored in the BIOS configuration, controlling which devices the BIOS attempts to boot from. When attempting to boot from a hard drive, the BIOS tries to find a boot sector. On hard drives partitioned with an MBR partition layout, the boot sector is stored in the first 446 bytes of the first sector (which is 512 bytes). The final two bytes of the first sector are `0x55` and `0xaa`, which signals the BIOS that this device is bootable. For example:
 
 ```assembly
 ;
