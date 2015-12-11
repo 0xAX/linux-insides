@@ -153,7 +153,7 @@ and if `KEEP_SEGMENTS` is not set, we need to set `ds`, `ss` and `es` registers 
 	movl	%eax, %ss
 ```
 
-remember that `__BOOT_DS` is `0x18` (index of data segment in the Global Descriptor Table). If `KEEP_SEGMENTS` is not set, we jump to the label `1f` or update segment registers with `__BOOT_DS` if this flag is set. 
+remember that `__BOOT_DS` is `0x18` (index of data segment in the Global Descriptor Table). If `KEEP_SEGMENTS` is set, we jump to the label `1f` or update segment registers with `__BOOT_DS` if this flag is not set.
 
 If you read the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), you can remember that we already updated segment registers in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S), so why do we need to set up it again? Actually linux kernel also has the 32-bit boot protocol, so `startup_32` can be the first function which will be executed right after a bootloader transfers control to the kernel.
 
