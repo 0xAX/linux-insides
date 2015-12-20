@@ -94,7 +94,7 @@ struct thread_info {
 };
 ```
 
-and occupies 52 bytes. The `thread_info` structure contains architecture-specific information on the thread. We know that on `x86_64` the stack grows down and `thread_union.thread_info` is stored at the bottom of the stack in our case. So the process stack is 16 killobytes and `thread_info` is at the bottom. The remaining thread_size will be `16 killobytes - 62 bytes = 16332 bytes`. Note that `thread_unioun` represented as the [union](http://en.wikipedia.org/wiki/Union_type) and not structure, it means that `thread_info` and stack share the memory space.
+and occupies 52 bytes. The `thread_info` structure contains architecture-specific information on the thread. We know that on `x86_64` the stack grows down and `thread_union.thread_info` is stored at the bottom of the stack in our case. So the process stack is 16 killobytes and `thread_info` is at the bottom. The remaining thread_size will be `16 killobytes - 52 bytes = 16332 bytes`. Note that `thread_unioun` represented as the [union](http://en.wikipedia.org/wiki/Union_type) and not structure, it means that `thread_info` and stack share the memory space.
 
 Schematically it can be represented as follows:
 
