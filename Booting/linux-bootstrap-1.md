@@ -388,7 +388,7 @@ This can lead to 3 different scenarios:
 
 Let's look at all three of these scenarios:
 
-1. `ss` has a correct address (0x10000). In this case we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
+* `ss` has a correct address (0x10000). In this case we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
 
 ```
 2: 	andw	$~3, %dx
@@ -403,7 +403,7 @@ Here we can see the alignment of `dx` (contains `sp` given by bootloader) to 4 b
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
-2. In the second scenario, (`ss` != `ds`). First of all put the [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) (address of end of setup code) value in `dx` and check the `loadflags` header field with the `testb` instruction to see whether we can use the heap or not. [loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
+* In the second scenario, (`ss` != `ds`). First of all put the [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) (address of end of setup code) value in `dx` and check the `loadflags` header field with the `testb` instruction to see whether we can use the heap or not. [loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
 
 ```C
 #define LOADED_HIGH	    (1<<0)
@@ -429,7 +429,7 @@ If the `CAN_USE_HEAP` bit is set, put `heap_end_ptr` in `dx` which points to `_e
 
 ![stack](http://oi62.tinypic.com/dr7b5w.jpg)
 
-3. When `CAN_USE_HEAP` is not set, we just use a minimal stack from `_end` to `_end + STACK_SIZE`:
+* When `CAN_USE_HEAP` is not set, we just use a minimal stack from `_end` to `_end + STACK_SIZE`:
 
 ![minimal stack](http://oi60.tinypic.com/28w051y.jpg)
 
