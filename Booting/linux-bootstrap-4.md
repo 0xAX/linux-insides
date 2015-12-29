@@ -389,7 +389,7 @@ Now we can build the top level page table - `PML4` - with:
 
 Here we get the address stored in the `ebx` with `pgtable` offset and put it in `edi`. Next we put this address with offset `0x1007` in the `eax` register. `0x1007` is 4096 bytes (size of the PML4) + 7 (PML4 entry flags - `PRESENT+RW+USER`) and puts `eax` in `edi`. After this manipulation `edi` will contain the address of the first Page Directory Pointer Entry with flags - `PRESENT+RW+USER`.
 
-In the next step we build 4 Page Directory entries in the Page Directory Pointer table, where the first entry will be with `0x7` flags and the others with `0x8`:
+In the next step we build 4 Page Directory entries in the Page Directory Pointer table, where the first entry will be with `0x7` flags or present, write, userspace (`PRESENT WRITE | USER`):
 
 ```assembly
 	leal	pgtable + 0x1000(%ebx), %edi
@@ -404,7 +404,7 @@ In the next step we build 4 Page Directory entries in the Page Directory Pointer
 
 We put the base address of the page directory pointer table in `edi` and the address of the first page directory pointer entry in `eax`. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register. 
 
-After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries with flags `0x8` and write their addresses to `edi`.
+After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries where each entry is 8 bytes, and write their addresses to `eax`.
 
 The next step is building the `2048` page table entries by 2 megabytes:
 
@@ -419,7 +419,7 @@ The next step is building the `2048` page table entries by 2 megabytes:
 	jnz	1b
 ```
 
-Here we do almost the same as in the previous example, except the first entry will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ` and all other entries with `0x8`. In the end we will have 2048 pages by 2 megabytes.
+Here we do almost the same as in the previous example, except the first entry will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ` and all other entries. In the end we will have 2048 pages by 2 megabytes.
 
 Our early page table structure are done, it maps 4 gigabytes of memory and now we can put the address of the high-level page table - `PML4` - in `cr3` control register:
 
