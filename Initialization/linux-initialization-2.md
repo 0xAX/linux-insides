@@ -160,7 +160,7 @@ and inserts an interrupt gate in the nth `IDT` entry. First of all let's look on
 extern const char early_idt_handlers[NUM_EXCEPTION_VECTORS][2+2+5];
 ```
 
-We're filling only first 32 IDT entries because all of the early setup runs with interrupts disabled, so there is no need to set up early exception handlers for vectors greater than 32. `early_idt_handlers` contains generic idt handlers and we can find it in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S), we will look it soon.
+We're filling only first 32 IDT entries because all of the early setup runs with interrupts disabled, so there is no need to set up interrupt handlers for vectors greater than 32. `early_idt_handlers` contains generic idt handlers and we can find it in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S), we will look it soon.
 
 Now let's look on `set_intr_gate` implementation:
 
@@ -281,7 +281,7 @@ We can see here, interrupt handlers generation for the first 32 exceptions. We c
 |--------------------|
 ```
 
-Now let's look on the `early_idt_handler` implementation. It locates in the same [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S#L343). First of all we can see check for [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt), we no need to handle it, so just ignore they in the `early_idt_handler`:
+Now let's look on the `early_idt_handler` implementation. It locates in the same [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S#L343). First of all we can see check for [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt), we don't need to handle it, so just ignore it in the `early_idt_handler`:
 
 ```assembly
 	cmpl $2,(%rsp)
@@ -310,7 +310,7 @@ we drop error code and vector number from the stack and call `INTERRUPT_RETURN` 
 	pushq %r11
 ```
 
-we need to do it to prevent wrong values in it when we return from the interrupt handler. After this we check segment selector in the stack:
+we need to do it to prevent wrong values of registers when we return from the interrupt handler. After this we check segment selector in the stack:
 
 ```assembly
 	cmpl $__KERNEL_CS,96(%rsp)
