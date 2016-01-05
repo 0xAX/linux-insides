@@ -460,9 +460,9 @@ Conclusion
 
 It is the end of the seventh part about the linux kernel initialization process. In this part, finally we have finsihed with the `setup_arch` function and returned to the `start_kernel` function. In the next part we will continue to learn generic kernel code from the `start_kernel` and will continue our way to the first `init` process.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 ================================================================================

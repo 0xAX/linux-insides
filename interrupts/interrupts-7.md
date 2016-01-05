@@ -436,9 +436,9 @@ Conclusion
 
 It is the end of the seventh part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and we started to dive into external hardware interrupts in this part. We saw early initialization of the `irq_desc` structure which represents description of an external interrupt and contains information about it like list of irq actions, information about interrupt handler, interrupts's owner, count of the unhandled interrupt and etc. In the next part we will continue to research external interrupts.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

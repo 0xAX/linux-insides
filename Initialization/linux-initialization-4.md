@@ -434,9 +434,9 @@ Conclusion
 
 It is the end of the fourth part about the Linux kernel initialization process. We started to dive in the kernel generic code from the `start_kernel` function in this part and stopped on the architecture-specific initializations in the `setup_arch`. In the next part we will continue with architecture-dependent initialization steps.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me a PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me a PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

@@ -526,9 +526,9 @@ Conclusion
 
 It is the end of the sixth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function again It was long part, but we not finished with it. Yes, `setup_arch` is big, hope that next part will be last about this function.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

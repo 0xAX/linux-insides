@@ -442,9 +442,9 @@ Conclusion
 
 It is the end of the tenth part about the linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). And it is not only `tenth` part, but this is the last part which describes initialization of the linux kernel. As I wrote in the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of this chapter, we will go through all steps of the kernel initialization and we did it. We started at the first architecture-independent function - `start_kernel` and finished with the launch of the first `init` process in the our system. I missed details about different subsystem of the kernel, for example I almost did not cover linux kernel scheduler or we did not see almost anything about interrupts and exceptions handling and etc... From the next part we will start to dive to the different kernel subsystems. Hope it will be interesting.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------
