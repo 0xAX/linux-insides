@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 3.
 Interrupt handlers
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about an interrupts and an exceptions handling and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we stoped in the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blame/master/arch/x86/kernel/setup.c) on the setting of the two exceptions handlers for the two following exceptions:
+This is the third part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about an interrupts and an exceptions handling and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we stopped in the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blame/master/arch/x86/kernel/setup.c) on the setting of the two exceptions handlers for the two following exceptions:
 
 * `#DB` - debug exception, transfers control from the interrupted process to the debug handler;
 * `#BP` - breakpoint exception, caused by the `int 3` instruction.
@@ -104,14 +104,14 @@ As you can note, the `set_intr_gate_ist` and `set_system_intr_gate_ist` function
 * `&debug`;
 * `&int3`.
 
-You will not find these functions in the C code. All that can be found in in the `*.c/*.h` files only definition of this functions in the [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/traps.h): 
+You will not find these functions in the C code. All that can be found in the `*.c/*.h` files only definition of this functions in the [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/traps.h): 
 
 ```C
 asmlinkage void debug(void);
 asmlinkage void int3(void);
 ```
 
-But we can see `asmlinkage` descriptor here. The `asmlinkage` is the special specificator of the [gcc](http://en.wikipedia.org/wiki/GNU_Compiler_Collection). Actually for a `C` functions which are will be called from assembly, we need in explicit declaration of the function calling convention. In our case, if function maked with `asmlinkage` descriptor, then `gcc` will compile the function to retrieve parameters from stack. So, both handlers are defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S) assembly source code file with the `idtentry` macro:
+But we can see `asmlinkage` descriptor here. The `asmlinkage` is the special specificator of the [gcc](http://en.wikipedia.org/wiki/GNU_Compiler_Collection). Actually for a `C` functions which are called from assembly, we need in explicit declaration of the function calling convention. In our case, if function maked with `asmlinkage` descriptor, then `gcc` will compile the function to retrieve parameters from stack. So, both handlers are defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S) assembly source code file with the `idtentry` macro:
 
 ```assembly
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
@@ -199,7 +199,7 @@ The `pushq_cfi` macro defined in the [arch/x86/include/asm/dwarf2.h](https://git
 	.endm
 ```
 
-Pay attention on the `$-1`. We already know that when an exception occrus, the processor pushes `ss`, `rsp`, `rflags`, `cs` and `rip` on the stack:
+Pay attention on the `$-1`. We already know that when an exception occurs, the processor pushes `ss`, `rsp`, `rflags`, `cs` and `rip` on the stack:
 
 ```C
 #define RIP		16*8
@@ -239,14 +239,14 @@ After this we check `paranoid` and if it is set we check first three `CPL` bits.
 .endif
 ```
 
-If we came from userspace we jump on the label `1` which starts from the `call error_entry` instruction. The `error_entry` saves all registers in the `pt_regs` structure which presetens an interrupt/exception stack frame and defined in the [arch/x86/include/uapi/asm/ptrace.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/ptrace.h). It saves common and extra registers on the stack with the:
+If we came from userspace we jump on the label `1` which starts from the `call error_entry` instruction. The `error_entry` saves all registers in the `pt_regs` structure which presents an interrupt/exception stack frame and defined in the [arch/x86/include/uapi/asm/ptrace.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/ptrace.h). It saves common and extra registers on the stack with the:
 
 ```assembly
 SAVE_C_REGS 8
 SAVE_EXTRA_REGS 8
 ```
 
-from `rdi` to `r15` and executes [swapgs](http://www.felixcloutier.com/x86/SWAPGS.html) instruction. This instruction provides a method to for the Linux kernel to obtain a pointer to the kernel data structures and save the user's `gsbase`. After this we will exit from the `error_entry` with the `ret` instruction. After the `error_entry` finished to execute, since we came from userspace we need to switch on kernel interrupt stack:
+from `rdi` to `r15` and executes [swapgs](http://www.felixcloutier.com/x86/SWAPGS.html) instruction. This instruction provides a method for the Linux kernel to obtain a pointer to the kernel data structures and save the user's `gsbase`. After this we will exit from the `error_entry` with the `ret` instruction. After the `error_entry` finished to execute, since we came from userspace we need to switch on kernel interrupt stack:
 
 ```assembly
 	movq %rsp,%rdi
@@ -277,7 +277,7 @@ and put pointer of the `pt_regs` again in the `rdi`, and in the last step we cal
 call \do_sym
 ```
 
-So, realy exceptions handlers are `do_debug` and `do_int3` functions. We will see these function in this part, but little later. First of all let's look on the preparations before a processor will transfer control to an interrupt handler. In another way if `paranoid` is set, but it is not 1, we call `paranoid_entry` which makes almost the same that `error_entry`, but it checks current mode with more slow but accurate way:
+So, real exceptions handlers are `do_debug` and `do_int3` functions. We will see these function in this part, but little later. First of all let's look on the preparations before a processor will transfer control to an interrupt handler. In another way if `paranoid` is set, but it is not 1, we call `paranoid_entry` which makes almost the same that `error_entry`, but it checks current mode with more slow but accurate way:
 
 ```assembly
 ENTRY(paranoid_entry)
@@ -434,9 +434,9 @@ exit:
 	ist_exit(regs, prev_state);
 ```
 
-In the end we disabled `irqs`, decrement value of the `debug_stack_usage` and exit from the exception handler with the `ist_exit` function.
+In the end we disable `irqs`, decrease value of the `debug_stack_usage` and exit from the exception handler with the `ist_exit` function.
 
-The second exception handler is `do_int3` defined in the same source code file - [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). In the `do_int3` we makes almost the same that in the `do_debug` handler. We get the previous state with the `ist_enter`, increment and decrement the `debug_stack_usage` per-cpu variable, enabled and disable local interrupts. But of course there is one difference between these two handlers. We need to lock and than sync processor cores during breakpoint patching.
+The second exception handler is `do_int3` defined in the same source code file - [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). In the `do_int3` we make almost the same that in the `do_debug` handler. We get the previous state with the `ist_enter`, increase and decrease the `debug_stack_usage` per-cpu variable, enable and disable local interrupts. But of course there is one difference between these two handlers. We need to lock and then sync processor cores during breakpoint patching.
 
 That's all.
 
