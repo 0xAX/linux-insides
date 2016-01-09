@@ -114,10 +114,10 @@ Every access to a linear address is either a supervisor-mode access or a user-mo
 
 Where:
 
-* 63 bit - N/X bit (No Execute Bit) - presents ability to execute the code from physical pages mapped by the table entry;
+* 63 bit - N/X bit (No Execute Bit) which presents ability to execute the code from physical pages mapped by the table entry;
 * 62:52 bits - ignored by CPU, used by system software;
 * 51:12 bits - stores physical address of the lower level paging structure;
-* 12:9  bits - ignored by CPU;
+* 11:9  bits - ignored by CPU;
 * MBZ - must be zero bits;
 * Ignored bits;
 * A - accessed bit indicates was physical page or page structure accessed;
