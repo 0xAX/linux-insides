@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 4.
 Initialization of non-early interrupt gates
 --------------------------------------------------------------------------------
 
-This is fourth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) we saw first early `#DB` and `#BP` exceptions handlers from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We stopped on the right after the `early_trap_init` function that called in the `setup_arch` function which defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/setup.c). In this part we will continue to dive into an interrupts and exceptions handling in the Linux kernel for `x86_64` and continue to do it from from the place where we left off in the last part. First thing which is related to the interrupts and exceptions handling is the setup of the `#PF` or [page fault](https://en.wikipedia.org/wiki/Page_fault) handler with the `early_trap_pf_init` function. Let's start from it.
+This is fourth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) we saw first early `#DB` and `#BP` exceptions handlers from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We stopped on the right after the `early_trap_init` function that called in the `setup_arch` function which defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/setup.c). In this part we will continue to dive into an interrupts and exceptions handling in the Linux kernel for `x86_64` and continue to do it from the place where we left off in the last part. First thing which is related to the interrupts and exceptions handling is the setup of the `#PF` or [page fault](https://en.wikipedia.org/wiki/Page_fault) handler with the `early_trap_pf_init` function. Let's start from it.
 
 Early page fault handler
 --------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ prev_state = exception_enter();
 exception_exit(prev_state);
 ```
 
-The `exception_enter` function checks that `context tracking` is enabled with the `context_tracking_is_enabled` and if it is in enabled state, we get previous context with te `this_cpu_read` (more about `this_cpu_*` operations you can read in the [Documentation](https://github.com/torvalds/linux/blob/master/Documentation/this_cpu_ops.txt)). After this it calls `context_tracking_user_exit` function which informs that Inform the context tracking that the processor is exiting userspace mode and entering the kernel:
+The `exception_enter` function checks that `context tracking` is enabled with the `context_tracking_is_enabled` and if it is in enabled state, we get previous context with the `this_cpu_read` (more about `this_cpu_*` operations you can read in the [Documentation](https://github.com/torvalds/linux/blob/master/Documentation/this_cpu_ops.txt)). After this it calls `context_tracking_user_exit` function which informs the context tracking that the processor is exiting userspace mode and entering the kernel:
 
 ```C
 static inline enum ctx_state exception_enter(void)
@@ -142,7 +142,7 @@ And in the end we return previous context. Between the `exception_enter` and `ex
 __do_page_fault(regs, error_code, address);
 ```
 
-The `__do_page_fault` is defined in the same source code file as `do_page_fault` - [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/fault.c). In the bingging of the `__do_page_fault` we check state of the [kmemcheck](https://www.kernel.org/doc/Documentation/kmemcheck.txt) checker. The `kmemcheck` detects warns about some uses of uninitialized memory. We need to check it because page fault can be caused by kmemcheck:
+The `__do_page_fault` is defined in the same source code file as `do_page_fault` - [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/fault.c). In the beginning of the `__do_page_fault` we check state of the [kmemcheck](https://www.kernel.org/doc/Documentation/kmemcheck.txt) checker. The `kmemcheck` detects warns about some uses of uninitialized memory. We need to check it because page fault can be caused by kmemcheck:
 
 ```C
 if (kmemcheck_active(regs))
@@ -329,7 +329,7 @@ __set_fixmap(FIX_RO_IDT, __pa_symbol(idt_table), PAGE_KERNEL_RO);
 idt_descr.address = fix_to_virt(FIX_RO_IDT);
 ```
 
-and write its address to the `idt_descr.address` (more about fix-mapped addresses you can read in the second part of the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html) chapter). After this we can see the call of the `cpu_init` function that defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c). This function makes initialization of the all `per-cpu` state. In the beginnig of the `cpu_init` we do the following things: First of all we wait while current cpu is initialized and than we call the `cr4_init_shadow` function which stores shadow copy of the `cr4` control register for the current cpu and load CPU microcode if need with the following function calls:
+and write its address to the `idt_descr.address` (more about fix-mapped addresses you can read in the second part of the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html) chapter). After this we can see the call of the `cpu_init` function that defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c). This function makes initialization of the all `per-cpu` state. In the beginning of the `cpu_init` we do the following things: First of all we wait while current cpu is initialized and than we call the `cr4_init_shadow` function which stores shadow copy of the `cr4` control register for the current cpu and load CPU microcode if need with the following function calls:
 
 ```C
 wait_for_master_cpu(cpu);
@@ -350,7 +350,7 @@ As we got values of the `Task State Segement` and `Interrupt Stack Table` for th
 cr4_clear_bits(X86_CR4_VME|X86_CR4_PVI|X86_CR4_TSD|X86_CR4_DE);
 ```
 
-with this we disable `vm86` extension, virtual interrupts, timestamp ([RDTSC](https://en.wikipedia.org/wiki/Time_Stamp_Counter) can only be executed with the highest privilege) and debug extension. After this we reload the `Glolbal Descripto Table` and `Interrupt Descriptor table` with the:
+with this we disable `vm86` extension, virtual interrupts, timestamp ([RDTSC](https://en.wikipedia.org/wiki/Time_Stamp_Counter) can only be executed with the highest privilege) and debug extension. After this we reload the `Glolbal Descriptor Table` and `Interrupt Descriptor table` with the:
 
 ```C
 	switch_to_new_gdt(cpu);
@@ -428,7 +428,7 @@ That's all. Soon we will consider all handlers of these interrupts/exceptions.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the fourth part about interrupts and interrupt handling in the Linux kernel. We saw the initialization of the [Task State Segment](https://en.wikipedia.org/wiki/Task_state_segment) in this part and initialization of the different interrupt handlers as `Divide Error`, `Page Fault` excetpion and etc. You can noted that we saw just initialization stuf, and will dive into details about handlers for these exceptions. In the next part we will start to do it.
+It is the end of the fourth part about interrupts and interrupt handling in the Linux kernel. We saw the initialization of the [Task State Segment](https://en.wikipedia.org/wiki/Task_state_segment) in this part and initialization of the different interrupt handlers as `Divide Error`, `Page Fault` excetpion and etc. You can note that we saw just initialization stuff, and will dive into details about handlers for these exceptions. In the next part we will start to do it.
 
 If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
