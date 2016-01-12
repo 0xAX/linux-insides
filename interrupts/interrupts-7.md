@@ -24,7 +24,7 @@ Generally, a handler of an `I/O` interrupt must be flexible enough to service se
 Ok, we know a little theory and now let's start with the `early_irq_init` function. The implementation of the `early_irq_init` function is in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c). This function make early initialziation of the `irq_desc` structure. The `irq_desc` structure is the foundation of interrupt management code in the Linux kernel. An array of this structure, which has the same name - `irq_desc`, keeps track of every interrupt request source in the Linux kernel. This structure defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/master/include/linux/irqdesc.h) and as you can note it depends on the `CONFIG_SPARSE_IRQ` kernel configuration option. This kernel configuration option enables support for sparse irqs. The `irq_desc` structure contains many different fiels:
 
 * `irq_common_data` - per irq and chip data passed down to chip functions;
-* `status_use_accessors` - contains status of the interrupt source which is can be combination of of the values from the `enum` from the [include/linux/irq.h](https://github.com/torvalds/linux/blob/master/include/linux/irq.h) and different macros which are defined in the same source code file;
+* `status_use_accessors` - contains status of the interrupt source which is combination of the values from the `enum` from the [include/linux/irq.h](https://github.com/torvalds/linux/blob/master/include/linux/irq.h) and different macros which are defined in the same source code file;
 * `kstat_irqs` - irq stats per-cpu;
 * `handle_irq` - highlevel irq-events handler;
 * `action` - identifies the interrupt service routines to be invoked when the [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) occurs;
@@ -221,7 +221,7 @@ cpu3 26648 8 6931 678891 414 0 244 0 0 0
 ...
 ```
 
-Where the sixth column is the servicing interrupts. After this we allocate [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) for the given irq descriptor affinity and initialize the [spinlock](https://en.wikipedia.org/wiki/Spinlock) for the given interrupt descriptor. After this before the [critical section](https://en.wikipedia.org/wiki/Critical_section), the lock will be aqcuired with a call of the `raw_spin_lock` and unlocked with the call of the `raw_spin_unlock`. In the next step we call the `lockdep_set_class` macro which set the [Lock validator](https://lwn.net/Articles/185666/) `irq_desc_lock_class` class for the lock of the given interrupt descriptor. More about `lockdep`, `spinlock` and other synchronization primitives will be described in the separate chapter.
+Where the sixth column is the servicing interrupts. After this we allocate [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) for the given irq descriptor affinity and initialize the [spinlock](https://en.wikipedia.org/wiki/Spinlock) for the given interrupt descriptor. After this before the [critical section](https://en.wikipedia.org/wiki/Critical_section), the lock will be acquired with a call of the `raw_spin_lock` and unlocked with the call of the `raw_spin_unlock`. In the next step we call the `lockdep_set_class` macro which set the [Lock validator](https://lwn.net/Articles/185666/) `irq_desc_lock_class` class for the lock of the given interrupt descriptor. More about `lockdep`, `spinlock` and other synchronization primitives will be described in the separate chapter.
 
 In the end of the loop we call the `desc_set_defaults` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c). This function takes four parameters:
 
@@ -301,7 +301,7 @@ In the end of the `early_irq_init` function we return the return value of the `a
 return arch_early_irq_init();
 ```
 
-This function defined in the [kernel/apic/vector.c](https://github.com/torvalds/linux/blob/master/kernel/apic/vector.c) and contains only one call of the `arch_early_ioapic_init` function from the [kernel/apic/io_apic.c](https://github.com/torvalds/linux/blob/master/kernel/apic/io_apic.c). As we can understand from the `arch_early_ioapic_init` function's name, this function makes early initialization of the [I/O APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). First of all it make a check of the number of the legacy interrupts wit the call of the `nr_legacy_irqs` function. If we have no lagacy interrupts with the [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259) programmable interrupt controller we set `io_apic_irqs` to the `0xffffffffffffffff`: 
+This function defined in the [kernel/apic/vector.c](https://github.com/torvalds/linux/blob/master/kernel/apic/vector.c) and contains only one call of the `arch_early_ioapic_init` function from the [kernel/apic/io_apic.c](https://github.com/torvalds/linux/blob/master/kernel/apic/io_apic.c). As we can understand from the `arch_early_ioapic_init` function's name, this function makes early initialization of the [I/O APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). First of all it make a check of the number of the legacy interrupts wit the call of the `nr_legacy_irqs` function. If we have no legacy interrupts with the [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259) programmable interrupt controller we set `io_apic_irqs` to the `0xffffffffffffffff`: 
 
 ```C
 if (!nr_legacy_irqs())
@@ -330,7 +330,7 @@ That's all.
 Sparse IRQs
 --------------------------------------------------------------------------------
 
-We already saw in the beginning of this part that implementation of the `early_irq_init` function depends on the `CONFIG_SPARSE_IRQ` kernel configuration option. Previously we saw implementation of the `early_irq_init` function when the `CONFIG_SPARSE_IRQ` configuration option is not set, not let's look on the its implementation when this option is set. Implementation of this function very similar, but little differ. We can see the same definition of variables and call of the `init_irq_default_affinity` in the beginning of the `early_irq_init` function:
+We already saw in the beginning of this part that implementation of the `early_irq_init` function depends on the `CONFIG_SPARSE_IRQ` kernel configuration option. Previously we saw implementation of the `early_irq_init` function when the `CONFIG_SPARSE_IRQ` configuration option is not set, now let's look on the its implementation when this option is set. Implementation of this function very similar, but little differ. We can see the same definition of variables and call of the `init_irq_default_affinity` in the beginning of the `early_irq_init` function:
 
 ```C
 #ifdef CONFIG_SPARSE_IRQ
@@ -367,7 +367,7 @@ if (nr_irqs > (NR_VECTORS * nr_cpu_ids))
 nr = (gsi_top + nr_legacy_irqs()) + 8 * nr_cpu_ids;
 ```
 
-Take a look on the `gsi_top` variable. Each `APIC` is identified with its own `ID` and with the offset where its `IRQ` starts. It is called `GSI` base or `Global System Interrupt` base. So the `gsi_top` represnters it. We get the `Global System Interrupt` base from the [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification) table (you can remember that we have parsed this table in the sixth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html) of the Linux Kernel initialization process chapter).
+Take a look on the `gsi_top` variable. Each `APIC` is identified with its own `ID` and with the offset where its `IRQ` starts. It is called `GSI` base or `Global System Interrupt` base. So the `gsi_top` represents it. We get the `Global System Interrupt` base from the [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification) table (you can remember that we have parsed this table in the sixth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html) of the Linux Kernel initialization process chapter).
 
 After this we update the `nr` depends on the value of the `gsi_top`:
 
