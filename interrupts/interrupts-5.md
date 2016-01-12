@@ -62,7 +62,7 @@ native_irq_return_iret:
 iretq
 ```
 
-More about the `idtentry` macro you can read in the thirt part of the [http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) chapter. Ok, now we saw the preparation before an exception handler will be executed and now time to look on the handlers. First of all let's look on the following handlers:
+More about the `idtentry` macro you can read in the third part of the [http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) chapter. Ok, now we saw the preparation before an exception handler will be executed and now time to look on the handlers. First of all let's look on the following handlers:
 
 * divide_error
 * overflow
@@ -192,7 +192,7 @@ static ATOMIC_NOTIFIER_HEAD(die_chain);
 return atomic_notifier_call_chain(&die_chain, val, &args);
 ```
 
-which just expands to the `atomit_notifier_head` structure that contains lock and `notifier_block`:
+which just expands to the `atomic_notifier_head` structure that contains lock and `notifier_block`:
 
 ```C
 struct atomic_notifier_head {
@@ -211,7 +211,7 @@ static inline void conditional_sti(struct pt_regs *regs)
 }
 ```
 
-more about `local_irq_enable` macro you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html) of this chapter. The next and last call in the `do_error_trap` is the `do_trap` function. First of all the `do_trap` function defined the `tsk` variable which has `trak_struct` type and represents the current interrupted process. After the definition of the `tsk`, we can see the call of the `do_trap_no_signal` function:
+more about `local_irq_enable` macro you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html) of this chapter. The next and last call in the `do_error_trap` is the `do_trap` function. First of all the `do_trap` function defined the `tsk` variable which has `task_struct` type and represents the current interrupted process. After the definition of the `tsk`, we can see the call of the `do_trap_no_signal` function:
 
 ```C
 struct task_struct *tsk = current;
@@ -280,7 +280,7 @@ This is the end of the `do_trap`. We just saw generic implementation for eight d
 Double fault
 --------------------------------------------------------------------------------
 
-The next exception is `#DF` or `Double fault`. This exception occurrs when the processor detected a second exception while calling an exception handler for a prior exception. We set the trap gate for this exception in the previous part:
+The next exception is `#DF` or `Double fault`. This exception occurs when the processor detected a second exception while calling an exception handler for a prior exception. We set the trap gate for this exception in the previous part:
 
 ```C
 set_intr_gate_ist(X86_TRAP_DF, &double_fault, DOUBLEFAULT_STACK);
