@@ -72,7 +72,7 @@ Now we know default physical and virtual addresses of the `startup_64` routine, 
 	subq	$_text - __START_KERNEL_map, %rbp
 ```
 
-Here we just put the `rip-relative` address to the `rbp` register and then subtract `$_text - __START_KERNEL_map` from it. We know that compiled address of the `_text` is `0xffffffff81000000` and `__START_KERNEL_map` contains `0xffffffff81000000`, so `rbp` will contain physical address of the `text` - `0x1000000` after this calculation. We need to calculate it because kernel can't be run on the default address, but now we know the actual physical address.
+Here we just put the `rip-relative` address to the `rbp` register and then subtract `$_text - __START_KERNEL_map` from it. We know that compiled address of the `_text` is `0xffffffff81000000` and `__START_KERNEL_map` contains `0xffffffff80000000`, so `rbp` will contain physical address of the `_text` - `0x1000000` after this calculation. We need to calculate it because kernel may not be running at the default address, but now we know the actual physical address.
 
 In the next step we checks that this address is aligned with:
 
@@ -122,7 +122,7 @@ The first step before we start to setup identity paging is to correct following 
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-Here we need to correct `early_level4_pgt` and other addresses of the page table directories, because as I wrote above, kernel can't be run at the default `0x1000000` address. `rbp` register contains actual address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
+Here we need to correct `early_level4_pgt` and other addresses of the page table directories, because as I wrote above, kernel may not be running at the default `0x1000000` address. `rbp` register contains the delta address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
 
 ```assembly
 NEXT_PAGE(early_level4_pgt)

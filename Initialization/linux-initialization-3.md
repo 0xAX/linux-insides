@@ -4,7 +4,7 @@ Kernel initialization. Part 3.
 Last preparations before the kernel entry point
 --------------------------------------------------------------------------------
 
-This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we will see call of the `start_kernel` function, we must do some preparations. So let's continue.
+This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we call the `start_kernel` function, we must do some preparations. So let's continue.
 
 boot_params again
 --------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ cmd_line_ptr |= (u64)boot_params.ext_cmd_line_ptr << 32;
 return cmd_line_ptr;
 ```
 
-which gets the 64-bit address of the command line from the kernel boot header and returns it. In the last step we check that we got `cmd_line_pty`, getting its virtual address and copy it to the `boot_command_line` which is just an array of bytes:
+which gets the 64-bit address of the command line from the kernel boot header and returns it. In the last step we check `cmd_line_ptr`, getting its virtual address and copy it to the `boot_command_line` which is just an array of bytes:
 
 ```C
 extern char __initdata boot_command_line[];
@@ -76,13 +76,13 @@ After microcode was loaded we can see the check of the `console_loglevel` and th
 Move on init pages
 --------------------------------------------------------------------------------
 
-In the next step as we have copied `boot_params` structure, we need to move from the early page tables to the page tables for initialization process. We already set early page tables for switchover, you can read about it in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) and dropped all it in the `reset_early_page_tables` function (you can read about it in the previous part too) and kept only kernel high mapping. After this we call:
+In the next step, as we have copied `boot_params` structure, we need to move from the early page tables to the page tables for initialization process. We already set early page tables for switchover, you can read about it in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) and dropped all it in the `reset_early_page_tables` function (you can read about it in the previous part too) and kept only kernel high mapping. After this we call:
 
 ```C
 	clear_page(init_level4_pgt);
 ```
 
-function and pass `init_level4_pgt` which defined also in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) and looks:
+function and pass `init_level4_pgt` which also defined in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) and looks:
 
 ```assembly
 NEXT_PAGE(init_level4_pgt)
@@ -93,7 +93,7 @@ NEXT_PAGE(init_level4_pgt)
 	.quad   level3_kernel_pgt - __START_KERNEL_map + _PAGE_TABLE
 ```
 
-which maps first 2 gigabytes and 512 megabytes for the kernel code, data and bss. `clear_page` function defined in the [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/lib/clear_page_64.S) let look on this function:
+which maps first 2 gigabytes and 512 megabytes for the kernel code, data and bss. `clear_page` function defined in the [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/lib/clear_page_64.S) let's look on this function:
 
 ```assembly
 ENTRY(clear_page)
@@ -121,14 +121,14 @@ ENTRY(clear_page)
 	ENDPROC(clear_page)
 ```
 
-As you can understart from the function name it clears or fills with zeros page tables. First of all note that this function starts with the `CFI_STARTPROC` and `CFI_ENDPROC` which are expands to GNU assembly directives:
+As you can understand from the function name it clears or fills with zeros page tables. First of all note that this function starts with the `CFI_STARTPROC` and `CFI_ENDPROC` which are expands to GNU assembly directives:
 
 ```C
 #define CFI_STARTPROC           .cfi_startproc
 #define CFI_ENDPROC             .cfi_endproc
 ```
 
-and used for debugging. After `CFI_STARTPROC` macro we zero out `eax` register and put 64 to the `ecx` (it will be counter). Next we can see loop which starts with the `.Lloop` label and it starts from the `ecx` decrement. After it we put zero from the `rax` register to the `rdi` which contains the base address of the `init_level4_pgt` now and do the same procedure seven times but every time move `rdi` offset on 8. After this we will have first 64 bytes of the `init_level4_pgt` filled with zeros. In the next step we put the address of the `init_level4_pgt` with 64-bytes offset to the `rdi` again and repeat all operations which `ecx` is not zero. In the end we will have `init_level4_pgt` filled with zeros.
+and used for debugging. After `CFI_STARTPROC` macro we zero out `eax` register and put 64 to the `ecx` (it will be a counter). Next we can see loop which starts with the `.Lloop` label and it starts from the `ecx` decrement. After it we put zero from the `rax` register to the `rdi` which contains the base address of the `init_level4_pgt` now and do the same procedure seven times but every time move `rdi` offset on 8. After this we will have first 64 bytes of the `init_level4_pgt` filled with zeros. In the next step we put the address of the `init_level4_pgt` with 64-bytes offset to the `rdi` again and repeat all operations until `ecx` reaches zero. In the end we will have `init_level4_pgt` filled with zeros.
 
 As we have `init_level4_pgt` filled with zeros, we set the last `init_level4_pgt` entry to kernel high mapping with the:
 
@@ -163,14 +163,14 @@ You can see that it is the last function before we are in the kernel entry point
 Last step before kernel entry point
 --------------------------------------------------------------------------------
 
-First of all we can see in the `x86_64_start_reservations` function check for `boot_params.hdr.version`:
+First of all we can see in the `x86_64_start_reservations` function the check for `boot_params.hdr.version`:
 
 ```C
 if (!boot_params.hdr.version)
 	copy_bootdata(__va(real_mode_data));
 ```
 
-and if it is not we call again `copy_bootdata` function with the virtual address of the `real_mode_data` (read about about it's implementation).
+and if it is zero we call `copy_bootdata` function again with the virtual address of the `real_mode_data` (read about about it's implementation).
 
 In the next step we can see the call of the `reserve_ebda_region` function which defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head.c). This function reserves memory block for th `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area located in the top of conventional memory and contains data about ports, disk parameters and etc...
 
@@ -420,7 +420,7 @@ It is the end of the third part about linux kernel insides. In next part we will
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

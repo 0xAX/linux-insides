@@ -4,7 +4,7 @@ Kernel initialization. Part 10.
 End of the linux kernel initialization process
 ================================================================================
 
-This is tenth part of the chapter about linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) and in the [previous part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-9.html) we saw the initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update) and stopped on the call of the `acpi_early_init` function. This part will be the last part of the [Kernel initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) chapter, so let's finish with it.
+This is tenth part of the chapter about linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) and in the [previous part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-9.html) we saw the initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update) and stopped on the call of the `acpi_early_init` function. This part will be the last part of the [Kernel initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) chapter, so let's finish it.
 
 After the call of the `acpi_early_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c), we can see the following code:
 
@@ -14,7 +14,7 @@ After the call of the `acpi_early_init` function from the [init/main.c](https://
 #endif
 ```
 
-Here we can see the call of the `init_espfix_bsp` function which depends on the `CONFIG_X86_ESPFIX64` kernel configuration option. As we can understand from the function name, it does something with the stack. This function defined in the [arch/x86/kernel/espfix_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/espfix_64.c) and prevents leaking of `31:16` bits of the `esp` register during returning to 16-bit stack. First of all we install `espfix` page upper directory into the kernel page directory in the `init_espfix_bs`:
+Here we can see the call of the `init_espfix_bsp` function which depends on the `CONFIG_X86_ESPFIX64` kernel configuration option. As we can understand from the function name, it does something with the stack. This function is defined in the [arch/x86/kernel/espfix_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/espfix_64.c) and prevents leaking of `31:16` bits of the `esp` register during returning to 16-bit stack. First of all we install `espfix` page upper directory into the kernel page directory in the `init_espfix_bs`:
 
 ```C
 pgd_p = &init_level4_pgt[pgd_index(ESPFIX_BASE_ADDR)];
@@ -29,7 +29,7 @@ Where `ESPFIX_BASE_ADDR` is:
 #define ESPFIX_BASE_ADDR (ESPFIX_PGD_ENTRY << PGDIR_SHIFT)
 ```
 
-Also we can find it in the [Documentation/arch/x86_64/mm](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt):
+Also we can find it in the [Documentation/x86/x86_64/mm](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt):
 
 ```
 ... unused hole ...
@@ -37,7 +37,7 @@ ffffff0000000000 - ffffff7fffffffff (=39 bits) %esp fixup stacks
 ... unused hole ...
 ```
 
-After we've filled page global directory with the `espfix` pud, the next step is call of the `init_espfix_random` and `init_espfix_ap` functions. The first function returns random locations for the `espfix` page and the second enables the `espfix` the current CPU. After the `init_espfix_bsp` finished to work, we can see the call of the `thread_info_cache_init` function which defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/master/kernel/fork.c) and allocates cache for the `thread_info` if its size is less than `PAGE_SIZE`:
+After we've filled page global directory with the `espfix` pud, the next step is call of the `init_espfix_random` and `init_espfix_ap` functions. The first function returns random locations for the `espfix` page and the second enables the `espfix` for the current CPU. After the `init_espfix_bsp` finished the work, we can see the call of the `thread_info_cache_init` function which defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/master/kernel/fork.c) and allocates cache for the `thread_info` if `THREAD_SIZE` is less than `PAGE_SIZE`:
 
 ```C
 # if THREAD_SIZE >= PAGE_SIZE
@@ -56,7 +56,7 @@ void thread_info_cache_init(void)
 #endif
 ```
 
-As we already know the `PAGE_SIZE` is `(_AC(1,UL) << PAGE_SHIFT)` or `4096` bytes and `THREAD_SIZE` is `(PAGE_SIZE << THREAD_SIZE_ORDER)` or `16384` bytes for the `x86_64`. The next function after the `thread_info_cache_init` is the `cred_init` from the [kernel/cred.c](https://github.com/torvalds/linux/blob/master/kernel/cred.c). This function just allocates space for the credentials (like `uid`, `gid` and etc...):
+As we already know the `PAGE_SIZE` is `(_AC(1,UL) << PAGE_SHIFT)` or `4096` bytes and `THREAD_SIZE` is `(PAGE_SIZE << THREAD_SIZE_ORDER)` or `16384` bytes for the `x86_64`. The next function after the `thread_info_cache_init` is the `cred_init` from the [kernel/cred.c](https://github.com/torvalds/linux/blob/master/kernel/cred.c). This function just allocates cache for the credentials (like `uid`, `gid`, etc.):
 
 ```C
 void __init cred_init(void)
@@ -66,7 +66,7 @@ void __init cred_init(void)
 }
 ```
 
-more about credentials you can read in the [Documentation/security/credentials.txt](https://github.com/torvalds/linux/blob/master/Documentation/security/credentials.txt). Next step is the `fork_init` function from the [kernel/fork.c](https://github.com/torvalds/linux/blob/master/kernel/fork.c). The `fork_init` function allocates space for the `task_struct`. Let's look on the implementation of the `fork_init`. First of all we can see definitions of the `ARCH_MIN_TASKALIGN` macro and creation of a slab where task_structs will be allocated:
+more about credentials you can read in the [Documentation/security/credentials.txt](https://github.com/torvalds/linux/blob/master/Documentation/security/credentials.txt). Next step is the `fork_init` function from the [kernel/fork.c](https://github.com/torvalds/linux/blob/master/kernel/fork.c). The `fork_init` function allocates cache for the `task_struct`. Let's look on the implementation of the `fork_init`. First of all we can see definitions of the `ARCH_MIN_TASKALIGN` macro and creation of a slab where task_structs will be allocated:
 
 ```C
 #ifndef CONFIG_ARCH_TASK_STRUCT_ALLOCATOR
@@ -97,7 +97,7 @@ void arch_task_cache_init(void)
 }
 ```
 
-The `arch_task_cache_init` does initialization of the architecture-specific caches. In our case it is `x86_64`, so as we can see, the `arch_task_cache_init` allocates space for the `task_xstate` which represents [FPU](http://en.wikipedia.org/wiki/Floating-point_unit) state and sets up offsets and sizes of all extended states in [xsave](http://www.felixcloutier.com/x86/XSAVES.html) area with the call of the `setup_xstate_comp` function. After the `arch_task_cache_init` we calculate default maximum number of threads with the:
+The `arch_task_cache_init` does initialization of the architecture-specific caches. In our case it is `x86_64`, so as we can see, the `arch_task_cache_init` allocates cache for the `task_xstate` which represents [FPU](http://en.wikipedia.org/wiki/Floating-point_unit) state and sets up offsets and sizes of all extended states in [xsave](http://www.felixcloutier.com/x86/XSAVES.html) area with the call of the `setup_xstate_comp` function. After the `arch_task_cache_init` we calculate default maximum number of threads with the:
 
 ```C
 set_max_threads(MAX_THREADS);
@@ -128,7 +128,7 @@ struct rlimit {
 };
 ```
 
-structure from the [include/uapi/linux/resource.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/resource.h). In our case the resource is the `RLIMIT_NPROC` which is the maximum number of process that use can own and `RLIMIT_SIGPENDING` - the maximum number of pending signals. We can see it in the:
+structure from the [include/uapi/linux/resource.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/resource.h). In our case the resource is the `RLIMIT_NPROC` which is the maximum number of processes that user can own and `RLIMIT_SIGPENDING` - the maximum number of pending signals. We can see it in the:
 
 ```C
 cat /proc/self/limits
@@ -168,7 +168,7 @@ After this we allocate `SLAB` cache for the important `vm_area_struct` which use
 vm_area_cachep = KMEM_CACHE(vm_area_struct, SLAB_PANIC);
 ```
 
-Note, that we use `KMEM_CACHE` macro here instead of the `kmem_cache_create`. This macro defined in the [include/linux/slab.h](https://github.com/torvalds/linux/blob/master/include/linux/slab.h) and just expands to the `kmem_cache_create` call:
+Note, that we use `KMEM_CACHE` macro here instead of the `kmem_cache_create`. This macro is defined in the [include/linux/slab.h](https://github.com/torvalds/linux/blob/master/include/linux/slab.h) and just expands to the `kmem_cache_create` call:
 
 ```C
 #define KMEM_CACHE(__struct, __flags) kmem_cache_create(#__struct,\
@@ -178,14 +178,14 @@ Note, that we use `KMEM_CACHE` macro here instead of the `kmem_cache_create`. Th
 
 The `KMEM_CACHE` has one difference from `kmem_cache_create`. Take a look on `__alignof__` operator. The `KMEM_CACHE` macro aligns `SLAB` to the size of the given structure, but `kmem_cache_create` uses given value to align space. After this we can see the call of the `mmap_init` and `nsproxy_cache_init` functions. The first function initalizes virtual memory area `SLAB` and the second function initializes `SLAB` for namespaces.
 
-The next function after the `proc_caches_init` is `buffer_init`. This function defined in the [fs/buffer.c](https://github.com/torvalds/linux/blob/master/fs/buffer.c) source code file and allocate cache for the `buffer_head`. The `buffer_head` is a special structure which defined in the [include/linux/buffer_head.h](https://github.com/torvalds/linux/blob/master/include/linux/buffer_head.h) and used for managing buffers. In the start of the `bufer_init` function we allocate cache for the `struct buffer_head` structures with the call of the `kmem_cache_create` function as we did it in the previous functions. And calcuate the maximum size of the buffers in memory with:
+The next function after the `proc_caches_init` is `buffer_init`. This function is defined in the [fs/buffer.c](https://github.com/torvalds/linux/blob/master/fs/buffer.c) source code file and allocate cache for the `buffer_head`. The `buffer_head` is a special structure which defined in the [include/linux/buffer_head.h](https://github.com/torvalds/linux/blob/master/include/linux/buffer_head.h) and used for managing buffers. In the start of the `bufer_init` function we allocate cache for the `struct buffer_head` structures with the call of the `kmem_cache_create` function as we did in the previous functions. And calcuate the maximum size of the buffers in memory with:
 
 ```C
 nrpages = (nr_free_buffer_pages() * 10) / 100;
 max_buffer_heads = nrpages * (PAGE_SIZE / sizeof(struct buffer_head));
 ```
 
-which will be equal to the `10%` of the `ZONE_NORMAL` (all RAM from the 4GB on the `x86_64`). The next function after the `buffer_init` is - `vfs_caches_init`. This function allocates `SLAB` caches and hashtable for different [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) caches. We already saw the `vfs_caches_init_early` function in the eighth part of the linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-8.html) which initialized caches for `dcache` (or directory-cache) and [inode](http://en.wikipedia.org/wiki/Inode) cache. The `vfs_caches_init` function makes post-early initialization of the `dcache` and `inode` caches, private data cache, hash tables for the mount points and etc... More details about [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) will be described in the separate part. After this we can see `signals_init` function. This function defined in the [kernel/signal.c](https://github.com/torvalds/linux/blob/master/kernel/signal.c) and allocates a cache for the `sigqueue` structures which represents queue of the real time signals. The next function is `page_writeback_init`. This function initializes the ratio for the dirty pages. Every low-level page entry contains the `dirty` bit which indicates whether a page has been written to when set.
+which will be equal to the `10%` of the `ZONE_NORMAL` (all RAM from the 4GB on the `x86_64`). The next function after the `buffer_init` is - `vfs_caches_init`. This function allocates `SLAB` caches and hashtable for different [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) caches. We already saw the `vfs_caches_init_early` function in the eighth part of the linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-8.html) which initialized caches for `dcache` (or directory-cache) and [inode](http://en.wikipedia.org/wiki/Inode) cache. The `vfs_caches_init` function makes post-early initialization of the `dcache` and `inode` caches, private data cache, hash tables for the mount points, etc. More details about [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) will be described in the separate part. After this we can see `signals_init` function. This function is defined in the [kernel/signal.c](https://github.com/torvalds/linux/blob/master/kernel/signal.c) and allocates a cache for the `sigqueue` structures which represents queue of the real time signals. The next function is `page_writeback_init`. This function initializes the ratio for the dirty pages. Every low-level page entry contains the `dirty` bit which indicates whether a page has been written to after been loaded into memory.
 
 Creation of the root for the procfs
 --------------------------------------------------------------------------------
@@ -198,7 +198,7 @@ err = register_filesystem(&proc_fs_type);
                 return;
 ```
 
-As I wrote above we will not dive into details about [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) and different filesystems in this chapter, but will see it in the chapter about the `VFS`. After we've registered a new filesystem in the our system, we call the `proc_self_init` function from the TO[fs/proc/self.c](https://github.com/torvalds/linux/blob/master/fs/proc/self.c) and this function allocates `inode` number for the `self` (`/proc/self` directory refers to the process accessing the `/proc` filesystem). The next step after the `proc_self_init` is `proc_setup_thread_self` which setups the `/proc/thread-self` directory which contains information about current thread. After this we create `/proc/self/mounts` symllink which will contains mount points with the call of the
+As I wrote above we will not dive into details about [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) and different filesystems in this chapter, but will see it in the chapter about the `VFS`. After we've registered a new filesystem in our system, we call the `proc_self_init` function from the [fs/proc/self.c](https://github.com/torvalds/linux/blob/master/fs/proc/self.c) and this function allocates `inode` number for the `self` (`/proc/self` directory refers to the process accessing the `/proc` filesystem). The next step after the `proc_self_init` is `proc_setup_thread_self` which setups the `/proc/thread-self` directory which contains information about current thread. After this we create `/proc/self/mounts` symllink which will contains mount points with the call of the
 
 ```C
 proc_symlink("mounts", NULL, "self/mounts");
@@ -230,14 +230,14 @@ and a couple of directories depends on the different configuration options:
 
 In the end of the `proc_root_init` we call the `proc_sys_init` function which creates `/proc/sys` directory and initializes the [Sysctl](http://en.wikipedia.org/wiki/Sysctl).
 
-It is the end of `start_kernel` function. I did not describe all functions which are called in the `start_kernel`. I missed it, because they are not so important for the generic kernel initialization stuff and depend on only different kernel configurations. They are `taskstats_init_early` which exports per-task statistic to the user-space, `delayacct_init` - initializes per-task delay accounting, `key_init` and `security_init` initialize diferent security stuff, `check_bugs` - makes fix up of the some architecture-dependent bugs, `ftrace_init` function executes initialization of the [ftrace](https://www.kernel.org/doc/Documentation/trace/ftrace.txt), `cgroup_init` makes initialization of the rest of the [cgroup](http://en.wikipedia.org/wiki/Cgroups) subsystem and etc... Many of these parts and subsystems will be described in the other chapters.
+It is the end of `start_kernel` function. I did not describe all functions which are called in the `start_kernel`. I skipped them, because they are not important for the generic kernel initialization stuff and depend on only different kernel configurations. They are `taskstats_init_early` which exports per-task statistic to the user-space, `delayacct_init` - initializes per-task delay accounting, `key_init` and `security_init` initialize diferent security stuff, `check_bugs` - fix some architecture-dependent bugs, `ftrace_init` function executes initialization of the [ftrace](https://www.kernel.org/doc/Documentation/trace/ftrace.txt), `cgroup_init` makes initialization of the rest of the [cgroup](http://en.wikipedia.org/wiki/Cgroups) subsystem,etc. Many of these parts and subsystems will be described in the other chapters.
 
-That's all. Finally we passed through the long-long `start_kernel` function. But it is not the end of the linux kernel initialization process. We haven't run the first process yet. In the end of the `start_kernel` we can see the last call of the - `rest_init` function. Let's go ahead.
+That's all. Finally we have passed through the long-long `start_kernel` function. But it is not the end of the linux kernel initialization process. We haven't run the first process yet. In the end of the `start_kernel` we can see the last call of the - `rest_init` function. Let's go ahead.
 
 First steps after the start_kernel
 --------------------------------------------------------------------------------
 
-The `rest_init` function defined in the same source code file as `start_kernel` function, and this file is [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). In the beginning of the `rest_init` we can see call of the two following functions:
+The `rest_init` function is defined in the same source code file as `start_kernel` function, and this file is [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). In the beginning of the `rest_init` we can see call of the two following functions:
 
 ```C
 	rcu_scheduler_starting();
@@ -257,14 +257,14 @@ Here the `kernel_thread` function (defined in the [kernel/fork.c](https://github
 * Parameter for the `kernel_init` function;
 * Flags.
 
-We will not dive into details about `kernel_thread` implementation (we will see it in the chapter which will describe scheduler, just need to say that `kernel_thread` invokes [clone](http://www.tutorialspoint.com/unix_system_calls/clone.htm)). Now we only need to know that we create new kernel thread with `kernel_thread` function, parent and child of the thread will use shared information about a filesystem and it will start to execute `kernel_init` function. A kernel thread differs from an user thread that it runs in a kernel mode. So with these two `kernel_thread` calls we create two new kernel threads with the `PID = 1` for `init` process and `PID = 2` for `kthread`. We already know what is `init` process. Let's look on the `kthread`. It is special kernel thread which allows to `init` and different parts of the kernel to create another kernel threads. We can see it in the output of the `ps` util:
+We will not dive into details about `kernel_thread` implementation (we will see it in the chapter which describe scheduler, just need to say that `kernel_thread` invokes [clone](http://www.tutorialspoint.com/unix_system_calls/clone.htm)). Now we only need to know that we create new kernel thread with `kernel_thread` function, parent and child of the thread will use shared information about filesystem and it will start to execute `kernel_init` function. A kernel thread differs from an user thread that it runs in kernel mode. So with these two `kernel_thread` calls we create two new kernel threads with the `PID = 1` for `init` process and `PID = 2` for `kthreadd`. We already know what is `init` process. Let's look on the `kthreadd`. It is a special kernel thread which manages and helps different parts of the kernel to create another kernel thread. We can see it in the output of the `ps` util:
 
 ```C
-$ ps -ef | grep kthradd
-alex     12866  4767  0 18:26 pts/0    00:00:00 grep kthradd
+$ ps -ef | grep kthread
+root         2     0  0 Jan11 ?        00:00:00 [kthreadd]
 ```
 
-Let's postpone `kernel_init` and `kthreadd` for now and will go ahead in the `rest_init`. In the next step after we have created two new kernel threads we can see the following code:
+Let's postpone `kernel_init` and `kthreadd` for now and go ahead in the `rest_init`. In the next step after we have created two new kernel threads we can see the following code:
 
 ```C
 	rcu_read_lock();
@@ -272,7 +272,7 @@ Let's postpone `kernel_init` and `kthreadd` for now and will go ahead in the `re
 	rcu_read_unlock();
 ```
     
-The first `rcu_read_lock` function marks the beginning of an [RCU](http://en.wikipedia.org/wiki/Read-copy-update) read-side critical section and the `rcu_read_unlock` marks the end of an RCU read-side critical section. We call these functions because we need to protect the `find_task_by_pid_ns`. The `find_task_by_pid_ns` returns pointer to the `task_struct` by the given pid. So, here we are getting the pointer to the `task_struct` for the `PID = 2` (we got it after `kthreadd` creation with the `kernel_thread`). In the next step we call `complete` function
+The first `rcu_read_lock` function marks the beginning of an [RCU](http://en.wikipedia.org/wiki/Read-copy-update) read-side critical section and the `rcu_read_unlock` marks the end of an RCU read-side critical section. We call these functions because we need to protect the `find_task_by_pid_ns`. The `find_task_by_pid_ns` returns pointer to the `task_struct` by the given pid. So, here we are getting the pointer to the `task_struct` for `PID = 2` (we got it after `kthreadd` creation with the `kernel_thread`). In the next step we call `complete` function
 
 ```C
 complete(&kthreadd_done);
@@ -291,7 +291,7 @@ where `DECLARE_COMPLETION` macro defined as:
          struct completion work = COMPLETION_INITIALIZER(work)
 ```
 
-and expands to the definition of the `completion` structure. This structure defined in the [include/linux/completion.h](https://github.com/torvalds/linux/blob/master/include/linux/completion.h) and presents `completions` concept. Completions are a code synchronization mechanism which is provide race-free solution for the threads that must wait for some process to have reached a point or a specific state. Using completions consists of three parts: The first is definition of the `complete` structure and we did it with the `DECLARE_COMPLETION`. The second is call of the `wait_for_completion`. After the call of this function, a thread which called it will not continue to execute and will wait while other thread did not call `complete` function. Note that we call `wait_for_completion` with the `kthreadd_done` in the beginning of the `kernel_init_freeable`:
+and expands to the definition of the `completion` structure. This structure is defined in the [include/linux/completion.h](https://github.com/torvalds/linux/blob/master/include/linux/completion.h) and presents `completions` concept. Completions is a code synchronization mechanism which provides race-free solution for the threads that must wait for some process to have reached a point or a specific state. Using completions consists of three parts: The first is definition of the `complete` structure and we did it with the `DECLARE_COMPLETION`. The second is call of the `wait_for_completion`. After the call of this function, a thread which called it will not continue to execute and will wait while other thread did not call `complete` function. Note that we call `wait_for_completion` with the `kthreadd_done` in the beginning of the `kernel_init_freeable`:
 
 ```C
 wait_for_completion(&kthreadd_done);
@@ -314,7 +314,7 @@ void init_idle_bootup_task(struct task_struct *idle)
 }
 ```
 
-where `idle` class is a low priority tasks and tasks can be run only when the processor doesn't have to run anything besides this tasks. The second function `schedule_preempt_disabled` disables preempt in `idle` tasks. And the third function `cpu_startup_entry` defined in the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/master/sched/idle.c) and calls `cpu_idle_loop` from the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/master/sched/idle.c). The `cpu_idle_loop` function works as process with `PID = 0` and works in the background. Main purpose of the `cpu_idle_loop` is usage of the idle CPU cycles. When there are no one process to run, this process starts to work. We have one process with `idle` scheduling class (we just set the `current` task to the `idle` with the call of the `init_idle_bootup_task` function), so the `idle` thread does not do useful work and checks that there is not active task to switch: 
+where `idle` class is a low task priority and tasks can be run only when the processor doesn't have anything to run besides this tasks. The second function `schedule_preempt_disabled` disables preempt in `idle` tasks. And the third function `cpu_startup_entry` is defined in the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/master/sched/idle.c) and calls `cpu_idle_loop` from the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/master/sched/idle.c). The `cpu_idle_loop` function works as process with `PID = 0` and works in the background. Main purpose of the `cpu_idle_loop` is to consume the idle CPU cycles. When there is no process to run, this process starts to work. We have one process with `idle` scheduling class (we just set the `current` task to the `idle` with the call of the `init_idle_bootup_task` function), so the `idle` thread does not do useful work but just checks if there is an active task to switch to: 
 
 ```C
 static void cpu_idle_loop(void)
@@ -338,7 +338,7 @@ More about it will be in the chapter about scheduler. So for this moment the `st
 wait_for_completion(&kthreadd_done);
 ```
 
-After this we set `gfp_allowed_mask` to `__GFP_BITS_MASK` which means that already system is running, set allowed [cpus/mems](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to all CPUs and [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) nodes with the `set_mems_allowed` function, allow `init` process to run on any CPU with the `set_cpus_allowed_ptr`, set pid for the `cad` or `Ctrl-Alt-Delete`, do preparation for booting of the other CPUs with the call of the `smp_prepare_cpus`, call early [initcalls](http://kernelnewbies.org/Documents/InitcallMechanism) with the `do_pre_smp_initcalls`, initialization of the `SMP` with the `smp_init` and initialization of the [lockup_detector](https://www.kernel.org/doc/Documentation/lockup-watchdogs.txt) with the call of the `lockup_detector_init` and initialize scheduler with the `sched_init_smp`.
+After this we set `gfp_allowed_mask` to `__GFP_BITS_MASK` which means that system is already running, set allowed [cpus/mems](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to all CPUs and [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) nodes with the `set_mems_allowed` function, allow `init` process to run on any CPU with the `set_cpus_allowed_ptr`, set pid for the `cad` or `Ctrl-Alt-Delete`, do preparation for booting of the other CPUs with the call of the `smp_prepare_cpus`, call early [initcalls](http://kernelnewbies.org/Documents/InitcallMechanism) with the `do_pre_smp_initcalls`, initialize `SMP` with the `smp_init` and initialize [lockup_detector](https://www.kernel.org/doc/Documentation/lockup-watchdogs.txt) with the call of the `lockup_detector_init` and initialize scheduler with the `sched_init_smp`.
 
 After this we can see the call of the following functions - `do_basic_setup`. Before we will call the `do_basic_setup` function, our kernel already initialized for this moment. As comment says:
 
@@ -346,7 +346,7 @@ After this we can see the call of the following functions - `do_basic_setup`. Be
 Now we can finally start doing some real work..
 ```
 
-The `do_basic_setup` will reinitialize [cpuset](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to the active CPUs, initialization of the `khelper` - which is a kernel thread which used for making calls out to userspace from within the kernel, initialize [tmpfs](http://en.wikipedia.org/wiki/Tmpfs), initialize `drivers` subsystem, enable the user-mode helper `workqueue`  and make post-early call of the `initcalls`. We can see openinng of the `dev/console` and dup twice file descriptors from `0` to `2` after the `do_basic_setup`:
+The `do_basic_setup` will reinitialize [cpuset](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to the active CPUs, initialize the `khelper` - which is a kernel thread which used for making calls out to userspace from within the kernel, initialize [tmpfs](http://en.wikipedia.org/wiki/Tmpfs), initialize `drivers` subsystem, enable the user-mode helper `workqueue`  and make post-early call of the `initcalls`. We can see openinng of the `dev/console` and dup twice file descriptors from `0` to `2` after the `do_basic_setup`:
 
 
 ```C
@@ -406,7 +406,7 @@ return do_execve(getname_kernel(init_filename),
 	(const char __user *const __user *)envp_init);
 ```
 
-The `do_execve` function defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) and runs program with the given file name and arguments. If we did not pass `rdinit=` option to the kernel command line, kernel starts to check the `execute_command` which is equal to value of the `init=` kernel command line parameter:
+The `do_execve` function is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) and runs program with the given file name and arguments. If we did not pass `rdinit=` option to the kernel command line, kernel starts to check the `execute_command` which is equal to value of the `init=` kernel command line parameter:
 
 ```C
 	if (execute_command) {
@@ -418,7 +418,7 @@ The `do_execve` function defined in the [include/linux/sched.h](https://github.c
 	}
 ```
 
-If we did not pass `init=` kernel command line parameter too, kernel tries to run one of the following executable files: 
+If we did not pass `init=` kernel command line parameter either, kernel tries to run one of the following executable files: 
 
 ```C
 if (!try_to_run_init_process("/sbin/init") ||
@@ -428,7 +428,7 @@ if (!try_to_run_init_process("/sbin/init") ||
 	return 0;
 ```
 
-In other way we finish with [panic](http://en.wikipedia.org/wiki/Kernel_panic):
+Otherwise we finish with [panic](http://en.wikipedia.org/wiki/Kernel_panic):
 
 ```C
 panic("No working init found.  Try passing init= option to kernel. "
@@ -440,11 +440,11 @@ That's all! Linux kernel initialization process is finished!
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the tenth part about the linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). And it is not only `tenth` part, but this is the last part which describes initialization of the linux kernel. As I wrote in the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of this chapter, we will go through all steps of the kernel initialization and we did it. We started at the first architecture-independent function - `start_kernel` and finished with the launch of the first `init` process in the our system. I missed details about different subsystem of the kernel, for example I almost did not cover linux kernel scheduler or we did not see almost anything about interrupts and exceptions handling and etc... From the next part we will start to dive to the different kernel subsystems. Hope it will be interesting.
+It is the end of the tenth part about the linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). It is not only the `tenth` part, but also is the last part which describes initialization of the linux kernel. As I wrote in the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of this chapter, we will go through all steps of the kernel initialization and we did it. We started at the first architecture-independent function - `start_kernel` and finished with the launch of the first `init` process in the our system. I skipped details about different subsystem of the kernel, for example I almost did not cover scheduler, interrupts, exception handling, etc. From the next part we will start to dive to the different kernel subsystems. Hope it will be interesting.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

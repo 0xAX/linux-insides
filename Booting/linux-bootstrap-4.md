@@ -486,7 +486,7 @@ This is the end of the fourth part linux kernel booting process. If you have que
 
 In the next part we will see kernel decompression and many more.
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
 
 Links
 --------------------------------------------------------------------------------
