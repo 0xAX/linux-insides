@@ -78,3 +78,4 @@ Thank you to all contributors:
 * [Ruth Grace Wong](https://github.com/ruthgrace)
 * [Jeremy Lacomis](https://github.com/jlacomis)
 * [Dubyah](https://github.com/Dubyah)
+* [Matthieu Tardy](https://github.com/c0riolis)

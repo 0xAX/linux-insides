@@ -34,10 +34,10 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode). Let's back up a little to try and understand memory segmentation in this mode. Real mode is supported on all x86-compatible processors, from the [8086](https://en.wikipedia.org/wiki/Intel_8086) all the way to the modern Intel 64-bit CPUs. The 8086 processor has a 20-bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it only has 16-bit registers, and with 16-bit registers the maximum address is 2^16 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all the address space available. All memory is divided into small, fixed-size segments of 65535 bytes, or 64 KB. Since we cannot address memory above 64 KB with 16 bit registers, an alternate method is devised. An address consists of two parts: the beginning address of the segment and an offset from this address. To get a physical address in memory, we need to multiply the segment part by 16 and add the offset part:
+The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode). Let's back up a little to try and understand memory segmentation in this mode. Real mode is supported on all x86-compatible processors, from the [8086](https://en.wikipedia.org/wiki/Intel_8086) all the way to the modern Intel 64-bit CPUs. The 8086 processor has a 20-bit address bus, which means that it could work with a 0-0x100000 address space (1 megabyte). But it only has 16-bit registers, and with 16-bit registers the maximum address is 2^16 - 1 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all the address space available. All memory is divided into small, fixed-size segments of 65536 bytes, or 64 KB. Since we cannot address memory above 64 KB with 16 bit registers, an alternate method is devised. An address consists of two parts: a segment selector which has an associated base address and an offset from this base address. In real mode, the associated base address of a segment selector is `Segment Selector * 16`. Thus, to get a physical address in memory, we need to multiply the segment selector part by 16 and add the offset part:
 
 ```
-PhysicalAddress = Segment * 16 + Offset
+PhysicalAddress = Segment Selector * 16 + Offset
 ```
 
 For example if `CS:IP` is `0x2000:0x0010`, the corresponding physical address will be:
@@ -47,22 +47,18 @@ For example if `CS:IP` is `0x2000:0x0010`, the corresponding physical address wi
 '0x20010'
 ```
 
-But if we take the largest segment part and offset: `0xffff:0xffff`, it will be:
+But if we take the largest segment selector and offset: `0xffff:0xffff`, it will be:
 
 ```python
 >>> hex((0xffff << 4) + 0xffff)
 '0x10ffef'
 ```
 
-which is 65519 bytes over first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](https://en.wikipedia.org/wiki/A20_line).
+which is 65520 bytes over first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](https://en.wikipedia.org/wiki/A20_line).
 
 Ok, now we know about real mode and memory addressing. Let's get back to discuss about register values after reset:
 
-The `CS` register consists of two parts: the visible segment selector and hidden base address. We know the predefined `CS` base and `IP` value, so the logical address will be:
-
-```
-0xffff0000:0xfff0
-```
+The `CS` register consists of two parts: the visible segment selector and the hidden base address. While the base address is normally formed by multiplying the segment selector value by 16, during a hardware reset, the segment selector in the CS register is loaded with 0xf000 and the base address is loaded with 0xffff0000. The processor use this special base address until CS is changed.
 
 The starting address is formed by adding the base address to the value in the EIP register:
 
@@ -147,7 +143,7 @@ A real-world boot sector has code to continue the boot process and the partition
 **NOTE**: As you can read above the CPU is in real mode. In real mode, calculating the physical address in memory is done as follows:
 
 ```
-PhysicalAddress = Segment * 16 + Offset
+PhysicalAddress = Segment Selector * 16 + Offset
 ```
 
 The same as mentioned before. We have only 16 bit general purpose registers, the maximum value of a 16 bit register is `0xffff`, so if we take the largest values, the result will be:
@@ -282,7 +278,7 @@ It needs this to load an operating system with [UEFI](https://en.wikipedia.org/w
 
 So the actual kernel setup entry point is:
 
-```
+```assembly
 // header.S line 292
 .globl _start
 _start:
@@ -342,17 +338,17 @@ Let's look at the implementation.
 Segment registers align
 --------------------------------------------------------------------------------
 
-First of all it ensures that `ds` and `es` segment registers point to the same address and disables interrupts with the `cli` instruction:
+First of all it ensures that `ds` and `es` segment registers point to the same address and clears the direction flag with the `cld` instruction:
 
 ```assembly
 	movw	%ds, %ax
 	movw	%ax, %es
-	cli
+	cld
 ```
 
 As I wrote earlier, grub2 loads kernel setup code at address `0x10000` and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
 
-```
+```assembly
 _start:
 	.byte 0xeb
 	.byte start_of_setup-1f
@@ -390,7 +386,7 @@ Let's look at all three of these scenarios:
 
 * `ss` has a correct address (0x10000). In this case we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
 
-```
+```assembly
 2: 	andw	$~3, %dx
 	jnz	3f
 	movw	$0xfffc, %dx
