@@ -57,7 +57,7 @@ As we can see, the `sys_call_table` is an array of `__NR_syscall_max + 1` size w
 #define __NR_syscall_max 322
 ```
 
-There will be the same number of system calls in the [arch/x86/entry/syscalls/syscall_64.tbl](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L331) for the `x86_64`. There are two important topics here; the type of the `sys_call_table` array, and the initialization of elements in this array. First of all, the type. The `sys_call_ptr_t` represents a pointer to a system call table. It is defined as [typedef](https://en.wikipedia.org/wiki/Typedef) for a function pointer that returns nothing and and does not take arguments:
+There will be the same number of system calls in the [arch/x86/entry/syscalls/syscall_64.tbl](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L331) for the `x86_64`. There are two important topics here; the type of the `sys_call_table` array, and the initialization of elements in this array. First of all, the type. The `sys_call_ptr_t` represents a pointer to a system call table. It is defined as [typedef](https://en.wikipedia.org/wiki/Typedef) for a function pointer that returns nothing and does not take arguments:
 
 ```C
 typedef void (*sys_call_ptr_t)(void);
@@ -196,7 +196,7 @@ These flags will be cleared during syscall initialization. That's all, it is the
 Preparation before system call handler will be called
 --------------------------------------------------------------------------------
 
-As I already wrote, before a system call or an interrupt handler will be called by the Linux kernel we need to do some preparations. The `idtentry` macro performs the preparations required before an exception handler will be executed, the `interrupt` macro performs the preparations requires before an interrupt handler will be called and the `entry_SYSCALL_64` will do the preparations required before a system call handler will be executed.
+As I already wrote, before a system call or an interrupt handler will be called by the Linux kernel we need to do some preparations. The `idtentry` macro performs the preparations required before an exception handler will be executed, the `interrupt` macro performs the preparations required before an interrupt handler will be called and the `entry_SYSCALL_64` will do the preparations required before a system call handler will be executed.
 
 The `entry_SYSCALL_64` is defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S)  assembly file and starts from the following macro:
 
