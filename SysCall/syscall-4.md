@@ -249,7 +249,7 @@ And set the pointer to the top of new program's stack that we set in the `bprm_m
 bprm->exec = bprm->p;
 ```
 
-The top of the stack will contain the program filename and we store this filename to the `exec` field of the `linux_bprm` structure.
+The top of the stack will contain the program filename and we store this fileneme to the `exec` field of the `linux_bprm` structure.
 
 Now we have filled `linux_bprm` structure, we call the `exec_binprm` function:
 
@@ -284,7 +284,7 @@ function. This function goes through the list of handlers that contains differen
 * `binfmt_elf_fdpic` - Support for [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF) binaries;
 * `binfmt_em86` - support for Intel [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) binaries running on [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha) machines.
 
-So, the search_binary_handler tries to call the `load_binary` function and pass `linux_binprm` to it. If the binary handler supports the given executable file format, it starts to prepare the executable binary for execution:
+So, the `search_binary_handler` tries to call the `load_binary` function and pass `linux_binprm` to it. If the binary handler supports the given executable file format, it starts to prepare the executable binary for execution:
 
 ```C
 int search_binary_handler(struct linux_binprm *bprm)
