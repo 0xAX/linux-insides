@@ -41,7 +41,7 @@ As you can read in the previous part, addresses consist of two parts in real mod
 And we can get the physical address if we know these two parts by:
 
 ```
-PhysicalAddress = Segment * 16 + Offset
+PhysicalAddress = Segment Selector * 16 + Offset
 ```
 
 Memory segmentation was completely redone in protected mode. There are no 64 Kilobyte fixed-size segments. Instead, the size and location of each segment is described by an associated data structure called _Segment Descriptor_. The segment descriptors are stored in a data structure called `Global Descriptor Table` (GDT).
@@ -135,11 +135,12 @@ As we can see the first bit(bit 43) is `0` for a _data_ segment and `1` for a _c
 
 8. D/B flag(bit 54) - Default/Big flag represents the operand size i.e 16/32 bits. If it is set then 32 bit otherwise 16.
 
-Segment registers don't contain the base address of the segment as in real mode. Instead they contain a special structure - `Segment Selector`. Each Segment Descriptor has an associated Segment Selector. `Segment Selector` is a 16-bit structure:
+Segment registers contain segment selectors as in real mode. However, in protected mode, a segment selector is handled differently. Each Segment Descriptor has an associated Segment Selector which is a 16-bit structure:
 
 ```
+15              3  2   1  0
 -----------------------------
-|       Index    | TI | RPL |
+|      Index     | TI | RPL |
 -----------------------------
 ```
 
@@ -213,8 +214,8 @@ memcpy(&boot_params.hdr, &hdr, sizeof hdr);
 ```
 
 So,
-* `ax` will contain the address of the `boot_params.hdr` in bytes
-* `dx` will contain the address of `hdr` in bytes
+* `ax` will contain the address of the `boot_params.hdr`
+* `dx` will contain the address of `hdr`
 * `cx` will contain the size of `hdr` in bytes.
 
 `memcpy` puts the address of `boot_params.hdr` into `si` and saves the size on the stack. After this it shifts to the right on 2 size (or divide on 4) and copies from `si` to `di` by 4 bytes. After this we restore the size of `hdr` again, align it by 4 bytes and copy the rest of the bytes from `si` to `di` byte by byte (if there is more). Restore `si` and `di` values from the stack in the end and after this copying is finished.
