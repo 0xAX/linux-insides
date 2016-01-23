@@ -419,9 +419,9 @@ So, we already know that before we can move into `64-bit` mode, we need to build
 
 The Linux kernel uses `4-level` paging, and generally we build 6 page tables:
 
-* One `PML4` or `Page Map Level 4` table;
-* One `PDP` or `Page Directory Pointer`  table;
-* Four Page Directory tables.
+* One `PML4` or `Page Map Level 4` table with one entry;
+* One `PDP` or `Page Directory Pointer` table with four entries;
+* Four Page Directory tables with `2048` entries.
 
 Let's look at the implementation of this. First of all we clear the buffer for the page tables in memory. Every table is `4096` bytes, so we need clear `24` kilobytes buffer:
 
@@ -468,7 +468,7 @@ In the next step we will build four `Page Directory` entries in the `Page Direct
 	jnz	1b
 ```
 
-We put the base address of the page directory pointer which is `4096` or `0x1000` offset from the `pgtable` table in `edi` and the address of the first page directory pointer entry in `eax` register. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register. After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries where each entry is `8` bytes, and write their addresses to `eax`. The next step is the building the `2048` page table entries with `2-MByte` pages:
+We put the base address of the page directory pointer which is `4096` or `0x1000` offset from the `pgtable` table in `edi` and the address of the first page directory pointer entry in `eax` register. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry to the `edi` register. After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries where each entry is `8` bytes, and write their addresses to `eax`. The last step of building paging structure is the building of the `2048` page table entries with `2-MByte` pages:
 
 ```assembly
 	leal	pgtable + 0x2000(%ebx), %edi
