@@ -497,7 +497,7 @@ Here we do almost the same as in the previous example, all entries will be with 
 
 That's all. All preparation are finished and now we can see transition to the long mode.
 
-Transition to long mode
+Transition to the 64-bit mode
 --------------------------------------------------------------------------------
 
 First of all we need to set the `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
@@ -525,13 +525,13 @@ After this we push this address to the stack and enable paging by setting `PG` a
 	movl	%eax, %cr0
 ```
 
-and call:
+and execute:
 
 ```assembly
 lret
 ```
 
-Remember that we pushed the address of the `startup_64` function to the stack in the previous step, and after the `lret` instruction, the CPU extracts the address of it and jumps there.
+instruction. Remember that we pushed the address of the `startup_64` function to the stack in the previous step, and after the `lret` instruction, the CPU extracts the address of it and jumps there.
 
 After all of these steps we're finally in 64-bit mode:
 
