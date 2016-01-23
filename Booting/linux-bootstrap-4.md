@@ -4,7 +4,7 @@ Kernel booting process. Part 4.
 Transition to 64-bit mode
 --------------------------------------------------------------------------------
 
-It is the fourth part of the `Kernel booting process` and we will see first steps in the [protected mode](http://en.wikipedia.org/wiki/Protected_mode), like checking that cpu supports the [long mode](http://en.wikipedia.org/wiki/Long_mode) and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions), [paging](http://en.wikipedia.org/wiki/Paging) and initialization of the page tables and transition to the long mode in in the end of this part.
+It is the fourth part of the `Kernel booting process` and we will see first steps in the [protected mode](http://en.wikipedia.org/wiki/Protected_mode), like checking that cpu supports the [long mode](http://en.wikipedia.org/wiki/Long_mode) and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions), [paging](http://en.wikipedia.org/wiki/Paging) and initialization of the page tables and transition to the [long mode](https://en.wikipedia.org/wiki/Long_mode) in in the end of this part.
 
 **NOTE: will be much assembly code in this part, so if you have poor knowledge, read a book about it**
 
@@ -386,44 +386,44 @@ Now we are almost finished with all preparations before we can move into 64-bit 
 Long mode
 --------------------------------------------------------------------------------
 
-Long mode is the native mode for x86_64 processors. First of all let's look at some differences between `x86_64` and `x86`.
+The [long mode](https://en.wikipedia.org/wiki/Long_mode) is the native mode for [x86_64](https://en.wikipedia.org/wiki/X86-64) processors. First of all let's look at some differences between the `x86_64` and the `x86`.
 
-It provides features such as:
+The `64-bit` mode provides features such as:
 
-* New 8 general purpose registers from `r8` to `r15` + all general purpose registers are 64-bit now
-* 64-bit instruction pointer - `RIP`
-* New operating mode - Long mode
-* 64-Bit Addresses and Operands
-* RIP Relative Addressing (we will see an example if it in the next parts)
+* New 8 general purpose registers from `r8` to `r15` + all general purpose registers are 64-bit now;
+* 64-bit instruction pointer - `RIP`;
+* New operating mode - Long mode;
+* 64-Bit Addresses and Operands;
+* RIP Relative Addressing (we will see an example if it in the next parts).
 
 Long mode is an extension of legacy protected mode. It consists of two sub-modes:
 
-* 64-bit mode
-* compatibility mode
+* 64-bit mode;
+* compatibility mode.
 
-To switch into 64-bit mode we need to do following things:
+To switch into `64-bit` mode we need to do following things:
 
-* enable PAE (we already did it, see above)
-* build page tables and load the address of the top level page table into the `cr3` register
-* enable `EFER.LME`
-* enable paging
+* To enable [PAE](https://en.wikipedia.org/wiki/Physical_Address_Extension);
+* To build page tables and load the address of the top level page table into the `cr3` register;
+* To enable `EFER.LME`;
+* To enable paging.
 
-We already enabled `PAE` by setting the PAE bit in the `cr4` register. Now let's look at paging.
+We already enabled `PAE` by setting the `PAE` bit in the `cr4` control register. Our next goal is to build structure for [paging](https://en.wikipedia.org/wiki/Paging). We will see this in next paragraph.
 
 Early page tables initialization
 --------------------------------------------------------------------------------
 
-Before we can move into 64-bit mode, we need to build page tables, so, let's look at the building of early 4G boot page tables.
+So, we already know that before we can move into `64-bit` mode, we need to build page tables, so, let's look at the building of early `4G` boot page tables.
 
-**NOTE: I will not describe theory of virtual memory here, if you need to know more about it, see links in the end**
+**NOTE: I will not describe theory of virtual memory here, if you need to know more about it, see links in the end of this part**
 
-The Linux kernel uses 4-level paging, and generally we build 6 page tables:
+The Linux kernel uses `4-level` paging, and generally we build 6 page tables:
 
-* One PML4 table
-* One PDP  table
-* Four Page Directory tables
+* One `PML4` or `Page Map Level 4` table;
+* One `PDP` or `Page Directory Pointer`  table;
+* Four Page Directory tables.
 
-Let's look at the implementation of it. First of all we clear the buffer for the page tables in memory. Every table is 4096 bytes, so we need 24 kilobytes buffer:
+Let's look at the implementation of this. First of all we clear the buffer for the page tables in memory. Every table is `4096` bytes, so we need clear `24` kilobytes buffer:
 
 ```assembly
 	leal	pgtable(%ebx), %edi
@@ -432,7 +432,9 @@ Let's look at the implementation of it. First of all we clear the buffer for the
 	rep	stosl
 ```
 
-We put the address stored in `ebx` (remember that `ebx` contains the address to relocate the kernel for decompression) with `pgtable` offset to the `edi` register. `pgtable` is defined in the end of `head_64.S` and looks:
+We put the address of the `pgtable` relative to `ebx` (remember that `ebx` contains the address to relocate the kernel for decompression) to the `edi` register, clear `eax` register and `6144` to the `ecx` register. The `rep stosl` instruction will write value of the `eax` to the `edi`, increase value of the `edi` register on `4` and decrease value of the `ecx` register on `4`. This operation will be repeated while value of the `ecx` register will be greater than zero. That's why we put magic `6144` to the `ecx`.
+
+The `pgtable` is defined in the end of [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly file and looks:
 
 ```assembly
 	.section ".pgtable","a",@nobits
@@ -441,9 +443,9 @@ pgtable:
 	.fill 6*4096, 1, 0
 ```
 
-It is in the `.pgtable` section and its size is 24 kilobytes. After we put the address in `edi`, we zero out the `eax` register and write zeros to the buffer with the `rep stosl` instruction.
+As we can see, it is located in the `.pgtable` section and its size is `24` kilobytes.
 
-Now we can build the top level page table - `PML4` - with:
+After we have got buffer for the `pgtable` structure, we can start to build the top level page table - `PML4` - with:
 
 ```assembly
 	leal	pgtable + 0(%ebx), %edi
@@ -451,9 +453,9 @@ Now we can build the top level page table - `PML4` - with:
 	movl	%eax, 0(%edi)
 ```
 
-Here we get the address stored in the `ebx` with `pgtable` offset and put it in `edi`. Next we put this address with offset `0x1007` in the `eax` register. `0x1007` is 4096 bytes (size of the PML4) + 7 (PML4 entry flags - `PRESENT+RW+USER`) and puts `eax` in `edi`. After this manipulation `edi` will contain the address of the first Page Directory Pointer Entry with flags - `PRESENT+RW+USER`.
+Here again, we put the address of the `pgtable` relative to `ebx` or in other words relative to address of the `startup_32` to the `edi` register. Next we put this address with offset `0x1007` in the `eax` register. The `0x1007` is `4096` bytes which is the size of the `PML4` plus `7`. The `7` here represents flags of the `PML4` entry. In our case, these flags are `PRESENT+RW+USER`. In the end we just write first the address of the first `PDP` entry to the `PML4`.
 
-In the next step we build 4 Page Directory entries in the Page Directory Pointer table with `0x7` flags or present, write, userspace (`PRESENT WRITE | USER`):
+In the next step we will build four `Page Directory` entries in the `Page Directory Pointer` table with the same `PRESENT+RW+USE` flags:
 
 ```assembly
 	leal	pgtable + 0x1000(%ebx), %edi
@@ -466,11 +468,7 @@ In the next step we build 4 Page Directory entries in the Page Directory Pointer
 	jnz	1b
 ```
 
-We put the base address of the page directory pointer table in `edi` and the address of the first page directory pointer entry in `eax`. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register.
-
-After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries where each entry is 8 bytes, and write their addresses to `eax`.
-
-The next step is building the `2048` page table entries with 2-MByte page:
+We put the base address of the page directory pointer which is `4096` or `0x1000` offset from the `pgtable` table in `edi` and the address of the first page directory pointer entry in `eax` register. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register. After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries where each entry is `8` bytes, and write their addresses to `eax`. The next step is the building the `2048` page table entries with `2-MByte` pages:
 
 ```assembly
 	leal	pgtable + 0x2000(%ebx), %edi
@@ -483,16 +481,21 @@ The next step is building the `2048` page table entries with 2-MByte page:
 	jnz	1b
 ```
 
-Here we do almost the same as in the previous example, all entries will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ`. In the end we will have 2048 pages with 2-MByte page.
+Here we do almost the same as in the previous example, all entries will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ`. In the end we will have `2048` pages with `2-MByte` page or:
 
-Our early page table structure are done, it maps 4 gigabytes of memory and now we can put the address of the high-level page table - `PML4` - in `cr3` control register:
+```python
+>>> 2048 * 0x00200000
+4294967296
+```
+
+`4G` page table. We just finished to build our early page table structure which maps `4` gigabytes of memory and now we can put the address of the high-level page table - `PML4` - in `cr3` control register:
 
 ```assembly
 	leal	pgtable(%ebx), %eax
 	movl	%eax, %cr3
 ```
 
-That's all. Now we can see transition to the long mode.
+That's all. All preparation are finished and now we can see transition to the long mode.
 
 Transition to long mode
 --------------------------------------------------------------------------------
