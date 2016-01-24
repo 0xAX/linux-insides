@@ -60,7 +60,7 @@ The next step is computation of difference between where the kernel was compiled
 
 `rbp` contains the decompressed kernel start address and after this code executes `rbx` register will contain address to relocate the kernel code for decompression. We already saw code like this in the `startup_32` ( you can read about it in the previous part - [Calculate relocation address](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#calculate-relocation-address)), but we need to do this calculation again because the bootloader can use 64-bit boot protocol and `startup_32` just will not be executed in this case.
 
-In the next step we can see setup of the stack and reset of the flags register:
+In the next step we can see setup of the stack pointer and reseting of the flags register:
 
 ```assembly
 	leaq	boot_stack_end(%rbx), %rsp
@@ -69,7 +69,7 @@ In the next step we can see setup of the stack and reset of the flags register:
 	popfq
 ```
 
-As you can see above `rbx` register contains the start address of the decompressing kernel code and we just put this address with `boot_stack_end` offset to the `rsp` register. After this stack will be correct. You can find definition of the `boot_stack_end` in the end of `compressed/head_64.S` file:
+As you can see above, the `rbx` register contains the start address of the kernel decompressor code and we just put this address with `boot_stack_end` offset to the `rsp` register which represents pointer to the top of the stack. After this step, the stack will be correct. You can find definition of the `boot_stack_end` in the end of [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
 ```assembly
 	.bss
@@ -79,12 +79,11 @@ boot_heap:
 boot_stack:
 	.fill BOOT_STACK_SIZE, 1, 0
 boot_stack_end:
-
 ```
 
-It located in the `.bss` section right before `.pgtable`. You can look at [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) to find it.
+It located in the end of the `.bss` section, right before the `.pgtable`. If you will look into [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) linker script, you will find  Definition of the `.bss` and `.pgtable` there.
 
-As we set the stack, now we can copy the compressed kernel to the address that we got above, when we calculated the relocation address of the decompressed kernel. Let's look at this code:
+As we set the stack, now we can copy the compressed kernel to the address that we got above, when we calculated the relocation address of the decompressed kernel. Before details, let's look at this assembly code:
 
 ```assembly
 	pushq	%rsi
@@ -98,9 +97,9 @@ As we set the stack, now we can copy the compressed kernel to the address that w
 	popq	%rsi
 ```
 
-First of all we push `rsi` to the stack. We need save the value of `rsi`, because this register now stores a pointer to the `boot_params` real mode structure (you must remember this structure, we filled it in the start of kernel setup). In the end of this code we'll restore the pointer to the `boot_params` into `rsi` again. 
+First of all we push `rsi` to the stack. We need preserve the value of `rsi`, because this register now stores a pointer to the `boot_params` which is real mode structure that contains booting related data (you must remember this structure, we filled it in the start of kernel setup). In the end of this code we'll restore the pointer to the `boot_params` into `rsi` again. 
 
-The next two `leaq` instructions calculates effective address of the `rip` and `rbx` with `_bss - 8` offset and put it to the `rsi` and `rdi`. Why do we calculate these addresses? Actually the compressed kernel image is located between this copying code (from `startup_32` to the current code) and the decompression code. You can verify this by looking at the linker script - [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S):
+The next two `leaq` instructions calculates effective addresses of the `rip` and `rbx` with `_bss - 8` offset and put it to the `rsi` and `rdi`. Why do we calculate these addresses? Actually the compressed kernel image is located between this copying code (from `startup_32` to the current code) and the decompression code. You can verify this by looking at the linker script - [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S):
 
 ```
 	. = 0;
@@ -131,10 +130,9 @@ ENTRY(startup_32)
 ...
 ```
 
-`.text` section contains decompression code:
+The `.text` section contains decompression code:
 
-assembly
-```
+```assembly
 	.text
 relocated:
 ...
@@ -146,15 +144,11 @@ relocated:
 ...
 ```
 
-And `.rodata..compressed` contains the compressed kernel image. 
+And `.rodata..compressed` contains the compressed kernel image. So the `rsi` will contain `rip` relative address of the `_bss - 8` and `rdi` will contain relocation relative address of the `_bss - 8`. As we store these addresses in registers, we put the address of `_bss` to the `rcx` register. As you can see in the `vmlinux.lds.S` linker script, it located in the end of all sections with the setup/kernel code. Now we can start to copy data from the `rsi` to `rdi` by `8` bytes with `movsq` instruction. 
 
-So `rsi` will contain `rip` relative address of the `_bss - 8` and `rdi` will contain relocation relative address of the ``_bss - 8`. As we store these addresses in register, we put the address of `_bss` to the `rcx` register. As you can see in the `vmlinux.lds.S`, it located in the end of all sections with the setup/kernel code. Now we can start to copy data from `rsi` to `rdi` by 8 bytes with `movsq` instruction. 
+Note that there is `std` instruction before data copying, it sets `DF` flag and it means that `rsi` and `rdi` will be decremented or in other words, we will copy bytes in backwards. In the end we clear `DF` flag with `cld` instruction and restore `boot_params` structure to the `rsi`.
 
-Note that there is `std` instruction before data copying, it sets `DF` flag and it means that `rsi` and `rdi` will be decremented or in other words, we will copy bytes in backwards. 
-
-In the end we clear `DF` flag with `cld` instruction and restore `boot_params` structure to the `rsi`.
-
-After this we get `.text` section address and jump to it:
+Now we have the address of the `.text` section address after relocation and we can jump to it:
 
 ```assembly
 	leaq	relocated(%rbx), %rax
@@ -164,7 +158,7 @@ After this we get `.text` section address and jump to it:
 Last preparation before kernel decompression
 --------------------------------------------------------------------------------
 
-The `.text` section starts with the `relocated` label. For the start there is clearing of the `bss` section with:
+In the previous paragraph we saw that the `.text` section starts with the `relocated` label. For the start there is clearing of the `bss` section with:
 
 ```assembly
 	xorl	%eax, %eax
@@ -175,7 +169,7 @@ The `.text` section starts with the `relocated` label. For the start there is cl
 	rep	stosq
 ```
 
-Here we just clear `eax`, put RIP relative address of the `_bss` to the `rdi` and `_ebss` to `rcx` and fill it with zeros with `rep stosq` instructions.
+We need to initialze the `.bss` section, because soon we will jump to the [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code. Here we just clear `eax`, put RIP relative address of the `_bss` to the `rdi` and `_ebss` to `rcx` and fill it with zeros with `rep stosq` instructions.
 
 In the end we can see the call of the `decompress_kernel` routine:
 
@@ -194,36 +188,48 @@ In the end we can see the call of the `decompress_kernel` routine:
 	popq	%rsi
 ```
 
-Again we save `rsi` with a pointer to the `boot_params` structure and call `decompress_kernel` from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) with seven arguments. All arguments will be passed through the registers. We finished all preparation and now can look on the kernel decompression.
+Again we save `rsi` with a pointer to the `boot_params` structure and call `decompress_kernel` from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) with seven arguments:
+
+* `boot_param` - pointer to the [boot_params](https://github.com/torvalds/linux/blob/master//arch/x86/include/uapi/asm/bootparam.h#L114) structure which is filled by bootloader or during early kernel initialzation;
+* `heap` - pointer to the `boot_heap` which represents start address of the early boot heap;
+* `input_data` - pointer to the start of the compressed kernel or in other words pointer to the `arch/x86/boot/compressed/vmlinux.bin.bz2`;
+* `input_len` - size of the compressed kernel;
+* `output` - start address of the future decompressed kernel;
+* `output_len` - size of decompressed kernel;
+* `run_size` - amount of space needed to run the kernel including `.bss` and `.brk` sections.
+
+All arguments will be passed through the registers according to [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf). We finished all preparation and now can look on the kernel decompression.
 
 Kernel decompression
 --------------------------------------------------------------------------------
 
-As I wrote above, `decompress_kernel` function is in the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) source code file. This function starts with the video/console initialization that we saw in the previous parts. This call needs to know if bootloader used 32 or 64-bit protocols. After this we store pointers to the start of the free memory and to the end of it:
+As we saw in previous paragraph, the `decompress_kernel` function is defined in the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) source code file and takes seven arguments. This function starts with the video/console initialization that we already saw in the previous parts. Again, we need to do this because we don't know, do we started in the [real mode](https://en.wikipedia.org/wiki/Real_mode) or a bootloader used 32 or 64-bit boot protocols.
+
+After the first initialization steps, we store pointers to the start of the free memory and to the end of it:
 
 ```C
-	free_mem_ptr     = heap;
-	free_mem_end_ptr = heap + BOOT_HEAP_SIZE;
+free_mem_ptr     = heap;
+free_mem_end_ptr = heap + BOOT_HEAP_SIZE;
 ```
 
-where `heap` is the second parameter of the `decompress_kernel` function which we got with:
+where the `heap` is the second parameter of the `decompress_kernel` function which we got in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 leaq	boot_heap(%rip), %rsi
 ```
 
-As you saw above, `boot_heap` is defined as:
+As you saw above, the `boot_heap` is defined as:
 
 ```assembly
 boot_heap:
 	.fill BOOT_HEAP_SIZE, 1, 0
 ```
 
-where `BOOT_HEAP_SIZE` is `0x400000` if the kernel compressed with `bzip2` or `0x8000` if not.
+where the `BOOT_HEAP_SIZE` is macro which expands to the `0x400000` (in a case of `bzip2` kernel and `0x8000` in other cases) value and represents size of the heap.
 
-In the next step we call the `choose_kernel_location` function from  [arch/x86/boot/compressed/aslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/aslr.c#L298). As we can understand from the function name it chooses the memory location where the kernel image will be decompressed. Let's look at this function.
+After heap pointers initialzation, the next step is the call of the `choose_kernel_location` function from [arch/x86/boot/compressed/aslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/aslr.c#L298) source code file. As we can understand from the function name it chooses the memory location where the kernel image will be decompressed. I know, it may look weird, that we need to find or even `choose` location where to decompress the compressed kernel image. But actuall the Linux kernel supports [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) feature which in simple words allows to decompress the kernel into random address for security reasons. Let's open the [arch/x86/boot/compressed/aslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/aslr.c#L298) source code file and will look at the `choose_kernel_location` implementation.
 
-At the start `choose_kernel_location` tries to find `kaslr` option in the command line if `CONFIG_HIBERNATION` is set and `nokaslr` option if this configuration option `CONFIG_HIBERNATION` is not set:
+At the start `choose_kernel_location` tries to find `kaslr` option in the Linux kernel command line if the `CONFIG_HIBERNATION` is set and `nokaslr` option if this configuration option otherwise:
 
 ```C
 #ifdef CONFIG_HIBERNATION
@@ -239,14 +245,16 @@ At the start `choose_kernel_location` tries to find `kaslr` option in the comman
 #endif
 ```
 
-If there is no `kaslr` or `nokaslr` in the command line it jumps to `out` label:
+If the `CONFIG_HIBERNATION` kernel configuration option is enabled during kernel configuration and if there is no `kASLR` option in the Linux kernel command line, we will see `KASLR disabled by default...` output and will jump to the `out` label:
 
 ```C
 out:
 	return (unsigned char *)choice;
 ```
 
-which just returns the `output` parameter which we passed to the `choose_kernel_location` without any changes. Let's try to understand what `kaslr` is. We can find information about it in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt):
+which just returns the `output` parameter which we passed to the `choose_kernel_location` without any changes. In other case, if the `CONFIG_HIBERNATION` kernel configuration option is disabled and the `nokaslr` option is in the kernel command line we do the same that in previous condition.
+
+For now, let's suppose that kernel was configured with enabled randomization and try to understand what `kASLR` is. We can find information about it in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt):
 
 ```
 kaslr/nokaslr [X86]
@@ -258,22 +266,50 @@ kASLR is disabled by default. When kASLR is enabled,
 hibernation will be disabled.
 ```
 
-It means that we can pass the `kaslr` option to the kernel's command line and get a random address for the decompressed kernel (you can read more about aslr [here](https://en.wikipedia.org/wiki/Address_space_layout_randomization)). 
+It means that we can pass the `kaslr` option to the kernel's command line and get a random address for the decompressed kernel (you can read more about aslr [here](https://en.wikipedia.org/wiki/Address_space_layout_randomization)). So, our current goal is to find random address where we can `safely` to decompress the Linux kernel. I'm not in vain wrote - `safely`. What does it mean in this context? You may remember that besides the code of decompressor and directly the kernel image, there are some unsafe places in memory. For example [initrd](https://en.wikipedia.org/wiki/Initrd) image is in memory too and we must not overlap it by the decompressed kernel.
 
-Let's consider the case when kernel's command line contains the `kaslr` option.
+The next function will help us to find safe place where we can decompress kernel. This function is the - `mem_avoid_init`. It defined in the same source code [file](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/aslr.c) and takes four arguments that we already saw in the `decompress_kernel` function:
 
-There is the call of the `mem_avoid_init` function from the same `aslr.c` source code file. This function gets the unsafe memory regions (initrd, kernel command line and etc...). We need to know about these memory regions to not overlap them with the kernel after decompression. For example:
+* `input_data` - pointer to the start of the compressed kernel or in other words pointer to the `arch/x86/boot/compressed/vmlinux.bin.bz2`;
+* `input_len` - size of the compressed kernel;
+* `output` - start address of the future decompressed kernel;
+* `output_len` - size of decompressed kernel.
+
+The main point of this function is to fill array of the `mem_vector` structures:
 
 ```C
+#define MEM_AVOID_MAX 5
+
+static struct mem_vector mem_avoid[MEM_AVOID_MAX];
+```
+
+where the `mem_vector` structure contains information about unsafe memory regions:
+
+```C
+struct mem_vector {
+	unsigned long start;
+	unsigned long size;
+};
+```
+
+The implementation of the `mem_avoid_init` is pretty simple. Let's look on the part of this function:
+
+```C
+    ...
+    ...
+    ...
 	initrd_start  = (u64)real_mode->ext_ramdisk_image << 32;
 	initrd_start |= real_mode->hdr.ramdisk_image;
 	initrd_size  = (u64)real_mode->ext_ramdisk_size << 32;
 	initrd_size |= real_mode->hdr.ramdisk_size;
 	mem_avoid[1].start = initrd_start;
 	mem_avoid[1].size = initrd_size;
+    ...
+    ...
+    ...
 ```
 
-Here we can see calculation of the [initrd](http://en.wikipedia.org/wiki/Initrd) start address and size. `ext_ramdisk_image` is high 32-bits of the `ramdisk_image` field from boot header and `ext_ramdisk_size` is high 32-bits of the `ramdisk_size` field from [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt):
+Here we can see calculation of the [initrd](http://en.wikipedia.org/wiki/Initrd) start address and size. The `ext_ramdisk_image` is high `32-bits` of the `ramdisk_image` field from the setup header and `ext_ramdisk_size` is high 32-bits of the `ramdisk_size` field from [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt):
 
 ```
 Offset	Proto	Name		Meaning
@@ -299,31 +335,15 @@ Offset	Proto	Name		Meaning
 ...
 ```
 
-So we're taking `ext_ramdisk_image` and `ext_ramdisk_size`, shifting them left on 32 (now they will contain low 32-bits in the high 32-bit bits) and getting start address of the `initrd` and size of it. After this we store these values in the `mem_avoid` array which is defined as:
+So we're taking `ext_ramdisk_image` and `ext_ramdisk_size`, shifting them left on `32` (now they will contain low 32-bits in the high 32-bit bits) and getting start address of the `initrd` and size of it. After this we store these values in the `mem_avoid` array.
 
-```C
-#define MEM_AVOID_MAX 5
-static struct mem_vector mem_avoid[MEM_AVOID_MAX];
-```
-
-where `mem_vector` structure is:
-
-```C
-struct mem_vector {
-	unsigned long start;
-	unsigned long size;
-};
-```
-
-The next step after we collect all unsafe memory regions in the `mem_avoid` array will be searching for the random address which does not overlap with the unsafe regions with the `find_random_addr` function.
-
-First of all we can see align of the output address in the `find_random_addr` function:
+The next step after we collected all unsafe memory regions in the `mem_avoid` array will be searching for the random address which does not overlap with the unsafe regions with the `find_random_addr` function. First of all we can see align of the output address in the `find_random_addr` function:
 
 ```C
 minimum = ALIGN(minimum, CONFIG_PHYSICAL_ALIGN);
 ```
 
-you can remember `CONFIG_PHYSICAL_ALIGN` configuration option from the previous part. This option provides the value to which kernel should be aligned and it is `0x200000` by default. Once we have the aligned output address, we go through the memory and collect regions which are good for decompressed kernel image:
+You can remember `CONFIG_PHYSICAL_ALIGN` configuration option from the previous part. This option provides the value to which kernel should be aligned and it is `0x200000` by default. Once we have the aligned output address, we go through the memory regions which we got with the help of the BIOS [e820](https://en.wikipedia.org/wiki/E820) service and collect regions which are good for decompressed kernel image:
 
 ```C
 for (i = 0; i < real_mode->e820_entries; i++) {
@@ -331,9 +351,7 @@ for (i = 0; i < real_mode->e820_entries; i++) {
 }
 ```
 
-Recall that we collected `e820_entries` in the second part of the [Kernel booting process part 2](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md#memory-detection).
-
-First of all `process_e820_entry` function does some checks that e820 memory region is not non-RAM, that the start address of the memory region  is not bigger than Maximum allowed `aslr` offset and that memory region is not less than value of kernel alignment:
+Recall that we collected `e820_entries` in the second part of the [Kernel booting process part 2](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md#memory-detection). The `process_e820_entry` function does some checks that an `e820` memory region is not `non-RAM`, that the start address of the memory region is not bigger than maximum allowed `aslr` offset and that memory region is not less than value of kernel alignment:
 
 ```C
 struct mem_vector region, img;
@@ -348,7 +366,7 @@ if (entry->addr + entry->size < minimum)
 	return;
 ```
 
-After this, we store e820 memory region start address and the size in the `mem_vector` structure (we saw definition of this structure above):
+After this, we store an `e820` memory region start address and the size in the `mem_vector` structure (we saw definition of this structure above):
 
 ```C
 region.start = entry->addr;
@@ -364,7 +382,7 @@ if (region.start > entry->addr + entry->size)
 	return;
 ```
 
-Next we get the difference between the original address and aligned and check that if the last address in the memory region is bigger than `CONFIG_RANDOMIZE_BASE_MAX_OFFSET`, we reduce the memory region size so that the end of the kernel image will be less than the maximum `aslr` offset:
+In the next step we need to get the difference between the original address and aligned and check that if the last address in the memory region is bigger than `CONFIG_RANDOMIZE_BASE_MAX_OFFSET`, we reduce the memory region size so that the end of the kernel image will be less than the maximum `aslr` offset:
 
 ```C
 region.size -= region.start - entry->addr;
@@ -388,7 +406,7 @@ for (img.start = region.start, img.size = image_size ;
 If the memory region does not overlap unsafe regions we call the `slots_append` function with the start address of the region. `slots_append` function just collects start addresses of memory regions to the `slots` array:
 
 ```C
-	slots[slot_max++] = addr;
+slots[slot_max++] = addr;
 ```
 
 which is defined as:
@@ -418,7 +436,7 @@ After all these checks will see the familiar message:
 Decompressing Linux... 
 ```
 
-and call `decompress` function which will decompress the kernel. `decompress` function depends on what decompression algorithm was chosen during kernel compilation:
+and call the `__decompress` function which will decompress the kernel. The `__decompress` function depends on what decompression algorithm was chosen during kernel compilation:
 
 ```C
 #ifdef CONFIG_KERNEL_GZIP
@@ -446,7 +464,71 @@ and call `decompress` function which will decompress the kernel. `decompress` fu
 #endif
 ```
 
-After kernel will be decompressed, the last function `handle_relocations` will relocate the kernel to the address that we got from `choose_kernel_location`. After the kernel is relocated we return from the `decompress_kernel` to `head_64.S`. The address of the kernel will be in the `rax` register and we jump to it:
+After kernel will be decompressed, the last two functions are the `parse_elf` and the `handle_relocations`. The main point of these function is to move the uncompressed kernel image to the correct memory place. The fact is that the decompression will decompress compressed part [in-place](https://en.wikipedia.org/wiki/In-place_algorithm) and we still need to move kernel to the correct address. As we already know, the kernel image is [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) executable, so the main goal of the `parse_elf` function is to move loadable segments to the correct address. We can see loadable segments in the output of the `readelf` util:
+
+```
+readelf -l vmlinux
+
+Elf file type is EXEC (Executable file)
+Entry point 0x1000000
+There are 5 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  LOAD           0x0000000000200000 0xffffffff81000000 0x0000000001000000
+                 0x0000000000893000 0x0000000000893000  R E    200000
+  LOAD           0x0000000000a93000 0xffffffff81893000 0x0000000001893000
+                 0x000000000016d000 0x000000000016d000  RW     200000
+  LOAD           0x0000000000c00000 0x0000000000000000 0x0000000001a00000
+                 0x00000000000152d8 0x00000000000152d8  RW     200000
+  LOAD           0x0000000000c16000 0xffffffff81a16000 0x0000000001a16000
+                 0x0000000000138000 0x000000000029b000  RWE    200000
+```
+
+The goal of the `parse_elf` function is to load these segments to the `output` address that we got from the `choose_kernel_location` function. This function starts from the checkking of the [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) signature:
+
+```C
+Elf64_Ehdr ehdr;
+Elf64_Phdr *phdrs, *phdr;
+
+memcpy(&ehdr, output, sizeof(ehdr));
+
+if (ehdr.e_ident[EI_MAG0] != ELFMAG0 ||
+   ehdr.e_ident[EI_MAG1] != ELFMAG1 ||
+   ehdr.e_ident[EI_MAG2] != ELFMAG2 ||
+   ehdr.e_ident[EI_MAG3] != ELFMAG3) {
+   error("Kernel is not a valid ELF file");
+   return;
+}
+```
+
+and if it does not valid it prints error message and halt. If we got a valid `ELF` file, copy go through all program headers from the given `ELF` file and copies all loadable segments with correct address to the output buffer:
+
+```C
+	for (i = 0; i < ehdr.e_phnum; i++) {
+		phdr = &phdrs[i];
+
+		switch (phdr->p_type) {
+		case PT_LOAD:
+#ifdef CONFIG_RELOCATABLE
+			dest = output;
+			dest += (phdr->p_paddr - LOAD_PHYSICAL_ADDR);
+#else
+			dest = (void *)(phdr->p_paddr);
+#endif
+			memcpy(dest,
+			       output + phdr->p_offset,
+			       phdr->p_filesz);
+			break;
+		default: /* Ignore other PT_* */ break;
+		}
+	}
+```
+
+That's all. From now all loadable segments are in the correct place. The last `handle_relocations` function adjusts addresses in the kernel image and called only if the `kASLR` was enabled during kernel configuration.
+
+After the kernel is relocated we return back from the `decompress_kernel` to the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S). The address of the kernel will be in the `rax` register and we jump to it:
 
 ```assembly
 jmp	*%rax
