@@ -4,20 +4,20 @@ Kernel initialization. Part 1.
 First steps in the kernel code
 --------------------------------------------------------------------------------
 
-In the previous post (`Kernel booting process. Part 5.`) - [Kernel decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) we stopped at the [jump](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) on the decompressed kernel:
+The previous [post](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) was a last part of the Linux kernel [booting process](https://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter and now we are starting to dive into initialization process of the Linux kernel. After the image of the Linux kernel is decompressed and placed in a correct place in memory, it starts to work. All previous parts describe work of the Linux kernel setup code which does preparation before first bytes of the Linux kernel code will be executed. From now we are in the kernel and all parts of this chapter will be devoted to the initialzation process of the kernel before it will launch process with [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. There are many things to do before the kernel will start first `init` process. Hope we will see all of the preparations before kernel will start in this big chapter. We will start from the kernel entry point, which is located in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) and and will move further and further. We will see first preparations like early page tables initialization, switch to a new descriptor in kernel space and many many more, before we will see the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489) will be called.
+
+In the last [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) of the previous [chapter](https://0xax.gitbooks.io/linux-insides/content/Booting/index.html) we stopped at the [jmp](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) instruction from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
 ```assembly
 jmp	*%rax
 ```
 
-and now we are in the kernel. There are many things to do before the kernel will start first `init` process. Hope we will see all of the preparations before kernel will start in this big chapter. We will start from the kernel entry point, which is in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S). We will see first preparations like early page tables initialization, switch to a new descriptor in kernel space and many many more, before we will see the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489) will be called.
-
-So let's start.
+At this moment the `rax` register contains address of the Linux kernel entry point which that was obtained as a result of the call of the `decompress_kernel` function from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) source code file. So, our last instruction in the kernel setup code is a jump on the kernel entry point. We already know where is defined the entry point of the linux kernel, so we are able to start to learn what does the Linux kernel does after the start.
 
 First steps in the kernel
 --------------------------------------------------------------------------------
 
-Okay, we got address of the kernel from the `decompress_kernel` function into `rax` register and just jumped there. Decompressed kernel code starts in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
+Okay, we got address of the decompressed kernel image from the `decompress_kernel` function into `rax` register and just jumped there. As we already know the entry point of the decompressed kernel image starts in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) assembly source code file and at the beginning of it, we can see following definitions:
 
 ```assembly
 	__HEAD
@@ -29,7 +29,7 @@ startup_64:
 	...
 ```
 
-We can see definition of the `startup_64` routine that is defined in the `__HEAD` section, which is just:
+We can see definition of the `startup_64` routine that is defined in the `__HEAD` section, which is just a macro which expands to the definion of executable `.head.text` section:
 
 ```C
 #define __HEAD		.section	".head.text","ax"
@@ -46,13 +46,13 @@ We can see definition of this section in the [arch/x86/kernel/vmlinux.lds.S](htt
 } :text = 0x9090
 ```
 
-We can understand default virtual and physical addresses from the linker script. Note that address of the `_text` is location counter which is defined as:
+Besides the definition of the `.text` section, we can understand default virtual and physical addresses from the linker script. Note that address of the `_text` is location counter which is defined as:
 
 ```
 . = __START_KERNEL;
 ```
 
-for `x86_64`. We can find definition of the `__START_KERNEL` macro in the [arch/x86/include/asm/page_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_types.h):
+for the [x86_64](https://en.wikipedia.org/wiki/X86-64). The definition of the `__START_KERNEL` macro is located in the [arch/x86/include/asm/page_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_types.h) header file and represented by the sum of the base virtual address of the kernel mapping and physical start:
 
 ```C
 #define __START_KERNEL	(__START_KERNEL_map + __PHYSICAL_START)
@@ -60,10 +60,10 @@ for `x86_64`. We can find definition of the `__START_KERNEL` macro in the [arch/
 #define __PHYSICAL_START  ALIGN(CONFIG_PHYSICAL_START, CONFIG_PHYSICAL_ALIGN)
 ```
 
-Here we can see that `__START_KERNEL` is the sum of the `__START_KERNEL_map` (which is `0xffffffff80000000`, see post about [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)) and `__PHYSICAL_START`. Where `__PHYSICAL_START` is aligned value of the `CONFIG_PHYSICAL_START`. So if you will not use [kASLR](http://en.wikipedia.org/wiki/Address_space_layout_randomization) and will not change `CONFIG_PHYSICAL_START` in the configuration addresses will be following:
+Or in other words:
 
-* Physical address - `0x1000000`;
-* Virtual address  - `0xffffffff81000000`.
+* Base physical address of the Linux kernel - `0x1000000`;
+* Base virtual address of the Linux kernel - `0xffffffff81000000`.
 
 Now we know default physical and virtual addresses of the `startup_64` routine, but to know actual addresses we must to calculate it with the following code:
 
@@ -72,18 +72,22 @@ Now we know default physical and virtual addresses of the `startup_64` routine, 
 	subq	$_text - __START_KERNEL_map, %rbp
 ```
 
-Here we just put the `rip-relative` address to the `rbp` register and then subtract `$_text - __START_KERNEL_map` from it. We know that compiled address of the `_text` is `0xffffffff81000000` and `__START_KERNEL_map` contains `0xffffffff80000000`, so `rbp` will contain physical address of the `_text` - `0x1000000` after this calculation. We need to calculate it because kernel may not be running at the default address, but now we know the actual physical address.
+Yes, it defined as `0x1000000`, but it may be different, for example if [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) is enabled. So our current goal is to calculate delta between `0x1000000` and where we actually loaded. Here we just put the `rip-relative` address to the `rbp` register and then subtract `$_text - __START_KERNEL_map` from it. We know that compiled virtual address of the `_text` is `0xffffffff81000000` and the physical address of it is `0x1000000`. The `__START_KERNEL_map` macro expands to the `0xffffffff80000000` address, so at the second line of the assembly code, we will get following expression:
 
-In the next step we checks that this address is aligned with:
+```
+rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
+```
+
+So, after the calculation,  the `rbp` will contain `0` which represents difference between addresses where we actually loaded and where the code was compiled. In our case `zero` means that the Linux kernel was loaded by default address and the [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) was disabled.
+
+After we got the address of the `startup_64`, we need to do a check that this address is correctly aligned. We will do it with the following code:
 
 ```assembly
-	movq	%rbp, %rax
-	andl	$~PMD_PAGE_MASK, %eax
-	testl	%eax, %eax
+	testl	$~PMD_PAGE_MASK, %ebp
 	jnz	bad_address
 ```
 
-Here we just put address to the `%rax` and test first bit. `PMD_PAGE_MASK` indicates the mask for `Page middle directory` (read [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) about it) and defined as:
+Here we just compare low part of the `rbp` register with the complemeted value of the `PMD_PAGE_MASK`. The `PMD_PAGE_MASK` indicates the mask for `Page middle directory` (read [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) about it) and defined as:
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
@@ -92,9 +96,9 @@ Here we just put address to the `%rax` and test first bit. `PMD_PAGE_MASK` indic
 #define PMD_SHIFT       21
 ```
 
-As we can easily calculate, `PMD_PAGE_SIZE` is 2 megabytes. Here we use standard formula for checking alignment and if `text` address is not aligned for 2 megabytes, we jump to `bad_address` label.
+As we can easily calculate, `PMD_PAGE_SIZE` is `2` megabytes. Here we use standard formula for checking alignment and if `text` address is not aligned for `2` megabytes, we jump to `bad_address` label.
 
-After this we check address that it is not too large:
+After this we check address that it is not too large by the checking of highest `18` bits:
 
 ```assembly
 	leaq	_text(%rip), %rax
@@ -102,7 +106,7 @@ After this we check address that it is not too large:
 	jnz	bad_address
 ```
 
-Address most not be greater than 46-bits:
+The address must not be greater than `46`-bits:
 
 ```C
 #define MAX_PHYSMEM_BITS       46
@@ -113,7 +117,7 @@ Okay, we did some early checks and now we can move on.
 Fix base addresses of page tables
 --------------------------------------------------------------------------------
 
-The first step before we start to setup identity paging is to correct following addresses:
+The first step before we start to setup identity paging is to fixup following addresses:
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -122,7 +126,7 @@ The first step before we start to setup identity paging is to correct following 
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-Here we need to correct `early_level4_pgt` and other addresses of the page table directories, because as I wrote above, kernel may not be running at the default `0x1000000` address. `rbp` register contains the delta address so we add to the `early_level4_pgt`, `level3_kernel_pgt` and  `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
+All of `early_level4_pgt`, `level3_kernel_pgt` and other address may be wrong if the `startup_64` is not equal to default `0x1000000` address. The `rbp` register contains the delta address so we add to the certain entries of the `early_level4_pgt`, the `level3_kernel_pgt` and the `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
 
 ```assembly
 NEXT_PAGE(early_level4_pgt)
@@ -147,29 +151,25 @@ NEXT_PAGE(level1_fixmap_pgt)
 	.fill	512,8,0
 ```
 
-Looks hard, but it is not true.
-
-First of all let's look at the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use first 511 `early_level4_pgt` entries. And after this we can see `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look at `_PAGE_TABLE`, it is just page entry access rights:
+Looks hard, but it is not true. First of all let's look at the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use first `511` entries. And after this we can see one `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look at `_PAGE_TABLE`, it is just page entry access rights:
 
 ```C
 #define _PAGE_TABLE     (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER | \
                          _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-You can read more about it in the [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) post.
+You can read more about it in the [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) part.
 
-`level3_kernel_pgt` - stores entries which map kernel space. At the start of it's definition, we can see that it is filled with zeros `L3_START_KERNEL` times. Here `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After it, we can see definition of two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
+The `level3_kernel_pgt` - stores two entries which map kernel space. At the start of it's definition, we can see that it is filled with zeros `L3_START_KERNEL` or `510` times. Here the `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After this, we can see the definition of the two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
 
 ```C
 #define _KERNPG_TABLE   (_PAGE_PRESENT | _PAGE_RW | _PAGE_ACCESSED | \
                          _PAGE_DIRTY)
 ```
 
-access rights. The second - `level2_fixmap_pgt` is a virtual addresses which can refer to any physical addresses even under kernel space.
+access rights. The second - `level2_fixmap_pgt` is a virtual addresses which can refer to any physical addresses even under kernel space. They represented by the one `level2_fixmap_pgt` entry and `10` megabytes hole for the [vsyscalls](https://lwn.net/Articles/446528/) mapping. The next `level2_kernel_pgt` calls the `PDMS` macro which creates `512` megabytes from the `__START_KERNEL_map` for kernel `.text` (after these `512` megabytes will be modules memory space).
 
-The next `level2_kernel_pgt` calls `PDMS` macro which creates 512 megabytes from the `__START_KERNEL_map` for kernel text (after these 512 megabytes will be modules memory space).
-
-Now that we know this, let's get back to the code which is described at the beginning of the section. Remember that `rbp` contains actual physical address of the `_text` section. We just add this address to the base address of the page tables, that they'll have correct addresses:
+Now, after we saw definitins of these symbols, let's get back to the code which is described at the beginning of the section. Remember that the `rbp` register contains delta between the address of the `startup_64` symbol which was got during kernel [linking](https://en.wikipedia.org/wiki/Linker_%28computing%29) and the actual address. So, for this moment, we just need to add add this delta to the base address of some page table entries, that they'll have correct addresses. In our case these entries are:
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -178,7 +178,7 @@ Now that we know this, let's get back to the code which is described at the begi
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-In the first line we add `rbp` to the `early_level4_pgt`, in the second line we add `rbp` to the `level2_kernel_pgt`, in the third line we add `rbp` to the `level2_fixmap_pgt` and add `rbp` to the `level1_fixmap_pgt`.
+or the last entry of the `early_level4_pgt` which is the `level3_kernel_pgt`, last two entries of the `level3_kerenl_pgt` which are the `level2_kernel_pgt` and the `level2_fixmap_pgt` and five hundreds seventh entry of the `level2_fixmap_pgt` which is `level1_fixmap_pgt` page directory.
 
 After all of this we will have:
 
@@ -187,22 +187,22 @@ early_level4_pgt[511] -> level3_kernel_pgt[0]
 level3_kernel_pgt[510] -> level2_kernel_pgt[0]
 level3_kernel_pgt[511] -> level2_fixmap_pgt[0]
 level2_kernel_pgt[0]   -> 512 MB kernel mapping
-level2_fixmap_pgt[506] -> level1_fixmap_pgt
+level2_fixmap_pgt[507] -> level1_fixmap_pgt
 ```
 
-As we corrected base addresses of the page tables, we can start to build it.
+Note that we didn't fixup base address of the `early_level4_pgt` and some of other page table directories, because we will see this during of building/filling of structures for these page tables. As we corrected base addresses of the page tables, we can start to build it.
 
 Identity mapping setup
 --------------------------------------------------------------------------------
 
-Now we can see the set up of identity mapping of early page tables. In Identity Mapped Paging, virtual addresses  are mapped to physical addresses that have the same value, `1 : 1`. Let's look at it in detail. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
+Now we can see the set up of identity mapping of early page tables. In Identity Mapped Paging, virtual addresses are mapped to physical addresses that have the same value, `1 : 1`. Let's look at it in detail. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
 
 ```assembly
 	leaq	_text(%rip), %rdi
 	leaq	early_level4_pgt(%rip), %rbx
 ```
 
-After this we store physical address of the `_text` in the `rax` and get the index of the page global directory entry which stores `_text` address, by shifting `_text` address on the `PGDIR_SHIFT`:
+After this we store address of the `_text` in the `rax` and get the index of the page global directory entry which stores `_text` address, by shifting `_text` address on the `PGDIR_SHIFT`:
 
 ```assembly
 	movq	%rdi, %rax
@@ -259,9 +259,9 @@ In the next step we correct `phys_base` physical address with `rbp` (contains ph
 	jmp 1f
 ```
 
-where `phys_base` matches the first entry of the `level2_kernel_pgt` which is 512 MB kernel mapping.
+where `phys_base` matches the first entry of the `level2_kernel_pgt` which is `512` MB kernel mapping.
 
-Last preparations
+Last preparation before jump at the kernel entry point
 --------------------------------------------------------------------------------
 
 After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extension) and put the physical address of the `phys_base` (see above) to the `rax` register and fill `cr3` register with it:
@@ -320,15 +320,113 @@ We will not see all fields in details here, but we will learn about this and oth
 1:	wrmsr
 ```
 
-If `NX` bit is supported we enable `_EFER_NX`  and write it too, with the `wrmsr` instruction.
+If the [NX](https://en.wikipedia.org/wiki/NX_bit) bit is supported we enable `_EFER_NX`  and write it too, with the `wrmsr` instruction. After the [NX](https://en.wikipedia.org/wiki/NX_bit) bit is set, we set some bits in the `cr0` [control register](https://en.wikipedia.org/wiki/Control_register), namely:
 
-In the next step we need to update Global Descriptor table with `lgdt` instruction:
+* `X86_CR0_PE` - system is in protected mode;
+* `X86_CR0_MP` - controls interaction of WAIT/FWAIT instructions with TS flag in CR0;
+* `X86_CR0_ET` - on the 386, it allowed to specify whether the external math coprocessor was an 80287 or 80387;
+* `X86_CR0_NE` - enable internal x87 floating point error reporting when set, else enables PC style x87 error detection;
+* `X86_CR0_WP` - when set, the CPU can't write to read-only pages when privilege level is 0;
+* `X86_CR0_AM` - alignment check enabled if AM set, AC flag (in EFLAGS register) set, and privilege level is 3;
+* `X86_CR0_PG` - enable paging.
+
+by the execution following assembly code:
+
+```assembly
+#define CR0_STATE	(X86_CR0_PE | X86_CR0_MP | X86_CR0_ET | \
+			 X86_CR0_NE | X86_CR0_WP | X86_CR0_AM | \
+			 X86_CR0_PG)
+movl	$CR0_STATE, %eax
+movq	%rax, %cr0
+```
+
+We already know that to run any code, and even more [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code from assembly, we need to setup a stack. As always, we are doing it by the setting of [stack pointer](https://en.wikipedia.org/wiki/Stack_register) to a correct place in memory and reseting [flags](https://en.wikipedia.org/wiki/FLAGS_register) register after this:
+
+```assembly
+movq stack_start(%rip), %rsp
+pushq $0
+popfq
+```
+
+The most interesting thing here is the `stack_start`. It defined in the same [source](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) code file and looks like:
+
+```assembly
+GLOBAL(stack_start)
+.quad  init_thread_union+THREAD_SIZE-8
+```
+
+The `GLOBAL` is already familiar to us from. It defined in the [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h) header file expands to the `global` symbol definition:
+
+```C
+#define GLOBAL(name)    \
+         .globl name;           \
+         name:
+```
+
+The `THREAD_SIZE` macro is defined in the [arch/x86/include/asm/page_64_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_64_types.h) header file and depends on value of the `KASAN_STACK_ORDER` macro:
+
+```C
+#define THREAD_SIZE_ORDER       (2 + KASAN_STACK_ORDER)
+#define THREAD_SIZE  (PAGE_SIZE << THREAD_SIZE_ORDER)
+```
+
+We consider when the [kasan](http://lxr.free-electrons.com/source/Documentation/kasan.txt) is disabled and the `PAGE_SIZE` is `4096` bytes. So the `THREAD_SIZE` will expands to `16` killobytes and represents size of the stack of a thread. Why is `thread`? You may already know that each [process](https://en.wikipedia.org/wiki/Process_%28computing%29) may have parent [processes](https://en.wikipedia.org/wiki/Parent_process) and [child](https://en.wikipedia.org/wiki/Child_process) processes. Actually, a parent process and child process differ in stack. A new kernel stack is allocated for a new process. In the Linux kernel this stack is represented by the [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with the `thread_info` strcture.
+
+And as we can see the `init_thread_union` is represented by the `thread_union`, which defined as:
+
+```C
+union thread_union {
+         struct thread_info thread_info;
+         unsigned long stack[THREAD_SIZE/sizeof(long)];
+};
+```
+
+and `init_thread_union` looks like:
+
+```C
+union thread_union init_thread_union __init_task_data =
+	{ INIT_THREAD_INFO(init_task) };
+```
+
+Where the `INIT_THREAD_INFO` macro takes `task_struct` structure which represents process descriptor in the Linux kernel and does some basic initialization of the given `task_struct` structure:
+
+```C
+#define INIT_THREAD_INFO(tsk)		\
+{                                               \
+	.task		= &tsk,                         \
+	.flags		= 0,                            \
+	.cpu		= 0,                            \
+	.addr_limit	= KERNEL_DS,                    \
+}
+```
+
+So, the `thread_union` contains low-level information about a process and process's stack and placed in the bottom of stack:
+
+```
++-----------------------+
+|                       |
+|                       |
+|                       |
+|     Kernel stack      |
+|                       |
+|                       |
+|                       |
+|-----------------------|
+|                       |
+|  struct thread_info   |
+|                       |
++-----------------------+
+```
+
+Note that we reserve `8` bytes at the to of stack. This is necessary to guarantee illegal access of the next page memory.
+
+After the early boot stack is set, to update the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table) with `lgdt` instruction:
 
 ```assembly
 lgdt	early_gdt_descr(%rip)
 ```
 
-where Global Descriptor table defined as:
+where the `early_gdt_descr` is defined as:
 
 ```assembly
 early_gdt_descr:
@@ -337,7 +435,7 @@ early_gdt_descr_base:
 	.quad	INIT_PER_CPU_VAR(gdt_page)
 ```
 
-We need to reload Global Descriptor Table because now kernel works in the userspace addresses, but soon kernel will work in it's own space. Now let's look at the definition of `early_gdt_descr`. Global Descriptor Table contains 32 entries:
+We need to reload `Global Descriptor Table` because now kernel works in the low userspace addresses, but soon kernel will work in it's own space. Now let's look at the definition of `early_gdt_descr`. Global Descriptor Table contains `32` entries:
 
 ```C
 #define GDT_ENTRIES 32
@@ -370,13 +468,13 @@ struct desc_struct {
  } __attribute__((packed));
 ```
 
-and presents familiar to us GDT descriptor. Also we can note that `gdt_page` structure aligned to `PAGE_SIZE` which is 4096 bytes. It means that `gdt` will occupy one page. Now let's try to understand what is `INIT_PER_CPU_VAR`. `INIT_PER_CPU_VAR` is a macro which defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h) and just concats `init_per_cpu__` with the given parameter:
+and presents familiar to us `GDT` descriptor. Also we can note that `gdt_page` structure aligned to `PAGE_SIZE` which is `4096` bytes. It means that `gdt` will occupy one page. Now let's try to understand what is `INIT_PER_CPU_VAR`. `INIT_PER_CPU_VAR` is a macro which defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h) and just concats `init_per_cpu__` with the given parameter:
 
 ```C
 #define INIT_PER_CPU_VAR(var) init_per_cpu__##var
 ```
 
-After this we have `init_per_cpu__gdt_page`. We can see in the [linker script](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
+After the `INIT_PER_CPU_VAR` macro will be expanded, we will have `init_per_cpu__gdt_page`. We can see in the [linker script](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
 
 ```
 #define INIT_PER_CPU(x) init_per_cpu__##x = x + __per_cpu_load
@@ -398,7 +496,7 @@ As we loaded new Global Descriptor Table, we reload segments as we did it every 
 	movl %eax,%gs
 ```
 
-After all of these steps we set up `gs` register that it post to the `irqstack` (we will see information about it in the upcoming parts):
+After all of these steps we set up `gs` register that it post to the `irqstack` which represents special stack where [interrupts](https://en.wikipedia.org/wiki/Interrupt) will be handled on:
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -413,7 +511,7 @@ where `MSR_GS_BASE` is:
 #define MSR_GS_BASE             0xc0000101
 ```
 
-We need to put `MSR_GS_BASE` to the `ecx` register and load data from the `eax` and `edx` (which are point to the `initial_gs`) with `wrmsr` instruction. We don't use `cs`, `fs`, `ds` and `ss` segment registers for addressation in the 64-bit mode, but `fs` and `gs` registers can be used. `fs` and `gs` have a hidden part (as we saw it in the real mode for `cs`) and this part contains descriptor which mapped to Model specific registers. So we can see above `0xc0000101` is a `gs.base` MSR address.
+We need to put `MSR_GS_BASE` to the `ecx` register and load data from the `eax` and `edx` (which are point to the `initial_gs`) with `wrmsr` instruction. We don't use `cs`, `fs`, `ds` and `ss` segment registers for addressation in the 64-bit mode, but `fs` and `gs` registers can be used. `fs` and `gs` have a hidden part (as we saw it in the real mode for `cs`) and this part contains descriptor which mapped to [Model Specific Registers](https://en.wikipedia.org/wiki/Model-specific_register). So we can see above `0xc0000101` is a `gs.base` MSR address. When a [system call](https://en.wikipedia.org/wiki/System_call) or [interrupt](https://en.wikipedia.org/wiki/Interrupt) occured, there is no kernel stack at the entry point, so the value of the `MSR_GS_BASE` will store address of the interrupt stack.
 
 In the next step we put the address of the real mode bootparam structure to the `rdi` (remember `rsi` holds pointer to this structure from the start) and jump to the C code with:
 
@@ -428,7 +526,6 @@ In the next step we put the address of the real mode bootparam structure to the 
 Here we put the address of the `initial_code` to the `rax` and push fake address, `__KERNEL_CS` and the address of the `initial_code` to the stack. After this we can see `lretq` instruction which means that after it return address will be extracted from stack (now there is address of the `initial_code`) and jump there. `initial_code` is defined in the same source code file and looks:
 
 ```assembly
-	__REFDATA
 	.balign	8
 	GLOBAL(initial_code)
 	.quad	x86_64_start_kernel
