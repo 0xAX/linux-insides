@@ -34,10 +34,10 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode). Let's back up a little to try and understand memory segmentation in this mode. Real mode is supported on all x86-compatible processors, from the [8086](https://en.wikipedia.org/wiki/Intel_8086) all the way to the modern Intel 64-bit CPUs. The 8086 processor has a 20-bit address bus, which means that it could work with 0-2^20 bytes address space (1 megabyte). But it only has 16-bit registers, and with 16-bit registers the maximum address is 2^16 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all the address space available. All memory is divided into small, fixed-size segments of 65535 bytes, or 64 KB. Since we cannot address memory above 64 KB with 16 bit registers, an alternate method is devised. An address consists of two parts: the beginning address of the segment and an offset from this address. To get a physical address in memory, we need to multiply the segment part by 16 and add the offset part:
+The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode). Let's back up a little to try and understand memory segmentation in this mode. Real mode is supported on all x86-compatible processors, from the [8086](https://en.wikipedia.org/wiki/Intel_8086) all the way to the modern Intel 64-bit CPUs. The 8086 processor has a 20-bit address bus, which means that it could work with a 0-0x100000 address space (1 megabyte). But it only has 16-bit registers, and with 16-bit registers the maximum address is 2^16 - 1 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all the address space available. All memory is divided into small, fixed-size segments of 65536 bytes, or 64 KB. Since we cannot address memory above 64 KB with 16 bit registers, an alternate method is devised. An address consists of two parts: a segment selector which has an associated base address and an offset from this base address. In real mode, the associated base address of a segment selector is `Segment Selector * 16`. Thus, to get a physical address in memory, we need to multiply the segment selector part by 16 and add the offset part:
 
 ```
-PhysicalAddress = Segment * 16 + Offset
+PhysicalAddress = Segment Selector * 16 + Offset
 ```
 
 For example if `CS:IP` is `0x2000:0x0010`, the corresponding physical address will be:
@@ -47,22 +47,18 @@ For example if `CS:IP` is `0x2000:0x0010`, the corresponding physical address wi
 '0x20010'
 ```
 
-But if we take the largest segment part and offset: `0xffff:0xffff`, it will be:
+But if we take the largest segment selector and offset: `0xffff:0xffff`, it will be:
 
 ```python
 >>> hex((0xffff << 4) + 0xffff)
 '0x10ffef'
 ```
 
-which is 65519 bytes over first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](https://en.wikipedia.org/wiki/A20_line).
+which is 65520 bytes over first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](https://en.wikipedia.org/wiki/A20_line).
 
 Ok, now we know about real mode and memory addressing. Let's get back to discuss about register values after reset:
 
-The `CS` register consists of two parts: the visible segment selector and hidden base address. We know the predefined `CS` base and `IP` value, so the logical address will be:
-
-```
-0xffff0000:0xfff0
-```
+The `CS` register consists of two parts: the visible segment selector and the hidden base address. While the base address is normally formed by multiplying the segment selector value by 16, during a hardware reset, the segment selector in the CS register is loaded with 0xf000 and the base address is loaded with 0xffff0000. The processor use this special base address until CS is changed.
 
 The starting address is formed by adding the base address to the value in the EIP register:
 
@@ -74,26 +70,26 @@ The starting address is formed by adding the base address to the value in the EI
 We get `0xfffffff0` which is 4GB - 16 bytes. This point is called the [Reset vector](http://en.wikipedia.org/wiki/Reset_vector). This is the memory location at which the CPU expects to find the first instruction to execute after reset. It contains a [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) instruction which usually points to the BIOS entry point. For example, if we look in the [coreboot](http://www.coreboot.org/) source code, we see:
 
 ```assembly
-	.section ".reset"
-	.code16
-.globl	reset_vector
+    .section ".reset"
+    .code16
+.globl  reset_vector
 reset_vector:
-	.byte  0xe9
-	.int   _start - ( . + 2 )
-	...
+    .byte  0xe9
+    .int   _start - ( . + 2 )
+    ...
 ```
 
 Here we can see the jmp instruction [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9 and its destination address - `_start - ( . + 2)`, and we can see that the `reset` section is 16 bytes and starts at `0xfffffff0`:
 
 ```
 SECTIONS {
-	_ROMTOP = 0xfffffff0;
-	. = _ROMTOP;
-	.reset . : {
-		*(.reset)
-		. = 15 ;
-		BYTE(0x00);
-	}
+    _ROMTOP = 0xfffffff0;
+    . = _ROMTOP;
+    .reset . : {
+        *(.reset)
+        . = 15 ;
+        BYTE(0x00);
+    }
 }
 ```
 
@@ -147,7 +143,7 @@ A real-world boot sector has code to continue the boot process and the partition
 **NOTE**: As you can read above the CPU is in real mode. In real mode, calculating the physical address in memory is done as follows:
 
 ```
-PhysicalAddress = Segment * 16 + Offset
+PhysicalAddress = Segment Selector * 16 + Offset
 ```
 
 The same as mentioned before. We have only 16 bit general purpose registers, the maximum value of a 16 bit register is `0xffff`, so if we take the largest values, the result will be:
@@ -195,15 +191,15 @@ Now that the BIOS has chosen a boot device and transferred control to the boot s
 As we can read in the kernel boot protocol, the bootloader must read and fill some fields of the kernel setup header, which starts at `0x01f1` offset from the kernel setup code. The kernel header [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) starts from:
 
 ```assembly
-	.globl hdr
+    .globl hdr
 hdr:
-	setup_sects: .byte 0
-	root_flags:  .word ROOT_RDONLY
-	syssize:     .long 0
-	ram_size:    .word 0
-	vid_mode:    .word SVGA_MODE
-	root_dev:    .word 0
-	boot_flag:   .word 0xAA55
+    setup_sects: .byte 0
+    root_flags:  .word ROOT_RDONLY
+    syssize:     .long 0
+    ram_size:    .word 0
+    vid_mode:    .word SVGA_MODE
+    root_dev:    .word 0
+    boot_flag:   .word 0xAA55
 ```
 
 The bootloader must fill this and the rest of the headers (only marked as `write` in the Linux boot protocol, for example [this](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) with values which it either got from command line or calculated. We will not see a description and explanation of all fields of the kernel setup header, we will get back to that when the kernel uses them. You can find a description of all fields in the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).
@@ -274,15 +270,15 @@ Actually `header.S` starts from [MZ](https://en.wikipedia.org/wiki/DOS_MZ_execut
 ...
 ...
 pe_header:
-	.ascii "PE"
-	.word 0
+    .ascii "PE"
+    .word 0
 ```
 
 It needs this to load an operating system with [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface). We won't see how this works right now, we'll see this in one of the next chapters.
 
 So the actual kernel setup entry point is:
 
-```
+```assembly
 // header.S line 292
 .globl _start
 _start:
@@ -302,14 +298,14 @@ The bootloader (grub2 and others) knows about this point (`0x200` offset from `M
 So the kernel setup entry point is:
 
 ```assembly
-	.globl _start
+    .globl _start
 _start:
-	.byte 0xeb
-	.byte start_of_setup-1f
+    .byte  0xeb
+    .byte  start_of_setup-1f
 1:
-	//
-	// rest of the header
-	//
+    //
+    // rest of the header
+    //
 ```
 
 Here we can see a `jmp` instruction opcode - `0xeb` to the `start_of_setup-1f` point. `Nf` notation means `2f` refers to the next local `2:` label. In our case it is label `1` which goes right after jump. It contains the rest of the setup [header](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156). Right after the setup header we see the `.entrytext` section which starts at the `start_of_setup` label.
@@ -317,8 +313,8 @@ Here we can see a `jmp` instruction opcode - `0xeb` to the `start_of_setup-1f` p
 Actually this is the first code that runs (aside from the previous jump instruction of course). After the kernel setup got the control from the bootloader, the first `jmp` instruction is located at `0x200` (first 512 bytes) offset from the start of the kernel real mode. This we can read in the Linux kernel boot protocol and also see in the grub2 source code:
 
 ```C
-  state.gs = state.fs = state.es = state.ds = state.ss = segment;
-  state.cs = segment + 0x20;
+state.gs = state.fs = state.es = state.ds = state.ss = segment;
+state.cs = segment + 0x20;
 ```
 
 It means that segment registers will have the following values after kernel setup starts:
@@ -342,28 +338,28 @@ Let's look at the implementation.
 Segment registers align
 --------------------------------------------------------------------------------
 
-First of all it ensures that `ds` and `es` segment registers point to the same address and disables interrupts with the `cli` instruction:
+First of all it ensures that `ds` and `es` segment registers point to the same address and clears the direction flag with the `cld` instruction:
 
 ```assembly
-	movw	%ds, %ax
-	movw	%ax, %es
-	cli
+    movw    %ds, %ax
+    movw    %ax, %es
+    cld
 ```
 
 As I wrote earlier, grub2 loads kernel setup code at address `0x10000` and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
 
-```
+```assembly
 _start:
-	.byte 0xeb
-	.byte start_of_setup-1f
+    .byte 0xeb
+    .byte start_of_setup-1f
 ```
 
 `jump`, which is at 512 bytes offset from the [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L47). It also needs to align `cs` from `0x10200` to `0x10000` as all other segment registers. After that we set up the stack:
 
 ```assembly
-	pushw	%ds
-	pushw	$6f
-	lretw
+    pushw   %ds
+    pushw   $6f
+    lretw
 ```
 
 push `ds` value to the stack with the address of the [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) label and execute `lretw` instruction. When we call `lretw`, it loads address of label `6` into the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter) register and `cs` with the value of `ds`. After this `ds` and `cs` will have the same values.
@@ -374,10 +370,10 @@ Stack Setup
 Actually, almost all of the setup code is preparation for the C language environment in real mode. The next [step](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L467) is checking the `ss` register value and making a correct stack if `ss` is wrong:
 
 ```assembly
-	movw	%ss, %dx
-	cmpw	%ax, %dx
-	movw	%sp, %dx
-	je	2f
+    movw    %ss, %dx
+    cmpw    %ax, %dx
+    movw    %sp, %dx
+    je      2f
 ```
 
 This can lead to 3 different scenarios:
@@ -390,13 +386,13 @@ Let's look at all three of these scenarios:
 
 * `ss` has a correct address (0x10000). In this case we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
 
-```
-2: 	andw	$~3, %dx
-	jnz	3f
-	movw	$0xfffc, %dx
-3:  movw	%ax, %ss
-	movzwl %dx, %esp
-	sti
+```assembly
+2:  andw    $~3, %dx
+    jnz     3f
+    movw    $0xfffc, %dx
+3:  movw    %ax, %ss
+    movzwl  %dx, %esp
+    sti
 ```
 
 Here we can see the alignment of `dx` (contains `sp` given by bootloader) to 4 bytes and a check for whether or not it is zero. If it is zero, we put `0xfffc` (4 byte aligned address before maximum segment size - 64 KB) in `dx`. If it is not zero we continue to use `sp` given by the bootloader (0xf7f4 in my case). After this we put the `ax` value to `ss` which stores the correct segment address of `0x10000` and sets up a correct `sp`. We now have a correct stack:
@@ -406,23 +402,23 @@ Here we can see the alignment of `dx` (contains `sp` given by bootloader) to 4 b
 * In the second scenario, (`ss` != `ds`). First of all put the [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) (address of end of setup code) value in `dx` and check the `loadflags` header field with the `testb` instruction to see whether we can use the heap or not. [loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
 
 ```C
-#define LOADED_HIGH	    (1<<0)
-#define QUIET_FLAG	    (1<<5)
-#define KEEP_SEGMENTS	(1<<6)
-#define CAN_USE_HEAP	(1<<7)
+#define LOADED_HIGH     (1<<0)
+#define QUIET_FLAG      (1<<5)
+#define KEEP_SEGMENTS   (1<<6)
+#define CAN_USE_HEAP    (1<<7)
 ```
 
 And as we can read in the boot protocol:
 
 ```
-Field name:	loadflags
+Field name: loadflags
 
   This field is a bitmask.
 
   Bit 7 (write): CAN_USE_HEAP
-	Set this bit to 1 to indicate that the value entered in the
-	heap_end_ptr is valid.  If this field is clear, some setup code
-	functionality will be disabled.
+    Set this bit to 1 to indicate that the value entered in the
+    heap_end_ptr is valid.  If this field is clear, some setup code
+    functionality will be disabled.
 ```
 
 If the `CAN_USE_HEAP` bit is set, put `heap_end_ptr` in `dx` which points to `_end` and add `STACK_SIZE` (minimal stack size - 512 bytes) to it. After this if `dx` is not carry (it will not be carry, dx = _end + 512), jump to label `2` as in the previous case and make a correct stack.
@@ -439,8 +435,8 @@ BSS Setup
 The last two steps that need to happen before we can jump to the main C code, are setting up the [BSS](https://en.wikipedia.org/wiki/.bss) area and checking the "magic" signature. First, signature checking:
 
 ```assembly
-cmpl	$0x5a5aaa55, setup_sig
-jne	setup_bad
+    cmpl    $0x5a5aaa55, setup_sig
+    jne     setup_bad
 ```
 
 This simply compares the [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) with the magic number `0x5a5aaa55`. If they are not equal, a fatal error is reported.
@@ -450,12 +446,12 @@ If the magic number matches, knowing we have a set of correct segment registers 
 The BSS section is used to store statically allocated, uninitialized data. Linux carefully ensures this area of memory is first blanked, using the following code:
 
 ```assembly
-	movw	$__bss_start, %di
-	movw	$_end+3, %cx
-	xorl	%eax, %eax
-	subw	%di, %cx
-	shrw	$2, %cx
-	rep; stosl
+    movw    $__bss_start, %di
+    movw    $_end+3, %cx
+    xorl    %eax, %eax
+    subw    %di, %cx
+    shrw    $2, %cx
+    rep; stosl
 ```
 
 First of all the [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) address is moved into `di` and the `_end + 3` address (+3 - aligns to 4 bytes) is moved into `cx`. The `eax` register is cleared (using a `xor` instruction), and the bss section size (`cx`-`di`) is calculated and put into `cx`. Then, `cx` is divided by four (the size of a 'word'), and the `stosl` instruction is repeatedly used, storing the value of `eax` (zero) into the address pointed to by `di`, automatically increasing `di` by four (this occurs until `cx` reaches zero). The net effect of this code is that zeros are written through all words in memory from `__bss_start` to `_end`:
@@ -468,7 +464,7 @@ Jump to main
 That's all, we have the stack and BSS so we can jump to the `main()` C function:
 
 ```assembly
-	calll main
+    calll main
 ```
 
 The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). You can read about what this does in the next part.
