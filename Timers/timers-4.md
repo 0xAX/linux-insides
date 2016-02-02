@@ -4,7 +4,7 @@ Timers in the Linux kernel. Part 4.
 Timers
 --------------------------------------------------------------------------------
 
-This is fourth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-3.html) we knew about the `tick broadcast` framework and `NO_HZ` mode in the Linux kernel. We will continue to dive into the time managemented related stuff in the Linux kernel in this part and will and will acquainted with yet another concept in the Linux kernel - `timers`. Before we will look at timers in the Linux kernel, we have to learn some theory about this concept. Note that we will consider software timers in this part.
+This is fourth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-3.html) we knew about the `tick broadcast` framework and `NO_HZ` mode in the Linux kernel. We will continue to dive into the time management related stuff in the Linux kernel in this part and will be acquainted with yet another concept in the Linux kernel - `timers`. Before we will look at timers in the Linux kernel, we have to learn some theory about this concept. Note that we will consider software timers in this part.
 
 The Linux kernel provides a `software timer` concept to allow to kernel functions could be invoked at future moment. Timers are widely used in the Linux kernel. For example, look in the [net/netfilter/ipset/ip_set_list_set.c](https://github.com/torvalds/linux/blob/master/net/netfilter/ipset/ip_set_list_set.c) source code file. This source code file provides implementation of the framework for the managing of groups of [IP](https://en.wikipedia.org/wiki/Internet_Protocol) addresses.
 
@@ -75,7 +75,7 @@ static void __init init_timer_cpus(void)
 }
 ```
 
-If you do not know or do not remember what is it a `possible` cpu, you can read the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) of this book which describes `cpumask` concept in the Linux kernel. In shot words, a `possible` processor is a processor which can be plugged in anytime during the life of the system.
+If you do not know or do not remember what is it a `possible` cpu, you can read the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) of this book which describes `cpumask` concept in the Linux kernel. In short words, a `possible` processor is a processor which can be plugged in anytime during the life of the system.
 
 The `init_timer_cpu` function does main work for us, namely it executes initialization of the `tvec_base` structure for each processor. This structure defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file and stores data related to a `dynamic` timer for a certain processor. Let's look on the definition of this structure:
 
@@ -98,7 +98,7 @@ struct tvec_base {
 } ____cacheline_aligned;
 ```
 
-The `thec_base` structure contains following fields: The `lock` for `tvec_base` protection, the next `running_timer` field points to the currently running timer for the certain processor, the `timer_jiffies` fields represents the earilest expiration time (it will be used by the Linux kernel to find already expired timers). The next field - `next_timer` contains the next pending timer for a next timer [interrupt](https://en.wikipedia.org/wiki/Interrupt) in a case when a processor goes to sleep and the `NO_HZ` mode is enabled in the Linux kernel. The `active_timers` field provides accounting of non-deferrable timers timers or in other words all timers that will not be stopped during a processor will go to sleep. The `all_timers` field tracks total number of timers or `active_timers` + deferrable timers. The `cpu` field represents number of a processor which owns timers. The `migration_enabled` and `nohz_active` fields are represent opportunity of timers migration to another processor and status of the `NO_HZ` mode respectively.
+The `thec_base` structure contains following fields: The `lock` for `tvec_base` protection, the next `running_timer` field points to the currently running timer for the certain processor, the `timer_jiffies` fields represents the earliest expiration time (it will be used by the Linux kernel to find already expired timers). The next field - `next_timer` contains the next pending timer for a next timer [interrupt](https://en.wikipedia.org/wiki/Interrupt) in a case when a processor goes to sleep and the `NO_HZ` mode is enabled in the Linux kernel. The `active_timers` field provides accounting of non-deferrable timers or in other words all timers that will not be stopped during a processor will go to sleep. The `all_timers` field tracks total number of timers or `active_timers` + deferrable timers. The `cpu` field represents number of a processor which owns timers. The `migration_enabled` and `nohz_active` fields are represent opportunity of timers migration to another processor and status of the `NO_HZ` mode respectively.
 
 The last five fields of the `tvec_base` structure represent lists of dynamic timers. The first `tv1` field has:
 
@@ -232,9 +232,9 @@ static int timer_cpu_notify(struct notifier_block *self,
 }
 ```
 
-This chapter will not describe `hotplug` related events in the Linux kernel source code, but if you are interesting in such things, you can find implementation iof the `migrate_timers` function in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file.
+This chapter will not describe `hotplug` related events in the Linux kernel source code, but if you are interesting in such things, you can find implementation of the `migrate_timers` function in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file.
 
-The last step in the is the `init_timers` function is the call of the:
+The last step in the `init_timers` function is the call of the:
 
 ```C
 open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
@@ -267,7 +267,7 @@ At the beginning of the `run_timer_softirq` function we get a `dynamic` timer fo
 
 Reclaim that the `timer_jiffies` field of the `tvec_base` structure represents the relative time when functions delayed by the given timer will be executed. So we compare these two values and if the current time represented by the `jiffies` is greater than `base->timer_jiffies`, we call the `__run_timers` function that defined in the same source code file. Let's look on the implementation of this function.
 
-As I just wrote, the `__run_timers` function runs all expired timers for a given processor. This function starts from the acquireing of the `tvec_base's`  lock to protect the `tvec_base` structure
+As I just wrote, the `__run_timers` function runs all expired timers for a given processor. This function starts from the acquiring of the `tvec_base's`  lock to protect the `tvec_base` structure
 
 ```C
 static inline void __run_timers(struct tvec_base *base)

@@ -25,7 +25,7 @@ x86_init.timers.wallclock_init();
 
 We already saw `x86_init` structure in the chapter that describes initialization of the Linux kernel. This structure contains pointers to the default setup functions for the different platforms like [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms), [Intel CE4100](http://www.wpgholdings.com/epaper/US/newsRelease_20091215/255874.pdf) and etc. The `x86_init` structure defined in the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c#L36) and as you can see it determines standard PC hardware by default.
 
-As we can see, the `x86_init` structure has `x86_init_ops` type that provides a set of functions for platform specific setup like reserviing standard resources, platform specific memory setup, initialization of interrupt handlers and etc. This structure looks like:
+As we can see, the `x86_init` structure has `x86_init_ops` type that provides a set of functions for platform specific setup like reserving standard resources, platform specific memory setup, initialization of interrupt handlers and etc. This structure looks like:
 
 ```C
 struct x86_init_ops {
@@ -105,7 +105,7 @@ void __init intel_mid_rtc_init(void)
 }
 ```
 
-That's all, after this a device based on `Intel MID` will be able to get get time from hardware clock. As I already wrote, the standard PC [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture does not support `function` and just do nothing during call of this function. We just saw initialization of the [real time clock](https://en.wikipedia.org/wiki/Real-time_clock) for the [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms) architecture and now times to return to the general `x86_64` architecture and will look on the time management related stuff there.
+That's all, after this a device based on `Intel MID` will be able to get time from hardware clock. As I already wrote, the standard PC [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture does not support `x86_init_noop` and just do nothing during call of this function. We just saw initialization of the [real time clock](https://en.wikipedia.org/wiki/Real-time_clock) for the [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms) architecture and now times to return to the general `x86_64` architecture and will look on the time management related stuff there.
 
 Acquainted with jiffies
 --------------------------------------------------------------------------------
@@ -128,7 +128,7 @@ This definition is very similar to the `jiffy` in the Linux kernel. There is glo
 extern unsigned long volatile __jiffy_data jiffies;
 ```
 
-during initialization process. This global variable will be incremented each time during timer interrupt. Besides this, near the `jiffies` variable we can see definition of the similar variable
+during initialization process. This global variable will be increased each time during timer interrupt. Besides this, near the `jiffies` variable we can see definition of the similar variable
 
 ```C
 extern u64 jiffies_64;
@@ -168,7 +168,7 @@ Now we know a little theory about `jiffies` and we can return to the our functio
 The `clocksource` is hardware abstraction for a free-running counter.
 ```
 
-I'm not sure about you, but that description didn't give a good understanding about the `clocksource` concept. Let's try to understand what is it, but we will not go deeper because this topic will be described in a separate part in much more detail. The main point of the `clocksource` is timekeeping abstraction or in very simple words - it provides a time value to the kernel. We already know about `jiffies` interface that represents number of ticks that have occurred since the system booted. It represented by the global variable in the Linux kernel and incremented each timer interrupt. The Linux kernel can use `jiffies` for time measurement. So why do we need in separate context like the `clocksource`? Actually different hardware devices provide different clock sources that are widely in their capabilities. The availability of more precise techniques for time intervals measurement is hardware-dependent.
+I'm not sure about you, but that description didn't give a good understanding about the `clocksource` concept. Let's try to understand what is it, but we will not go deeper because this topic will be described in a separate part in much more detail. The main point of the `clocksource` is timekeeping abstraction or in very simple words - it provides a time value to the kernel. We already know about `jiffies` interface that represents number of ticks that have occurred since the system booted. It represented by the global variable in the Linux kernel and increased each timer interrupt. The Linux kernel can use `jiffies` for time measurement. So why do we need in separate context like the `clocksource`? Actually different hardware devices provide different clock sources that are widely in their capabilities. The availability of more precise techniques for time intervals measurement is hardware-dependent.
 
 For example `x86` has on-chip a 64-bit counter that is called [Time Stamp  Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) and its frequency can be equal to processor frequency. Or for example [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) that consists of a `64-bit` counter of at least `10 MHz` frequency. Two different timers and they are both for `x86`. If we will add timers from other architectures, this only makes this problem more complex. The Linux kernel provides `clocksource` concept to solve the problem.
 
@@ -279,7 +279,7 @@ As I already wrote, the main purpose of the `register_refined_jiffies` function 
 struct clocksource refined_jiffies;
 ```
 
-There is one different between `refined_jiffies` and `clocksource_jiffies`: The standard `jiffies` based clock source is the lowest common denominator clock source which should function on all systems. As we already know, the `jiffies` global variable will be incremented during each timer interrupt. This means that standard `jiffies` based clock source has the same resolution as the timer interrupt frequency. From this we can understand that standard `jiffies` based clock source may suffer from inaccuracies. The `refined_jiffies` uses `CLOCK_TICK_RATE` as the base of `jiffies` shift.
+There is one different between `refined_jiffies` and `clocksource_jiffies`: The standard `jiffies` based clock source is the lowest common denominator clock source which should function on all systems. As we already know, the `jiffies` global variable will be increased during each timer interrupt. This means that standard `jiffies` based clock source has the same resolution as the timer interrupt frequency. From this we can understand that standard `jiffies` based clock source may suffer from inaccuracies. The `refined_jiffies` uses `CLOCK_TICK_RATE` as the base of `jiffies` shift.
 
 Let's look on the implementation of this function. First of all we can see that the `refined_jiffies` clock source based on the `clocksource_jiffies` structure:
 
@@ -297,7 +297,7 @@ int register_refined_jiffies(long cycles_per_second)
 	...
 ```
 
-Here we can see that we update the name of the `refined_jiffies` to `refined-jiffies` and increment the rating of this structure. As you remember, the `clocksource_jiffies` has rating - `1`, so our `refined_jiffies` clocksource will have rating - `2`. This means that the `refined_jiffies` will be best selection for clock source management code.
+Here we can see that we update the name of the `refined_jiffies` to `refined-jiffies` and increase the rating of this structure. As you remember, the `clocksource_jiffies` has rating - `1`, so our `refined_jiffies` clocksource will have rating - `2`. This means that the `refined_jiffies` will be best selection for clock source management code.
 
 In the next step we need to calculate number of cycles per one tick:
 
@@ -354,7 +354,7 @@ We just saw initialization of two `jiffies` based clock sources in the previous 
 * standard `jiffies` based clock source;
 * refined  `jiffies` based clock source;
 
-Don't worry if you don't understand the calculations here. They look frightening at first. Soon, step by step we will learn these things. So, we just saw initialization of `jffies` based clock sources and also we know that the Linux kernel has the global variable `jiffies` that holds the number of ticks that have occured since the kernel started to work. Now, let's look how to use it. To use `jiffies` we just can use `jiffies` global variable by its name or with the call of the `get_jiffies_64` function. This function defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file and just returns full full `64-bit` value of the `jiffies`:
+Don't worry if you don't understand the calculations here. They look frightening at first. Soon, step by step we will learn these things. So, we just saw initialization of `jffies` based clock sources and also we know that the Linux kernel has the global variable `jiffies` that holds the number of ticks that have occured since the kernel started to work. Now, let's look how to use it. To use `jiffies` we just can use `jiffies` global variable by its name or with the call of the `get_jiffies_64` function. This function defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file and just returns full `64-bit` value of the `jiffies`:
 
 ```C
 u64 get_jiffies_64(void)
