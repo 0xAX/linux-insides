@@ -117,7 +117,7 @@ Ultimately, the memory space will be allocated for the given `cpumask` with the 
 *mask = kmalloc_node(cpumask_size(), flags, node);
 ```
 
-Now let's look on the `cpumasks` that will be initialized in the `tick_broadcast_init` function. As we can see, the `tick_broadcast_init` function will initialize six `cpumasks`, and moreover, initialization of the last three `cpumasks` will be dependet on the `CONFIG_TICK_ONESHOT` kernel configuration option.
+Now let's look on the `cpumasks` that will be initialized in the `tick_broadcast_init` function. As we can see, the `tick_broadcast_init` function will initialize six `cpumasks`, and moreover, initialization of the last three `cpumasks` will be depended on the `CONFIG_TICK_ONESHOT` kernel configuration option.
 
 The first three `cpumasks` are:
 
@@ -321,7 +321,7 @@ If you remember, we have started this part with the call of the `tick_init` func
 Initialization of dyntick related data structures
 --------------------------------------------------------------------------------
 
-We already saw some information about `dyntick` concept in this part and we know that this concept allows kernel to disable system timer interrupts in the `idle` state. The `tick_nohz_init` function makes initialization of the different data structures which are related to this concept. This function defined in the [kernel/time/tick-sched.c](https://github.com/torvalds/linux/blob/master/kernel/time/tich-sched.c) source code file and starts from the check of the value of the `tick_nohz_full_running` variable which represents state of the tick-less mode for the `idle` state and the state when system timer interrups are disabled durung a processor has only one runnable task:
+We already saw some information about `dyntick` concept in this part and we know that this concept allows kernel to disable system timer interrupts in the `idle` state. The `tick_nohz_init` function makes initialization of the different data structures which are related to this concept. This function defined in the [kernel/time/tick-sched.c](https://github.com/torvalds/linux/blob/master/kernel/time/tich-sched.c) source code file and starts from the check of the value of the `tick_nohz_full_running` variable which represents state of the tick-less mode for the `idle` state and the state when system timer interrups are disabled during a processor has only one runnable task:
 
 ```C
 if (!tick_nohz_full_running) {
@@ -330,7 +330,7 @@ if (!tick_nohz_full_running) {
 }
 ```
 
-If this mode is not running we cann the `tick_nohz_init_all` function that defined in the same source code file and check its result. The `tick_nohz_init_all` function tries to allocate the `tick_nohz_full_mask` with the call of the `alloc_cpumask_var` that will allocate space for a `tick_nohz_full_mask`. The `tck_nohz_full_mask` will store numbers of processors that have enabled full `NO_HZ`. After successful allocation of the `tick_nohz_full_mask` we set all bits in the `tick_nogz_full_mask`, set the `tick_nohz_full_running` and return result to the `tick_nohz_init` function:
+If this mode is not running we call the `tick_nohz_init_all` function that defined in the same source code file and check its result. The `tick_nohz_init_all` function tries to allocate the `tick_nohz_full_mask` with the call of the `alloc_cpumask_var` that will allocate space for a `tick_nohz_full_mask`. The `tck_nohz_full_mask` will store numbers of processors that have enabled full `NO_HZ`. After successful allocation of the `tick_nohz_full_mask` we set all bits in the `tick_nogz_full_mask`, set the `tick_nohz_full_running` and return result to the `tick_nohz_init` function:
 
 ```C
 static int tick_nohz_init_all(void)
@@ -360,7 +360,7 @@ if (!alloc_cpumask_var(&housekeeping_mask, GFP_KERNEL)) {
 }
 ```
 
-This `cpumask` will store number of processor for `housekeeping` or in other words we need at least in one processor that will not me in `NO_HZ` mode, because it will do timekeeping and etc. After this we check the result of the architecture-specific `arch_irq_work_has_interrupt` function. This function checks ability to send inter-processor interrupt for the certain architecture. We need to check this, because system timer of a processor will be disabled during `NO_HZ` mode, so there must be at least one online processor which can send inter-processor interrupt to awake offline processor. This function defined in the [arch/x86/include/asm/irq_work.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irq_work.h) header file for the [x86_64](https://en.wikipedia.org/wiki/X86-64) and just checks that a processor has [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) from the [CPUID](https://en.wikipedia.org/wiki/CPUID):
+This `cpumask` will store number of processor for `housekeeping` or in other words we need at least in one processor that will not be in `NO_HZ` mode, because it will do timekeeping and etc. After this we check the result of the architecture-specific `arch_irq_work_has_interrupt` function. This function checks ability to send inter-processor interrupt for the certain architecture. We need to check this, because system timer of a processor will be disabled during `NO_HZ` mode, so there must be at least one online processor which can send inter-processor interrupt to awake offline processor. This function defined in the [arch/x86/include/asm/irq_work.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irq_work.h) header file for the [x86_64](https://en.wikipedia.org/wiki/X86-64) and just checks that a processor has [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) from the [CPUID](https://en.wikipedia.org/wiki/CPUID):
 
 ```C
 static inline bool arch_irq_work_has_interrupt(void)
@@ -369,7 +369,7 @@ static inline bool arch_irq_work_has_interrupt(void)
 }
 ```
 
-If a processor has not `APIC`, the Linux kernel prints warning message, clears the `tick_nohz_full_mask` cpumask, copies numbers of all posible processors in the system to the `housekeeping_mask` and resets the value of the `tick_nogz_full_running` variable:
+If a processor has not `APIC`, the Linux kernel prints warning message, clears the `tick_nohz_full_mask` cpumask, copies numbers of all possible processors in the system to the `housekeeping_mask` and resets the value of the `tick_nohz_full_running` variable:
 
 ```C
 if (!arch_irq_work_has_interrupt()) {
@@ -382,7 +382,7 @@ if (!arch_irq_work_has_interrupt()) {
 }
 ```
 
-After this step, we get the number of the current processor by the call of the `smp_processor_id` and check this processor in the `tick_nogh_full_mask`. If the `tick_nohz_full_mask` contains a given processor we clear appropriate bit in the `tick_nohz_full_mask`:
+After this step, we get the number of the current processor by the call of the `smp_processor_id` and check this processor in the `tick_nohz_full_mask`. If the `tick_nohz_full_mask` contains a given processor we clear appropriate bit in the `tick_nohz_full_mask`:
 
 ```C
 cpu = smp_processor_id();
@@ -393,7 +393,7 @@ if (cpumask_test_cpu(cpu, tick_nohz_full_mask)) {
 }
 ```
 
-Because this processor will be used for timekeeping. After this step we put all numbers of processors that are in the `cpu_posssible_mask` and not in the `tick_nogz_full_mask`:
+Because this processor will be used for timekeeping. After this step we put all numbers of processors that are in the `cpu_possible_mask` and not in the `tick_nohz_full_mask`:
 
 ```C
 cpumask_andnot(housekeeping_mask,
