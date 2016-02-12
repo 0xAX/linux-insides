@@ -38,7 +38,7 @@ The `lib.c` file contains:
 
 ```C
 int factorial(int base) {
-	int res = 1, i = 1;
+	int res,i = 1;
 	
 	if (base == 0) {
 		return 1;
