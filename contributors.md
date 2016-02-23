@@ -79,3 +79,4 @@ Thank you to all contributors:
 * [Jeremy Lacomis](https://github.com/jlacomis)
 * [Dubyah](https://github.com/Dubyah)
 * [Matthieu Tardy](https://github.com/c0riolis)
+* [michaelian ennis](https://github.com/mennis)
