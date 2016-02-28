@@ -48,6 +48,7 @@
 * [Data Structures in the Linux Kernel](DataStructures/README.md)
     * [Doubly linked list](DataStructures/dlist.md)
     * [Radix tree](DataStructures/radix-tree.md)
+    * [Bit arrays](DataStructures/bitmap.md)
 * [Theory](Theory/README.md)
     * [Paging](Theory/Paging.md)
     * [Elf64](Theory/ELF.md)
