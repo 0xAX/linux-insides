@@ -20,7 +20,7 @@ So, the main goal of this part is to see how `bit arrays` are implemented in the
 Declaration of bit array
 ================================================================================
 
-Before we will look on `API` for bitmaps manipulation, we must know how to declare it in the Linux kernel. There are two common method to declare own bit array. The first simple way to declrae a bit array is to array of `unsigned long`. For example:
+Before we will look on `API` for bitmaps manipulation, we must know how to declare it in the Linux kernel. There are two common method to declare own bit array. The first simple way to declare a bit array is to array of `unsigned long`. For example:
 
 ```C
 unsigned long my_bitmap[8]
