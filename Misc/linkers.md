@@ -118,11 +118,11 @@ $ objdump -S -r main.o
 
 ...
   14:	e8 00 00 00 00       	callq  19 <main+0x19>
-			15: R_X86_64_PC32	factorial-0x4
+  15: R_X86_64_PC32	               factorial-0x4
   19:	89 c6                	mov    %eax,%esi
 ...
   25:	e8 00 00 00 00       	callq  2a <main+0x2a>
-			26: R_X86_64_PC32	printf-0x4
+  26:   R_X86_64_PC32	               printf-0x4
   2a:	b8 00 00 00 00       	mov    $0x0,%eax
 ...
 ```
@@ -136,7 +136,7 @@ Relocation is the process of connecting symbolic references with symbolic defini
 
 ```
   14:	e8 00 00 00 00       	callq  19 <main+0x19>
-			15: R_X86_64_PC32	factorial-0x4
+  15:   R_X86_64_PC32	               factorial-0x4
   19:	89 c6                	mov    %eax,%esi
 ```
 
