@@ -1,4 +1,4 @@
-Timers in the Linux kernel. Part 2.
+Timers and time management in the Linux kernel. Part 2.
 ================================================================================
 
 Introduction to the `clocksource` framework
