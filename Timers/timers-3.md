@@ -1,4 +1,4 @@
-Timers in the Linux kernel. Part 3.
+Timers and time management in the Linux kernel. Part 3.
 ================================================================================
 
 The tick broadcast framework and dyntick
