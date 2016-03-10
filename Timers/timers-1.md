@@ -1,4 +1,4 @@
-Timers in the Linux kernel. Part 1.
+Timers and time management in the Linux kernel. Part 1.
 ================================================================================
 
 Introduction
