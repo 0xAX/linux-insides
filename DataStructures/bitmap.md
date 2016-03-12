@@ -33,7 +33,7 @@ The second way is to use the `DECLARE_BITMAP` macro which is defined in the [inc
     unsigned long name[BITS_TO_LONGS(bits)]
 ```
 
-We can see that `DECLARE_BITMAP` takes two parameters:
+We can see that `DECLARE_BITMAP` macro takes two parameters:
 
 * `name` - name of bitmap;
 * `bits` - amount of bits in bitmap;
