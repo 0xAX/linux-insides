@@ -38,6 +38,7 @@
     * [Clocksource framework](Timers/timers-2.md)
     * [The tick broadcast framework and dyntick](Timers/timers-3.md)
     * [Introduction to timers](Timers/timers-4.md)
+    * [Clockevents framework](Timers/timers-5.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
