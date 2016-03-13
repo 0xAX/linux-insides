@@ -80,3 +80,4 @@ Thank you to all contributors:
 * [Dubyah](https://github.com/Dubyah)
 * [Matthieu Tardy](https://github.com/c0riolis)
 * [michaelian ennis](https://github.com/mennis)
+* [Amitay Stern](https://github.com/amist)
