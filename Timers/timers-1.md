@@ -430,7 +430,7 @@ Links
 * [Jiffy](https://en.wikipedia.org/wiki/Jiffy_%28time%29)
 * [high precision event timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
 * [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond)
-* [Intel 8253](Programmable interval timer)
+* [Intel 8253](https://en.wikipedia.org/wiki/Intel_8253)
 * [seqlocks](https://en.wikipedia.org/wiki/Seqlock)
 * [cloksource documentation](https://www.kernel.org/doc/Documentation/timers/timekeeping.txt)
 * [Previous chapter](https://0xax.gitbooks.io/linux-insides/content/SysCall/index.html)
