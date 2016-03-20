@@ -385,7 +385,7 @@ static struct clocksource clocksource_tsc = {
 
 That's all.
 
-Concusion
+Conclusion
 --------------------------------------------------------------------------------
 
 This is the end of the sixth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `clockevents` framework. In this part we continued to learn time management related stuff in the Linux kernel and saw a little about three diferent clock sources which are used in the [x86](https://en.wikipedia.org/wiki/X86) architecture. The next part will be last part of this [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) and we will see some user space related stuff, i.e. how some time related [system calls](https://en.wikipedia.org/wiki/System_call) implemented in the Linux kernel.
