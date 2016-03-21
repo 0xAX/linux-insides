@@ -29,7 +29,7 @@ We already saw implementation of the `set_intr_gate` in the previous part about 
 
 * number of the interrupt;
 * base address of the interrupt/exception handler;
-* third parameter is - `Interrupt Stack Table`. `IST` is a new mechanism in the `x86_64` and part of the [TSS](http://en.wikipedia.org/wiki/Task_state_segment). Every active thread in kernel mode has own kernel stack which is 16 killobytes. While a thread in user space, kernel stack is empty except `thread_info` (read about it previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html)) at the bottom. In addition to per-thread stacks, there are a couple of specialized stacks associated with each CPU. All about these stack you can read in the linux kernel documentation - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks). `x86_64` provides feature which allows to switch to a new `special` stack for during any events as non-maskable interrupt and etc... And the name of this feature is - `Interrupt Stack Table`. There can be up to 7 `IST` entries per CPU and every entry points to the dedicated stack. In our case this is `DEBUG_STACK`.
+* third parameter is - `Interrupt Stack Table`. `IST` is a new mechanism in the `x86_64` and part of the [TSS](http://en.wikipedia.org/wiki/Task_state_segment). Every active thread in kernel mode has own kernel stack which is 16 kilobytes. While a thread in user space, kernel stack is empty except `thread_info` (read about it previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html)) at the bottom. In addition to per-thread stacks, there are a couple of specialized stacks associated with each CPU. All about these stack you can read in the linux kernel documentation - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks). `x86_64` provides feature which allows to switch to a new `special` stack for during any events as non-maskable interrupt and etc... And the name of this feature is - `Interrupt Stack Table`. There can be up to 7 `IST` entries per CPU and every entry points to the dedicated stack. In our case this is `DEBUG_STACK`.
 
 `set_intr_gate_ist` and `set_system_intr_gate_ist` work by the same principle as `set_intr_gate` with only one difference. Both of these functions checks
 interrupt number and call `_set_gate` inside:
@@ -108,7 +108,7 @@ The next two macro from the `idtentry` implementation are:
 	PARAVIRT_ADJUST_EXCEPTION_FRAME
 ```
 
-First `ASM_CLAC` macro depends on `CONFIG_X86_SMAP` configuration option and need for security resason, more about it you can read [here](https://lwn.net/Articles/517475/). The second `PARAVIRT_ADJUST_EXCEPTION_FRAME` macro is for handling handle Xen-type-exceptions (this chapter about kernel initializations and we will not consider virtualization stuff here).
+First `ASM_CLAC` macro depends on `CONFIG_X86_SMAP` configuration option and need for security reason, more about it you can read [here](https://lwn.net/Articles/517475/). The second `PARAVIRT_ADJUST_EXCEPTION_FRAME` macro is for handling handle Xen-type-exceptions (this chapter about kernel initializations and we will not consider virtualization stuff here).
 
 The next piece of code checks if interrupt has error code or not and pushes `$-1` which is `0xffffffffffffffff` on `x86_64` on the stack if not:
 
@@ -118,7 +118,7 @@ The next piece of code checks if interrupt has error code or not and pushes `$-1
 	.endif
 ```
 
-We need to do it as `dummy` error code for stack consistency for all interrupts. In the next step we subscract from the stack pointer `$ORIG_RAX-R15`:
+We need to do it as `dummy` error code for stack consistency for all interrupts. In the next step we substract from the stack pointer `$ORIG_RAX-R15`:
 
 ```assembly
 	subq $ORIG_RAX-R15, %rsp
@@ -156,7 +156,7 @@ This is general view of the `idtentry` macro for `#DB` interrupt. All interrupts
 Early ioremap initialization
 --------------------------------------------------------------------------------
 
-The next step is initialization of early `ioremap`. In general there are two ways to comminicate with devices:
+The next step is initialization of early `ioremap`. In general there are two ways to communicate with devices:
 
 * I/O Ports;
 * Device memory.
@@ -337,7 +337,7 @@ void __init setup_memory_map(void)
 }
 ```
 
-First of all we call look here the call of the `x86_init.resources.memory_setup`. `x86_init` is a `x86_init_ops` structure which presents platform specific setup functions as resources initializtion, pci initialization and etc... Initiaization of the `x86_init` is in the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c). I will not give here the full description because it is very long, but only one part which interests us for now:
+First of all we call look here the call of the `x86_init.resources.memory_setup`. `x86_init` is a `x86_init_ops` structure which presents platform specific setup functions as resources initialization, pci initialization and etc... initialization of the `x86_init` is in the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c). I will not give here the full description because it is very long, but only one part which interests us for now:
 
 ```C
 struct x86_init_ops x86_init __initdata = {
@@ -490,7 +490,7 @@ void x86_configure_nx(void)
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the fifth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function which makes initialization of architecutre-specific stuff. It was long part, but we have not finished with it. As i already wrote, the `setup_arch` is big function, and I am really not sure that we will cover all of it even in the next part. There were some new interesting concepts in this part like `Fix-mapped` addresses, ioremap and etc... Don't worry if they are unclear for you. There is a special part about these concepts - [Linux kernel memory management Part 2.](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md). In the next part we will continue with the initialization of the architecture-specific stuff and will see parsing of the early kernel parameteres, early dump of the pci devices, direct Media Interface scanning and many many more.
+It is the end of the fifth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function which makes initialization of architecutre-specific stuff. It was long part, but we have not finished with it. As i already wrote, the `setup_arch` is big function, and I am really not sure that we will cover all of it even in the next part. There were some new interesting concepts in this part like `Fix-mapped` addresses, ioremap and etc... Don't worry if they are unclear for you. There is a special part about these concepts - [Linux kernel memory management Part 2.](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md). In the next part we will continue with the initialization of the architecture-specific stuff and will see parsing of the early kernel parameters, early dump of the pci devices, direct Media Interface scanning and many many more.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 

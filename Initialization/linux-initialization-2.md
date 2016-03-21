@@ -6,7 +6,7 @@ Early interrupt and exception handling
 
 In the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) we stopped before setting of early interrupt handlers. At this moment we are in the decompressed Linux kernel, we have basic [paging](https://en.wikipedia.org/wiki/Page_table) structure for early boot and our current goal is to finish early preparation before the main kernel code will start to work.
 
-We arlready started to do this preparation in the previous [first](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) part of this [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). We continue in this part and will know more about interrupt and exception handling.
+We already started to do this preparation in the previous [first](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) part of this [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). We continue in this part and will know more about interrupt and exception handling.
 
 Remember that we stopped before following loop:
 
@@ -84,7 +84,7 @@ CPU uses vector number as an index in the `Interrupt Descriptor Table` (we will 
 ----------------------------------------------------------------------------------------------
 ```
 
-To react on interrupt CPU uses special structure - Interrupt Descriptor Table or IDT. IDT is an array of 8-byte descriptors like Global Descriptor Table, but IDT entries are called `gates`. CPU multiplies vector number on 8 to find index of the IDT entry. But in 64-bit mode IDT is an array of 16-byte descriptors and CPU multiplies vector number on 16 to find index of the entry in the IDT. We remember from the previous part that CPU uses special `GDTR` register to locate Global Descriptor Table, so CPU uses special register `IDTR` for Interrupt Descriptor Table and `lidt` instruuction for loading base address of the table into this register.
+To react on interrupt CPU uses special structure - Interrupt Descriptor Table or IDT. IDT is an array of 8-byte descriptors like Global Descriptor Table, but IDT entries are called `gates`. CPU multiplies vector number on 8 to find index of the IDT entry. But in 64-bit mode IDT is an array of 16-byte descriptors and CPU multiplies vector number on 16 to find index of the entry in the IDT. We remember from the previous part that CPU uses special `GDTR` register to locate Global Descriptor Table, so CPU uses special register `IDTR` for Interrupt Descriptor Table and `lidt` instruction for loading base address of the table into this register.
 
 64-bit mode IDT entry has following structure:
 
@@ -163,7 +163,7 @@ and inserts an interrupt gate to the `IDT` table which is represented by the `&i
 extern const char early_idt_handler_array[NUM_EXCEPTION_VECTORS][EARLY_IDT_HANDLER_SIZE];
 ```
 
-The `early_idt_handler_array` is `288` bytes array which contains address of exception entry points every nine bytes. Every nine bytes of this array consist of two bytes optional instruction for pushing dummy error code if an exception does not provide it, two bytes instruction for pushing vector number to the stack and five bytes of `jump` to the common execption handler code.
+The `early_idt_handler_array` is `288` bytes array which contains address of exception entry points every nine bytes. Every nine bytes of this array consist of two bytes optional instruction for pushing dummy error code if an exception does not provide it, two bytes instruction for pushing vector number to the stack and five bytes of `jump` to the common exception handler code.
 
 As we can see, We're filling only first 32 `IDT` entries in the loop, because all of the early setup runs with interrupts disabled, so there is no need to set up interrupt handlers for vectors greater than `32`. The `early_idt_handler_array` array contains generic idt handlers and we can find its definition in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) assembly file. For now we will skip it, but will look it soon. Before this we will look on the implementation of the `set_intr_gate` macro.
 
