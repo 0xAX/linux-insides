@@ -76,7 +76,7 @@ union thread_union {
 };
 ```
 
-Every process has its own stack and it is 16 killobytes or 4 page frames. in `x86_64`. We can note that it is defined as array of `unsigned long`. The next field of the `thread_union` is - `thread_info` defined as:
+Every process has its own stack and it is 16 kilobytes or 4 page frames. in `x86_64`. We can note that it is defined as array of `unsigned long`. The next field of the `thread_union` is - `thread_info` defined as:
 
 ```C
 struct thread_info {
