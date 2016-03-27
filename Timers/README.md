@@ -8,3 +8,4 @@ This chapter describes timers and time management related concepts in the linux 
 * [Introduction to timers](https://github.com/0xAX/linux-insides/blob/master/Timers/timers-3.md) - this chapter describes timers in the Linux kernel.
 * [Introduction to the clockevents framework](https://github.com/0xAX/linux-insides/blob/master/Timers/timers-5.md) - this part describes yet another clock/time management related framework - `clockevents`.
 * [x86 related clock sources](https://github.com/0xAX/linux-insides/blob/master/Timers/timers-5.md) - this part describes `x86_64` related clock sources.
+* [Time related system calls in the Linux kernel](https://github.com/0xAX/linux-insides/blob/master/Timers/timers-7.md) - this part describes time related system calls.
