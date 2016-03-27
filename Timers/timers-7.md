@@ -16,7 +16,7 @@ Additionally we will not consider concept of system calls in this part, but only
 
 So, let's from the `gettimeofday` system call.
 
-Impplementation of the `gettimeofday` system call
+Implementation of the `gettimeofday` system call
 --------------------------------------------------------------------------------
 
 As we can understand from the name of the `gettimeofday`, this function returns current time. First of all, let's look on the following simple example:
