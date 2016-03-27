@@ -49,7 +49,7 @@ struct timeval {
 };
 ```
 
-The second parameter of the `gettimeofday` function is pointer to the `timezone` structure which represents a timizone. In our example, we pass address of the `timeval time` to the `gettimeofday` function, the Linux kernel fills the given `timeval` structure and returns it back to us. Additianolly we format the time with the `strftime` function to get something more human readable than elapsed microseconds. Let's see on result:
+The second parameter of the `gettimeofday` function is pointer to the `timezone` structure which represents a timizone. In our example, we pass address of the `timeval time` to the `gettimeofday` function, the Linux kernel fills the given `timeval` structure and returns it back to us. Additionally, we format the time with the `strftime` function to get something more human readable than elapsed microseconds. Let's see on result:
 
 ```C
 ~$ gcc date.c -o date
