@@ -127,7 +127,7 @@ As we got access to the `gtod`, we fill the `ts->tv_sec` with the `gtod->wall_ti
 
 That's all about the `gettimeofday` system call. The next system call in our list is the `clock_gettime`.
 
-Impplementation of the clock_gettime system call
+Implementation of the clock_gettime system call
 --------------------------------------------------------------------------------
 
 The `clock_gettime` function gets the time which is specified by the second parameter. Generally the `clock_gettime` function takes two parameters:
