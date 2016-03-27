@@ -40,6 +40,7 @@
     * [Introduction to timers](Timers/timers-4.md)
     * [Clockevents framework](Timers/timers-5.md)
     * [x86 related clock sources](Timers/timers-6.md)
+    * [Time realted syetem calls](Timers/timers-7.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
