@@ -483,7 +483,7 @@ Links
 * [Advanced Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [protected mode](http://en.wikipedia.org/wiki/Protected_mode)
 * [long mode](http://en.wikipedia.org/wiki/Long_mode)
-* [kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks)
+* [kernel stacks](https://www.kernel.org/doc/Documentation/x86/kernel-stacks)
 * [Task State Segement](http://en.wikipedia.org/wiki/Task_state_segment)
 * [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation)
 * [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register)
