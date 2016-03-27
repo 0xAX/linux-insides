@@ -301,14 +301,14 @@ As `nanosleep` has two parameters:
 int nanosleep(const struct timespec *req, struct timespec *rem);
 ```
 
-To call system call, we need put the `req` to the `rdi` register, and the `rem` parameter to the `rsi` register. The [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) does these job in the `INTERNAL_SYSCALL` macro which is located in the [sysdeps/unix/sysv/linux/x86_64/sysdep.h](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/x86_64/sysdep.h;h=d023d68174d3dfb4e698160b31ae31ad291802e1;hb=HEAD) header file. As we may see, the `INTERNAL_SYSCALL` macro just expands to the call of the `` macro
+To call system call, we need put the `req` to the `rdi` register, and the `rem` parameter to the `rsi` register. The [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) does these job in the `INTERNAL_SYSCALL` macro which is located in the [sysdeps/unix/sysv/linux/x86_64/sysdep.h](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/x86_64/sysdep.h;h=d023d68174d3dfb4e698160b31ae31ad291802e1;hb=HEAD) header file.
 
 ```C
 # define INTERNAL_SYSCALL(name, err, nr, args...) \
   INTERNAL_SYSCALL_NCS (__NR_##name, err, nr, ##args)
 ```
 
-which takes name of system call, storage for possible error during execution of system call, number of the system call (all `x86_64` system calls you can find in the [system calls table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)) and arguments of certain system call. The `INTERNAL_SYSCALL_NCS` macro prepares arguments of system call (puts their to the processor registers in correct order), execute `syscall` instruction and return result:
+which takes name of system call, storage for possible error during execution of system call, number of the system call (all `x86_64` system calls you can find in the [system calls table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)) and arguments of certain system call. The `INTERNAL_SYSCALL` macro just expands to the call of the `INTERNAL_SYSCALL_NCS` macro, which prepares arguments of system call (puts their to the processor registers in correct order), executes `syscall` instruction and returns result:
 
 ```C
 # define INTERNAL_SYSCALL_NCS(name, err, nr, args...)      \
