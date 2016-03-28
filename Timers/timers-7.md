@@ -132,7 +132,7 @@ Implementation of the clock_gettime system call
 
 The `clock_gettime` function gets the time which is specified by the second parameter. Generally the `clock_gettime` function takes two parameters:
 
-* `clk_id` - clock identificator;
+* `clk_id` - clock identifier;
 * `timespec` - address of the `timespec` structure which represent elapsed time.
 
 Let's look on the following simple example:
@@ -159,7 +159,7 @@ which prints `uptime` information:
 ```C
 ~$ gcc uptime.c -o uptime
 ~$ ./uptime
-tv_sec 14180
+14180 - seconds elapsed from boot
 ```
 
 We can easily check the result with the help of the [uptime](https://en.wikipedia.org/wiki/Uptime#Using_uptime) util:
@@ -247,7 +247,7 @@ notrace static int __always_inline do_monotonic(struct timespec *ts)
 }
 ```
 
-which We already saw a little about implementation of this function in the previous paragraph about the `gettimeofday`. There is only one difference here, that the `sec` and `nsec` of our `timespec` value will be based on the `gtod->monotonic_time_sec` instead of `gtod->wall_time_sec` which maps the value of the `tk->tkr_mono.xtime_nsec` or number of [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond) elapsed.
+We already saw a little about the implementation of this function in the previous paragraph about the `gettimeofday`. There is only one difference here, that the `sec` and `nsec` of our `timespec` value will be based on the `gtod->monotonic_time_sec` instead of `gtod->wall_time_sec` which maps the value of the `tk->tkr_mono.xtime_nsec` or number of [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond) elapsed.
 
 That's all.
 
@@ -284,7 +284,7 @@ end of sleep
 
 and the second line after five seconds.
 
-The `nanosleep` is not located in the `vDSO` area like the `gettimeofday` and the `clock_gettime` functions. So, let's look how the `real` system call which is located in the kernel space will be called by the standard library. The implementation of the `nanosleep` system call will be called with the help of the [syscall](http://www.felixcloutier.com/x86/SYSCALL.html) instruction. Before the execution of te `syscall` instruction, parameters of the system call must be put in processor [register](https://en.wikipedia.org/wiki/Processor_register) according to order which is described in the [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf) or in other words:
+The `nanosleep` is not located in the `vDSO` area like the `gettimeofday` and the `clock_gettime` functions. So, let's look how the `real` system call which is located in the kernel space will be called by the standard library. The implementation of the `nanosleep` system call will be called with the help of the [syscall](http://www.felixcloutier.com/x86/SYSCALL.html) instruction. Before the execution of the `syscall` instruction, parameters of the system call must be put in processor [registers](https://en.wikipedia.org/wiki/Processor_register) according to order which is described in the [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf) or in other words:
 
 * `rdi` - first parameter;
 * `rsi` - second parameter;
@@ -293,7 +293,7 @@ The `nanosleep` is not located in the `vDSO` area like the `gettimeofday` and th
 * `r8` - fifth parameter;
 * `r9` - sixth parameter.
 
-The `nanosleep` system call has two parameter - two pointers to the `timespec` structures. The system call suspends the calling thread until the given timeout has elapsed. Additionally it will be finished if a signal interrupts its execution. It takes two parameters, the first is `timespec` represents timeout for the sleep. The second parameter is the pointer to the `timespec` structure too and it will contain remainder of time if the call of the `nanosleep` was interrupted.
+The `nanosleep` system call has two parameters - two pointers to the `timespec` structures. The system call suspends the calling thread until the given timeout has elapsed. Additionally it will finish if a signal interrupts its execution. It takes two parameters, the first is `timespec` which represents timeout for the sleep. The second parameter is the pointer to the `timespec` structure too and it contains remainder of time if the call of the `nanosleep` was interrupted.
 
 As `nanosleep` has two parameters:
 
@@ -308,7 +308,7 @@ To call system call, we need put the `req` to the `rdi` register, and the `rem` 
   INTERNAL_SYSCALL_NCS (__NR_##name, err, nr, ##args)
 ```
 
-which takes name of system call, storage for possible error during execution of system call, number of the system call (all `x86_64` system calls you can find in the [system calls table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)) and arguments of certain system call. The `INTERNAL_SYSCALL` macro just expands to the call of the `INTERNAL_SYSCALL_NCS` macro, which prepares arguments of system call (puts their to the processor registers in correct order), executes `syscall` instruction and returns result:
+which takes the name of the system call, storage for possible error during execution of system call, number of the system call (all `x86_64` system calls you can find in the [system calls table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)) and arguments of certain system call. The `INTERNAL_SYSCALL` macro just expands to the call of the `INTERNAL_SYSCALL_NCS` macro, which prepares arguments of system call (puts them into the processor registers in correct order), executes `syscall` instruction and returns the result:
 
 ```C
 # define INTERNAL_SYSCALL_NCS(name, err, nr, args...)      \
@@ -323,7 +323,7 @@ which takes name of system call, storage for possible error during execution of 
     (long int) resultvar; })
 ```
 
-The `LOAD_ARGS_##nr` macro calls the `LOAD_ARGS_N` macro where the `N` is number of arguments of the system call. In our case, it will be the `LOAD_ARGS_2` macro. Ultimately all of this macros will be expanded to the following:
+The `LOAD_ARGS_##nr` macro calls the `LOAD_ARGS_N` macro where the `N` is number of arguments of the system call. In our case, it will be the `LOAD_ARGS_2` macro. Ultimately all of these macros will be expanded to the following:
 
 ```C
 # define LOAD_REGS_TYPES_1(t1, a1)					   \
@@ -338,7 +338,7 @@ The `LOAD_ARGS_##nr` macro calls the `LOAD_ARGS_N` macro where the `N` is number
 ...
 ```
 
-After the `syscall` instruction will be executed, the [context switch](https://en.wikipedia.org/wiki/Context_switch) will occur and the kernel will transef execution to the system call handler. The system call handler for the `nanosleep` system call is located in the [kernel/time/hrtimer.c](https://github.com/torvalds/linux/blob/master/kernel/time/hrtimer.c) source code file and defined with the `SYSCALL_DEFINE2` macro helper:
+After the `syscall` instruction will be executed, the [context switch](https://en.wikipedia.org/wiki/Context_switch) will occur and the kernel will transfer execution to the system call handler. The system call handler for the `nanosleep` system call is located in the [kernel/time/hrtimer.c](https://github.com/torvalds/linux/blob/master/kernel/time/hrtimer.c) source code file and defined with the `SYSCALL_DEFINE2` macro helper:
 
 ```C
 SYSCALL_DEFINE2(nanosleep, struct timespec __user *, rqtp,
@@ -356,7 +356,7 @@ SYSCALL_DEFINE2(nanosleep, struct timespec __user *, rqtp,
 }
 ```
 
-More about the `SYSCALL_DEFINE2` macro you may read in the [chapter](https://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) about system calls. If we will look at the implementation of the `nanosleep` system call, first of all we will see that it starts from the call of the `copy_from_user` function. This function copies the given data from the userspace to kernelspace. In our case we copy timeout value to sleep to the kernelspace `timespec` structure and check that the given `timespec` is valid by the call of the `timesc_valid` function:
+More about the `SYSCALL_DEFINE2` macro you may read in the [chapter](https://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) about system calls. If we look at the implementation of the `nanosleep` system call, first of all we will see that it starts from the call of the `copy_from_user` function. This function copies the given data from the userspace to kernelspace. In our case we copy timeout value to sleep to the kernelspace `timespec` structure and check that the given `timespec` is valid by the call of the `timesc_valid` function:
 
 ```C
 static inline bool timespec_valid(const struct timespec *ts)
@@ -369,7 +369,7 @@ static inline bool timespec_valid(const struct timespec *ts)
 }
 ```
 
-which just checks that the given `timespec` does not represent date before `1970` and nanoseconds does not overflow `1` second. The `nanosleep` function ends with the call of the `hrtimer_nanosleep` function from the same source code file. The `hrtimer_nanosleep` function creates [timer](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-4.html) and call the `do_nanosleep` function. The `do_nanosleep` does main job for us. This function provides loop:
+which just checks that the given `timespec` does not represent date before `1970` and nanoseconds does not overflow `1` second. The `nanosleep` function ends with the call of the `hrtimer_nanosleep` function from the same source code file. The `hrtimer_nanosleep` function creates a [timer](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-4.html) and calls the `do_nanosleep` function. The `do_nanosleep` does main job for us. This function provides loop:
 
 ```C
 do {
