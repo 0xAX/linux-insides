@@ -251,7 +251,7 @@ which We already saw a little about implementation of this function in the previ
 
 That's all.
 
-Impplementation of the `nanosleep` system call
+Implementation of the `nanosleep` system call
 --------------------------------------------------------------------------------
 
 The last system call in our list is the `nanosleep`. As you can understand from its name, this function provides `sleeping` ability. Let's look on the following simple example:
