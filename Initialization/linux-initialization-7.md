@@ -451,7 +451,7 @@ Here we put the last word to the `tmp` variable and check that `tmp` contains at
 return size;
 ```
 
-After this `nr_cpu_ids` will contain the correct amount of the avaliable CPUs.
+After this `nr_cpu_ids` will contain the correct amount of the available CPUs.
 
 That's all.
 
