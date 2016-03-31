@@ -344,7 +344,7 @@ After debugging lines were printed next is the call of the following function:
 memblock_add_range(_rgn, base, size, nid, flags);
 ```
 
-which adds new memory block region into the `.meminit.data` section. As we do not initlieze `_rgn` but it just contains `&memblock.reserved`, we just fill passed `_rgn` with the base address of the extended BIOS data area region, size of this region and flags:
+which adds new memory block region into the `.meminit.data` section. As we do not initialize `_rgn` but it just contains `&memblock.reserved`, we just fill passed `_rgn` with the base address of the extended BIOS data area region, size of this region and flags:
 
 ```C
 if (type->regions[0].size == 0) {
