@@ -235,7 +235,7 @@ set_intr_gate(X86_TRAP_NM, device_not_available);
 Here we can see:
 
 * `#OF` or `Overflow` exception. This exception indicates that an overflow trap occurred when an special [INTO](http://x86.renejeschke.de/html/file_module_x86_id_142.html) instruction was executed;
-* `#BR` or `BOUND Range exceeded` exception. This exception indeicates that a `BOUND-range-exceed` fault occured when a [BOUND](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm) instruction was executed;
+* `#BR` or `BOUND Range exceeded` exception. This exception indeicates that a `BOUND-range-exceed` fault occurred when a [BOUND](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm) instruction was executed;
 * `#UD` or `Invalid Opcode` exception. Occurs when a processor attempted to execute invalid or reserved [opcode](https://en.wikipedia.org/?title=Opcode), processor attempted to execute instruction with invalid operand(s) and etc;
 * `#NM` or `Device Not Available` exception. Occurs when the processor tries to execute `x87 FPU` floating point instruction while `EM` flag in the [control register](https://en.wikipedia.org/wiki/Control_register#CR0) `cr0` was set.
 
