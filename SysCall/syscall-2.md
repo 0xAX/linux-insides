@@ -7,7 +7,7 @@ How does the Linux kernel handle a system call
 The previous [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-1.html) was the first part of the chapter that describes the [system call](https://en.wikipedia.org/wiki/System_call) concepts in the Linux kernel.
 In the previous part we learned what a system call is in the Linux kernel, and in operating systems in general. This was introduced from a user-space perspective, and part of the [write](http://man7.org/linux/man-pages/man2/write.2.html) system call implementation was discussed. In this part we continue our look at system calls, starting with some theory before moving onto the Linux kernel code.
 
-An user application does not make the system call directly from our applications. We did not write the `Hello world!` program like:
+A user application does not make the system call directly from our applications. We did not write the `Hello world!` program like:
 
 ```C
 int main(int argc, char **argv)
@@ -135,16 +135,16 @@ wrmsrl(MSR_STAR,  ((u64)__USER32_CS)<<48  | ((u64)__KERNEL_CS)<<32);
 wrmsrl(MSR_LSTAR, entry_SYSCALL_64);
 ```
 
-The first model specific register - `MSR_STAR` contains `63:48` bits of the user code segment. These bits will be loaded to the `CS` and `SS` segment registers for the `sysret` instruction which provides functionality to return from a system call to user code with the related privilege. Also the `MSR_STAR` contains `47:32` bits from the kernel code that will be used as the base selector for `CS` and `SS` segment registers when user space applications execute a system call. In the second line of code we fill the `MSR_LSTAR` register with the `entry_SYSCALL_64` symbol that represents system call entry. The `entry_SYSCALL_64` is defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file and contains code related to the preparation peformed before a system call handler will be executed (I already wrote about these preparations, read above). We will not consider the `entry_SYSCALL_64` now, but will return to it later in this chapter.
+The first model specific register - `MSR_STAR` contains `63:48` bits of the user code segment. These bits will be loaded to the `CS` and `SS` segment registers for the `sysret` instruction which provides functionality to return from a system call to user code with the related privilege. Also the `MSR_STAR` contains `47:32` bits from the kernel code that will be used as the base selector for `CS` and `SS` segment registers when user space applications execute a system call. In the second line of code we fill the `MSR_LSTAR` register with the `entry_SYSCALL_64` symbol that represents system call entry. The `entry_SYSCALL_64` is defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file and contains code related to the preparation performed before a system call handler will be executed (I already wrote about these preparations, read above). We will not consider the `entry_SYSCALL_64` now, but will return to it later in this chapter.
 
 After we have set the entry point for system calls, we need to set the following model specific registers:
 
-* `MSR_CSTAR` - target `rip` for the compability mode callers;
+* `MSR_CSTAR` - target `rip` for the compatibility mode callers;
 * `MSR_IA32_SYSENTER_CS` - target `cs` for the `sysenter` instruction;
 * `MSR_IA32_SYSENTER_ESP` - target `esp` for the `sysenter` instruction;
 * `MSR_IA32_SYSENTER_EIP` - target `eip` for the `sysenter` instruction.
 
-The values of these model specific register depend on the `CONFIG_IA32_EMULATION` kernel configuration option. If this kernel configuration option is enabled, it allows legacy 32-bit programs to run under a 64-bit kernel. In the first case, if the `CONFIG_IA32_EMULATION` kernel configuration option is enabled, we fill these model specific registers with the entry point for the system calls the compability mode:
+The values of these model specific register depend on the `CONFIG_IA32_EMULATION` kernel configuration option. If this kernel configuration option is enabled, it allows legacy 32-bit programs to run under a 64-bit kernel. In the first case, if the `CONFIG_IA32_EMULATION` kernel configuration option is enabled, we fill these model specific registers with the entry point for the system calls the compatibility mode:
 
 ```C
 wrmsrl(MSR_CSTAR, entry_SYSCALL_compat);
@@ -191,7 +191,7 @@ wrmsrl(MSR_SYSCALL_MASK,
 	   X86_EFLAGS_IOPL|X86_EFLAGS_AC|X86_EFLAGS_NT);
 ```
 
-These flags will be cleared during syscall initialization. That's all, it is the end of the `syscall_init` function and it means that system call entry is ready to work. Now we can see what will occur when an user application executes the `syscall` instruction.
+These flags will be cleared during syscall initialization. That's all, it is the end of the `syscall_init` function and it means that system call entry is ready to work. Now we can see what will occur when a user application executes the `syscall` instruction.
 
 Preparation before system call handler will be called
 --------------------------------------------------------------------------------
@@ -364,7 +364,7 @@ In the end we just call the `USERGS_SYSRET64` macro that expands to the call of 
 	sysretq;
 ```
 
-Now we know what occurs when an user application calls a system call. The full path of this process is as follows:
+Now we know what occurs when a user application calls a system call. The full path of this process is as follows:
 
 * User application contains code that fills general purposer register with the values (system call number and arguments of this system call);
 * Processor switches from the user mode to kernel mode and starts execution of the system call entry - `entry_SYSCALL_64`; 
