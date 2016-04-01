@@ -9,19 +9,19 @@ The previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers
   * `jiffies`
   * `clocksource`
 
-The first is the global variable that defined in the [include/linux/jiffies.h](https://github.com/torvalds/linux/blob/master/include/linux/jiffies.h) header file and represents counter that increased during each timer interrupt. So if we can access this global variable and we know timer interrupt rate we can convert `jiffies` to the human time units. As we already know the timer interrupt rate represented by the compile-time constant that is called `HZ` in the Linux kernel. The value of the `HZ` is equal to the value of the `CONFIG_HZ` kernel configuration option and if we will look in the [arch/x86/configs/x86_64_defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig) kernel configuration file, we will see that:
+The first is the global variable that is defined in the [include/linux/jiffies.h](https://github.com/torvalds/linux/blob/master/include/linux/jiffies.h) header file and represents the counter that is increased during each timer interrupt. So if we can access this global variable and we know the timer interrupt rate we can convert `jiffies` to the human time units. As we already know the timer interrupt rate represented by the compile-time constant that is called `HZ` in the Linux kernel. The value of `HZ` is equal to the value of the `CONFIG_HZ` kernel configuration option and if we will look into the [arch/x86/configs/x86_64_defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig) kernel configuration file, we will see that:
 
 ```
 CONFIG_HZ_1000=y
 ```
 
-kernel configuration option is set. This means that value of the `CONFIG_HZ` will be `1000` by default for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. So, if we divide values of `jiffies` on the value of the `HZ`:
+kernel configuration option is set. This means that value of `CONFIG_HZ` will be `1000` by default for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. So, if we divide the value of `jiffies` by the value of `HZ`:
 
 ```
 jiffies / HZ
 ```
 
-we will get amount of seconds that elapsed since the beginning of the moment when the Linux kernel started to work or in other words we will get system [uptime](https://en.wikipedia.org/wiki/Uptime). Since the `HZ` represents amount of the timer interrupts in a second, we can set a value for some time in the future. For example:
+we will get the amount of seconds that elapsed since the beginning of the moment the Linux kernel started to work or in other words we will get the system [uptime](https://en.wikipedia.org/wiki/Uptime). Since `HZ` represents the amount of timer interrupts in a second, we can set a value for some time in the future. For example:
 
 ```C
 /* one minute from now */
@@ -31,7 +31,7 @@ unsigned long later = jiffies + 60*HZ;
 unsigned long later = jiffies + 5*60*HZ;
 ```
 
-This is a very common practice in the Linux kernel. For example, if you will look in the [arch/x86/kernel/smpboot.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/smpboot.c) source code file, you will find the `do_boot_cpu` function. This function boots all processors besides bootstrap processor. You can find a piece of code that waits for ten seconds for a response from application processor: 
+This is a very common practice in the Linux kernel. For example, if you will look into the [arch/x86/kernel/smpboot.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/smpboot.c) source code file, you will find the `do_boot_cpu` function. This function boots all processors besides bootstrap processor. You can find a snippet that waits ten seconds for a response from the application processor:
 
 ```C
 if (!boot_error) {
@@ -48,9 +48,9 @@ if (!boot_error) {
 }
 ```
 
-We assign `jiffies + 10*HZ` value to the `timeout` variable here. As I think you already understood, this will mean ten seconds timeout. After this we are entering to the loop that we use `time_before` macro to compare current `jiffies` value and our timeout.
+We assign `jiffies + 10*HZ` value to the `timeout` variable here. As I think you already understood, this means a ten seconds timeout. After this we are entering a loop where we use the `time_before` macro to compare the current `jiffies` value and our timeout.
 
-Or for example if we will look in the [sound/isa/sscape.c](https://github.com/torvalds/linux/blob/master/sound/isa/sscape) source code file which represents driver for the [Ensoniq Soundscape Elite](https://en.wikipedia.org/wiki/Ensoniq_Soundscape_Elite) sound card, we will see the `obp_startup_ack` function that waits given timeout for On-Board Processor to return its start-up acknowledgement sequence:
+Or for example if we look into the [sound/isa/sscape.c](https://github.com/torvalds/linux/blob/master/sound/isa/sscape) source code file which represents the driver for the [Ensoniq Soundscape Elite](https://en.wikipedia.org/wiki/Ensoniq_Soundscape_Elite) sound card, we will see the `obp_startup_ack` function that waits upto a given timeout for the On-Board Processor to return its start-up acknowledgement sequence:
 
 ```C
 static int obp_startup_ack(struct soundscape *s, unsigned timeout)
@@ -74,12 +74,12 @@ static int obp_startup_ack(struct soundscape *s, unsigned timeout)
 }
 ```
 
-So, you can find that `jiffies` variable is very widely used in the Linux kernel [code](http://lxr.free-electrons.com/ident?i=jiffies). As I already wrote, we met yet another new time management related concept in the previous part - `clocksource`. In the previous part we just saw a little descrption of this concept and saw API for a clock source registration. Let's take a closer look at this concept in this part
+As you can see, the `jiffies` variable is very widely used in the Linux kernel [code](http://lxr.free-electrons.com/ident?i=jiffies). As I already wrote, we met yet another new time management related concept in the previous part - `clocksource`. We have only seen a short description of this concept and the API for a clock source registration. Let's take a closer look in this part.
 
 Introduction to `clocksource`
 --------------------------------------------------------------------------------
 
-The `clocksource` concept represents generic API for clock sources management in the Linux kernel. Why do we need separate framework for this? Let's go back to the beginning. The `time` concept is fundamental concept in the Linux kernel and other operating system kernels. And the timekeeping is one of the necessities to use this concept. For example Linux kernel must know and update the time elapsed since system startup, it must determine how long the current process has been running for every processor and many many more. Where the Linux kernel can get information about time? First of all it is Real Time Clock or [RTC](https://en.wikipedia.org/wiki/Real-time_clock) that represents by the a nonvolatile device. You can find a set of architecture-independent real time clock drivers in the Linux kernel in the [drivers/rtc](https://github.com/torvalds/linux/tree/master/drivers/rtc) directory. Besides this, each architecture can provide a driver for the architecture-dependent real time clock, for example - `CMOS/RTC` - [arch/x86/kernel/rtc.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/rtc.c) for the [x86](https://en.wikipedia.org/wiki/X86) architecture. The second is system timer - timer that excites [interrupts](https://en.wikipedia.org/wiki/Interrupt) with a periodic rate. For example, for [IBM PC](https://en.wikipedia.org/wiki/IBM_Personal_Computer) compatibles it was - [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer).
+The `clocksource` concept represents the generic API for clock sources management in the Linux kernel. Why do we need a separate framework for this? Let's go back to the beginning. The `time` concept is the fundamental concept in the Linux kernel and other operating system kernels. And the timekeeping is one of the necessities to use this concept. For example Linux kernel must know and update the time elapsed since system startup, it must determine how long the current process has been running for every processor and many many more. Where the Linux kernel can get information about time? First of all it is Real Time Clock or [RTC](https://en.wikipedia.org/wiki/Real-time_clock) that represents by the a nonvolatile device. You can find a set of architecture-independent real time clock drivers in the Linux kernel in the [drivers/rtc](https://github.com/torvalds/linux/tree/master/drivers/rtc) directory. Besides this, each architecture can provide a driver for the architecture-dependent real time clock, for example - `CMOS/RTC` - [arch/x86/kernel/rtc.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/rtc.c) for the [x86](https://en.wikipedia.org/wiki/X86) architecture. The second is system timer - timer that excites [interrupts](https://en.wikipedia.org/wiki/Interrupt) with a periodic rate. For example, for [IBM PC](https://en.wikipedia.org/wiki/IBM_Personal_Computer) compatibles it was - [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer).
 
 We already know that for timekeeping purposes we can use `jiffies` in the Linux kernel. The `jiffies` can be considered as read only global variable which is updated with `HZ` frequency. We know that the `HZ` is a compile-time kernel parameter whose reasonable range is from `100` to `1000` [Hz](https://en.wikipedia.org/wiki/Hertz). So, it is guaranteed to have an interface for time measurement  with `1` - `10` milliseconds resolution. Besides standard `jiffies`, we saw the `refined_jiffies` clock source in the previous part that is based on the `i8253/i8254` [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer) tick rate which is almost `1193182` hertz. So we can get something about `1` microsecond resolution with the `refined_jiffies`. In this time, [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond) are the favorite choice for the time value units of the given clock source.
 
