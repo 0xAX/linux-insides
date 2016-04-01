@@ -6,7 +6,7 @@ x86_64 related clock sources
 
 This is sixth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-5.html) we saw `clockevents` framework and now we will continue to dive into time management related stuff in the Linux kernel. This part will describe implementation of [x86](https://en.wikipedia.org/wiki/X86) architecture related clock sources (more about `clocksource` concept you can read in the [second part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-2.html) of this chapter).
 
-First of all we must know what clock sources may be used at `x86` architecture. It is easy to know from the [sysfs](https://en.wikipedia.org/wiki/Sysfs) or from content of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. The `/sys/devices/system/clocksource/clocksourceN` provides two special files to to achieve this:
+First of all we must know what clock sources may be used at `x86` architecture. It is easy to know from the [sysfs](https://en.wikipedia.org/wiki/Sysfs) or from content of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. The `/sys/devices/system/clocksource/clocksourceN` provides two special files to achieve this:
 
 * `available_clocksource` - provides information about available clock sources in the system;
 * `current_clocksource`   - provides information about currently used clock source in the system.
@@ -388,7 +388,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the sixth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `clockevents` framework. In this part we continued to learn time management related stuff in the Linux kernel and saw a little about three diferent clock sources which are used in the [x86](https://en.wikipedia.org/wiki/X86) architecture. The next part will be last part of this [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) and we will see some user space related stuff, i.e. how some time related [system calls](https://en.wikipedia.org/wiki/System_call) implemented in the Linux kernel.
+This is the end of the sixth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `clockevents` framework. In this part we continued to learn time management related stuff in the Linux kernel and saw a little about three different clock sources which are used in the [x86](https://en.wikipedia.org/wiki/X86) architecture. The next part will be last part of this [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) and we will see some user space related stuff, i.e. how some time related [system calls](https://en.wikipedia.org/wiki/System_call) implemented in the Linux kernel.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 

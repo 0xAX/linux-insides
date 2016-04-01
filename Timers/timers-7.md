@@ -385,7 +385,7 @@ __set_current_state(TASK_RUNNING);
 return t->task == NULL;
 ```
 
-Which freezes current task during sleep. After we set `TASK_INTERRUPTIBLE` flag for the current task, the `hrtimer_start_expires` function starts the give high-resolution timer on the current processor. As the the given high resolution timer will expire, the task will be again running.
+Which freezes current task during sleep. After we set `TASK_INTERRUPTIBLE` flag for the current task, the `hrtimer_start_expires` function starts the give high-resolution timer on the current processor. As the given high resolution timer will expire, the task will be again running.
 
 That's all.
 

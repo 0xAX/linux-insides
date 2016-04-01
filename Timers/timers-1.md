@@ -354,7 +354,7 @@ We just saw initialization of two `jiffies` based clock sources in the previous 
 * standard `jiffies` based clock source;
 * refined  `jiffies` based clock source;
 
-Don't worry if you don't understand the calculations here. They look frightening at first. Soon, step by step we will learn these things. So, we just saw initialization of `jffies` based clock sources and also we know that the Linux kernel has the global variable `jiffies` that holds the number of ticks that have occured since the kernel started to work. Now, let's look how to use it. To use `jiffies` we just can use `jiffies` global variable by its name or with the call of the `get_jiffies_64` function. This function defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file and just returns full `64-bit` value of the `jiffies`:
+Don't worry if you don't understand the calculations here. They look frightening at first. Soon, step by step we will learn these things. So, we just saw initialization of `jffies` based clock sources and also we know that the Linux kernel has the global variable `jiffies` that holds the number of ticks that have occurred since the kernel started to work. Now, let's look how to use it. To use `jiffies` we just can use `jiffies` global variable by its name or with the call of the `get_jiffies_64` function. This function defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file and just returns full `64-bit` value of the `jiffies`:
 
 ```C
 u64 get_jiffies_64(void)
