@@ -14,14 +14,14 @@ Interrupts are signal that are sent across [IRQ](https://en.wikipedia.org/wiki/I
 
 I will try to describe all types of interrupts in this book.
 
-Generally, a handler of an `I/O` interrupt must be flexible enough to service several devices at the same time. For exmaple in the [PCI](https://en.wikipedia.org/wiki/Conventional_PCI) bus architecture several devices may share the same `IRQ` line. In the simplest way the Linux kernel must do following thing when an `I/O` interrupt occured:
+Generally, a handler of an `I/O` interrupt must be flexible enough to service several devices at the same time. For example in the [PCI](https://en.wikipedia.org/wiki/Conventional_PCI) bus architecture several devices may share the same `IRQ` line. In the simplest way the Linux kernel must do following thing when an `I/O` interrupt occurred:
 
 * Save the value of an `IRQ` and the register's contents on the kernel stack;
 * Send an acknowledgment to the hardware controller which is servicing the `IRQ` line;
 * Execute the interrupt service routine (next we will call it `ISR`) which is associated with the device;
 * Restore registers and return from an interrupt;
 
-Ok, we know a little theory and now let's start with the `early_irq_init` function. The implementation of the `early_irq_init` function is in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c). This function make early initialziation of the `irq_desc` structure. The `irq_desc` structure is the foundation of interrupt management code in the Linux kernel. An array of this structure, which has the same name - `irq_desc`, keeps track of every interrupt request source in the Linux kernel. This structure defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/master/include/linux/irqdesc.h) and as you can note it depends on the `CONFIG_SPARSE_IRQ` kernel configuration option. This kernel configuration option enables support for sparse irqs. The `irq_desc` structure contains many different fiels:
+Ok, we know a little theory and now let's start with the `early_irq_init` function. The implementation of the `early_irq_init` function is in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c). This function make early initialziation of the `irq_desc` structure. The `irq_desc` structure is the foundation of interrupt management code in the Linux kernel. An array of this structure, which has the same name - `irq_desc`, keeps track of every interrupt request source in the Linux kernel. This structure defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/master/include/linux/irqdesc.h) and as you can note it depends on the `CONFIG_SPARSE_IRQ` kernel configuration option. This kernel configuration option enables support for sparse irqs. The `irq_desc` structure contains many different files:
 
 * `irq_common_data` - per irq and chip data passed down to chip functions;
 * `status_use_accessors` - contains status of the interrupt source which is combination of the values from the `enum` from the [include/linux/irq.h](https://github.com/torvalds/linux/blob/master/include/linux/irq.h) and different macros which are defined in the same source code file;
