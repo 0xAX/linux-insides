@@ -313,6 +313,7 @@ Here we can see a `jmp` instruction opcode - `0xeb` to the `start_of_setup-1f` p
 Actually this is the first code that runs (aside from the previous jump instruction of course). After the kernel setup got the control from the bootloader, the first `jmp` instruction is located at `0x200` (first 512 bytes) offset from the start of the kernel real mode. This we can read in the Linux kernel boot protocol and also see in the grub2 source code:
 
 ```C
+segment = grub_linux_real_target >> 4;
 state.gs = state.fs = state.es = state.ds = state.ss = segment;
 state.cs = segment + 0x20;
 ```
@@ -324,7 +325,7 @@ gs = fs = es = ds = ss = 0x1000
 cs = 0x1020
 ```
 
-in my case when the kernel is loaded at `0x10000`.
+In my case when the kernel is loaded at `0x10000`.
 
 After the jump to `start_of_setup`, it needs to do the following:
 
