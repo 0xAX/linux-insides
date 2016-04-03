@@ -16,7 +16,7 @@ or
 arch_initcall(init_pit_clocksource);
 ```
 
-in some parts of the Linux kernel. Before we will see how this mechanism is implemented in the Linux kernel, we must know actually what is it and how the Linux kernel uses it. Definitions like these represent a [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) function which is will be called during initialization of the Linux kernel of right after. Acutally the main point of the `initcall` mechanism is to determine correct order of the built-in modules and subsystems initialization. For example let's look at the following function:
+in some parts of the Linux kernel. Before we will see how this mechanism is implemented in the Linux kernel, we must know actually what is it and how the Linux kernel uses it. Definitions like these represent a [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) function which will be called during initialization of the Linux kernel or right after. Actually the main point of the `initcall` mechanism is to determine correct order of the built-in modules and subsystems initialization. For example let's look at the following function:
 
 ```C
 static int __init nmi_warning_debugfs(void)
