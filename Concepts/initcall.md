@@ -4,7 +4,7 @@ The initcall mechanism
 Introduction
 --------------------------------------------------------------------------------
 
-As you may understand, this part will cover interesting and important mechanism in the Linux kernel which is called - `initcall`. We already saw definitions like these:
+As you may understand from the part's title, this part will cover interesting and important concpet in the Linux kernel which is called - `initcall`. We already saw definitions like these:
 
 ```C
 early_param("debug", debug_kernel);
