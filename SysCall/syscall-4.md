@@ -16,7 +16,7 @@ This part will be last part in this chapter and as you can understand from the p
 how do we launch our programs?
 --------------------------------------------------------------------------------
 
-There are many different ways to launch an application from an user perspective. For example we can run a program from the [shell](https://en.wikipedia.org/wiki/Unix_shell) or double-click on the application icon. It does not matter. The Linux kernel handles application launch regardless how we do launch this application.
+There are many different ways to launch an application from a user perspective. For example we can run a program from the [shell](https://en.wikipedia.org/wiki/Unix_shell) or double-click on the application icon. It does not matter. The Linux kernel handles application launch regardless how we do launch this application.
 
 In this part we will consider the way when we just launch an application from the shell. As you know, the standard way to launch an application from shell is the following: We just launch a [terminal emulator](https://en.wikipedia.org/wiki/Terminal_emulator) application and just write the name of the program and pass or not arguments to our program, for example:
 
@@ -68,12 +68,12 @@ $ strace uname
 execve("/bin/uname", ["uname"], [/* 62 vars */]) = 0
 ```
 
-So, an user application (`bash` in our case) calls the system call and as we already know the next step is Linux kernel.
+So, a user application (`bash` in our case) calls the system call and as we already know the next step is Linux kernel.
 
 execve system call
 --------------------------------------------------------------------------------
 
-We saw preparation before a system call called by an user application and after a system call handler finished its work in the second [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
+We saw preparation before a system call called by a user application and after a system call handler finished its work in the second [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
 
 ```
 SYSCALL_DEFINE3(execve,
@@ -161,7 +161,7 @@ The `sched_exec` function is used to determine the least loaded processor that c
 
 After this we need to check [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) of the give executable binary. We try to check does the name of the our binary file starts from the `/` symbol or does the path of the given executable binary is interpreted relative to the current working directory of the calling process or in other words file descriptor is `AT_FDCWD` (read above about this).
 
-If one of these checks is successfull we set the binary parameter filename:
+If one of these checks is successful we set the binary parameter filename:
 
 ```C
 bprm->file = file;
@@ -227,7 +227,7 @@ if (retval < 0)
 	goto out;
 ```
 
-fills the `linux_binprm` structure with the `uid` from [inode](https://en.wikipedia.org/wiki/Inode) and read `128` bytes from the binary executable file. We read only first `128` from the executable file because we need to check a type of our executable. We will read the rest of the executable file in the later step. After the preparation of the `linux_bprm` structure we copy the filename of the executable binary file, command line arguments and enviroment variables to the `linux_bprm` with the call of the `copy_strings_kernel` function:
+fills the `linux_binprm` structure with the `uid` from [inode](https://en.wikipedia.org/wiki/Inode) and read `128` bytes from the binary executable file. We read only first `128` from the executable file because we need to check a type of our executable. We will read the rest of the executable file in the later step. After the preparation of the `linux_bprm` structure we copy the filename of the executable binary file, command line arguments and environment variables to the `linux_bprm` with the call of the `copy_strings_kernel` function:
 
 ```C
 retval = copy_strings_kernel(1, &bprm->filename, bprm);
@@ -249,7 +249,7 @@ And set the pointer to the top of new program's stack that we set in the `bprm_m
 bprm->exec = bprm->p;
 ```
 
-The top of the stack will contain the program filename and we store this fileneme tothe `exec` field of the `linux_bprm` structure.
+The top of the stack will contain the program filename and we store this filename to the `exec` field of the `linux_bprm` structure.
 
 Now we have filled `linux_bprm` structure, we call the `exec_binprm` function:
 
@@ -277,7 +277,7 @@ search_binary_handler(bprm);
 function. This function goes through the list of handlers that contains different binary formats. Currently the Linux kernel supports following binary formats:
 
 * `binfmt_script` - support for interpreted scripts that are starts from the [#!](https://en.wikipedia.org/wiki/Shebang_%28Unix%29) line;
-* `binfmt_misc` - support differnt binary formats, according to runtime configuration of the Linux kernel;
+* `binfmt_misc` - support different binary formats, according to runtime configuration of the Linux kernel;
 * `binfmt_elf` - support [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format;
 * `binfmt_aout` - support [a.out](https://en.wikipedia.org/wiki/A.out) format;
 * `binfmt_flat` - support for [flat](https://en.wikipedia.org/wiki/Binary_file#Structure) format;
@@ -394,7 +394,7 @@ That's all. From this point our programm will be executed.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fourth and last part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from an user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run an user program.
+This is the end of the fourth and last part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from a user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run a user program.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
