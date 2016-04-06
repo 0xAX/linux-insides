@@ -11,7 +11,7 @@ We already know what is a `system call`. This is special routine in the Linux ke
 Introduction to vsyscalls
 --------------------------------------------------------------------------------
 
-The `vsyscall` or `virtual system call` is the first and oldest mechinism in the Linux kernel that is designed to accelerate execution of certain system calls. The principle of work of the `vsyscall` concept is simple. The Linux kernel maps into user space a page that contains some variables and the implementation of some system calls. We can find information about this memory space in the Linux kernel [documentation](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
+The `vsyscall` or `virtual system call` is the first and oldest mechanism in the Linux kernel that is designed to accelerate execution of certain system calls. The principle of work of the `vsyscall` concept is simple. The Linux kernel maps into user space a page that contains some variables and the implementation of some system calls. We can find information about this memory space in the Linux kernel [documentation](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
 
 ```
 ffffffffff600000 - ffffffffffdfffff (=8 MB) vsyscalls
