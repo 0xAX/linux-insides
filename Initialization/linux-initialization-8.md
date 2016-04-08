@@ -310,7 +310,7 @@ init_dl_bandwidth(&def_dl_bandwidth,
                   global_rt_period(), global_rt_runtime());
 ```
 
-we initialize bandwidth management for the `SCHED_DEADLINE` real-time tasks. These functions initializes `rt_bandwidth` and `dl_bandwidth` structures which store information about maximum `deadline` bandwith of the system. For example, let's look on the implementation of the `init_rt_bandwidth` function:
+we initialize bandwidth management for the `SCHED_DEADLINE` real-time tasks. These functions initializes `rt_bandwidth` and `dl_bandwidth` structures which store information about maximum `deadline` bandwidth of the system. For example, let's look on the implementation of the `init_rt_bandwidth` function:
 
 ```C
 void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 runtime)

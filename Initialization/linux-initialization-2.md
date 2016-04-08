@@ -20,7 +20,7 @@ from the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/maste
 Some theory
 --------------------------------------------------------------------------------
 
-An interrupt is an event caused by software or hardware to the CPU. For example an user have pressed a key on keyboard. On interrupt, CPU stops the current task and transfer control to the special routine which is called - [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler). An interrupt handler handles and interrupt and transfer control back to the previously stopped task. We can split interrupts on three types:
+An interrupt is an event caused by software or hardware to the CPU. For example a user have pressed a key on keyboard. On interrupt, CPU stops the current task and transfer control to the special routine which is called - [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler). An interrupt handler handles and interrupt and transfer control back to the previously stopped task. We can split interrupts on three types:
 
 * Software interrupts - when a software signals CPU that it needs kernel attention. These interrupts are generally used for system calls;
 * Hardware interrupts - when a hardware event happens, for example button is pressed on a keyboard;
