@@ -397,7 +397,7 @@ jiffies + 30*HZ
 /* Two minutes from now */
 jiffies + 120*HZ
 
-/* Ten milliseconds from now */
+/* One millisecond from now */
 jiffies + HZ / 1000
 ```
 
