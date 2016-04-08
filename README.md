@@ -1,7 +1,7 @@
 linux-insides
 ===============
 
-A series of posts about the linux kernel and its insides.
+An book-in-progress about the linux kernel and its insides.
 
 **The goal is simple** - to share my modest knowledge about the insides of the linux kernel and help people who are interested in linux kernel insides, and other low-level subject matter.
 
