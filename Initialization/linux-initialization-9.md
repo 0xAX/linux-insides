@@ -4,7 +4,7 @@ Kernel initialization. Part 9.
 RCU initialization
 ================================================================================
 
-This is ninth part of the [Linux Kernel initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) and in the previous part we stopped at the [scheduler initialization](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-8.html). In this part we will continue to dive to the linux kernel initialization process and the main purpose of this part will be to learn about initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update). We can see that the next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) after the `sched_init` is the call of the `preempt_disablepreempt_disable`. There are two macros:
+This is ninth part of the [Linux Kernel initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) and in the previous part we stopped at the [scheduler initialization](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-8.html). In this part we will continue to dive to the linux kernel initialization process and the main purpose of this part will be to learn about initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update). We can see that the next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) after the `sched_init` is the call of the `preempt_disable`. There are two macros:
 
 * `preempt_disable`
 * `preempt_enable`
