@@ -163,7 +163,7 @@ do {                                                  \
 } while (0)                                           \
 ```
 
-assign the value of the `__RAW_SPIN_LOCK_UNLOCKED` with the given `spinlock` to the given `raw_spinlock_t`. As we may understand from the name of the `__RAW_SPIN_LOCK_UNLOCIKED` macro, this macro does initialization of the given `spinlock` and set it to `free` state. This macro defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/master/include/linux/spinlock_types.h) header file and expands to the following macros:
+assigns the value of the `__RAW_SPIN_LOCK_UNLOCKED` with the given `spinlock` to the given `raw_spinlock_t`. As we may understand from the name of the `__RAW_SPIN_LOCK_UNLOCIKED` macro, this macro does initialization of the given `spinlock` and set it to `free` state. This macro defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/master/include/linux/spinlock_types.h) header file and expands to the following macros:
 
 ```C
 #define __RAW_SPIN_LOCK_UNLOCKED(lockname)      \
