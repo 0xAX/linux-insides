@@ -59,7 +59,7 @@ The `spinlock` is a low-level synchronization mechanism which in simple words, r
 * `acquired`;
 * `free`.
 
-Each process which wants to acquire a `spinlock`, must write a value which represents `spinlock acquired` state to this variable and write `spinlock free` state to the variable. If a process tries to execute code which is protected by a `spinlock`, it will be locked while a process which holds this lock will release it. In this case all related operations must be [atomic](https://en.wikipedia.org/wiki/Linearizability) to prevent [race conditions](https://en.wikipedia.org/wiki/Race_condition) state. The `spinlinock` is represented by the `spinlock_t` type in the Linux kernel which `spinlock_t` is [widely](http://lxr.free-electrons.com/ident?i=spinlock_t) used. The `spinlock_t` is defined as:
+Each process which wants to acquire a `spinlock`, must write a value which represents `spinlock acquired` state to this variable and write `spinlock free` state to the variable. If a process tries to execute code which is protected by a `spinlock`, it will be locked while a process which holds this lock will release it. In this case all related operations must be [atomic](https://en.wikipedia.org/wiki/Linearizability) to prevent [race conditions](https://en.wikipedia.org/wiki/Race_condition) state. The `spinlinock` is represented by the `spinlock_t` type in the Linux kernel. If we will look at the Linux kernel code, we will see that this type is [widely](http://lxr.free-electrons.com/ident?i=spinlock_t) used. The `spinlock_t` is defined as:
 
 ```C
 typedef struct spinlock {
