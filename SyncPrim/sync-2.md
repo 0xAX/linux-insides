@@ -1,7 +1,7 @@
 Synchronization primitives in the Linux kernel. Part 2.
 ================================================================================
 
-Queue Spinlocks
+Queued Spinlocks
 --------------------------------------------------------------------------------
 
 This is the second part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the first [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) of this chapter we met the first - [spinlock](https://en.wikipedia.org/wiki/Spinlock). We will continue to learn this synchronization primitive in this part. If you have read the previous part, you may remember that besides normal spinlocks, the Linux kernel provides special type of `spinlocks` - `queued spinlocks`. In this part we will try to understand what does this concept represent.
