@@ -43,6 +43,7 @@
     * [Time related system calls](Timers/timers-7.md)
 * [Synchronization primitives](SyncPrim/README.md)
     * [Introduction to spinlocks](SyncPrim/sync-1.md)
+    * [Queued spinlocks](SyncPrim/sync-2.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
