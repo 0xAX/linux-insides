@@ -17,7 +17,7 @@ We saw [API](https://en.wikipedia.org/wiki/Application_programming_interface) of
 * `spin_is_locked` - returns the state of the given `spinlock`;
 * and etc.
 
-And we know that all of these macro which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/master/include/linux/spinlock.h) header file will be expanded to the call of the functions with `arch_spin_.*` prefix from the  [arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/spinlock.h) for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at this header fill with attention, we will that these functions (`arch_spin_is_locked`, `arch_spin_lock`, `arch_spin_unlock` and etc) defined only if the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option is disabled: 
+And we know that all of these macro which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock.h) header file will be expanded to the call of the functions with `arch_spin_.*` prefix from the  [arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/spinlock.h) for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at this header fill with attention, we will that these functions (`arch_spin_is_locked`, `arch_spin_lock`, `arch_spin_unlock` and etc) defined only if the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option is disabled: 
 
 ```C
 #ifdef CONFIG_QUEUED_SPINLOCKS
