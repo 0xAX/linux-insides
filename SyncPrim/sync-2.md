@@ -53,7 +53,7 @@ Before we will consider how queued spinlocks and their [API](https://en.wikipedi
 Introduction to queued spinlocks
 -------------------------------------------------------------------------------
 
-Queued spinlocks is a [locking mechanism](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) in the Linux kernel which is replacement for the standard `spinlocks`. At least this is true for the [x86_64](https://en.wikipedia.org/wiki/X86-64) archutecutre. If we will look at the following kernel configuration file - [kernel/Kconfig.locks](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks), we will see following configuration entries:
+Queued spinlocks is a [locking mechanism](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) in the Linux kernel which is replacement for the standard `spinlocks`. At least this is true for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at the following kernel configuration file - [kernel/Kconfig.locks](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks), we will see following configuration entries:
 
 ```
 config ARCH_USE_QUEUED_SPINLOCKS
