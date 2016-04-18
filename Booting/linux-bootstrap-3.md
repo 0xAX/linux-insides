@@ -213,7 +213,7 @@ struct card_info {
 };
 ```
 
-is in the `.videocards` segment. Let's look in the [arch/x86/boot/setup.ld](https://github.com/0xAX/linux/blob/master/arch/x86/boot/setup.ld) linker file, we can see there:
+is in the `.videocards` segment. Let's look in the [arch/x86/boot/setup.ld](https://github.com/0xAX/linux/blob/master/arch/x86/boot/setup.ld) linker script, where we can find:
 
 ```
 	.videocards	: {
