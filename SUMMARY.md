@@ -44,6 +44,7 @@
 * [Synchronization primitives](SyncPrim/README.md)
     * [Introduction to spinlocks](SyncPrim/sync-1.md)
     * [Queued spinlocks](SyncPrim/sync-2.md)
+    * [Semaphores](SyncPrim/sync-3.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
