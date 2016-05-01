@@ -84,3 +84,4 @@ Thank you to all contributors:
 * [Matt Todd](https://github.com/mtodd)
 * [Piyush Pangtey](https://github.com/pangteypiyush)
 * [Alfred Agrell](https://github.com/Alcaro)
+* [Jakub Wilk](https://github.com/jwilk)
