@@ -36,9 +36,9 @@ __asm__("movq    $3, %rax\t\n"
         "movq    %rsi, %rdi");
 ```
 
-Instead of the `__asm__` keyword, also the `asm` keyword may be used, but the `__asm__` is portable whereas the `asm` keyword is the `GNU` [extenstion](https://gcc.gnu.org/onlinedocs/gcc/C-Extensions.html). Further I will use only `__asm__` variant in examples.
+Instead of the `__asm__` keyword, also the `asm` keyword may be used, but the `__asm__` is portable whereas the `asm` keyword is the `GNU` [extension](https://gcc.gnu.org/onlinedocs/gcc/C-Extensions.html). Further I will use only `__asm__` variant in examples.
 
-If you know assembly programming language this looks pretty easy. The main problem is in the second form of inline assembly statements - `extended`. This form allows us to pass parameters to an assembly statement, perform [jumps](https://en.wikipedia.org/wiki/Branch_%28computer_science%29) and etc. Not so hard, but this leads to the need to know the additional rules in addition to the knowledge of assembly language. Everyt ime, when I see yet another piece of inline assembly code in the Linux kernel, I need to refer to the official [documentation](https://gcc.gnu.org/onlinedocs/) of `GCC` to remember how behaves a particular `qualifier` or what is the meaning of the `=&r` for example.
+If you know assembly programming language this looks pretty easy. The main problem is in the second form of inline assembly statements - `extended`. This form allows us to pass parameters to an assembly statement, perform [jumps](https://en.wikipedia.org/wiki/Branch_%28computer_science%29) and etc. Not so hard, but this leads to the need to know the additional rules in addition to the knowledge of assembly language. Every time, when I see yet another piece of inline assembly code in the Linux kernel, I need to refer to the official [documentation](https://gcc.gnu.org/onlinedocs/) of `GCC` to remember how behaves a particular `qualifier` or what is the meaning of the `=&r` for example.
 
 I've decided to write this part to consolidate my knowledge related to the inline assembly here. As inline assembly statements are quite common in the Linux kernel and we may see them in [linux-insides](https://0xax.gitbooks.io/linux-insides/content/) parts sometimes, I thought that it will be useful if we will have a special part which contains description of more important aspects of the inline assembly. Of course you may find comprehensive information about inline assembly in the official [documentation](https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html#Using-Assembly-Language-with-C), but I like the rule all in one place.
 
@@ -47,7 +47,7 @@ I've decided to write this part to consolidate my knowledge related to the inlin
 Introduction to extended inline assembly
 --------------------------------------------------------------------------------
 
-So, let's start. As I already wrote above, the `basic` assembly statement consists from the `asm` or `__asm__` keyword and set of assembly instructions. If you are familar with assembly programming language, there is no sense to write something additional about it. Most interesting part is inline assembler with operands or `extended` assembler. An extended assembly statement looks a little harder and consists not only from two parts:
+So, let's start. As I already wrote above, the `basic` assembly statement consists from the `asm` or `__asm__` keyword and set of assembly instructions. If you are familiar with assembly programming language, there is no sense to write something additional about it. Most interesting part is inline assembler with operands or `extended` assembler. An extended assembly statement looks a little harder and consists not only from two parts:
 
 ```assembly
 __asm__ [volatile] [goto] (AssemblerTemplate
@@ -57,7 +57,7 @@ __asm__ [volatile] [goto] (AssemblerTemplate
                            [ : GotoLabels     ]);
 ```
 
-All parameters which are marked with squared brackets are optional. You may notice that if we will skip all optional parameters and also `volatile` and `goto` qualifiers, we will get `basic` form. Let's start to consider this in order. The first optional `qualifier` is `volatile`. This specificator tells to compiler that an assembly statement may produce `side effects`. In this case we need to prevent compiler's optimization related to the given assembly statement. In simple words, the `volatile` specificator tells to compiler to not touch this statement and put it in the same place where it was in the original code. For example let's look at the following function from the [Linux kernel](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h):
+All parameters which are marked with squared brackets are optional. You may notice that if we will skip all optional parameters and also `volatile` and `goto` qualifiers, we will get `basic` form. Let's start to consider this in order. The first optional `qualifier` is `volatile`. This specifier tells to compiler that an assembly statement may produce `side effects`. In this case we need to prevent compiler's optimization related to the given assembly statement. In simple words, the `volatile` specifier tells to compiler to not touch this statement and put it in the same place where it was in the original code. For example let's look at the following function from the [Linux kernel](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h):
 
 ```C
 static inline void native_load_gdt(const struct desc_ptr *dtr)
@@ -126,7 +126,7 @@ Variables and expressions which are listed in the `OutputOperands` and `InputOpe
 "=r" (sum)
 ```
 
-Notice that the `sum` is marked with two special symbols: `=r`. This is first constraint that we have encountered. Actually constraint here is only `r`. The `=` symbol is `modifier` which denotes output value. This tells to compiler that the previous value will be descarded and replaced by the new data. Besides the `=` modifier, `GCC` provides support for following three modifiers:
+Notice that the `sum` is marked with two special symbols: `=r`. This is first constraint that we have encountered. Actually constraint here is only `r`. The `=` symbol is `modifier` which denotes output value. This tells to compiler that the previous value will be discarded and replaced by the new data. Besides the `=` modifier, `GCC` provides support for following three modifiers:
 
 * `+` - an operand is read and written by an instruction;
 * `&` - output register shouldn't overlap an input register and should be used only for output;
@@ -138,7 +138,7 @@ Now let's back to the `r` qualifier. As I already wrote above, a qualifier denot
 "r" (a), "0" (b)
 ```
 
-are input operands - `a` and `b` variables. We already know what does `r` qualifier mean. Now we may notice new constraint before `b` variable. The `0` or any other digit from `1` to `9` is called - `matching constraint`. With this assembler may use only one signle operand that fills two roles. As you may guess, here the value of the constraint provides the order number of operands. In our case `0` will match `sum`. If we will look at assembly output of our program:
+are input operands - `a` and `b` variables. We already know what does `r` qualifier mean. Now we may notice new constraint before `b` variable. The `0` or any other digit from `1` to `9` is called - `matching constraint`. With this assembler may use only one single operand that fills two roles. As you may guess, here the value of the constraint provides the order number of operands. In our case `0` will match `sum`. If we will look at assembly output of our program:
 
 ```C
 0000000000400400 <main>:
@@ -147,14 +147,14 @@ are input operands - `a` and `b` variables. We already know what does `r` qualif
   40040b:       01 d0                   add    %edx,%eax
 ```
 
-we will see that only two general purpose registers are used: `%edx` and `%eax`. In this way the `%eax` register is used as for storing value of `b` variable as for storing result of calculation. We considered input and output parameters of an inline assembly statement. Before we will meet other constraints supportd by `gcc`, there is still to consider last possible part of an inline assembly statement - `clobbers`.
+we will see that only two general purpose registers are used: `%edx` and `%eax`. In this way the `%eax` register is used as for storing value of `b` variable as for storing result of calculation. We considered input and output parameters of an inline assembly statement. Before we will meet other constraints supported by `gcc`, there is still to consider last possible part of an inline assembly statement - `clobbers`.
 
 Clobbers
 --------------------------------------------------------------------------------
 
-As I wrote above, the `clobbered` part should contain a comma-separated list of registers which will be changed in the `AssemblerTemplate`. This may be useful when our assembly expression needs in additional register for calculation and only output parameter will be changed. If we will add clobered register to the inline assembly statement, the compiler will take into account this and the register will not be reused in a wrong way.
+As I wrote above, the `clobbered` part should contain a comma-separated list of registers which will be changed in the `AssemblerTemplate`. This may be useful when our assembly expression needs in additional register for calculation and only output parameter will be changed. If we will add clobbered register to the inline assembly statement, the compiler will take into account this and the register will not be reused in a wrong way.
 
-Let's consider the same example, but will add additionall simple assembler expression:
+Let's consider the same example, but will add additional simple assembler expression:
 
 ```C
 __asm__("movq $100, %%rdx\t\n"
@@ -171,7 +171,7 @@ If we will look at the assembly output:
   400411:       01 d0                   add    %edx,%eax
 ```
 
-We will see that `%edx` register will will be overwritten with `0x64` or `100` value and the result will be `115` instead of `15`. Now if we will add the `%rdx` register to the list of `clobbered` registers:
+We will see that `%edx` register will be overwritten with `0x64` or `100` value and the result will be `115` instead of `15`. Now if we will add the `%rdx` register to the list of `clobbered` registers:
 
 ```C
 __asm__("movq $100, %%rdx\t\n"
@@ -188,7 +188,7 @@ and will look at the assembler output again:
   400411:       01 c8                   add    %ecx,%eax
 ```
 
-Now we may see that the `%ecx` register will be used for `sum` calculation. Besides general purpose registers, we may pass two special specificators. They are:
+Now we may see that the `%ecx` register will be used for `sum` calculation. Besides general purpose registers, we may pass two special specifiers. They are:
 
 * `cc`;
 * `memory`.
@@ -199,7 +199,7 @@ The first - `cc` indicates that an assembler code modifies [flags](https://en.wi
 __asm__("incq %0" ::""(variable): "cc");
 ```
 
-The second `memory` specificator tells to the compiler that the given inline assembly statement executes arbitrary write or read operations in memory which is not pointed by operands listed in output list. This allows to compiler prevent keeping of values loaded from memory to be cached in registers. Let's take a look at the following example:
+The second `memory` specifier tells to the compiler that the given inline assembly statement executes arbitrary write or read operations in memory which is not pointed by operands listed in output list. This allows compiler to prevent keeping of values loaded from memory to be cached in registers. Let's take a look at the following example:
 
 ```C
 #include <stdio.h>
@@ -276,12 +276,12 @@ we will see one difference here. This difference in the following piece code:
   400516:       83 e8 05                sub    $0x5,%eax
 ```
 
-Instead of direct calculation, `GCC` now associates calculation from the assembly statement and put the value of the `a[0]` to the `%eax` register after this. In the end it just substracts value of the `b` variable. Besides `memory` specificator, we may see new constraint here - `m`. This constraint tells to compiler to deal with address of the `a[0]`, instead of its value. So, now we finished with `clobbers` and now we may continue to consider other constraints supported by `GCC` besided `r` and `m` that we already seen.
+Instead of direct calculation, `GCC` now associates calculation from the assembly statement and put the value of the `a[0]` to the `%eax` register after this. In the end it just subtracts value of the `b` variable. Besides `memory` specifier, we may see new constraint here - `m`. This constraint tells to compiler to deal with address of the `a[0]`, instead of its value. So, now we finished with `clobbers` and now we may continue to consider other constraints supported by `GCC` besides `r` and `m` that we already seen.
 
 Constraints
 ---------------------------------------------------------------------------------
 
-Now as we finished with all three possible parts of an inline assembly statement, let's return to constraints. We already saw some constraints in this part, like `r` constraint which represnets `register` operand, `m` constraint represents memory operand and `0-9` constraints which are represent an operand that matches specified operand number from an inline assembly statement. Besides this constraints, the `GCC` provides support for other constraints. For example - `i` constraint represents an `immediate` integer operand with know value:
+Now as we finished with all three possible parts of an inline assembly statement, let's return to constraints. We already saw some constraints in this part, like `r` constraint which represents `register` operand, `m` constraint represents memory operand and `0-9` constraints which are represent an operand that matches specified operand number from an inline assembly statement. Besides this constraints, the `GCC` provides support for other constraints. For example - `i` constraint represents an `immediate` integer operand with know value:
 
 ```C
 #include <stdio.h>
@@ -430,7 +430,7 @@ Links
 * [Linux kernel source code](https://github.com/torvalds/linux)
 * [assembly programming language](https://en.wikipedia.org/wiki/Assembly_language) 
 * [GCC](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)
-* [GNU extenstion](https://gcc.gnu.org/onlinedocs/gcc/C-Extensions.html)
+* [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/C-Extensions.html)
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
 * [Processor registers](https://en.wikipedia.org/wiki/Processor_register)
 * [add instruction](http://x86.renejeschke.de/html/file_module_x86_id_5.html)
