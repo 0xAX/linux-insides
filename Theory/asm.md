@@ -307,7 +307,7 @@ a = 100
 Or for example the `I` constraint which represents a `32-bit` integer. The difference between the `i` and `I` constraints is that `i` is more general, while `I` is for strictly `32-bit` integer data. For example if you try to compile the following example:
 
 ```C
-int test_asm(int nr)
+unsigned long test_asm(int nr)
 {
         unsigned long a = 0;
 
@@ -330,7 +330,7 @@ test.c:7:9: error: impossible constraint in ‘asm’
 when:
 
 ```C
-int test_asm(int nr)
+unsigned long test_asm(int nr)
 {
         unsigned long a = 0;
 
@@ -358,7 +358,7 @@ int main(void)
         static unsigned long element;
         
         __asm__ volatile("movq 16+%1, %0" : "=r"(element) : "o"(arr));
-        printf("%d\n", element);
+        printf("%lu\n", element);
         return 0;
 }
 ```
