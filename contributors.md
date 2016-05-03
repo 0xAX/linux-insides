@@ -85,3 +85,4 @@ Thank you to all contributors:
 * [Piyush Pangtey](https://github.com/pangteypiyush)
 * [Alfred Agrell](https://github.com/Alcaro)
 * [Jakub Wilk](https://github.com/jwilk)
+* [Justus Adam](https://github.com/JustusAdam)
