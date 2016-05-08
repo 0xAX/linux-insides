@@ -309,6 +309,7 @@ In all of these cases, the `__mutex_lock_common` function will acct like a `sema
 if (!mutex_is_locked(lock) &&
    (atomic_xchg_acquire(&lock->count, 0) == 1))
       goto skip_wait;
+```
 
 In a failure case the process which wants to acquire a lock will be added to the waiters list
 
@@ -354,6 +355,7 @@ void __sched mutex_unlock(struct mutex *lock)
 {
     __mutex_fastpath_unlock(&lock->count, __mutex_unlock_slowpath);
 }
+```
 
 Implementation of the `__mutex_fastpath_unlock` function is very similar to the implementation of the `__mutex_fastpath_lock` function:
 
