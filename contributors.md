@@ -86,3 +86,4 @@ Thank you to all contributors:
 * [Alfred Agrell](https://github.com/Alcaro)
 * [Jakub Wilk](https://github.com/jwilk)
 * [Justus Adam](https://github.com/JustusAdam)
+* [Roy Wellington Ⅳ](https://github.com/thanatos)
