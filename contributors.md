@@ -87,3 +87,4 @@ Thank you to all contributors:
 * [Jakub Wilk](https://github.com/jwilk)
 * [Justus Adam](https://github.com/JustusAdam)
 * [Roy Wellington Ⅳ](https://github.com/thanatos)
+* [Jonathan Rennison](https://github.com/JGRennison)
