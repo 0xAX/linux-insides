@@ -4,7 +4,7 @@ Synchronization primitives in the Linux kernel. Part 3.
 Semaphores
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the previous part we saw special type of [spinlocks](https://en.wikipedia.org/wiki/Spinlock) - `queued spinlocks`. The previous [part]((https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html) was the last part which describes `spinlocks` related stuff. So we need to go ahead.
+This is the third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the previous part we saw special type of [spinlocks](https://en.wikipedia.org/wiki/Spinlock) - `queued spinlocks`. The previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html) was the last part which describes `spinlocks` related stuff. So we need to go ahead.
 
 The next [synchronization primitive](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) after `spinlock` which we will see in this part is [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). Se will start from theoretical side and will learn what is it `semaphore` and only after this, we will see how it is implemented in the Linux kernel as we did in the previous part.
 

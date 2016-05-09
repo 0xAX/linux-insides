@@ -13,7 +13,7 @@ So, let's start.
 Concept of `mutex`
 --------------------------------------------------------------------------------
 
-We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the previous [part]((https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html). It represented by the:
+We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-3.html). It represented by the:
 
 ```C
 struct semaphore {

@@ -334,7 +334,7 @@ That's all, and now we can back to the `start_kernel` from the `setup_arch`.
 Back to the main.c
 ================================================================================
 
-As I wrote above, we have finished with the `setup_arch` function and now we can back to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). As you may remember or saw yourself, `start_kernel` function as big as the `setup_arch`. So the couple of the next part will be dedicated to learning of this function. So, let's continue with it. After the `setup_arch` we can see the call of the `mm_init_cpumask` function. This function sets the [cpumask]((http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)) pointer to the memory descriptor `cpumask`. We can look on its implementation:
+As I wrote above, we have finished with the `setup_arch` function and now we can back to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). As you may remember or saw yourself, `start_kernel` function as big as the `setup_arch`. So the couple of the next part will be dedicated to learning of this function. So, let's continue with it. After the `setup_arch` we can see the call of the `mm_init_cpumask` function. This function sets the [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) pointer to the memory descriptor `cpumask`. We can look on its implementation:
 
 ```C
 static inline void mm_init_cpumask(struct mm_struct *mm)
