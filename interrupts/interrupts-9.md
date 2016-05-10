@@ -460,10 +460,21 @@ static inline bool queue_work(struct workqueue_struct *wq,
 }
 ```
 
-The `queue_work` function just calls the `queue_work_on` function that queue work on specific processor. Note that in our case we pass the `WORK_STRUCT_PENDING_BIT` to the `queue_work_on` function. It is a part of the `enum` that is defined in the [include/linux/workqueue.h](https://github.com/torvalds/linux/blob/master/include/linux/workqueue.h) and represents workqueue which are not bound to any specific processor. The `queue_work_on` function tests and set the `WORK_STRUCT_PENDING_BIT` bit of the given `work` and executes the `__queue_work` function with the `workqueue` for the given processor and given `work`:
+The `queue_work` function just calls the `queue_work_on` function that queue work on specific processor. Note that in our case we pass the `WORK_CPU_UNBOUND` to the `queue_work_on` function. It is a part of the `enum` that is defined in the [include/linux/workqueue.h](https://github.com/torvalds/linux/blob/master/include/linux/workqueue.h) and represents workqueue which are not bound to any specific processor. The `queue_work_on` function tests and set the `WORK_STRUCT_PENDING_BIT` bit of the given `work` and executes the `__queue_work` function with the `workqueue` for the given processor and given `work`:
 
 ```C
-__queue_work(cpu, wq, work);
+bool queue_work_on(int cpu, struct workqueue_struct *wq,
+           struct work_struct *work)
+{
+    bool ret = false;
+    ...
+    if (!test_and_set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(work))) {
+        __queue_work(cpu, wq, work);
+        ret = true;
+    }
+    ...
+    return ret;
+}
 ```
 
 The `__queue_work` function gets the `work pool`. Yes, the `work pool` not `workqueue`. Actually, all `works` are not placed in the `workqueue`, but to the `work pool` that is represented by the `worker_pool` structure in the Linux kernel. As you can see above, the `workqueue_struct` structure has the `pwqs` field which is list of `worker_pools`. When we create a `workqueue`, it stands out for each processor the `pool_workqueue`. Each `pool_workqueue` associated with `worker_pool`, which is allocated on the same processor and corresponds to the type of priority queue. Through them `workqueue` interacts with `worker_pool`. So in the `__queue_work` function we set the cpu to the current processor with the `raw_smp_processor_id` (you can find information about this marco in the fourth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process chapter), getting the `pool_workqueue` for the given `workqueue_struct` and insert the given `work` to the given `workqueue`:
