@@ -107,7 +107,7 @@ struct memblock memblock __initdata_memblock = {
 };
 ```
 
-Here we can see initialization of the `memblock` structure which has the same name as structure - `memblock`. First of all note the `__initdata_memblock`. Defenition of this macro looks like:
+Here we can see initialization of the `memblock` structure which has the same name as structure - `memblock`. First of all note the `__initdata_memblock`. Definition of this macro looks like:
 
 ```C
 #ifdef CONFIG_ARCH_DISCARD_MEMBLOCK
