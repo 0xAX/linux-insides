@@ -49,7 +49,7 @@ The `spawn_ksoftirqd` function starts this these threads. As we can see this fun
 early_initcall(spawn_ksoftirqd);
 ```
 
-Deferred interrupts are determined statically at compile-time of the Linux kernel and the `open_softirq` function takes care of `softirq` initialization. The `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c):
+Softirqs are determined statically at compile-time of the Linux kernel and the `open_softirq` function takes care of `softirq` initialization. The `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c):
 
 
 ```C
@@ -61,7 +61,7 @@ void open_softirq(int nr, void (*action)(struct softirq_action *))
 
 and as we can see this function uses two parameters:
 
-* the index of the `softirq_vec` array; 
+* the index of the `softirq_vec` array;
 * a pointer to the softirq function to be executed;
 
 First of all let's look on the `softirq_vec` array:
