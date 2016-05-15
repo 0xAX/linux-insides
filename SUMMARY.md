@@ -46,6 +46,7 @@
     * [Queued spinlocks](SyncPrim/sync-2.md)
     * [Semaphores](SyncPrim/sync-3.md)
     * [Mutex](SyncPrim/sync-4.md)
+    * [Reader/Writer semaphores](SyncPrim/sync-5.md)
 * [Memory management](mm/README.md)
     * [Memblock](mm/linux-mm-1.md)
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
