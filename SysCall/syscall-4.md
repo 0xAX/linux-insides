@@ -146,7 +146,7 @@ current->in_execve = 1;
 
 Initialization of the `binprm` credentials in other words is initialization of the `cred` structure that stored inside of the `linux_binprm` structure. The `cred` structure contains the security context of a task for example [real uid](https://en.wikipedia.org/wiki/User_identifier#Real_user_ID) of the task, real [guid](https://en.wikipedia.org/wiki/Globally_unique_identifier) of the task, `uid` and `guid` for the [virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system) operations etc. In the next step as we executed preparation of the `bprm` credentials we check that now we can safely execute a program with the call of the `check_unsafe_exec` function and set the current process to the `in_execve` state.
 
-After all of these operations we call the `do_open_execat` function that checks the flags that we passed to the `do_execveat_common` function (remember that we have `0` in the `flags`) and searches and opens executable file on disk, checks that our we will load a binary file from `noexec` mount points (we need to avoid execute a binary from filesystems that do not contain executable binaries like [proc](https://en.wikipedia.org/wiki/Procfs) or [sysfs](https://en.wikipedia.org/wiki/Sysfs)), intializes `file` structure and returns pointer on this structure. Next we can see the call the `sched_exec` after this:
+After all of these operations we call the `do_open_execat` function that checks the flags that we passed to the `do_execveat_common` function (remember that we have `0` in the `flags`) and searches and opens executable file on disk, checks that our we will load a binary file from `noexec` mount points (we need to avoid execute a binary from filesystems that do not contain executable binaries like [proc](https://en.wikipedia.org/wiki/Procfs) or [sysfs](https://en.wikipedia.org/wiki/Sysfs)), initializes `file` structure and returns pointer on this structure. Next we can see the call the `sched_exec` after this:
 
 ```C
 file = do_open_execat(fd, filename, flags);
@@ -191,7 +191,7 @@ Otherwise if the filename is empty we set the binary parameter filename to the `
 bprm->interp = bprm->filename;
 ```
 
-Note that we set not only the `bprm->filename` but also `bprm->interp` that will contain name of the program interpreter. For now we just write the same name there, but later it will be updated with the real name of the program interpreter depends on binary format of a program. You can read above that we already prepared `cred` for the `linux_binprm`. The next step is initalization of other fields of the `linux_binprm`.  First of all we call the `bprm_mm_init` function and pass the `bprm` to it:
+Note that we set not only the `bprm->filename` but also `bprm->interp` that will contain name of the program interpreter. For now we just write the same name there, but later it will be updated with the real name of the program interpreter depends on binary format of a program. You can read above that we already prepared `cred` for the `linux_binprm`. The next step is initialization of other fields of the `linux_binprm`.  First of all we call the `bprm_mm_init` function and pass the `bprm` to it:
 
 ```C
 retval = bprm_mm_init(bprm);
@@ -389,7 +389,7 @@ The `start_thread_common` function fills `fs` segment register with zero and `es
 
 After we returned from the `execve` system call handler, execution of our program will be started. We can do it, because all context related information already configured for this purpose. As we saw the `execve` system call does not return control to a process, but code, data and other segments of the caller process are just overwritten of the program segments. The exit from our application will be implemented through the `exit` system call.
 
-That's all. From this point our programm will be executed.
+That's all. From this point our program will be executed.
 
 Conclusion
 --------------------------------------------------------------------------------

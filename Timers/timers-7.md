@@ -49,7 +49,7 @@ struct timeval {
 };
 ```
 
-The second parameter of the `gettimeofday` function is pointer to the `timezone` structure which represents a timizone. In our example, we pass address of the `timeval time` to the `gettimeofday` function, the Linux kernel fills the given `timeval` structure and returns it back to us. Additionally, we format the time with the `strftime` function to get something more human readable than elapsed microseconds. Let's see on result:
+The second parameter of the `gettimeofday` function is pointer to the `timezone` structure which represents a timezone. In our example, we pass address of the `timeval time` to the `gettimeofday` function, the Linux kernel fills the given `timeval` structure and returns it back to us. Additionally, we format the time with the `strftime` function to get something more human readable than elapsed microseconds. Let's see on result:
 
 ```C
 ~$ gcc date.c -o date
@@ -57,7 +57,7 @@ The second parameter of the `gettimeofday` function is pointer to the `timezone`
 Current date/time: 03-26-2016/16:42:02
 ```
 
-As you already may know, an userspace application does not call a system call directly from the kernel space. Before the actual system call entry will be called, we call a function from the standard library. In my case it is [glibc](https://en.wikipedia.org/wiki/GNU_C_Library), so I will consider this case. The implementation of the `gettimeofday` function is located in ths [sysdeps/unix/sysv/linux/x86/gettimeofday.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/x86/gettimeofday.c;h=36f7c26ffb0e818709d032c605fec8c4bd22a14e;hb=HEAD) source code file. As you already may know, the `gettimeofday` is not usual system call. It is located in the special area which is called `vDSO` (you can read more about it in the [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-3.html) which describes this concept).
+As you already may know, an userspace application does not call a system call directly from the kernel space. Before the actual system call entry will be called, we call a function from the standard library. In my case it is [glibc](https://en.wikipedia.org/wiki/GNU_C_Library), so I will consider this case. The implementation of the `gettimeofday` function is located in the [sysdeps/unix/sysv/linux/x86/gettimeofday.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/x86/gettimeofday.c;h=36f7c26ffb0e818709d032c605fec8c4bd22a14e;hb=HEAD) source code file. As you already may know, the `gettimeofday` is not usual system call. It is located in the special area which is called `vDSO` (you can read more about it in the [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-3.html) which describes this concept).
 
 The `glibc` implementation of the `gettimeofday` tries to resolve the given symbol, in our case this symbol is `__vdso_gettimeofday` by the call of the `_dl_vdso_vsym` internal function. If the symbol will not be resolved, it returns `NULL` and we fallback to the call of the usual system call:
 
@@ -105,9 +105,9 @@ notrace static long vdso_fallback_gtod(struct timeval *tv, struct timezone *tz)
 }
 ```
 
-The `do_realtime` function gets the time data from the `vsyscall_gtod_data` structure which is defined in the [arch/x86/include/asm/vgtod.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/vgtod.h#L16) header file and contains mapping of the `timespec` structure and a couple of fields which are related to the current clock source in the system. This function filss the given `timeval` structure with values from the `vsyscall_gtod_data` which contains a time related data which is updated via timer interrupt.
+The `do_realtime` function gets the time data from the `vsyscall_gtod_data` structure which is defined in the [arch/x86/include/asm/vgtod.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/vgtod.h#L16) header file and contains mapping of the `timespec` structure and a couple of fields which are related to the current clock source in the system. This function fills the given `timeval` structure with values from the `vsyscall_gtod_data` which contains a time related data which is updated via timer interrupt.
 
-First of all we try to access the `gtod` or `global time of day` the `vsyscall_gtod_data` structure via the call of the `gotd_read_begin` and will continue to do it until it will be successful:
+First of all we try to access the `gtod` or `global time of day` the `vsyscall_gtod_data` structure via the call of the `gtod_read_begin` and will continue to do it until it will be successful:
 
 ```C
 do {

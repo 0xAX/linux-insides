@@ -318,7 +318,7 @@ archscripts: scripts_basic
 
 We can see that it depends on the `scripts_basic` target from the top [Makefile](https://github.com/torvalds/linux/blob/master/Makefile). At the first we can see the `scripts_basic` target that executes make for the [scripts/basic](https://github.com/torvalds/linux/blob/master/scripts/basic/Makefile) makefile:
 
-```Maklefile
+```Makefile
 scripts_basic:
 	$(Q)$(MAKE) $(build)=scripts/basic
 ```
@@ -557,7 +557,7 @@ $(obj)/zoffset.h: $(obj)/compressed/vmlinux FORCE
 	$(call if_changed,zoffset)
 ```
 
-The `$(obj)/compressed/vmlinux` target depends on the `vmlinux-objs-y` that compiles source code files from the [arch/x86/boot/compressed](https://github.com/torvalds/linux/tree/master/arch/x86/boot/compressed) directory and generates `vmlinux.bin`, `vmlinux.bin.bz2`, and compiles programm - `mkpiggy`. We can see this in the output:
+The `$(obj)/compressed/vmlinux` target depends on the `vmlinux-objs-y` that compiles source code files from the [arch/x86/boot/compressed](https://github.com/torvalds/linux/tree/master/arch/x86/boot/compressed) directory and generates `vmlinux.bin`, `vmlinux.bin.bz2`, and compiles program - `mkpiggy`. We can see this in the output:
 
 ```Makefile
   LDS     arch/x86/boot/compressed/vmlinux.lds
@@ -570,7 +570,7 @@ The `$(obj)/compressed/vmlinux` target depends on the `vmlinux-objs-y` that comp
   HOSTCC  arch/x86/boot/compressed/mkpiggy
 ```
 
-Where `vmlinux.bin` is the `vmlinux` file with debuging information and comments stripped and the `vmlinux.bin.bz2` compressed `vmlinux.bin.all` + `u32` size of `vmlinux.bin.all`. The `vmlinux.bin.all` is `vmlinux.bin + vmlinux.relocs`, where `vmlinux.relocs` is the `vmlinux` that was handled by the `relocs` program (see above). As we got these files, the `piggy.S` assembly files will be generated with the `mkpiggy` program and compiled:
+Where `vmlinux.bin` is the `vmlinux` file with debugging information and comments stripped and the `vmlinux.bin.bz2` compressed `vmlinux.bin.all` + `u32` size of `vmlinux.bin.all`. The `vmlinux.bin.all` is `vmlinux.bin + vmlinux.relocs`, where `vmlinux.relocs` is the `vmlinux` that was handled by the `relocs` program (see above). As we got these files, the `piggy.S` assembly files will be generated with the `mkpiggy` program and compiled:
 
 ```Makefile
   MKPIGGY arch/x86/boot/compressed/piggy.S

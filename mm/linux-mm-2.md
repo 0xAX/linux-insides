@@ -36,9 +36,9 @@ Base virtual address and size of the `fix-mapped` area are presented by the two 
 #define FIXADDR_START		(FIXADDR_TOP - FIXADDR_SIZE)
 ```
 
-Here `__end_of_permanent_fixed_addresses` is an element of the `fixed_addresses` enum and as I wrote above: Every fix-mapped address is represented by an integer index which is defined in the `fixed_addresses`. `PAGE_SHIFT` determines size of a page. For example size of the one page we can get with the `1 << PAGE_SHIFT`. In our case we need to get the size of the fix-mapped area, but not only of one page, that's why we are using `__end_of_permanent_fixed_addresses` for getting the size of the fix-mapped area. In my case it's a little more than `536` killobytes. In your case it might be a different number, because the size depends on amount of the fix-mapped addresses which are depends on your kernel's configuration.
+Here `__end_of_permanent_fixed_addresses` is an element of the `fixed_addresses` enum and as I wrote above: Every fix-mapped address is represented by an integer index which is defined in the `fixed_addresses`. `PAGE_SHIFT` determines size of a page. For example size of the one page we can get with the `1 << PAGE_SHIFT`. In our case we need to get the size of the fix-mapped area, but not only of one page, that's why we are using `__end_of_permanent_fixed_addresses` for getting the size of the fix-mapped area. In my case it's a little more than `536` kilobytes. In your case it might be a different number, because the size depends on amount of the fix-mapped addresses which are depends on your kernel's configuration.
 
-The second `FIXADDR_START` macro just substracts fix-mapped area size from the last address of the fix-mapped area to get its base virtual address. `FIXADDR_TOP` is a rounded up address from the base address of the [vsyscall](https://lwn.net/Articles/446528/) space:
+The second `FIXADDR_START` macro just subtracts fix-mapped area size from the last address of the fix-mapped area to get its base virtual address. `FIXADDR_TOP` is a rounded up address from the base address of the [vsyscall](https://lwn.net/Articles/446528/) space:
 
 ```C
 #define FIXADDR_TOP     (round_up(VSYSCALL_ADDR + PAGE_SIZE, 1<<PMD_SHIFT) - PAGE_SIZE)
@@ -78,7 +78,7 @@ static inline unsigned long virt_to_fix(const unsigned long vaddr)
 
 A PFN is simply an index within physical memory that is counted in page-sized units. PFN for a physical address could be trivially defined as (page_phys_addr >> PAGE_SHIFT);
 
-`__virt_to_fix` clears the first 12 bits in the given address, subtracts it from the last address the of `fix-mapped` area (`FIXADDR_TOP`) and shifts the result right on `PAGE_SHIFT` which is `12`. Let me explain how it works. As I already wrote we will clear the first 12 bits in the given address with `x & PAGE_MASK`. As we subtract this from the `FIXADDR_TOP`, we will get the last 12 bits of the `FIXADDR_TOP` which are present. We know that the first 12 bits of the virtual address represent the offset in the page frame. With the shiting it on `PAGE_SHIFT` we will get `Page frame number` which is just all bits in a virtual address besides the first 12 offset bits. `Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) in the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. We use `fix-mapped` area in the early `ioremap` initialization. Let's look on it and try to understand what is `ioremap`, how it is implemented in the kernel and how it is releated to the `fix-mapped` addresses.
+`__virt_to_fix` clears the first 12 bits in the given address, subtracts it from the last address the of `fix-mapped` area (`FIXADDR_TOP`) and shifts the result right on `PAGE_SHIFT` which is `12`. Let me explain how it works. As I already wrote we will clear the first 12 bits in the given address with `x & PAGE_MASK`. As we subtract this from the `FIXADDR_TOP`, we will get the last 12 bits of the `FIXADDR_TOP` which are present. We know that the first 12 bits of the virtual address represent the offset in the page frame. With the shifting it on `PAGE_SHIFT` we will get `Page frame number` which is just all bits in a virtual address besides the first 12 offset bits. `Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) in the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. We use `fix-mapped` area in the early `ioremap` initialization. Let's look on it and try to understand what is `ioremap`, how it is implemented in the kernel and how it is related to the `fix-mapped` addresses.
 
 ioremap
 --------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ struct resource {
 };
 ```
 
-and contains start and end addresses of the resource, name, etc. Every `resource` structure contains pointers to the `parent`, `slibling` and `child` resources. As it has parent and childs, it means that every subset of resuorces has root `resource` structure. For example, for `I/O` ports it is `ioport_resource` structure:
+and contains start and end addresses of the resource, name, etc. Every `resource` structure contains pointers to the `parent`, `sibling` and `child` resources. As it has parent and childs, it means that every subset of resources has root `resource` structure. For example, for `I/O` ports it is `ioport_resource` structure:
 
 ```C
 struct resource ioport_resource = {
@@ -361,10 +361,10 @@ As early `ioremap` is setup, we can use it. It provides two functions:
 * early_ioremap
 * early_iounmap
 
-for mapping/unmapping of IO physical address to virtual address. Both functions depends on `CONFIG_MMU` configuration option. [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit) is a special block of memory management. Main purpose of this block is translation physical addresses to virtual adresses. Techinically memory management unit knows about high-level page table address (`pgd`) from the `cr3` control register. If `CONFIG_MMU` options is set to `n`, `early_ioremap` just returns the given physical address and `early_iounmap` does not nothing. In other way, if `CONFIG_MMU` option is set to `y`, `early_ioremap` calls `__early_ioremap` which takes three parameters:
+for mapping/unmapping of IO physical address to virtual address. Both functions depends on `CONFIG_MMU` configuration option. [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit) is a special block of memory management. Main purpose of this block is translation physical addresses to virtual addresses. Technically memory management unit knows about high-level page table address (`pgd`) from the `cr3` control register. If `CONFIG_MMU` options is set to `n`, `early_ioremap` just returns the given physical address and `early_iounmap` does not nothing. In other way, if `CONFIG_MMU` option is set to `y`, `early_ioremap` calls `__early_ioremap` which takes three parameters:
 
-* `phys_addr` - base physicall address of the `I/O` memory region to map on virtual addresses;
-* `size`      - size of the `I/O` memroy region;
+* `phys_addr` - base physical address of the `I/O` memory region to map on virtual addresses;
+* `size`      - size of the `I/O` memory region;
 * `prot`      - page table entry bits.
 
 First of all in the `__early_ioremap`, we goes through the all early ioremap fixmap slots and check first free are in the `prev_map` array and remember it's number in the `slot` variable and set up size as we found it:
@@ -481,7 +481,7 @@ static inline void __native_flush_tlb_single(unsigned long addr)
 }
 ```
 
-or call `__flush_tlb` which just updates `cr3` register as we saw it above. After this step execution of the `__early_set_fixmap` function is finsihed and we can back to the `__early_ioremap` implementation. As we have set fixmap area for the given address, we need to save the base virtual address of the I/O Re-mapped area in the `prev_map` with the `slot` index:
+or call `__flush_tlb` which just updates `cr3` register as we saw it above. After this step execution of the `__early_set_fixmap` function is finished and we can back to the `__early_ioremap` implementation. As we have set fixmap area for the given address, we need to save the base virtual address of the I/O Re-mapped area in the `prev_map` with the `slot` index:
 
 ```C
 prev_map[slot] = (void __iomem *)(offset + slot_virt[slot]);
@@ -489,7 +489,7 @@ prev_map[slot] = (void __iomem *)(offset + slot_virt[slot]);
 
 and return it.
 
-The second function is - `early_iounmap` - unmaps an `I/O` memory region. This function takes two parameters: base address and size of a `I/O` region and generally looks very similar on `early_ioremap`. It also goes through fixmap slots and looks for slot with the given address. After this it gets the index of the fixmap slot and calls `__late_clear_fixmap` or `__early_set_fixmap` depends on `after_paging_init` value. It calls `__early_set_fixmap` with on difference then it does `early_ioremap`: it passes `zero` as physicall address. And in the end it sets address of the I/O memory region to `NULL`:
+The second function is - `early_iounmap` - unmaps an `I/O` memory region. This function takes two parameters: base address and size of a `I/O` region and generally looks very similar on `early_ioremap`. It also goes through fixmap slots and looks for slot with the given address. After this it gets the index of the fixmap slot and calls `__late_clear_fixmap` or `__early_set_fixmap` depends on `after_paging_init` value. It calls `__early_set_fixmap` with on difference then it does `early_ioremap`: it passes `zero` as physical address. And in the end it sets address of the I/O memory region to `NULL`:
 
 ```C
 prev_map[slot] = NULL;

@@ -154,7 +154,7 @@ we see that only two general purpose registers are used: `%edx` and `%eax`. This
 Clobbers
 --------------------------------------------------------------------------------
 
-As mentioned above, the "clobbered" part should contain a comma-separated list of registers whos content will be modified by the assembler code. This is useful if our assembly expression needs additional registers for calculation. If we add clobbered registers to the inline assembly statement, the compiler take this into account and the register in question will not simultaneously be used by the compiler.
+As mentioned above, the "clobbered" part should contain a comma-separated list of registers whose content will be modified by the assembler code. This is useful if our assembly expression needs additional registers for calculation. If we add clobbered registers to the inline assembly statement, the compiler take this into account and the register in question will not simultaneously be used by the compiler.
 
 Consider the example from before, but we will add an additional, simple assembler instruction:
 
@@ -395,7 +395,7 @@ will use a memory operand.
   400400:       8b 05 26 0c 20 00       mov    0x200c26(%rip),%eax        # 60102c <a>
 ```
 
-That's about all of the commonly used constraints in inline assembly statements. You can find more in the oficcial [documentation](https://gcc.gnu.org/onlinedocs/gcc/Simple-Constraints.html#Simple-Constraints).
+That's about all of the commonly used constraints in inline assembly statements. You can find more in the official [documentation](https://gcc.gnu.org/onlinedocs/gcc/Simple-Constraints.html#Simple-Constraints).
 
 Architecture specific constraints
 --------------------------------------------------------------------------------

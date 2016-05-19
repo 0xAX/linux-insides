@@ -18,7 +18,7 @@ Take a look at the `DECLARE_PER_CPU` definition. We see that it takes 2 paramete
 DEFINE_PER_CPU(int, per_cpu_n)
 ```
 
-We pass the type and the name of our variable. `DEFINE_PER_CPU` calls the `DEFINE_PER_CPU_SECTION` macro and passes the same two paramaters and empty string to it. Let's look at the definition of the `DEFINE_PER_CPU_SECTION`:
+We pass the type and the name of our variable. `DEFINE_PER_CPU` calls the `DEFINE_PER_CPU_SECTION` macro and passes the same two parameters and empty string to it. Let's look at the definition of the `DEFINE_PER_CPU_SECTION`:
 
 ```C
 #define DEFINE_PER_CPU_SECTION(type, name, sec)    \

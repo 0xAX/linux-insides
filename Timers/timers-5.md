@@ -10,11 +10,11 @@ At first let's refresh your memory and try to remember what is it `clocksource` 
 
 > For example issuing the command 'date' on a Linux system will eventually read the clock source to determine exactly what time it is.
 
-The Linux kernel supports many different clock sources. You can find some of them in the [drivers/closksource](https://github.com/torvalds/linux/tree/master/drivers/clocksource). For example old good [Intel 8253](https://en.wikipedia.org/wiki/Intel_8253) - [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer) with `1193182` Hz frequency, yet another one - [ACPI PM](http://uefi.org/sites/default/files/resources/ACPI_5.pdf) timer with `3579545` Hz frequence. Besides the [drivers/closksource](https://github.com/torvalds/linux/tree/master/drivers/clocksource) directory, each architecture may provide own architecture-specific clock sources. For example [x86](https://en.wikipedia.org/wiki/X86) architecture provides [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer), or for example [powerpc](https://en.wikipedia.org/wiki/PowerPC) provides access to the processor timer through `timebase` register.
+The Linux kernel supports many different clock sources. You can find some of them in the [drivers/closksource](https://github.com/torvalds/linux/tree/master/drivers/clocksource). For example old good [Intel 8253](https://en.wikipedia.org/wiki/Intel_8253) - [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer) with `1193182` Hz frequency, yet another one - [ACPI PM](http://uefi.org/sites/default/files/resources/ACPI_5.pdf) timer with `3579545` Hz frequency. Besides the [drivers/closksource](https://github.com/torvalds/linux/tree/master/drivers/clocksource) directory, each architecture may provide own architecture-specific clock sources. For example [x86](https://en.wikipedia.org/wiki/X86) architecture provides [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer), or for example [powerpc](https://en.wikipedia.org/wiki/PowerPC) provides access to the processor timer through `timebase` register.
 
 Each clock source provides monotonic atomic counter. As I already wrote, the Linux kernel supports a huge set of different clock source and each clock source has own parameters like [frequency](https://en.wikipedia.org/wiki/Frequency). The main goal of the `clocksource` framework is to provide [API](https://en.wikipedia.org/wiki/Application_programming_interface) to select best available clock source in the system i.e. a clock source with the highest frequency. Additional goal of the `clocksource` framework is to represent an atomic counter provided by a clock source in human units. In this time, nanoseconds are the favorite choice for the time value units of the given clock source in the Linux kernel.
 
-The `clocksource` framework represented by the `clocksource` structure which is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header code file which contains `name` of a clock source, ratiing of certain clock sourcein the system (a clock source with the higher frequence has the biggest rating in the system), `list` of all registered clock source in the system, `enable` and `disable` fields to enable and disable a clock source, pointer to the `read` function which must return an atomic counter of a clock source and etc.
+The `clocksource` framework represented by the `clocksource` structure which is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header code file which contains `name` of a clock source, rating of certain clock source in the system (a clock source with the higher frequency has the biggest rating in the system), `list` of all registered clock source in the system, `enable` and `disable` fields to enable and disable a clock source, pointer to the `read` function which must return an atomic counter of a clock source and etc.
 
 Additionally the `clocksource` structure provides two fields: `mult` and `shift` which are needed for translation of an atomic counter which is provided by a certain clock source to the human units, i.e. [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond). Translation occurs via following formula:
 
@@ -74,7 +74,7 @@ Where the `CLOCK_EVT_FEAT_PERIODIC` represents device which may be programmed to
 
 The first `CLOCK_EVT_FEAT_C3STOP` means that a clock event device will be stopped in the [C3](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface#Device_states) state. Additionally the `clock_event_device` structure has `mult` and `shift` fields as well as `clocksource` structure. The `clocksource` structure also contains other fields, but we will consider it later.
 
-After we considered part of the `clock_event_device` structure, time is to look at the `API` of the `clockevents` framework. To work with a clock envet device, first of all we need to initialize `clock_event_device` structure and register a clock events device. The `clockevents` framework provides following `API` for registration of clock event devies:
+After we considered part of the `clock_event_device` structure, time is to look at the `API` of the `clockevents` framework. To work with a clock event device, first of all we need to initialize `clock_event_device` structure and register a clock events device. The `clockevents` framework provides following `API` for registration of clock event devices:
 
 ```C
 void clockevents_register_device(struct clock_event_device *dev)
@@ -174,7 +174,7 @@ static inline void clockevent_set_state(struct clock_event_device *dev,
 }
 ```
 
-As we can see, it just fills the `state_use_accessors` field of the given `clock_event_device` structure with the given value which is in our case is `CLOCK_EVT_STATE_DETACHED`. Acutally all clock event devices has this initial state during registration. The `state_use_accessors` field of the `clock_event_device` structure provides `current` state of the clock event device.
+As we can see, it just fills the `state_use_accessors` field of the given `clock_event_device` structure with the given value which is in our case is `CLOCK_EVT_STATE_DETACHED`. Actually all clock event devices has this initial state during registration. The `state_use_accessors` field of the `clock_event_device` structure provides `current` state of the clock event device.
 
 After we have set initial state of the given `clock_event_device` structure we check that the `cpumask` of the given clock event device is not zero:
 
@@ -199,7 +199,7 @@ raw_spin_unlock_irqrestore(&clockevents_lock, flags);
 
 Additionally the `raw_spin_lock_irqsave` and the `raw_spin_unlock_irqrestore` macros disable local interrupts, however interrupts on other processors still may occur. We need to do it to prevent potential [deadlock](https://en.wikipedia.org/wiki/Deadlock) if we adding new clock event device to the list of clock event devices and an interrupt occurs from other clock event device.
 
-We can see following code of clock event device registration between the `raw_spin_lock_irqsave` and `raw_spin_unkock_irqrestore` macros:
+We can see following code of clock event device registration between the `raw_spin_lock_irqsave` and `raw_spin_unlock_irqrestore` macros:
 
 ```C
 list_add(&dev->list, &clockevent_devices);
@@ -304,7 +304,7 @@ data->clkevt.features = CLOCK_EVT_FEAT_PERIODIC;
 data->clkevt.set_state_periodic = pit_clkevt_set_periodic;
 ```
 
-So, fo the `pit_clkevt_set_periodic` callback will be called. If we will read the documentation of the [Periodic Interval Timer (PIT) for at91sam926x](http://www.atmel.com/Images/doc6062.pdf), we will see that there is `Periodic Interval Timer Mode Register` which allows us to control of periodic interval timer.
+So, for the `pit_clkevt_set_periodic` callback will be called. If we will read the documentation of the [Periodic Interval Timer (PIT) for at91sam926x](http://www.atmel.com/Images/doc6062.pdf), we will see that there is `Periodic Interval Timer Mode Register` which allows us to control of periodic interval timer.
 
 It looks like:
 
@@ -327,7 +327,7 @@ It looks like:
 +---------------------------------------------------------------+
 ```
 
-Where `PIV` or `Periodic Interval Value` - defines the value compared with the primary `20-bit` counter of the Periodic Interval Timer. The `PITEN` or `Period Interval Timer Enabled` if the bit is `1` and the `PITIEN` or `Periodic Interval Timer Interrupt Enable` if the bit is `1`. So, to set peridic mode, we need to set `24`, `25` bits in the `Periodic Interval Timer Mode Register`. And we are doing it in the `pit_clkevt_set_periodic` function:
+Where `PIV` or `Periodic Interval Value` - defines the value compared with the primary `20-bit` counter of the Periodic Interval Timer. The `PITEN` or `Period Interval Timer Enabled` if the bit is `1` and the `PITIEN` or `Periodic Interval Timer Interrupt Enable` if the bit is `1`. So, to set periodic mode, we need to set `24`, `25` bits in the `Periodic Interval Timer Mode Register`. And we are doing it in the `pit_clkevt_set_periodic` function:
 
 ```C
 static int pit_clkevt_set_periodic(struct clock_event_device *dev)
@@ -376,7 +376,7 @@ static void clockevents_notify_released(void)
 
 That's all. From this moment we have registered new clock event device. So the usage of the `clockevents` framework is simple and clear. Architectures registered their clock event devices, in the clock events core. Users of the clockevents core can get clock event devices for their use. The `clockevents` framework provides notification mechanisms for various clock related management events like a clock event device registered or unregistered, a processor is offlined in system which supports [CPU hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) and etc.
 
-We saw implementation only of the `clockevents_register_device` function. But genrally, the clock event layer [API](https://en.wikipedia.org/wiki/Application_programming_interface) is small. Besides the `API` for clock event device registration, the `clockevents` framework provides functions to schedule the next event interrupt, clock event device notification service and support for suspend and resume for clock event devices.
+We saw implementation only of the `clockevents_register_device` function. But generally, the clock event layer [API](https://en.wikipedia.org/wiki/Application_programming_interface) is small. Besides the `API` for clock event device registration, the `clockevents` framework provides functions to schedule the next event interrupt, clock event device notification service and support for suspend and resume for clock event devices.
 
 If you want to know more about `clockevents` API you can start to research following source code and header files: [kernel/time/tick-common.c](https://github.com/torvalds/linux/blob/master/kernel/time/tick-common.c), [kernel/time/clockevents.c](https://github.com/torvalds/linux/blob/master/kernel/time/clockevents.c) and [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/master/include/linux/clockchips.h).
 
@@ -385,7 +385,7 @@ That's all.
 Conclusion
 -------------------------------------------------------------------------------
 
-This is the end of the fifth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `timers` concept. In this part we continied to learn time management related stuff in the Linux kernel and saw a little about yet another framework - `clockevents`.
+This is the end of the fifth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `timers` concept. In this part we continued to learn time management related stuff in the Linux kernel and saw a little about yet another framework - `clockevents`.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 

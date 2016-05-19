@@ -172,7 +172,7 @@ if (!boot_params.hdr.version)
 
 and if it is zero we call `copy_bootdata` function again with the virtual address of the `real_mode_data` (read about about it's implementation).
 
-In the next step we can see the call of the `reserve_ebda_region` function which defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head.c). This function reserves memory block for th `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area located in the top of conventional memory and contains data about ports, disk parameters and etc...
+In the next step we can see the call of the `reserve_ebda_region` function which defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head.c). This function reserves memory block for the `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area located in the top of conventional memory and contains data about ports, disk parameters and etc...
 
 Let's look on the `reserve_ebda_region` function. It starts from the checking is paravirtualization enabled or not:
 
@@ -324,7 +324,7 @@ struct memblock memblock __initdata_memblock = {
 };
 ```
 
-We will not dive into detail of this varaible, but we will see all details about it in the parts about memory manager. Just note that `memblock` variable defined with the `__initdata_memblock` which is:
+We will not dive into detail of this variable, but we will see all details about it in the parts about memory manager. Just note that `memblock` variable defined with the `__initdata_memblock` which is:
 
 ```C
 #define __initdata_memblock __meminitdata
