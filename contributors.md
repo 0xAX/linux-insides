@@ -88,3 +88,4 @@ Thank you to all contributors:
 * [Justus Adam](https://github.com/JustusAdam)
 * [Roy Wellington Ⅳ](https://github.com/thanatos)
 * [Jonathan Rennison](https://github.com/JGRennison)
+* [Mack Stump](https://github.com/rmbreak)
