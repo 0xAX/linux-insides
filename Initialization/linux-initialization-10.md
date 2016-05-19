@@ -110,7 +110,7 @@ where default maximum number of threads is:
 #define MAX_THREADS     FUTEX_TID_MASK
 ```
 
-In the end of the `fork_init` function we initalize [signal](http://www.win.tue.nl/~aeb/linux/lk/lk-5.html) handler:
+In the end of the `fork_init` function we initialize [signal](http://www.win.tue.nl/~aeb/linux/lk/lk-5.html) handler:
 
 ```C
 init_task.signal->rlim[RLIMIT_NPROC].rlim_cur = max_threads/2;
@@ -176,9 +176,9 @@ Note, that we use `KMEM_CACHE` macro here instead of the `kmem_cache_create`. Th
                 (__flags), NULL)
 ```
 
-The `KMEM_CACHE` has one difference from `kmem_cache_create`. Take a look on `__alignof__` operator. The `KMEM_CACHE` macro aligns `SLAB` to the size of the given structure, but `kmem_cache_create` uses given value to align space. After this we can see the call of the `mmap_init` and `nsproxy_cache_init` functions. The first function initalizes virtual memory area `SLAB` and the second function initializes `SLAB` for namespaces.
+The `KMEM_CACHE` has one difference from `kmem_cache_create`. Take a look on `__alignof__` operator. The `KMEM_CACHE` macro aligns `SLAB` to the size of the given structure, but `kmem_cache_create` uses given value to align space. After this we can see the call of the `mmap_init` and `nsproxy_cache_init` functions. The first function initializes virtual memory area `SLAB` and the second function initializes `SLAB` for namespaces.
 
-The next function after the `proc_caches_init` is `buffer_init`. This function is defined in the [fs/buffer.c](https://github.com/torvalds/linux/blob/master/fs/buffer.c) source code file and allocate cache for the `buffer_head`. The `buffer_head` is a special structure which defined in the [include/linux/buffer_head.h](https://github.com/torvalds/linux/blob/master/include/linux/buffer_head.h) and used for managing buffers. In the start of the `bufer_init` function we allocate cache for the `struct buffer_head` structures with the call of the `kmem_cache_create` function as we did in the previous functions. And calcuate the maximum size of the buffers in memory with:
+The next function after the `proc_caches_init` is `buffer_init`. This function is defined in the [fs/buffer.c](https://github.com/torvalds/linux/blob/master/fs/buffer.c) source code file and allocate cache for the `buffer_head`. The `buffer_head` is a special structure which defined in the [include/linux/buffer_head.h](https://github.com/torvalds/linux/blob/master/include/linux/buffer_head.h) and used for managing buffers. In the start of the `buffer_init` function we allocate cache for the `struct buffer_head` structures with the call of the `kmem_cache_create` function as we did in the previous functions. And calculate the maximum size of the buffers in memory with:
 
 ```C
 nrpages = (nr_free_buffer_pages() * 10) / 100;
@@ -198,7 +198,7 @@ err = register_filesystem(&proc_fs_type);
                 return;
 ```
 
-As I wrote above we will not dive into details about [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) and different filesystems in this chapter, but will see it in the chapter about the `VFS`. After we've registered a new filesystem in our system, we call the `proc_self_init` function from the [fs/proc/self.c](https://github.com/torvalds/linux/blob/master/fs/proc/self.c) and this function allocates `inode` number for the `self` (`/proc/self` directory refers to the process accessing the `/proc` filesystem). The next step after the `proc_self_init` is `proc_setup_thread_self` which setups the `/proc/thread-self` directory which contains information about current thread. After this we create `/proc/self/mounts` symllink which will contains mount points with the call of the
+As I wrote above we will not dive into details about [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) and different filesystems in this chapter, but will see it in the chapter about the `VFS`. After we've registered a new filesystem in our system, we call the `proc_self_init` function from the [fs/proc/self.c](https://github.com/torvalds/linux/blob/master/fs/proc/self.c) and this function allocates `inode` number for the `self` (`/proc/self` directory refers to the process accessing the `/proc` filesystem). The next step after the `proc_self_init` is `proc_setup_thread_self` which setups the `/proc/thread-self` directory which contains information about current thread. After this we create `/proc/self/mounts` symlink which will contains mount points with the call of the
 
 ```C
 proc_symlink("mounts", NULL, "self/mounts");
@@ -346,7 +346,7 @@ After this we can see the call of the following functions - `do_basic_setup`. Be
 Now we can finally start doing some real work..
 ```
 
-The `do_basic_setup` will reinitialize [cpuset](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to the active CPUs, initialize the `khelper` - which is a kernel thread which used for making calls out to userspace from within the kernel, initialize [tmpfs](http://en.wikipedia.org/wiki/Tmpfs), initialize `drivers` subsystem, enable the user-mode helper `workqueue`  and make post-early call of the `initcalls`. We can see openinng of the `dev/console` and dup twice file descriptors from `0` to `2` after the `do_basic_setup`:
+The `do_basic_setup` will reinitialize [cpuset](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to the active CPUs, initialize the `khelper` - which is a kernel thread which used for making calls out to userspace from within the kernel, initialize [tmpfs](http://en.wikipedia.org/wiki/Tmpfs), initialize `drivers` subsystem, enable the user-mode helper `workqueue`  and make post-early call of the `initcalls`. We can see opening of the `dev/console` and dup twice file descriptors from `0` to `2` after the `do_basic_setup`:
 
 
 ```C

@@ -1,7 +1,7 @@
 Kernel initialization. Part 5.
 ================================================================================
 
-Continue of architecture-specific initializations
+Continue of architecture-specific initialization
 ================================================================================
 
 In the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html), we stopped at the initialization of an architecture-specific stuff from the [setup_arch](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L856) function and now we will continue with it. As we reserved memory for the [initrd](http://en.wikipedia.org/wiki/Initrd), next step is the `olpc_ofw_detect` which detects [One Laptop Per Child support](http://wiki.laptop.org/go/OFW_FAQ). We will not consider platform related stuff in this book and will skip functions related with it. So let's go ahead. The next step is the `early_trap_init` function. This function initializes debug (`#DB` - raised when the `TF` flag of rflags is set) and `int3` (`#BP`) interrupts gate. If you don't know anything about interrupts, you can read about it in the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html). In `x86` architecture `INT`, `INTO` and `INT3` are special instructions which allow a task to explicitly call an interrupt handler. The `INT3` instruction calls the breakpoint (`#BP`) handler. You may remember, we already saw it in the [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) about interrupts: and exceptions:
@@ -46,7 +46,7 @@ As `#DB` and `#BP` gates written to the `idt_descr`, we reload `IDT` table with 
 #DB handler
 --------------------------------------------------------------------------------
 
-As you can read above, we passed address of the `#DB` handler as `&debug` in the `set_intr_gate_ist`. [lxr.free-electorns.com](http://lxr.free-electrons.com/ident) is a great resource for searching identificators in the linux kernel source code, but unfortunately you will not find `debug` handler with it. All of you can find, it is `debug` definition in the [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/traps.h):
+As you can read above, we passed address of the `#DB` handler as `&debug` in the `set_intr_gate_ist`. [lxr.free-electorns.com](http://lxr.free-electrons.com/ident) is a great resource for searching identifiers in the linux kernel source code, but unfortunately you will not find `debug` handler with it. All of you can find, it is `debug` definition in the [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/traps.h):
 
 ```C
 asmlinkage void debug(void);
@@ -108,7 +108,7 @@ The next two macro from the `idtentry` implementation are:
 	PARAVIRT_ADJUST_EXCEPTION_FRAME
 ```
 
-First `ASM_CLAC` macro depends on `CONFIG_X86_SMAP` configuration option and need for security reason, more about it you can read [here](https://lwn.net/Articles/517475/). The second `PARAVIRT_ADJUST_EXCEPTION_FRAME` macro is for handling handle Xen-type-exceptions (this chapter about kernel initializations and we will not consider virtualization stuff here).
+First `ASM_CLAC` macro depends on `CONFIG_X86_SMAP` configuration option and need for security reason, more about it you can read [here](https://lwn.net/Articles/517475/). The second `PARAVIRT_ADJUST_EXCEPTION_FRAME` macro is for handling handle Xen-type-exceptions (this chapter about kernel initialization and we will not consider virtualization stuff here).
 
 The next piece of code checks if interrupt has error code or not and pushes `$-1` which is `0xffffffffffffffff` on `x86_64` on the stack if not:
 
@@ -118,7 +118,7 @@ The next piece of code checks if interrupt has error code or not and pushes `$-1
 	.endif
 ```
 
-We need to do it as `dummy` error code for stack consistency for all interrupts. In the next step we substract from the stack pointer `$ORIG_RAX-R15`:
+We need to do it as `dummy` error code for stack consistency for all interrupts. In the next step we subtract from the stack pointer `$ORIG_RAX-R15`:
 
 ```assembly
 	subq $ORIG_RAX-R15, %rsp
@@ -170,7 +170,7 @@ pmd_t *pmd;
 BUILD_BUG_ON((fix_to_virt(0) + PAGE_SIZE) & ((1 << PMD_SHIFT) - 1));
 ```
 
-`fixmap` - is fixed virtual address mappings which extends from `FIXADDR_START` to `FIXADDR_TOP`. Fixed virtual addresses are needed for subsystems that need to know the virtual address at compile time. After the check `early_ioremap_init` makes a call of the `early_ioremap_setup` function from the [mm/early_ioremap.c](https://github.com/torvalds/linux/blob/master/mm/early_ioremap.c). `early_ioremap_setup` fills `slot_virt` arry of the `unsigned long` with virtual addresses with 512 temporary boot-time fix-mappings:
+`fixmap` - is fixed virtual address mappings which extends from `FIXADDR_START` to `FIXADDR_TOP`. Fixed virtual addresses are needed for subsystems that need to know the virtual address at compile time. After the check `early_ioremap_init` makes a call of the `early_ioremap_setup` function from the [mm/early_ioremap.c](https://github.com/torvalds/linux/blob/master/mm/early_ioremap.c). `early_ioremap_setup` fills `slot_virt` array of the `unsigned long` with virtual addresses with 512 temporary boot-time fix-mappings:
 
 ```C
 for (i = 0; i < FIX_BTMAPS_SLOTS; i++)
@@ -390,7 +390,7 @@ Protocol:	2.09+
   parameters passing mechanism.
 ```
 
-It used for storing setup information for different types as device tree blob, EFI setup data and etc... In the second step we copy BIOS EDD informantion from the `boot_params` structure that we collected in the [arch/x86/boot/edd.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c) to the `edd` structure:
+It used for storing setup information for different types as device tree blob, EFI setup data and etc... In the second step we copy BIOS EDD information from the `boot_params` structure that we collected in the [arch/x86/boot/edd.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c) to the `edd` structure:
 
 ```C
 static inline void __init copy_edd(void)
@@ -444,7 +444,7 @@ struct mm_struct init_mm = {
 };
 ```
 
-where `mm_rb` is a red-black tree of the virtual memory areas, `pgd` is a pointer to the page global directory, `mm_users` is address space users, `mm_count` is primary usage counter and `mmap_sem` is memory area semaphore. After we setup memory descriptor of the initiali process, next step is initialization of the intel Memory Protection Extensions with `mpx_mm_init`. The next step is initialization of the code/data/bss resources with:
+where `mm_rb` is a red-black tree of the virtual memory areas, `pgd` is a pointer to the page global directory, `mm_users` is address space users, `mm_count` is primary usage counter and `mmap_sem` is memory area semaphore. After we setup memory descriptor of the initial process, next step is initialization of the Intel Memory Protection Extensions with `mpx_mm_init`. The next step is initialization of the code/data/bss resources with:
 
 ```C
 	code_resource.start = __pa_symbol(_text);
@@ -490,7 +490,7 @@ void x86_configure_nx(void)
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the fifth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function which makes initialization of architecutre-specific stuff. It was long part, but we have not finished with it. As i already wrote, the `setup_arch` is big function, and I am really not sure that we will cover all of it even in the next part. There were some new interesting concepts in this part like `Fix-mapped` addresses, ioremap and etc... Don't worry if they are unclear for you. There is a special part about these concepts - [Linux kernel memory management Part 2.](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md). In the next part we will continue with the initialization of the architecture-specific stuff and will see parsing of the early kernel parameters, early dump of the pci devices, direct Media Interface scanning and many many more.
+It is the end of the fifth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function which makes initialization of architecture-specific stuff. It was long part, but we have not finished with it. As i already wrote, the `setup_arch` is big function, and I am really not sure that we will cover all of it even in the next part. There were some new interesting concepts in this part like `Fix-mapped` addresses, ioremap and etc... Don't worry if they are unclear for you. There is a special part about these concepts - [Linux kernel memory management Part 2.](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md). In the next part we will continue with the initialization of the architecture-specific stuff and will see parsing of the early kernel parameters, early dump of the pci devices, direct Media Interface scanning and many many more.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 

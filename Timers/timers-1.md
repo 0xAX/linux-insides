@@ -344,7 +344,7 @@ __clocksource_register(&refined_jiffies);
 return 0;
 ```
 
-The clock source management code provides the API for clock source registration and selection. As we can see, clock sources are registered by calling the  `__clocksource_register` function during kernel initialization or from a kernel module. During registration, the clock source management code will choose the best clock source available in the system using the `clocksource.rating` field which we already saw when we initialized `clocksource` structure for `jiffes`.
+The clock source management code provides the API for clock source registration and selection. As we can see, clock sources are registered by calling the  `__clocksource_register` function during kernel initialization or from a kernel module. During registration, the clock source management code will choose the best clock source available in the system using the `clocksource.rating` field which we already saw when we initialized `clocksource` structure for `jiffies`.
 
 Using the jiffies
 --------------------------------------------------------------------------------

@@ -6,7 +6,7 @@ Introduction
 
 This is the fifth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the previous parts we finished to consider different types [spinlocks](https://en.wikipedia.org/wiki/Spinlock), [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) and [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) synchronization primitives. In We will continue to learn [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) in this part and start to consider special type of synchronization primitives - [readers–writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock).
 
-The first synchronization primitive of this type will be already familar for us - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). As in all previous parts of this [book](https://0xax.gitbooks.io/linux-insides/content), before we will consider implementation of the `reader/writer semaphores` in the Linux kernel, we will start from the theoretical side and will try to understand what is the difference between `reader/writer semaphores` and `normal semaphores`.
+The first synchronization primitive of this type will be already familiar for us - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). As in all previous parts of this [book](https://0xax.gitbooks.io/linux-insides/content), before we will consider implementation of the `reader/writer semaphores` in the Linux kernel, we will start from the theoretical side and will try to understand what is the difference between `reader/writer semaphores` and `normal semaphores`.
 
 So, let's start.
 
@@ -47,7 +47,7 @@ struct rw_semaphore {
 };
 ```
 
-Before we will consider fields of the `rw_semaphore` structure, we may notice, that declaration of the `rw_semaphore` structure depends on the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration option. This option is disabled for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture by default. We can be sure in this by looking at the coresponding kernel configuration file. In our case, this configuration file is - [arch/x86/um/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/um/Kconfig):
+Before we will consider fields of the `rw_semaphore` structure, we may notice, that declaration of the `rw_semaphore` structure depends on the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration option. This option is disabled for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture by default. We can be sure in this by looking at the corresponding kernel configuration file. In our case, this configuration file is - [arch/x86/um/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/um/Kconfig):
 
 ```
 config RWSEM_XCHGADD_ALGORITHM
@@ -57,9 +57,9 @@ config RWSEM_GENERIC_SPINLOCK
 	def_bool !RWSEM_XCHGADD_ALGORITHM
 ```
 
-So, as this [book](https://0xax.gitbooks.io/linux-insides/content) describes only [x86_64](https://en.wikipedia.org/wiki/X86-64) related stuff, we will skip the case when the `CONFIG_RWSEM_GENERIC_SPNLOCK` kernel configuration is enabled and consider definition of the `rw_semahpore` structure only from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file.
+So, as this [book](https://0xax.gitbooks.io/linux-insides/content) describes only [x86_64](https://en.wikipedia.org/wiki/X86-64) related stuff, we will skip the case when the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration is enabled and consider definition of the `rw_semaphore` structure only from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file.
 
-If we will take a look at the definition of the `rw_semaphore` structure, we will notice that first three fields are the same that in the `semaphore` structure. It contains `count` field which represents amount of available resources, the `wait_list` field which represnts [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html) of processes which are waiting to acquire a lock and `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) for protection of this list. Notice that `rw_semaphore.count` field is `long` type unlike the same field in the `semaphore` structure.
+If we will take a look at the definition of the `rw_semaphore` structure, we will notice that first three fields are the same that in the `semaphore` structure. It contains `count` field which represents amount of available resources, the `wait_list` field which represents [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html) of processes which are waiting to acquire a lock and `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) for protection of this list. Notice that `rw_semaphore.count` field is `long` type unlike the same field in the `semaphore` structure.
 
 The `count` field of a `rw_semaphore` structure may have following values:
 
@@ -70,7 +70,7 @@ The `count` field of a `rw_semaphore` structure may have following values:
 * `0xffffffff00000000` - represents situation when there are readers or writers are queued, but no one is active or is in the process of acquire of a lock;
 * `0xfffffffe00000001` - a writer is active or attempting to acquire a lock and waiters are in queue.
 
-So, besides the `count` field, all of these fields are similar to feilds of the `semaphore` structure. Last three fields depend on the two configuration options of the Linux kernel: the `CONFIG_RWSEM_SPIN_ON_OWNER` and `CONFIG_DEBUG_LOCK_ALLOC`. The first two fields may be familar us by declaration of the [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) structure from the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html). The first `osq` field represents [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) spinner for `optimistic spinning` and the second represnts process which is current owner of a lock.
+So, besides the `count` field, all of these fields are similar to fields of the `semaphore` structure. Last three fields depend on the two configuration options of the Linux kernel: the `CONFIG_RWSEM_SPIN_ON_OWNER` and `CONFIG_DEBUG_LOCK_ALLOC`. The first two fields may be familiar us by declaration of the [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) structure from the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html). The first `osq` field represents [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) spinner for `optimistic spinning` and the second represents process which is current owner of a lock.
 
 The last field of the `rw_semaphore` structure is - `dep_map` - debugging related, and as I already wrote in previous parts, we will skip debugging related stuff in this chapter.
 
@@ -122,7 +122,7 @@ After this we initialize list of a lock waiters with the empty linked list and [
 #endif
 ```
 
-As we may see, the `__RWSEM_OPT_INIT` macro intializes the [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) lock with `unlocked` state and initial `owner` of a lock with `NULL`. From this moment, a `rw_semaphore` structure will be initilaized in a compile time and may be used for data protection.
+As we may see, the `__RWSEM_OPT_INIT` macro initializes the [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) lock with `unlocked` state and initial `owner` of a lock with `NULL`. From this moment, a `rw_semaphore` structure will be initialized in a compile time and may be used for data protection.
 
 The second way to initialize a `rw_semaphore` structure is `dynamically` or use the `init_rwsem` macro from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file. This macro declares an instance of the `lock_class_key` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel and to the call of the `__init_rwsem` function with the given `reader/writer semaphore`:
 
@@ -284,14 +284,14 @@ static inline long rwsem_atomic_update(long delta, struct rw_semaphore *sem)
 }
 ```
 
-This function atomically adds the given delta to the `count` and returns old value of the count. After this it just returns sum of the given `delta` and old value of the `count` field. In our case we undo write bias from the `count` as we didn't acquire a lock. After this step we try to do `opimistic spinning` by the call of the `rwsem_optimistic_spin` function:
+This function atomically adds the given delta to the `count` and returns old value of the count. After this it just returns sum of the given `delta` and old value of the `count` field. In our case we undo write bias from the `count` as we didn't acquire a lock. After this step we try to do `optimistic spinning` by the call of the `rwsem_optimistic_spin` function:
 
 ```C
 if (rwsem_optimistic_spin(sem))
       return sem;
 ```
 
-We will skip implementation of the `rwsem_optimistic_spin` function, as it is similar on the `mutex_optimistic_spin` function which we saw in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html). In short words we check existence other tasks ready to run that have higher priority in the `rwsem_optimistic_spin` function. If there are such tasks, the process will be added to the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) `waitqueue` and start to spin in the loop until a lock will be able to be acquired. If `optimistic spining` is disabled, a process will be added to the and marked as waiting for write:
+We will skip implementation of the `rwsem_optimistic_spin` function, as it is similar on the `mutex_optimistic_spin` function which we saw in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html). In short words we check existence other tasks ready to run that have higher priority in the `rwsem_optimistic_spin` function. If there are such tasks, the process will be added to the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) `waitqueue` and start to spin in the loop until a lock will be able to be acquired. If `optimistic spinning` is disabled, a process will be added to the and marked as waiting for write:
 
 ```C
 waiter.task = current;
@@ -326,7 +326,7 @@ while (true) {
 
 I will skip explanation of this loop as we already met similar functional in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html).
 
-That's all. From this moment, our `writer` process will acquire or not acquire a lock depends on the value of the `rw_semaphore->count` field. Now if we will look at the implementation of the `down_read` function which executes a try of acquiring of a lock. We will see similar actions which we saw in the `down_write` function. This function calss different debugging and lock validator related functions/macros:
+That's all. From this moment, our `writer` process will acquire or not acquire a lock depends on the value of the `rw_semaphore->count` field. Now if we will look at the implementation of the `down_read` function which executes a try of acquiring of a lock. We will see similar actions which we saw in the `down_write` function. This function calls different debugging and lock validator related functions/macros:
 
 ```C
 void __sched down_read(struct rw_semaphore *sem)

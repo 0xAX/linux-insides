@@ -13,9 +13,9 @@ So, let's start.
 Introduction to the semaphores in the Linux kernel
 --------------------------------------------------------------------------------
 
-So, what is it `semaphore`? As you may gues - `semaphore` is yet another mechanism for support of thread or process synchronization. The Linux kernel already provides implementation of one synchronization mechanism - `spinlocks`, why do we need in yet another one? To answer on this question we need to know details of both of these mechanisms. We already familar with the `spinlocks`, so let's start from this mechanism.
+So, what is it `semaphore`? As you may guess - `semaphore` is yet another mechanism for support of thread or process synchronization. The Linux kernel already provides implementation of one synchronization mechanism - `spinlocks`, why do we need in yet another one? To answer on this question we need to know details of both of these mechanisms. We already familiar with the `spinlocks`, so let's start from this mechanism.
 
-The main idea behind `spinlock` concept is a lock which will be acquired for a very short time. We can't sleep when a lock acquired by a process or thread, because other processes wait us. [Context switch](https://en.wikipedia.org/wiki/Context_switch) is not not allowed because [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) is disabled to avlid [deadlocks](https://en.wikipedia.org/wiki/Deadlock).
+The main idea behind `spinlock` concept is a lock which will be acquired for a very short time. We can't sleep when a lock acquired by a process or thread, because other processes wait us. [Context switch](https://en.wikipedia.org/wiki/Context_switch) is not not allowed because [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) is disabled to avoid [deadlocks](https://en.wikipedia.org/wiki/Deadlock).
 
 In this way, [semaphores](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) is a good solution for locks which may be acquired for a long time. In other way this mechanism is not optimal for locks that acquired for a short time. To understand this, we need to know what is `semaphore`.
 
@@ -31,7 +31,7 @@ Semaphore API
 
 So, we know a little about `semaphores` from theoretical side, let's look on its implementation in the Linux kernel. All `semaphore` [API](https://en.wikipedia.org/wiki/Application_programming_interface) is located in the [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) header file.
 
-We may see that the `semaphore` machanism is represented by the following structure:
+We may see that the `semaphore` mechanism is represented by the following structure:
 
 ```C
 struct semaphore {
@@ -52,7 +52,7 @@ Before we will consider an [API](https://en.wikipedia.org/wiki/Application_progr
 * `statically`;
 * `dynamically`.
 
-ways. Let's look at the first approach. We are able to intialize a `semaphor` statically with the `DEFINE_SEMAPHORE` macro:
+ways. Let's look at the first approach. We are able to initialize a `semaphore` statically with the `DEFINE_SEMAPHORE` macro:
 
 ```C
 #define DEFINE_SEMAPHORE(name)  \
@@ -89,9 +89,9 @@ static inline void sema_init(struct semaphore *sem, int val)
 }
 ```
 
-Let's consider implementation of this function. It looks pretty easy and actually it does almost the same. Thus function executes initialization of the given `semaphore` with the `__SEMAPHORE_INITIALIZR` macro which we just saw. As I already wrote in the previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will skip the stuff which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
+Let's consider implementation of this function. It looks pretty easy and actually it does almost the same. Thus function executes initialization of the given `semaphore` with the `__SEMAPHORE_INITIALIZER` macro which we just saw. As I already wrote in the previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will skip the stuff which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
 
-So, from now we are able to initialize a `semaphore` let's look at how to lock and unlock. The Linux kernel provides following [API](https://en.wikipedia.org/wiki/Application_programming_interface) to manipulate `simaphores`:
+So, from now we are able to initialize a `semaphore` let's look at how to lock and unlock. The Linux kernel provides following [API](https://en.wikipedia.org/wiki/Application_programming_interface) to manipulate `semaphores`:
 
 ```
 void down(struct semaphore *sem);
@@ -102,7 +102,7 @@ int  down_trylock(struct semaphore *sem);
 int  down_timeout(struct semaphore *sem, long jiffies);
 ```
 
-The first two functions: `down` and `up` are for acquriring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the value of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may returned to runned state by [signal](https://en.wikipedia.org/wiki/Unix_signal).
+The first two functions: `down` and `up` are for acquiring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the value of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may returned to ruined state by [signal](https://en.wikipedia.org/wiki/Unix_signal).
 
 The `down_killable` function does the same as the `down_interruptible` function, but set the `TASK_KILLABLE` flag for the current process. This means that the waiting process may be interrupted by the kill signal.
 
@@ -234,7 +234,7 @@ for (;;) {
 }
 ```
 
-In the previous pice of code we set `waiter.up` to `false`. So, a task will spin in this loop while `up` will not be set to `true`. This loop starts from the check that the current task is in the `pending` state or in other words flags of this task contains `TASK_INTERRUPTIBLE` or `TASK_WAKEKILL` flag. As I already wrote above a task may be interrupted by [signal](https://en.wikipedia.org/wiki/Unix_signal) during wait of ability to acquire a lock. The `signal_pending_state` function is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) source code file and looks:
+In the previous piece of code we set `waiter.up` to `false`. So, a task will spin in this loop while `up` will not be set to `true`. This loop starts from the check that the current task is in the `pending` state or in other words flags of this task contains `TASK_INTERRUPTIBLE` or `TASK_WAKEKILL` flag. As I already wrote above a task may be interrupted by [signal](https://en.wikipedia.org/wiki/Unix_signal) during wait of ability to acquire a lock. The `signal_pending_state` function is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) source code file and looks:
 
 ```C
 static inline int signal_pending_state(long state, struct task_struct *p)
@@ -256,7 +256,7 @@ interrupted:
     return -EINTR;
 ```
 
-where we delete task from the list of lock waiters and return the `-EINTR` [error code](https://en.wikipedia.org/wiki/Errno.h). If a task has no pedning signal, we check the given timeout and if it is less or equal zero:
+where we delete task from the list of lock waiters and return the `-EINTR` [error code](https://en.wikipedia.org/wiki/Errno.h). If a task has no pending signal, we check the given timeout and if it is less or equal zero:
 
 ```C
 if (unlikely(timeout <= 0))
@@ -271,7 +271,7 @@ timed_out:
     return -ETIME;
 ```
 
-Where we do almost the same that we did in the `interrupted` label. We delete task from the list of lock waiters, but return the `-ETIME` error code. If a task has no pedning signal and the given timeout is not expired yet, the given `state` will be set in the given task:
+Where we do almost the same that we did in the `interrupted` label. We delete task from the list of lock waiters, but return the `-ETIME` error code. If a task has no pending signal and the given timeout is not expired yet, the given `state` will be set in the given task:
 
 ```C
 __set_task_state(task, state);
@@ -287,7 +287,7 @@ raw_spin_lock_irq(&sem->lock);
 
 which is defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file. The `schedule_timeout` function makes the current task sleep until the given timeout.
 
-That is all about the `__down_common` function. A task which wants to acquire a lock which is already acquired by another task will be spinned in the infinite loop while it will not be interrupted by a signal, the given timeout will not be expired or the task which holds a lock will not release it. Now let's look at the implementation of the `up` function.
+That is all about the `__down_common` function. A task which wants to acquire a lock which is already acquired by another task will be spun in the infinite loop while it will not be interrupted by a signal, the given timeout will not be expired or the task which holds a lock will not release it. Now let's look at the implementation of the `up` function.
 
 The `up` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file as `down` function. As we already know, the main purpose of this function is to release a lock. This function looks:
 
@@ -306,7 +306,7 @@ void up(struct semaphore *sem)
 EXPORT_SYMBOL(up);
 ```
 
-It looks almost the same as the `down` function. There are only two diferences here. First of all we increment a counter of a `semaphore` if the list of waiters is empty. In other way we call the `__up` function from the same source code file. If the list of waiters is not empty we need to allow the first task from the list to acquire a lock: 
+It looks almost the same as the `down` function. There are only two differences here. First of all we increment a counter of a `semaphore` if the list of waiters is empty. In other way we call the `__up` function from the same source code file. If the list of waiters is not empty we need to allow the first task from the list to acquire a lock: 
 
 ```C
 static noinline void __sched __up(struct semaphore *sem)
@@ -319,7 +319,7 @@ static noinline void __sched __up(struct semaphore *sem)
 }
 ```
 
-Here we takes the first task from the list of waiters, delete it from the list, set its `waiter-up` to true. From this point the infinite loop from the `__down_common` function will be stopped. The `wake_up_process` function will be called in the end of the `__up` function. As you remember we called the `schedule_timeout` function in the infinite loop from the `__down_common` this function. The `schedule_timeout` function makes the current task sleep until the given timeout will not be expired. So, as our process may sleep right now, we need to wake it up. That's why we call the `wake_up_proces` function from the [kernel/sched/core.c](https://github.com/torvalds/linux/blob/master/kernel/sched/core.c) source code file.
+Here we takes the first task from the list of waiters, delete it from the list, set its `waiter-up` to true. From this point the infinite loop from the `__down_common` function will be stopped. The `wake_up_process` function will be called in the end of the `__up` function. As you remember we called the `schedule_timeout` function in the infinite loop from the `__down_common` this function. The `schedule_timeout` function makes the current task sleep until the given timeout will not be expired. So, as our process may sleep right now, we need to wake it up. That's why we call the `wake_up_process` function from the [kernel/sched/core.c](https://github.com/torvalds/linux/blob/master/kernel/sched/core.c) source code file.
 
 That's all.
 

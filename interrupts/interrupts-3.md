@@ -215,7 +215,7 @@ With the `pushq \reg` we denote that place before the `RIP` will contain error c
 #define ORIG_RAX	15*8
 ```
 
-The `ORIG_RAX` will contain error code of an exception, [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) number on a hardware interrupt and system call number on [system call](http://en.wikipedia.org/wiki/System_call) entry. In the next step we can see thr `ALLOC_PT_GPREGS_ON_STACK` macro which allocates space for the 15 general purpose registers on the stack:
+The `ORIG_RAX` will contain error code of an exception, [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) number on a hardware interrupt and system call number on [system call](http://en.wikipedia.org/wiki/System_call) entry. In the next step we can see the `ALLOC_PT_GPREGS_ON_STACK` macro which allocates space for the 15 general purpose registers on the stack:
 
 ```assembly
 .macro ALLOC_PT_GPREGS_ON_STACK addskip=0
@@ -407,7 +407,7 @@ exit:
 ```
 
 If we came not from the virtual 8086 mode, we need to check `dr6` register and previous mode as we did it above. Here we check if step mode debugging is
-enabled and we are not from the user mode, we enabled step mode debugging in the `dr6` copy in the current thread, set `TIF_SINGLE_STEP` falg and re-enable [Trap flag](https://en.wikipedia.org/wiki/Trap_flag) for the user mode:
+enabled and we are not from the user mode, we enabled step mode debugging in the `dr6` copy in the current thread, set `TIF_SINGLE_STEP` flag and re-enable [Trap flag](https://en.wikipedia.org/wiki/Trap_flag) for the user mode:
 
 ```C
 if ((dr6 & DR_STEP) && !user_mode(regs)) {
