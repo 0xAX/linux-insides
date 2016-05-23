@@ -180,7 +180,7 @@ static inline void __clear_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-Yes. As we see, it takes the same set of arguments and contains very similar block of inline assembler. It just uses the [btr](http://x86.renejeschke.de/html/file_module_x86_id_24.html) instruction instead of `bts`. As we can understand form the function's name, it clears a given bit by the given address. The `btr` instruction acts like `btr`. This instruction also selects a given bit which is specified in the first operand, stores its value in the `CF` flag register and clears this bit in the given bit array which is specifed with second operand.
+Yes. As we see, it takes the same set of arguments and contains very similar block of inline assembler. It just uses the [btr](http://x86.renejeschke.de/html/file_module_x86_id_24.html) instruction instead of `bts`. As we can understand form the function's name, it clears a given bit by the given address. The `btr` instruction acts like `btr`. This instruction also selects a given bit which is specified in the first operand, stores its value in the `CF` flag register and clears this bit in the given bit array which is specified with second operand.
 
 The atomic variant of the `__clear_bit` is `clear_bit`:
 
@@ -229,7 +229,7 @@ static inline int variable_test_bit(long nr, volatile const unsigned long *addr)
 }
 ```
 
-The `variable_test_bit` function takes similar set of arguments as `set_bit` and other function take. We also may see inline assembly code here which executes [bt](http://x86.renejeschke.de/html/file_module_x86_id_22.html) and [sbb](http://x86.renejeschke.de/html/file_module_x86_id_286.html) instruction. The `bt` or `bit test` instruction selects a given bit which is specified with first operand from the bit array which is specified with the second operand and stores its value in the [CF](https://en.wikipedia.org/wiki/FLAGS_register) bit of flags register. The second `sbb` instruction substracts first operand from second and subscrtact value of the `CF`. So, here write a value of a given bit number from a given bit array to the `CF` bit of flags register and execute `sbb` instruction which calculates: `00000000 - CF` and writes the result to the `oldbit`.
+The `variable_test_bit` function takes similar set of arguments as `set_bit` and other function take. We also may see inline assembly code here which executes [bt](http://x86.renejeschke.de/html/file_module_x86_id_22.html) and [sbb](http://x86.renejeschke.de/html/file_module_x86_id_286.html) instruction. The `bt` or `bit test` instruction selects a given bit which is specified with first operand from the bit array which is specified with the second operand and stores its value in the [CF](https://en.wikipedia.org/wiki/FLAGS_register) bit of flags register. The second `sbb` instruction subtracts first operand from second and subtracts value of the `CF`. So, here write a value of a given bit number from a given bit array to the `CF` bit of flags register and execute `sbb` instruction which calculates: `00000000 - CF` and writes the result to the `oldbit`.
 
 The `constant_test_bit` function does the same as we saw in the `set_bit`:
 
@@ -312,7 +312,7 @@ As we may see it takes three arguments and expands to the loop from first set bi
 
 Besides these four macros, the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) provides API for rotation of `64-bit` or `32-bit` values and etc.
 
-The next [header](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) file which provides API for manipulation with a bit arrays. For example it provdes two functions:
+The next [header](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) file which provides API for manipulation with a bit arrays. For example it provides two functions:
 
 * `bitmap_zero`;
 * `bitmap_fill`.

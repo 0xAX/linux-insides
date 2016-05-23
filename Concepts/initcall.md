@@ -27,13 +27,13 @@ static int __init nmi_warning_debugfs(void)
 }
 ```
 
-from the [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/nmi.c) source code file. As we may see it just creates the `nmi_longest_ns` [debugfs](https://en.wikipedia.org/wiki/Debugfs) file in the `arch_debugfs_dir` directory. Actually, this `debugfs` file may be created only after the `arch_debugfs_dir` will be created. Creation of this directory occurs during the architecture-specific initalization of the Linux kernel. Actually this directory will be created in the `arch_kdebugfs_init` function from the [arch/x86/kernel/kdebugfs.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/kdebugfs.c) source code file. Note that the `arch_kdebugfs_init` function is marked as `initcall` too:
+from the [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/nmi.c) source code file. As we may see it just creates the `nmi_longest_ns` [debugfs](https://en.wikipedia.org/wiki/Debugfs) file in the `arch_debugfs_dir` directory. Actually, this `debugfs` file may be created only after the `arch_debugfs_dir` will be created. Creation of this directory occurs during the architecture-specific initialization of the Linux kernel. Actually this directory will be created in the `arch_kdebugfs_init` function from the [arch/x86/kernel/kdebugfs.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/kdebugfs.c) source code file. Note that the `arch_kdebugfs_init` function is marked as `initcall` too:
 
 ```C
 arch_initcall(arch_kdebugfs_init);
 ```
 
-The Linux kernel calls all architecture-specific `initcalls` before the `fs` related `initicalls`. So, our `nmi_longest_ns` file will be created only after the `arch_kdebugfs_dir` directory will be created. Actually, the Linux kernel provides eight levels of main `initcalls`:
+The Linux kernel calls all architecture-specific `initcalls` before the `fs` related `initcalls`. So, our `nmi_longest_ns` file will be created only after the `arch_kdebugfs_dir` directory will be created. Actually, the Linux kernel provides eight levels of main `initcalls`:
 
 * `early`;
 * `core`;
@@ -59,12 +59,12 @@ static char *initcall_level_names[] __initdata = {
 };
 ```
 
-All functions which are marked as `initcall` by these identificators, will be called in the same order or at first `early initcalls` will be called, at second `core initcalls` and etc. From this moment we know a little about `initcall` mechanism, so we can start to dive into the source code of the Linux kernel to see how this mechanism is implemented.
+All functions which are marked as `initcall` by these identifiers, will be called in the same order or at first `early initcalls` will be called, at second `core initcalls` and etc. From this moment we know a little about `initcall` mechanism, so we can start to dive into the source code of the Linux kernel to see how this mechanism is implemented.
 
 Implementation initcall mechanism in the Linux kernel
 --------------------------------------------------------------------------------
 
-The Linux kernel provides a set of macros from the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file to mark a given function as `initicall`. All of these macros are pretty simple:
+The Linux kernel provides a set of macros from the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file to mark a given function as `initcall`. All of these macros are pretty simple:
 
 ```C
 #define early_initcall(fn)		__define_initcall(fn, early)
@@ -77,10 +77,10 @@ The Linux kernel provides a set of macros from the [include/linux/init.h](https:
 #define late_initcall(fn)		__define_initcall(fn, 7)
 ```
 
-and as we may see these macros just expands to the call of the `__define_initcall` macro from the same header file. As we may see, the `__define_inticall` macro takes two arguments:
+and as we may see these macros just expands to the call of the `__define_initcall` macro from the same header file. As we may see, the `__define_initcall` macro takes two arguments:
 
 * `fn` - callback function which will be called during call of `initcalls` of the certain level;
-* `id` - identificator to identify `initcall` to prevent error when two the same `initcalls` point to the same handler.
+* `id` - identifier to identify `initcall` to prevent error when two the same `initcalls` point to the same handler.
 
 The implementation of the `__define_initcall` macro looks like:
 
@@ -97,7 +97,7 @@ To understand the `__define_initcall` macro, first of all let's look at the `ini
 typedef int (*initcall_t)(void);
 ```
 
-Now let's return to the `_-define_initicall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces definition of the given function which is located in the `.initcall id .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and makred with the following [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attributes: `__initicall_function_name_id` and `__used`. If we will look in the [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) header file which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
+Now let's return to the `_-define_initcall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces definition of the given function which is located in the `.initcall id .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and marked with the following [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attributes: `__initcall_function_name_id` and `__used`. If we will look in the [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) header file which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
 
 ```C
 #define INIT_CALLS					\
@@ -166,7 +166,7 @@ static void __init do_basic_setup(void)
 }
 ```
 
-which is called during the initialization of the Linux kernel, right after main steps of initialization like memory manager related initializations, `CPU` subsystem and other already finished. The `do_initcalls` function just goes through the array of `initcall` levels and call the `do_initcall_level` function for each level:
+which is called during the initialization of the Linux kernel, right after main steps of initialization like memory manager related initialization, `CPU` subsystem and other already finished. The `do_initcalls` function just goes through the array of `initcall` levels and call the `do_initcall_level` function for each level:
 
 ```C
 static void __init do_initcalls(void)
@@ -213,16 +213,16 @@ If you are interested, you can find these sections in the `arch/x86/kernel/vmlin
 }
 ```
 
-If this is not familar for you, you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html) of this book.
+If this is not familiar for you, you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html) of this book.
 
-As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` and does two following thigs: First of all this function parses the `initcall_command_line` which is copy of usual kernel [command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c) source code file and call the `do_on_initcall` function for each level:
+As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` and does two following things: First of all this function parses the `initcall_command_line` which is copy of usual kernel [command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c) source code file and call the `do_on_initcall` function for each level:
 
 ```C
 for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
 		do_one_initcall(*fn);
 ```
 
-The `do_on_initcall` does all main job for us. As we may see, this function takes one paraemter which represent `initcall` callback function and does the call of the given callback:
+The `do_on_initcall` does all main job for us. As we may see, this function takes one parameter which represent `initcall` callback function and does the call of the given callback:
 
 ```C
 int __init_or_module do_one_initcall(initcall_t fn)
@@ -270,7 +270,7 @@ list_for_each_entry(entry, &blacklisted_initcalls, next) {
 
 The blacklisted `initcalls` stored in the `blacklisted_initcalls` list and this list is filled during early Linux kernel initialization from the Linux kernel command line.
 
-After the blakclisted `initcalls` will be handled, the next part of code does directly the call of the `initcall`:
+After the blacklisted `initcalls` will be handled, the next part of code does directly the call of the `initcall`:
 
 ```C
 if (initcall_debug)
@@ -279,7 +279,7 @@ else
 	ret = fn();
 ```
 
-Depends on the valule of the `initcall_debug` variable, the `do_one_initcall_debug` function will call `initcall` or this function will do it directly via `fn()`. The `initcall_debug` variable is defined in the [same](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+Depends on the value of the `initcall_debug` variable, the `do_one_initcall_debug` function will call `initcall` or this function will do it directly via `fn()`. The `initcall_debug` variable is defined in the [same](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
 
 ```C
 bool initcall_debug;
@@ -347,7 +347,7 @@ As we may understand from the macro's name, its main purpose is to store callbac
 rootfs_initcall(populate_rootfs);
 ```
 
-From this place, we may see faimilar output:
+From this place, we may see familiar output:
 
 ```
 [    0.199960] Unpacking initramfs...

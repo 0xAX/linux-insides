@@ -23,7 +23,7 @@ struct semaphore {
 };
 ```
 
-structure which holds information about state of a [lock](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) and list of a lock waiters. Depends on the value of the `count` field, a `semaphore` can provide access to a resource of more than one wishing of this resource. The [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) concept is very similar to a [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) concept. But it has some differences. The main difference between `semaphore` and `mutex` synchronization primitive is that `mutex` has more strict semantic. Unlike a `semaphore`, only one [process](https://en.wikipedia.org/wiki/Process_%28computing%29) may hold `mutex` at one time and only the `owner` of a `mutex` may release or unlock it. Additionall difference in implementation of `lock` [API](https://en.wikipedia.org/wiki/Application_programming_interface). The `semaphore` synchronization primitive forces rescheduling of processes which are in waiters list. The implementation of `mutex` lock `API` allows to avoid this situation and as a result expensive [context switches](https://en.wikipedia.org/wiki/Context_switch).
+structure which holds information about state of a [lock](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) and list of a lock waiters. Depends on the value of the `count` field, a `semaphore` can provide access to a resource of more than one wishing of this resource. The [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) concept is very similar to a [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) concept. But it has some differences. The main difference between `semaphore` and `mutex` synchronization primitive is that `mutex` has more strict semantic. Unlike a `semaphore`, only one [process](https://en.wikipedia.org/wiki/Process_%28computing%29) may hold `mutex` at one time and only the `owner` of a `mutex` may release or unlock it. Additional difference in implementation of `lock` [API](https://en.wikipedia.org/wiki/Application_programming_interface). The `semaphore` synchronization primitive forces rescheduling of processes which are in waiters list. The implementation of `mutex` lock `API` allows to avoid this situation and as a result expensive [context switches](https://en.wikipedia.org/wiki/Context_switch).
 
 The `mutex` synchronization primitive represented by the following:
 
@@ -51,7 +51,7 @@ structure in the Linux kernel. This structure is defined in the [include/linux/m
 
 The next two fields of the `mutex` structure - `wait_lock` and `wait_list` are [spinlock](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) for the protection of a `wait queue` and list of waiters which represents this `wait queue` for a certain lock. As you may notice, the similarity of the `mutex` and `semaphore` structures ends. Remaining fields of the `mutex` structure, as we may see depends on different configuration options of the Linux kernel.
 
-The first field - `owner` represents [process](https://en.wikipedia.org/wiki/Process_%28computing%29) which acquired a lock. As we may see, existence of this field in the `mutex` structure dependson the `CONFIG_DEBUG_MUTEXES` or `CONFIG_MUTEX_SPIN_ON_OWNER` kernel configuration options. Main point of this field and the next `osq` fields is support of `optimistic spinning` which we will see later. The last two fields - `magic` and `dep_map` are used only in [debugging](https://en.wikipedia.org/wiki/Debugging) mode. The `magic` field is to storing a `mutex` related information for debugging and the second field - `lockdep_map` is for [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
+The first field - `owner` represents [process](https://en.wikipedia.org/wiki/Process_%28computing%29) which acquired a lock. As we may see, existence of this field in the `mutex` structure depends on the `CONFIG_DEBUG_MUTEXES` or `CONFIG_MUTEX_SPIN_ON_OWNER` kernel configuration options. Main point of this field and the next `osq` fields is support of `optimistic spinning` which we will see later. The last two fields - `magic` and `dep_map` are used only in [debugging](https://en.wikipedia.org/wiki/Debugging) mode. The `magic` field is to storing a `mutex` related information for debugging and the second field - `lockdep_map` is for [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
 
 Now, after we have considered the `mutex` structure, we may consider how this synchronization primitive works in the Linux kernel. As you may guess, a process which wants to acquire a lock, must to decrease value of the `mutex->count` if possible. And if a process wants to release a lock, it must to increase the same value. That's true. But as you may also guess, it is not so simple in the Linux kernel.
 
@@ -63,7 +63,7 @@ Actually, when a process try to acquire a `mutex`, there three possible paths:
 
 which may be taken, depending on the current state of the `mutex`. The first path or `fastpath` is the fastest as you may understand from its name. Everything is easy in this case. Nobody acquired a `mutex`, so the value of the `count` field of the `mutex` structure may be directly decremented. In a case of unlocking of a `mutex`, the algorithm is the same. A process just increments the value of the `count` field of the `mutex` structure. Of course, all of these operations must be [atomic](https://en.wikipedia.org/wiki/Linearizability).
 
-Yes, this looks pretty easy. But what happens if a process wants to acquire a `mutex` which is already acquired by other process? In this case, the control will be transfered to the second path - `midpath`. The `midpath` or `optimistic spinning` tries to [spin](https://en.wikipedia.org/wiki/Spinlock) with already familar for us [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) while the lock owner is running. This path will be executed only if there are no other processes ready to run that have higher priority. This path is called `optimistic` because the waiting task will not be sleep and rescheduled. This allows to avoid expensive [context switch](https://en.wikipedia.org/wiki/Context_switch).
+Yes, this looks pretty easy. But what happens if a process wants to acquire a `mutex` which is already acquired by other process? In this case, the control will be transferred to the second path - `midpath`. The `midpath` or `optimistic spinning` tries to [spin](https://en.wikipedia.org/wiki/Spinlock) with already familiar for us [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) while the lock owner is running. This path will be executed only if there are no other processes ready to run that have higher priority. This path is called `optimistic` because the waiting task will not be sleep and rescheduled. This allows to avoid expensive [context switch](https://en.wikipedia.org/wiki/Context_switch).
 
 In the last case, when the `fastpath` and `midpath` may not be executed, the last path - `slowpath` will be executed. This path acts like a [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) lock. If the lock is unable to be acquired by a process, this process will be added to `wait queue` which is represented by the following:
 
@@ -87,14 +87,14 @@ struct semaphore_waiter {
 };
 ```
 
-It also contains `list` and `task` fields which are represent entry of the mutex wait queue. The one difference here that the `mutex_waiter` does not contains `up` field, but contains the `magic` field which depends on the `CONFIG_DEBUG_MUTEXES` kernel configuration option and used to store a `mutex` related informantion for debugging purpose.
+It also contains `list` and `task` fields which are represent entry of the mutex wait queue. The one difference here that the `mutex_waiter` does not contains `up` field, but contains the `magic` field which depends on the `CONFIG_DEBUG_MUTEXES` kernel configuration option and used to store a `mutex` related information for debugging purpose.
 
 Now we know what is it `mutex` and how it is represented the Linux kernel. In this case, we may go ahead and start to look at the [API](https://en.wikipedia.org/wiki/Application_programming_interface) which the Linux kernel provides for manipulation of `mutexes`.
 
 Mutex API
 --------------------------------------------------------------------------------
 
-Ok, in the previous paragraph we knew what is it `mutex` synchronization primitive and saw the `mutex` structure which represents `mutex` in the Linux kernel. Now it's time to consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) for manipulation of mutexes. Description of the `mutex` API is located in the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file. As allways, before we will consider how to acquire and release a `mutex`, we need to know how to initialize it.
+Ok, in the previous paragraph we knew what is it `mutex` synchronization primitive and saw the `mutex` structure which represents `mutex` in the Linux kernel. Now it's time to consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) for manipulation of mutexes. Description of the `mutex` API is located in the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file. As always, before we will consider how to acquire and release a `mutex`, we need to know how to initialize it.
 
 There are two approaches to initialize a `mutex`. The first is to do it statically. For this purpose the Linux kernel provides following:
 
@@ -150,7 +150,7 @@ As we may see the `__mutex_init` function takes three arguments:
 * `name` - name of mutex for debugging purpose;
 * `key`  - key for [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt).
 
-At the beginning of the `__mitex_init` function, we may see intiialization of the `mutex` state. We set it to `unlocked` state with the `atomic_set` function which atomically set the give variable to the given value. After this we may see initializtion of the `spinlock` to the unlocked state which will protect `wait queue` of the `mutex` and initializtion of the `wait queue` of the `mutex`. After this we clear owner of the `lock` and initialize optimistic queue by the call of the `osq_lock_init` function from the [include/linux/osq_lock.h](https://github.com/torvalds/linux/blob/master/include/linux/osq_lock.h) header file. This function just sets the tail of the optimistic queue to the unlocked state:
+At the beginning of the `__mutex_init` function, we may see initialization of the `mutex` state. We set it to `unlocked` state with the `atomic_set` function which atomically set the give variable to the given value. After this we may see initialization of the `spinlock` to the unlocked state which will protect `wait queue` of the `mutex` and initialization of the `wait queue` of the `mutex`. After this we clear owner of the `lock` and initialize optimistic queue by the call of the `osq_lock_init` function from the [include/linux/osq_lock.h](https://github.com/torvalds/linux/blob/master/include/linux/osq_lock.h) header file. This function just sets the tail of the optimistic queue to the unlocked state:
 
 ```C
 static inline bool osq_is_locked(struct optimistic_spin_queue *lock)
@@ -159,7 +159,7 @@ static inline bool osq_is_locked(struct optimistic_spin_queue *lock)
 }
 ```
 
-In the end of the `__mutex_init` function we may see the call of the `debug_mutex_init` function, but as I already wrote in previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will not consider debuging related stuff in this chapter.
+In the end of the `__mutex_init` function we may see the call of the `debug_mutex_init` function, but as I already wrote in previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will not consider debugging related stuff in this chapter.
 
 After the `mutex` structure is initialized, we may go ahead and will look at the `lock` and `unlock` API of `mutex` synchronization primitive. Implementation of `mutex_lock` and `mutex_unlock` functions located in the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/master/kernel/locking/mutex.c) source code file. First of all let's start from the implementation of the `mutex_lock`. It looks:
 
@@ -205,13 +205,13 @@ exit:
         return;
 ```
 
-For this momenet he implementation of the `__mutex_fastpath_lock` function looks pretty easy. But the value of the `mutex->counter` may be negative after increment. In this case the: 
+For this moment he implementation of the `__mutex_fastpath_lock` function looks pretty easy. But the value of the `mutex->counter` may be negative after increment. In this case the: 
 
 ```C
 fail_fn(v);
 ```
 
-will be called after our inline assembly statement. The `fail_fn` is the second parameter of the `__mutex_fastpath_lock` function and represents pointer to function which represents `midpath/slowpath` pathes to acquire the given lock. In our case the `fail_fn` is the `__mutex_lock_slowpath` function. Before we will look at the implementation of the `__mutex_lock_slowpath` function, let's finish with the implementation of the `mutex_lock` function. In the simplest way, the lock will be acquired successfully by a process and the `__mutex_fastpath_lock` will be finished. In this case, we just call the
+will be called after our inline assembly statement. The `fail_fn` is the second parameter of the `__mutex_fastpath_lock` function and represents pointer to function which represents `midpath/slowpath` paths to acquire the given lock. In our case the `fail_fn` is the `__mutex_lock_slowpath` function. Before we will look at the implementation of the `__mutex_lock_slowpath` function, let's finish with the implementation of the `mutex_lock` function. In the simplest way, the lock will be acquired successfully by a process and the `__mutex_fastpath_lock` will be finished. In this case, we just call the
 
 ```C
 mutex_set_owner(lock);
@@ -226,7 +226,7 @@ static inline void mutex_set_owner(struct mutex *lock)
 }
 ```
 
-In other way, let's consider situation when a process which wants to acquire a lock is unable to do it, because another process already acquired the same lock. We already know that the `__mutex_lock_slowpath` function will be called in this case. Let's consider implementation of this function. This function is defined in the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/master/kernel/locking/mutex.c) source code file and starts from the obtaining of the propoer mutex by the mutex state given from the `__mutex_fastpath_lock` with the `container_of` macro:
+In other way, let's consider situation when a process which wants to acquire a lock is unable to do it, because another process already acquired the same lock. We already know that the `__mutex_lock_slowpath` function will be called in this case. Let's consider implementation of this function. This function is defined in the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/master/kernel/locking/mutex.c) source code file and starts from the obtaining of the proper mutex by the mutex state given from the `__mutex_fastpath_lock` with the `container_of` macro:
 
 ```C
 __visible void __sched
@@ -279,7 +279,7 @@ while (true) {
 }
 ```
 
-and try to acquire a lock. First of all we try to take current owner and if the owner exists (it may not exists in a case when a process already released a mutex) and we wait for it in the `mutex_spin_on_owner` function before the owner will release a lock. If new task with higher priority have appeared during wait of the lock owner, we break the loop and go to sleep. In other case, the process already may release a lock, so we try to acquire a lock with the `mutex_try_to_acquired`. If this operation finished sucessfully, we set new owner for the given mutex, removes ourself from the `MCS` wait queue and exit from the `mutex_optimistic_spin` function. At this state a lock will be acquired by a process and we enable [preemtion](https://en.wikipedia.org/wiki/Preemption_%28computing%29) and exit from the `__mutex_lock_common` function:
+and try to acquire a lock. First of all we try to take current owner and if the owner exists (it may not exists in a case when a process already released a mutex) and we wait for it in the `mutex_spin_on_owner` function before the owner will release a lock. If new task with higher priority have appeared during wait of the lock owner, we break the loop and go to sleep. In other case, the process already may release a lock, so we try to acquire a lock with the `mutex_try_to_acquired`. If this operation finished successfully, we set new owner for the given mutex, removes ourself from the `MCS` wait queue and exit from the `mutex_optimistic_spin` function. At this state a lock will be acquired by a process and we enable [preemtion](https://en.wikipedia.org/wiki/Preemption_%28computing%29) and exit from the `__mutex_lock_common` function:
 
 ```C
 if (mutex_optimistic_spin(lock, ww_ctx, use_ww_ctx)) {
@@ -346,9 +346,9 @@ for (;;) {
 }
 ```
 
-where try to acquire a lock again and exit if this operation was sucessful. Yes, we try to acquire a lock again right after unsuccessful try  before the loop. We need to do it to make sure that we get a wakeup once a lock will be unlocked. Besides this, it allows us to acquire a lock after sleep.  In other case we check the current process for pending [signals](https://en.wikipedia.org/wiki/Unix_signal) and exit if the process was interrupted by a `signal` during wait for a lock acquisition. In the end of loop we didn't acquire a lock, so we set the task state for `TASK_UNINTERRUPTIBLE` and go to sleep with call of the `schedule_preempt_disabled` function.
+where try to acquire a lock again and exit if this operation was successful. Yes, we try to acquire a lock again right after unsuccessful try  before the loop. We need to do it to make sure that we get a wakeup once a lock will be unlocked. Besides this, it allows us to acquire a lock after sleep.  In other case we check the current process for pending [signals](https://en.wikipedia.org/wiki/Unix_signal) and exit if the process was interrupted by a `signal` during wait for a lock acquisition. In the end of loop we didn't acquire a lock, so we set the task state for `TASK_UNINTERRUPTIBLE` and go to sleep with call of the `schedule_preempt_disabled` function.
 
-That's all. We have considered all three possible pathes through which a process may pass when it will wan to acquire a lock. Now let's consider how `mutex_unlock` is implemented. When the `mutex_unlock` will be called by a process which wants to release a lock, the `__mutex_fastpath_unlock` will be called from the  [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/mutex_64.h)  header file:
+That's all. We have considered all three possible paths through which a process may pass when it will wan to acquire a lock. Now let's consider how `mutex_unlock` is implemented. When the `mutex_unlock` will be called by a process which wants to release a lock, the `__mutex_fastpath_unlock` will be called from the  [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/mutex_64.h)  header file:
 
 ```C
 void __sched mutex_unlock(struct mutex *lock)

@@ -144,7 +144,7 @@ do {                                 \
 } while (0)
 ```
 
-makes the same initialziation with default values as it does `RADIX_TREE_INIT` macro.
+makes the same initialization with default values as it does `RADIX_TREE_INIT` macro.
 
 The next are two functions for inserting and deleting records to/from a radix tree:
 

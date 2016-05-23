@@ -152,7 +152,7 @@ On this step the initialization of the `memblock` structure has been finished an
 Memblock API
 --------------------------------------------------------------------------------
 
-Ok we have finished with initilization of the `memblock` structure and now we can look on the Memblock API and its implementation. As I said above, all implementation of the `memblock` is presented in the [mm/memblock.c](https://github.com/torvalds/linux/blob/master/mm/memblock.c). To understand how `memblock` works and how it is implemented, let's look at its usage first. There are a couple of [places](http://lxr.free-electrons.com/ident?i=memblock) in the linux kernel where memblock is used. For example let's take `memblock_x86_fill` function from the [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/e820.c#L1061). This function goes through the memory map provided by the [e820](http://en.wikipedia.org/wiki/E820) and adds memory regions reserved by the kernel to the `memblock` with the `memblock_add` function. As we met `memblock_add` function first, let's start from it.
+Ok we have finished with initialization of the `memblock` structure and now we can look on the Memblock API and its implementation. As I said above, all implementation of the `memblock` is presented in the [mm/memblock.c](https://github.com/torvalds/linux/blob/master/mm/memblock.c). To understand how `memblock` works and how it is implemented, let's look at its usage first. There are a couple of [places](http://lxr.free-electrons.com/ident?i=memblock) in the linux kernel where memblock is used. For example let's take `memblock_x86_fill` function from the [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/e820.c#L1061). This function goes through the memory map provided by the [e820](http://en.wikipedia.org/wiki/E820) and adds memory regions reserved by the kernel to the `memblock` with the `memblock_add` function. As we met `memblock_add` function first, let's start from it.
 
 This function takes physical base address and size of the memory region and adds it to the `memblock`. `memblock_add` function does not do anything special in its body, but just calls:
 
@@ -179,10 +179,10 @@ static inline phys_addr_t memblock_cap_size(phys_addr_t base, phys_addr_t *size)
 
 `memblock_cap_size` returns new size which is the smallest value between the given size and `ULLONG_MAX - base`.
 
-After that we have the end address of the new memory region, `memblock_add_range` checks overlap and merge conditions with already added memory regions. Insertion of the new memory region to the `memblcok` consists of two steps:
+After that we have the end address of the new memory region, `memblock_add_range` checks overlap and merge conditions with already added memory regions. Insertion of the new memory region to the `memblock` consists of two steps:
 
 * Adding of non-overlapping parts of the new memory area as separate regions;  
-* Merging of all neighbouring regions.
+* Merging of all neighboring regions.
 
 We are going through all the already stored memory regions and checking for overlap with the new region:
 
@@ -342,7 +342,7 @@ and many more....
 Getting info about memory regions
 --------------------------------------------------------------------------------
 
-Memblock also provides an API for getting information about allocated memory regions in the `memblcok`. It is split in two parts:
+Memblock also provides an API for getting information about allocated memory regions in the `memblock`. It is split in two parts:
 
 * get_allocated_memblock_memory_regions_info - getting info about memory regions;
 * get_allocated_memblock_reserved_regions_info - getting info about reserved regions.

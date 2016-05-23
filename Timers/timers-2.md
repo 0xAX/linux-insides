@@ -83,7 +83,7 @@ The `clocksource` concept represents the generic API for clock sources managemen
 
 We already know that for timekeeping purposes we can use `jiffies` in the Linux kernel. The `jiffies` can be considered as read only global variable which is updated with `HZ` frequency. We know that the `HZ` is a compile-time kernel parameter whose reasonable range is from `100` to `1000` [Hz](https://en.wikipedia.org/wiki/Hertz). So, it is guaranteed to have an interface for time measurement  with `1` - `10` milliseconds resolution. Besides standard `jiffies`, we saw the `refined_jiffies` clock source in the previous part that is based on the `i8253/i8254` [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer) tick rate which is almost `1193182` hertz. So we can get something about `1` microsecond resolution with the `refined_jiffies`. In this time, [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond) are the favorite choice for the time value units of the given clock source.
 
-The availability of more precise techniques for time intervals measurement is hardware-dependent. We just knew a little about `x86` dependent timers hardware. But each architecture provides own timers hardware. Earlier each architecture had own implementation for this purpose. Solution of this problem is an abstraction layer and associated API in a common code framework for managing various clock sources and independent of the timer interrupt. This commn code framework became - `clocksource` framework.
+The availability of more precise techniques for time intervals measurement is hardware-dependent. We just knew a little about `x86` dependent timers hardware. But each architecture provides own timers hardware. Earlier each architecture had own implementation for this purpose. Solution of this problem is an abstraction layer and associated API in a common code framework for managing various clock sources and independent of the timer interrupt. This common code framework became - `clocksource` framework.
 
 Generic timeofday and clock source management framework moved a lot of timekeeping code into the architecture independent portion of the code, with the architecture-dependent portion reduced to defining and managing low-level hardware pieces of clocksources. It takes a large amount of funds to measure the time interval on different architectures with different hardware, and it is very complex. Implementation of the each clock related service is strongly associated with an individual hardware device and as you can understand, it results in similar implementations for different architectures.
 
@@ -92,7 +92,7 @@ Within this framework, each clock source is required to maintain a representatio
 The clocksource structure
 --------------------------------------------------------------------------------
 
-The fundamental of the `clocksource` framework is the `clocksource` structure that defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header file. We already saw some fields that are provided by the `clocksource` strucutre in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html). Let's look on the full definition of this structure and try to describe all of its fields:
+The fundamental of the `clocksource` framework is the `clocksource` structure that defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header file. We already saw some fields that are provided by the `clocksource` structure in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html). Let's look on the full definition of this structure and try to describe all of its fields:
 
 ```C
 struct clocksource {
@@ -190,7 +190,7 @@ for the `x86` architectures. Where the `vDSO` clock mode can be one of the:
 #define VCLOCK_PVCLOCK 3
 ```
 
-The last three fields are `wd_list`, `cs_last` and the `wd_last` depends on the `CONFIG_CLOCKSOURCE_WATCHDOG` kernel configuration option. First of all let's try to understand what is it `whatchdog`. In a simple words, watchdog is a timer that is used for detection of the computer malfunctions and recovering from it. All of these three fields contain watchdog related data that is used by the `clocksource` framework. If we will grep the Linux kernel source code, we will see that only [arch/x86/KConfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig#L54) kernel configuration file contains the `CONFIG_CLOCKSOURCE_WATCHDOG` kernel configuration option. So, why do `x86` and `x86_64` need in [watchdog](https://en.wikipedia.org/wiki/Watchdog_timer)? You already may know that all `x86` processors has special 64-bit register - [time stamp counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). This register contains number of [cycles](https://en.wikipedia.org/wiki/Clock_rate) since the reset. Sometimes the time stamp counter needs to be verified against another clock source. We will not see initialization of the `watchdog` timer in this part, before this we must learn more about timers.
+The last three fields are `wd_list`, `cs_last` and the `wd_last` depends on the `CONFIG_CLOCKSOURCE_WATCHDOG` kernel configuration option. First of all let's try to understand what is it `watchdog`. In a simple words, watchdog is a timer that is used for detection of the computer malfunctions and recovering from it. All of these three fields contain watchdog related data that is used by the `clocksource` framework. If we will grep the Linux kernel source code, we will see that only [arch/x86/KConfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig#L54) kernel configuration file contains the `CONFIG_CLOCKSOURCE_WATCHDOG` kernel configuration option. So, why do `x86` and `x86_64` need in [watchdog](https://en.wikipedia.org/wiki/Watchdog_timer)? You already may know that all `x86` processors has special 64-bit register - [time stamp counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). This register contains number of [cycles](https://en.wikipedia.org/wiki/Clock_rate) since the reset. Sometimes the time stamp counter needs to be verified against another clock source. We will not see initialization of the `watchdog` timer in this part, before this we must learn more about timers.
 
 That's all. From this moment we know all fields of the `clocksource` structure. This knowledge will help us to learn insides of the `clocksource` framework.
 
@@ -220,7 +220,7 @@ static inline int clocksource_register_khz(struct clocksource *cs, u32 khz)
 }
 ```
 
-And all of these functions do the same. They return value of the `__clocksource_register_scale` function but with diffferent set of parameters. The `__clocksource_register_scale` function defined in the [kernel/time/clocksource.c](https://github.com/torvalds/linux/tree/master/kernel/time/clocksource.c) source code file. To understand difference between these functions, let's look on the parameters of the `clocksource_register_khz` function. As we can see, this function takes three parameters:
+And all of these functions do the same. They return value of the `__clocksource_register_scale` function but with different set of parameters. The `__clocksource_register_scale` function defined in the [kernel/time/clocksource.c](https://github.com/torvalds/linux/tree/master/kernel/time/clocksource.c) source code file. To understand difference between these functions, let's look on the parameters of the `clocksource_register_khz` function. As we can see, this function takes three parameters:
 
 * `cs` - clocksource to be installed;
 * `scale` - scale factor of a clock source. In other words, if we will multiply value of this parameter on frequency, we will get `hz` of a clocksource;
@@ -407,7 +407,7 @@ $ cat /sys/devices/system/clocksource/clocksource0/available_clocksource
 tsc hpet acpi_pm 
 ```
 
-Or for example informantion about current clock source in the system:
+Or for example information about current clock source in the system:
 
 ```
 $ cat /sys/devices/system/clocksource/clocksource0/current_clocksource 

@@ -44,9 +44,9 @@ model name	: Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz
 
 And although Intel manual says that the frequency of the `Time Stamp Counter`, while constant, is not necessarily the maximum qualified frequency of the processor, or the frequency given in the brand string, anyway we may see that it will be much more than frequency of the `ACPI PM` timer or `High Precision Event Timer`. And we can see that the clock source with the best rating or highest frequency is current in the system.
 
-You can note that besides these three clock source, we don't see yet another two familar us clock sources in the ourtput of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. These clock sources are `jiffy` and `refined_jiffies`. We don't see them because this filed maps only high resolution clock sources or in other words clock sources with the [CLOCK_SOURCE_VALID_FOR_HRES](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h#L113) flag.
+You can note that besides these three clock source, we don't see yet another two familiar us clock sources in the output of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. These clock sources are `jiffy` and `refined_jiffies`. We don't see them because this filed maps only high resolution clock sources or in other words clock sources with the [CLOCK_SOURCE_VALID_FOR_HRES](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h#L113) flag.
 
-As I alredy wrote above, we will consider all of these three clock sources in this part. We will consider it in order of their initialization or:
+As I already wrote above, we will consider all of these three clock sources in this part. We will consider it in order of their initialization or:
 
 * `hpet`;
 * `acpi_pm`;
@@ -88,7 +88,7 @@ static __init void x86_late_time_init(void)
 }
 ```
 
-As we may see, it does initalization of the `x86` related timer and intitilization of the `Time Stamp Counter`. The seconds we will see in the next paragraph, but now let's consider the call of the `x86_init.timers.timer_init` function. The `timer_init` points to the `hpet_time_init` function from the same source code file. We can verify this by looking on the definition of the `x86_init` structure from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c):
+As we may see, it does initialization of the `x86` related timer and initialization of the `Time Stamp Counter`. The seconds we will see in the next paragraph, but now let's consider the call of the `x86_init.timers.timer_init` function. The `timer_init` points to the `hpet_time_init` function from the same source code file. We can verify this by looking on the definition of the `x86_init` structure from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c):
 
 ```C
 struct x86_init_ops x86_init __initdata = {
@@ -167,7 +167,7 @@ if (hpet_clocksource_register())
 	goto out_nohpet;
 ```
 
-which just calls already familar
+which just calls already familiar
 
 ```C
 clocksource_register_hz(&clocksource_hpet, (u32)hpet_freq);
@@ -193,7 +193,7 @@ After the `clocksource_hpet` is registered, we can return to the `hpet_time_init
 setup_default_timer_irq();
 ```
 
-function in the `hpet_time_init()`. The `setup_default_timer_irq` function checks existance of `legacy` IRQs or in other words support for the [i8259](https://en.wikipedia.org/wiki/Intel_8259) and setups [IRQ0](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29#Master_PIC) depends on this.
+function in the `hpet_time_init()`. The `setup_default_timer_irq` function checks existence of `legacy` IRQs or in other words support for the [i8259](https://en.wikipedia.org/wiki/Intel_8259) and setups [IRQ0](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29#Master_PIC) depends on this.
 
 That's all. From this moment the [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) clock source registered in the Linux kernel `clock source` framework and may be used from generic kernel code via the `read_hpet`:
 ```C
@@ -275,7 +275,7 @@ which reads value of the `Power Management Timer` register. This register has fo
 ```
 +-------------------------------+----------------------------------+
 |                               |                                  |
-| eupper eight bits of a        |      running count of the        |
+|  upper eight bits of a        |      running count of the        |
 | 32-bit power management timer |     power management timer       |
 |                               |                                  |
 +-------------------------------+----------------------------------+

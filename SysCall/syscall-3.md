@@ -24,7 +24,7 @@ or:
 ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
 ```
 
-After this, these system calls will be executed in userspace and this means that there will not be [context switching](https://en.wikipedia.org/wiki/Context_switch). Mapping of the `vsyscall` page occurs in the `map_vsyscall` function that is defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file. This function is called during the Linux kernel intialization in the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file (we saw this function in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) of the Linux kernel initialization process chapter).
+After this, these system calls will be executed in userspace and this means that there will not be [context switching](https://en.wikipedia.org/wiki/Context_switch). Mapping of the `vsyscall` page occurs in the `map_vsyscall` function that is defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file. This function is called during the Linux kernel initialization in the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file (we saw this function in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) of the Linux kernel initialization process chapter).
 
 Note that implementation of the `map_vsyscall` function depends on the `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option:
 
@@ -168,7 +168,7 @@ __vsyscall_page:
 	ret
 ```
 
-And the start address of the `vsyscall` page is the `ffffffffff600000` everytime. So, the [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) knows the addresses of the all virtual system call handlers. You can find definition of these addresses in the `glibc` source code:
+And the start address of the `vsyscall` page is the `ffffffffff600000` every time. So, the [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) knows the addresses of the all virtual system call handlers. You can find definition of these addresses in the `glibc` source code:
 
 ```C
 #define VSYSCALL_ADDR_vgettimeofday   0xffffffffff600000

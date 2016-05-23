@@ -53,7 +53,7 @@ Before we will consider how queued spinlocks and their [API](https://en.wikipedi
 Introduction to queued spinlocks
 -------------------------------------------------------------------------------
 
-Queued spinlocks is a [locking mechanism](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) in the Linux kernel which is replacement for the standard `spinlocks`. At least this is true for the [x86_64](https://en.wikipedia.org/wiki/X86-64) archutecutre. If we will look at the following kernel configuration file - [kernel/Kconfig.locks](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks), we will see following configuration entries:
+Queued spinlocks is a [locking mechanism](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) in the Linux kernel which is replacement for the standard `spinlocks`. At least this is true for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at the following kernel configuration file - [kernel/Kconfig.locks](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks), we will see following configuration entries:
 
 ```
 config ARCH_USE_QUEUED_SPINLOCKS
@@ -95,9 +95,9 @@ int unlock(lock)
 }
 ```
 
-The first thread will execute the `test_and_set` which will set the `lock` to `1`. When the second thread will call the `lock` function, it will spin in the `while` loop, until the first thread will not call the `unlock` function and the `lock` will be equal to `0`. This implementation is not very good for performance, because it has at least two problems. The first problem is that this implementation may be unfair and the thread from one processor may have long waiting time, even if it called the `lock` before other threads which are wating for free lock too. The second problem is that all threads which want to acquire a lock, must to execute many `atomic` operations like `test_and_set` on a variable which is in shared memory. This leads to the cache invalidation as the cache of the processor will store `lock=1`, but the value of the `lock` in memory may be `1` after a thread will release this lock.
+The first thread will execute the `test_and_set` which will set the `lock` to `1`. When the second thread will call the `lock` function, it will spin in the `while` loop, until the first thread will not call the `unlock` function and the `lock` will be equal to `0`. This implementation is not very good for performance, because it has at least two problems. The first problem is that this implementation may be unfair and the thread from one processor may have long waiting time, even if it called the `lock` before other threads which are waiting for free lock too. The second problem is that all threads which want to acquire a lock, must to execute many `atomic` operations like `test_and_set` on a variable which is in shared memory. This leads to the cache invalidation as the cache of the processor will store `lock=1`, but the value of the `lock` in memory may be `1` after a thread will release this lock.
 
-In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) we saw the second type of spinlock implementation - `ticket spinlock`. This approach solves the first problem and may guarantee order of threads which want to acquire a lock, but stil has a second problem.
+In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) we saw the second type of spinlock implementation - `ticket spinlock`. This approach solves the first problem and may guarantee order of threads which want to acquire a lock, but still has a second problem.
 
 The topic of this part is `queued spinlocks`. This approach may help to solve both of these problems. The `queued spinlocks` allows to each processor to use its own memory location to spin. The basic principle of a queue-based spinlock can best be understood by studying a classic queue-based spinlock implementation called the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) lock. Before we will look at implementation of the `queued spinlocks` in the Linux kernel, we will try to understand what is it `MCS` lock.
 
@@ -122,7 +122,7 @@ First thread tries to acquire a lock:
 ```
 +---------+     +----------------------------+
 |         |     |                            |
-|  Queue  |---->| First thread acqured lock  |
+|  Queue  |---->| First thread acquired lock |
 |         |     |                            |
 +---------+     +----------------------------+
 ```
@@ -145,7 +145,7 @@ void lock(...)
     lock.next = NULL;
     ancestor = put_lock_to_queue_and_return_ancestor(queue, lock);
 
-    // if we have ancestor, the lock already acqured and we
+    // if we have ancestor, the lock already acquired and we
     // need to wait until it will be released
     if (ancestor)
     {
@@ -227,13 +227,13 @@ struct mcs_spinlock {
 };
 ```
 
-from the [kernel/locking/mcs_spinlock.h](https://github.com/torvalds/linux/blob/master/kernel/locking/mcs_spinlock.h) header file. The first field represents a pointer to the next thread in the `queue`. The second field represents the state of the current thread in the `queue`, where `1` is `lock` already acqured and `0` in other way. And the last field of the `mcs_spinlock` structure represents nested locks. To understand what is it nested lock, imagine situation when a thread acqured lock, but was interrupted by the hardware [interrupt](https://en.wikipedia.org/wiki/Interrupt) and an [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler) tries to take a lock too. For this case, each processor has not just copy of the `mcs_spinlock` structure but array of these structures:
+from the [kernel/locking/mcs_spinlock.h](https://github.com/torvalds/linux/blob/master/kernel/locking/mcs_spinlock.h) header file. The first field represents a pointer to the next thread in the `queue`. The second field represents the state of the current thread in the `queue`, where `1` is `lock` already acquired and `0` in other way. And the last field of the `mcs_spinlock` structure represents nested locks. To understand what is it nested lock, imagine situation when a thread acquired lock, but was interrupted by the hardware [interrupt](https://en.wikipedia.org/wiki/Interrupt) and an [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler) tries to take a lock too. For this case, each processor has not just copy of the `mcs_spinlock` structure but array of these structures:
 
 ```C
 static DEFINE_PER_CPU_ALIGNED(struct mcs_spinlock, mcs_nodes[4]);
 ```
 
-This array allows to make four attempts of a lock acquisition for the four events in follwing contexts:
+This array allows to make four attempts of a lock acquisition for the four events in following contexts:
 
 * normal task context;
 * hardware interrupt context;
@@ -269,7 +269,7 @@ static __always_inline void queued_spin_lock(struct qspinlock *lock)
 }
 ```
 
-Looks pretty easy, except the `queued_spin_lock_slowpath` function. We may see that it takes only one parameter. In our case this parameter will represent `queued spinclock` which will be locked. Let's consider the situation that `queue` with locks is empty for now and the first thread wanted to acquire lock. As we may see the `queued_spin_lock` function starts from the call of the `atomic_cmpxchg_acquire` macro. As you may guess from the name of this macro, it executes atomic [CMPXCHG](http://x86.renejeschke.de/html/file_module_x86_id_41.html) instruction which compares value of the second parameter (zero in our case) with the value of the first parameter (current state of the given spinlock) and if they are identical, it stores value of the `_Q_LOCKED_VAL` in the memory location which is pointed by the `&lock->val` and return the initial value from this memory location.
+Looks pretty easy, except the `queued_spin_lock_slowpath` function. We may see that it takes only one parameter. In our case this parameter will represent `queued spinlock` which will be locked. Let's consider the situation that `queue` with locks is empty for now and the first thread wanted to acquire lock. As we may see the `queued_spin_lock` function starts from the call of the `atomic_cmpxchg_acquire` macro. As you may guess from the name of this macro, it executes atomic [CMPXCHG](http://x86.renejeschke.de/html/file_module_x86_id_41.html) instruction which compares value of the second parameter (zero in our case) with the value of the first parameter (current state of the given spinlock) and if they are identical, it stores value of the `_Q_LOCKED_VAL` in the memory location which is pointed by the `&lock->val` and return the initial value from this memory location.
 
 The `atomic_cmpxchg_acquire` macro is defined in the [include/linux/atomic.h](https://github.com/torvalds/linux/blob/master/include/linux/atomic.h) header file and expands to the call of the `atomic_cmpxchg` function:
 
@@ -296,7 +296,7 @@ This macro is defined in the [arch/x86/include/asm/cmpxchg.h](https://github.com
     __raw_cmpxchg((ptr), (old), (new), (size), LOCK_PREFIX)
 ```
 
-As we may see, the `cmpxchg` macro epxands to the `__cpmxchg` macro with the almost the same set of parameters. New additional parameter is the size of the atomic value. The `__cmpxchg` macro adds `LOCK_PREFIX` and expands to the `__raw_cmpxchg` macro where `LOCK_PREFIX` just [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction. After all, the `__raw_cmpxchg` does all job for us:
+As we may see, the `cmpxchg` macro expands to the `__cpmxchg` macro with the almost the same set of parameters. New additional parameter is the size of the atomic value. The `__cmpxchg` macro adds `LOCK_PREFIX` and expands to the `__raw_cmpxchg` macro where `LOCK_PREFIX` just [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction. After all, the `__raw_cmpxchg` does all job for us:
 
 ```C
 #define __raw_cmpxchg(ptr, old, new, size, lock) \
@@ -323,9 +323,9 @@ if (likely(val == 0))
     return;
 ```
 
-From this moment, our first thread will hold a lock. Notice that this behaviour differs from the behaviour which was described in the `MCS` algorithm. The thread acquired lock, but we didn't add it to the `queue`. As I already wrote the implementation of `queued spinlocks` concept is based on the `MCS` algorithm in the Linux kernel, but in the same time it has some difference like this for optimization purpose.
+From this moment, our first thread will hold a lock. Notice that this behavior differs from the behavior which was described in the `MCS` algorithm. The thread acquired lock, but we didn't add it to the `queue`. As I already wrote the implementation of `queued spinlocks` concept is based on the `MCS` algorithm in the Linux kernel, but in the same time it has some difference like this for optimization purpose.
 
-So the first thread have acquired lock and now let's consider that the second thread tried to acqure the same lock. The second thread will start from the same `queued_spin_lock` function, but the `lock->val` will contain `1` or `_Q_LOCKED_VAL`, because first thread already holds lock. So, in this case the `queued_spin_lock_slowpath` function will be called. The `queued_spin_lock_slowpath` function is defined in the [kernel/locking/qspinlock.c](https://github.com/torvalds/linux/blob/master/kernel/locking/qspinlock.c) source code file and starts from the following checks:
+So the first thread have acquired lock and now let's consider that the second thread tried to acquire the same lock. The second thread will start from the same `queued_spin_lock` function, but the `lock->val` will contain `1` or `_Q_LOCKED_VAL`, because first thread already holds lock. So, in this case the `queued_spin_lock_slowpath` function will be called. The `queued_spin_lock_slowpath` function is defined in the [kernel/locking/qspinlock.c](https://github.com/torvalds/linux/blob/master/kernel/locking/qspinlock.c) source code file and starts from the following checks:
 
 ```C
 void queued_spin_lock_slowpath(struct qspinlock *lock, u32 val)
@@ -351,7 +351,7 @@ if (val == _Q_PENDING_VAL) {
 }
 ```
 
-where `cpu_relax` is just [NOP](https://en.wikipedia.org/wiki/NOP) instruction. Above, we saw that the lock contains - `pending` bit. This bit represents thread which wanted to acquire lock, but it is already acquried by the other thread and in the same time `queue` is empty. In this case, the `pending` bit will be set and the `queue` will not be touched. This is done for optimization, because there are no need in unnecessary latency which will be caused by the cache invalidation in a touching of own `mcs_spinlock` array.
+where `cpu_relax` is just [NOP](https://en.wikipedia.org/wiki/NOP) instruction. Above, we saw that the lock contains - `pending` bit. This bit represents thread which wanted to acquire lock, but it is already acquired by the other thread and in the same time `queue` is empty. In this case, the `pending` bit will be set and the `queue` will not be touched. This is done for optimization, because there are no need in unnecessary latency which will be caused by the cache invalidation in a touching of own `mcs_spinlock` array.
 
 At the next step we enter into the following loop:
 
@@ -372,7 +372,7 @@ for (;;) {
 }
 ```
 
-The first `if` clause here checks that state of the lock (`val`) is in locked or pending state. This means that first thread already acquired lock, second thread tried to acquire lock too, but now it is in pending state. In this case we need to start to build queue. We will consider this situation little later. In our case we are first thread holds lock and the second thread tries to do it too. After this check we create new lock in a locked state and compare it with the state of the previous lock. As you remember, the `val` contains state of the `&lock->val` which after the second thread will call the `atomic_cmpxchg_acquire` macro will be equal to `1`. Both `new` and `val` values are equal so we set pending bit in the lock of the second thread. After this we need to check value of the `&lock->val` again, because the first thread may release lock before this moment. If the first thread did not released lock yet, the value of the `old` will be equal to the value of the `val` (because `atomic_cmpxchg_acquire` will return the value from the memory location which is pointed by the `lock->val` and now it is `1`) and we will exit from the loop. As we exited from this loop, we are waiting for the first thread until it will release lock, clear pending bit, acqure lock and return:
+The first `if` clause here checks that state of the lock (`val`) is in locked or pending state. This means that first thread already acquired lock, second thread tried to acquire lock too, but now it is in pending state. In this case we need to start to build queue. We will consider this situation little later. In our case we are first thread holds lock and the second thread tries to do it too. After this check we create new lock in a locked state and compare it with the state of the previous lock. As you remember, the `val` contains state of the `&lock->val` which after the second thread will call the `atomic_cmpxchg_acquire` macro will be equal to `1`. Both `new` and `val` values are equal so we set pending bit in the lock of the second thread. After this we need to check value of the `&lock->val` again, because the first thread may release lock before this moment. If the first thread did not released lock yet, the value of the `old` will be equal to the value of the `val` (because `atomic_cmpxchg_acquire` will return the value from the memory location which is pointed by the `lock->val` and now it is `1`) and we will exit from the loop. As we exited from this loop, we are waiting for the first thread until it will release lock, clear pending bit, acquire lock and return:
 
 ```C
 smp_cond_acquire(!(atomic_read(&lock->val) & _Q_LOCKED_MASK));
@@ -415,7 +415,7 @@ static __always_inline int queued_spin_trylock(struct qspinlock *lock)
 }
 ```
 
-If the lock was successfully acquired we jum to the `release` label to release a node of the `queue`:
+If the lock was successfully acquired we jump to the `release` label to release a node of the `queue`:
 
 ```C
 release:
@@ -428,7 +428,7 @@ because we no need in it anymore as lock is acquired. If the `queued_spin_tryloc
 old = xchg_tail(lock, tail);
 ```
 
-and retrive previous tail. The next step is to check that `queue` is not empty. In this case we need to link previous entry with the new:
+and retrieve previous tail. The next step is to check that `queue` is not empty. In this case we need to link previous entry with the new:
 
 ```C
 if (old & _Q_TAIL_MASK) {
