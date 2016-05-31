@@ -89,3 +89,4 @@ Thank you to all contributors:
 * [Roy Wellington Ⅳ](https://github.com/thanatos)
 * [Jonathan Rennison](https://github.com/JGRennison)
 * [Mack Stump](https://github.com/rmbreak)
+* [Pushpinder Singh[(https://github.com/PrinceDhaliwal)
