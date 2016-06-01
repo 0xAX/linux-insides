@@ -90,3 +90,4 @@ Thank you to all contributors:
 * [Jonathan Rennison](https://github.com/JGRennison)
 * [Mack Stump](https://github.com/rmbreak)
 * [Pushpinder Singh](https://github.com/PrinceDhaliwal)
+* [Xiaoqin Hu](https://github.com/huxq)
