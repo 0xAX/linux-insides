@@ -102,7 +102,7 @@ int  down_trylock(struct semaphore *sem);
 int  down_timeout(struct semaphore *sem, long jiffies);
 ```
 
-The first two functions: `down` and `up` are for acquiring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the value of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may returned to ruined state by [signal](https://en.wikipedia.org/wiki/Unix_signal).
+The first two functions: `down` and `up` are for acquiring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the `count` field of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may returned to ruined state by [signal](https://en.wikipedia.org/wiki/Unix_signal).
 
 The `down_killable` function does the same as the `down_interruptible` function, but set the `TASK_KILLABLE` flag for the current process. This means that the waiting process may be interrupted by the kill signal.
 
