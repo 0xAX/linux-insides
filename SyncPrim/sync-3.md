@@ -102,7 +102,7 @@ int  down_trylock(struct semaphore *sem);
 int  down_timeout(struct semaphore *sem, long jiffies);
 ```
 
-The first two functions: `down` and `up` are for acquiring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the value of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may returned to ruined state by [signal](https://en.wikipedia.org/wiki/Unix_signal).
+The first two functions: `down` and `up` are for acquiring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the `count` field of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may returned to ruined state by [signal](https://en.wikipedia.org/wiki/Unix_signal).
 
 The `down_killable` function does the same as the `down_interruptible` function, but set the `TASK_KILLABLE` flag for the current process. This means that the waiting process may be interrupted by the kill signal.
 
@@ -129,7 +129,7 @@ We may see the definition of the `flags` variable at the beginning of the `down`
 
 As you already may guess, the main work is done between the `raw_spin_lock_irqsave` and `raw_spin_unlock_irqrestore` macros in the `down` function. We compare the value of the `semaphore` counter with zero and if it is bigger than zero, we may decrement this counter. This means that we already acquired the lock. In other way counter is zero. This means that all available resources already finished and we need to wait to acquire this lock. As we may see, the `__down` function will be called in this case.
 
-The `__down` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c)) source code file and its implementation looks:
+The `__down` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file and its implementation looks:
 
 ```C
 static noinline void __sched __down(struct semaphore *sem)
@@ -138,7 +138,7 @@ static noinline void __sched __down(struct semaphore *sem)
 }
 ```
 
-The just calls the `__down_common` function with three parameters:
+The `__down` function just calls the `__down_common` function with three parameters:
 
 * `semaphore`;
 * `flag` - for the task;
