@@ -129,7 +129,7 @@ We may see the definition of the `flags` variable at the beginning of the `down`
 
 As you already may guess, the main work is done between the `raw_spin_lock_irqsave` and `raw_spin_unlock_irqrestore` macros in the `down` function. We compare the value of the `semaphore` counter with zero and if it is bigger than zero, we may decrement this counter. This means that we already acquired the lock. In other way counter is zero. This means that all available resources already finished and we need to wait to acquire this lock. As we may see, the `__down` function will be called in this case.
 
-The `__down` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c)) source code file and its implementation looks:
+The `__down` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file and its implementation looks:
 
 ```C
 static noinline void __sched __down(struct semaphore *sem)
@@ -138,7 +138,7 @@ static noinline void __sched __down(struct semaphore *sem)
 }
 ```
 
-The just calls the `__down_common` function with three parameters:
+The `__down` function just calls the `__down_common` function with three parameters:
 
 * `semaphore`;
 * `flag` - for the task;
