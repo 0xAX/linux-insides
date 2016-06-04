@@ -91,3 +91,4 @@ Thank you to all contributors:
 * [Mack Stump](https://github.com/rmbreak)
 * [Pushpinder Singh](https://github.com/PrinceDhaliwal)
 * [Xiaoqin Hu](https://github.com/huxq)
+* [Jeremy Cline](https://github.com/jeremycline)
