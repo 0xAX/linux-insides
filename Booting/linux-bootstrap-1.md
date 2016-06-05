@@ -465,7 +465,7 @@ Jump to main
 That's all, we have the stack and BSS so we can jump to the `main()` C function:
 
 ```assembly
-    calll main
+    call main
 ```
 
 The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). You can read about what this does in the next part.
