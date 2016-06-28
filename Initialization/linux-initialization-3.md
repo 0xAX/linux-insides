@@ -170,7 +170,7 @@ if (!boot_params.hdr.version)
 	copy_bootdata(__va(real_mode_data));
 ```
 
-and if it is zero we call `copy_bootdata` function again with the virtual address of the `real_mode_data` (read about about it's implementation).
+and if it is zero we call `copy_bootdata` function again with the virtual address of the `real_mode_data` (read about its implementation).
 
 In the next step we can see the call of the `reserve_ebda_region` function which defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head.c). This function reserves memory block for the `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area located in the top of conventional memory and contains data about ports, disk parameters and etc...
 
