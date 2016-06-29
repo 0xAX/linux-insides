@@ -68,7 +68,7 @@ memblock_free(ramdisk_image, ramdisk_end - ramdisk_image);
 
 After we relocated `initrd` ramdisk image, the next function is `vsmp_init` from the [arch/x86/kernel/vsmp_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vsmp_64.c). This function initializes support of the `ScaleMP vSMP`. As I already wrote in the previous parts, this chapter will not cover non-related `x86_64` initialization parts (for example as the current or `ACPI`, etc.). So we will skip implementation of this for now and will back to it in the part which cover techniques of parallel computing.
 
-The next function is `io_delay_init` from the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/io_delay.c). This function allows to override default default I/O delay `0x80` port. We already saw I/O delay in the [Last preparation before transition into protected mode](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html), now let's look on the `io_delay_init` implementation:
+The next function is `io_delay_init` from the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/io_delay.c). This function allows to override default I/O delay `0x80` port. We already saw I/O delay in the [Last preparation before transition into protected mode](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html), now let's look on the `io_delay_init` implementation:
 
 ```C
 void __init io_delay_init(void)
