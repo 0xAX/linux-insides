@@ -4,7 +4,7 @@ Kernel booting process. Part 4.
 Transition to 64-bit mode
 --------------------------------------------------------------------------------
 
-This is the fourth part of the `Kernel booting process` where we will see first steps in [protected mode](http://en.wikipedia.org/wiki/Protected_mode), like checking that cpu supports [long mode](http://en.wikipedia.org/wiki/Long_mode) and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions), [paging](http://en.wikipedia.org/wiki/Paging), initializes the page tables and at the end we will discus the transition to [long mode](https://en.wikipedia.org/wiki/Long_mode).
+This is the fourth part of the `Kernel booting process` where we will see first steps in [protected mode](http://en.wikipedia.org/wiki/Protected_mode), like checking that cpu supports [long mode](http://en.wikipedia.org/wiki/Long_mode) and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions), [paging](http://en.wikipedia.org/wiki/Paging), initializes the page tables and at the end we will discuss the transition to [long mode](https://en.wikipedia.org/wiki/Long_mode).
 
 **NOTE: there will be much assembly code in this part, so if you are not familiar with that, you might want to consult a book about it**
 

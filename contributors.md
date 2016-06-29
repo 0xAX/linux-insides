@@ -92,3 +92,4 @@ Thank you to all contributors:
 * [Pushpinder Singh](https://github.com/PrinceDhaliwal)
 * [Xiaoqin Hu](https://github.com/huxq)
 * [Jeremy Cline](https://github.com/jeremycline)
+* [Kavindra Nikhurpa](kavindra.nikhurpa@hotmail.com)
