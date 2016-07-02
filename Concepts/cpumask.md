@@ -4,7 +4,7 @@ CPU masks
 Introduction
 --------------------------------------------------------------------------------
 
-`Cpumasks` is a special way provided by the Linux kernel to store information about CPUs in the system. The relevant source code and header files which are contains API for `Cpumasks` manipulating:
+`Cpumasks` is a special way provided by the Linux kernel to store information about CPUs in the system. The relevant source code and header files which contains API for `Cpumasks` manipulation:
 
 * [include/linux/cpumask.h](https://github.com/torvalds/linux/blob/master/include/linux/cpumask.h)
 * [lib/cpumask.c](https://github.com/torvalds/linux/blob/master/lib/cpumask.c)
