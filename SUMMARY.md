@@ -47,7 +47,7 @@
     * [Semaphores](SyncPrim/sync-3.md)
     * [Mutex](SyncPrim/sync-4.md)
     * [Reader/Writer semaphores](SyncPrim/sync-5.md)
-    * [SeqLock]()
+    * [SeqLock](SyncPrim/sync-6.md)
     * [RCU]()
     * [Lockdep]()
 * [Memory management](mm/README.md)
