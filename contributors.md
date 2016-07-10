@@ -93,3 +93,4 @@ Thank you to all contributors:
 * [Xiaoqin Hu](https://github.com/huxq)
 * [Jeremy Cline](https://github.com/jeremycline)
 * [Kavindra Nikhurpa](https://github.com/kavi-nikhurpa)
+* [Connor Mullen](https://github.com/mullen3)
