@@ -36,7 +36,7 @@ do {
 } while (__retry__);
 ```
 
-Actualy the Linux kernel does not provide `get_seq_counter_val()` function. Here it is just a stub. Like a `__retry__` too. As I already wrote above, we will see actual [API](https://en.wikipedia.org/wiki/Application_programming_interface) for this in the next paragraph of this part.
+Actually the Linux kernel does not provide `get_seq_counter_val()` function. Here it is just a stub. Like a `__retry__` too. As I already wrote above, we will see actual [API](https://en.wikipedia.org/wiki/Application_programming_interface) for this in the next paragraph of this part.
 
 Ok, now we know what is it `seqlock` synchronization primitive and how it is represented the Linux kernel. In this case, we may go ahead and start to look at the [API](https://en.wikipedia.org/wiki/Application_programming_interface) which the Linux kernel provides for manipulation of synchronization primitives of this type.
 
