@@ -4,7 +4,7 @@ Linux kernel memory management Part 2.
 Fix-Mapped Addresses and ioremap
 --------------------------------------------------------------------------------
 
-`Fix-Mapped` addresses are a set of special compile-time addresses whose corresponding physical address do not have to be a linear address minus `__START_KERNEL_map`. Each fix-mapped address maps one page frame and the kernel uses them as pointers that never change their address. That is the main point of these addresses. As the comment says: `to have a constant address at compile time, but to set the physical address only in the boot process`. You can remember that in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html), we already set the `level2_fixmap_pgt`:
+`Fix-Mapped` addresses are a set of special compile-time addresses whose corresponding physical addresses do not have to be a linear address minus `__START_KERNEL_map`. Each fix-mapped address maps one page frame and the kernel uses them as pointers that never change their address. That is the main point of these addresses. As the comment says: `to have a constant address at compile time, but to set the physical address only in the boot process`. You can remember that in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html), we already set the `level2_fixmap_pgt`:
 
 ```assembly
 NEXT_PAGE(level2_fixmap_pgt)
@@ -21,8 +21,8 @@ As you can see `level2_fixmap_pgt` is right after the `level2_kernel_pgt` which 
 ```
        +-----------+-----------------+---------------+------------------+
        |           |                 |               |                  |
-	   |kernel text|      kernel     |               |    vsyscalls     |
-	   | mapping   |       text      |    Modules    |    fix-mapped    |
+       |kernel text|      kernel     |               |    vsyscalls     |
+       | mapping   |       text      |    Modules    |    fix-mapped    |
        |from phys 0|       data      |               |    addresses     |
        |           |                 |               |                  |
        +-----------+-----------------+---------------+------------------+
@@ -36,9 +36,9 @@ Base virtual address and size of the `fix-mapped` area are presented by the two 
 #define FIXADDR_START		(FIXADDR_TOP - FIXADDR_SIZE)
 ```
 
-Here `__end_of_permanent_fixed_addresses` is an element of the `fixed_addresses` enum and as I wrote above: Every fix-mapped address is represented by an integer index which is defined in the `fixed_addresses`. `PAGE_SHIFT` determines size of a page. For example size of the one page we can get with the `1 << PAGE_SHIFT`. In our case we need to get the size of the fix-mapped area, but not only of one page, that's why we are using `__end_of_permanent_fixed_addresses` for getting the size of the fix-mapped area. In my case it's a little more than `536` kilobytes. In your case it might be a different number, because the size depends on amount of the fix-mapped addresses which are depends on your kernel's configuration.
+Here `__end_of_permanent_fixed_addresses` is an element of the `fixed_addresses` enum and as I wrote above: Every fix-mapped address is represented by an integer index which is defined in the `fixed_addresses`. `PAGE_SHIFT` determines the size of a page. For example size of the one page we can get with the `1 << PAGE_SHIFT`. In our case we need to get the size of the fix-mapped area, but not only of one page, that's why we are using `__end_of_permanent_fixed_addresses` for getting the size of the fix-mapped area. In my case it's a little more than `536` kilobytes. In your case it might be a different number, because the size depends on amount of the fix-mapped addresses which are depends on your kernel's configuration.
 
-The second `FIXADDR_START` macro just subtracts fix-mapped area size from the last address of the fix-mapped area to get its base virtual address. `FIXADDR_TOP` is a rounded up address from the base address of the [vsyscall](https://lwn.net/Articles/446528/) space:
+The second `FIXADDR_START` macro just subtracts the fix-mapped area size from the last address of the fix-mapped area to get its base virtual address. `FIXADDR_TOP` is a rounded up address from the base address of the [vsyscall](https://lwn.net/Articles/446528/) space:
 
 ```C
 #define FIXADDR_TOP     (round_up(VSYSCALL_ADDR + PAGE_SIZE, 1<<PMD_SHIFT) - PAGE_SIZE)
@@ -70,7 +70,7 @@ static inline unsigned long virt_to_fix(const unsigned long vaddr)
 }
 ```
 
-`virt_to_fix` takes virtual address, checks that this address is between `FIXADDR_START` and `FIXADDR_TOP` and calls `__virt_to_fix` macro which implemented as:
+`virt_to_fix` takes a virtual address, checks that this address is between `FIXADDR_START` and `FIXADDR_TOP` and calls the `__virt_to_fix` macro which implemented as:
 
 ```C
 #define __virt_to_fix(x)        ((FIXADDR_TOP - ((x)&PAGE_MASK)) >> PAGE_SHIFT)
@@ -78,17 +78,17 @@ static inline unsigned long virt_to_fix(const unsigned long vaddr)
 
 A PFN is simply an index within physical memory that is counted in page-sized units. PFN for a physical address could be trivially defined as (page_phys_addr >> PAGE_SHIFT);
 
-`__virt_to_fix` clears the first 12 bits in the given address, subtracts it from the last address the of `fix-mapped` area (`FIXADDR_TOP`) and shifts the result right on `PAGE_SHIFT` which is `12`. Let me explain how it works. As I already wrote we will clear the first 12 bits in the given address with `x & PAGE_MASK`. As we subtract this from the `FIXADDR_TOP`, we will get the last 12 bits of the `FIXADDR_TOP` which are present. We know that the first 12 bits of the virtual address represent the offset in the page frame. With the shifting it on `PAGE_SHIFT` we will get `Page frame number` which is just all bits in a virtual address besides the first 12 offset bits. `Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) in the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. We use `fix-mapped` area in the early `ioremap` initialization. Let's look on it and try to understand what is `ioremap`, how it is implemented in the kernel and how it is related to the `fix-mapped` addresses.
+`__virt_to_fix` clears the first 12 bits in the given address, subtracts it from the last address the of `fix-mapped` area (`FIXADDR_TOP`) and shifts the result right on `PAGE_SHIFT` which is `12`. Let me explain how it works. As I already wrote we will clear the first 12 bits in the given address with `x & PAGE_MASK`. As we subtract this from the `FIXADDR_TOP`, we will get the last 12 bits of the `FIXADDR_TOP` which are present. We know that the first 12 bits of the virtual address represent the offset in the page frame. With the shifting it on `PAGE_SHIFT` we will get `Page frame number` which is just all bits in a virtual address besides the first 12 offset bits. `Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) in the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about of the linux kernel initialization. We use `fix-mapped` area in the early `ioremap` initialization. Let's look at it more closely and try to understand what `ioremap` is, how it is implemented in the kernel and how it is related to the `fix-mapped` addresses.
 
 ioremap
 --------------------------------------------------------------------------------
 
-Linux kernel provides many different primitives to manage memory. For this moment we will touch `I/O memory`. Every device is controlled by reading/writing from/to its registers. For example a driver can turn off/on a device by writing to its registers or get the state of a device by reading from its registers. Besides registers, many devices have buffers where a driver can write something or read from there. As we know for this moment there are two ways to access device's registers and data buffers:
+The Linux kernel provides many different primitives to manage memory. For this moment we will touch `I/O memory`. Every device is controlled by reading/writing from/to its registers. For example a driver can turn off/on a device by writing to its registers or get the state of a device by reading from its registers. Besides registers, many devices have buffers where a driver can write something or read from there. As we know for this moment there are two ways to access device's registers and data buffers:
 
 * through the I/O ports;
 * mapping of the all registers to the memory address space;
 
-In the first case every control register of a device has a number of input and output port. And driver of a device can read from a port and write to it with two `in` and `out` instructions which we already saw. If you want to know about currently registered port regions, you can know they by accessing of `/proc/ioports`:
+In the first case every control register of a device has a number of input and output port. A device driver can read from a port and write to it with two `in` and `out` instructions which we already saw. If you want to know about currently registered port regions, you can learn about them by accessing `/proc/ioports`:
 
 ```
 $ cat /proc/ioports
@@ -119,7 +119,7 @@ $ cat /proc/ioports
 ...
 ```
 
-`/proc/ioporst` provides information about what driver used address of a `I/O` ports region. All of these memory regions, for example `0000-0cf7`, were claimed with the `request_region` function from the [include/linux/ioport.h](https://github.com/torvalds/linux/blob/master/include/linux/ioport.h). Actually `request_region` is a macro which defied as:
+`/proc/ioports` provides information about which driver uses which address of a `I/O` port region. All of these memory regions, for example `0000-0cf7`, were claimed with the `request_region` function from the [include/linux/ioport.h](https://github.com/torvalds/linux/blob/master/include/linux/ioport.h). Actually `request_region` is a macro which is defined as:
 
 ```C
 #define request_region(start,n,name)   __request_region(&ioport_resource, (start), (n), (name), 0)
@@ -131,7 +131,7 @@ As we can see it takes three parameters:
 * `n`     -  length of region;
 * `name`  -  name of requester.
 
-`request_region` allocates `I/O` port region. Very often `check_region` function is called before the `request_region` to check that the given address range is available and `release_region` to release memory region. `request_region` returns pointer to the `resource` structure. `resource` structure presents abstraction for a tree-like subset of system resources. We already saw `resource` structure in the firth part about kernel [initialization](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) process and it looks as:
+`request_region` allocates an `I/O` port region. Very often the `check_region` function is called before the `request_region` to check that the given address range is available and the `release_region` function to release the memory region. `request_region` returns a pointer to the `resource` structure. The `resource` structure represents an abstraction for a tree-like subset of system resources. We already saw the `resource` structure in the fifth part of the kernel [initialization](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) process and it looks as follows:
 
 ```C
 struct resource {
@@ -143,7 +143,7 @@ struct resource {
 };
 ```
 
-and contains start and end addresses of the resource, name, etc. Every `resource` structure contains pointers to the `parent`, `sibling` and `child` resources. As it has parent and childs, it means that every subset of resources has root `resource` structure. For example, for `I/O` ports it is `ioport_resource` structure:
+and contains start and end addresses of the resource, the name, etc. Every `resource` structure contains pointers to the `parent`, `sibling` and `child` resources. As it has a parent and a childs, it means that every subset of resources has root `resource` structure. For example, for `I/O` ports it is the `ioport_resource` structure:
 
 ```C
 struct resource ioport_resource = {
@@ -155,7 +155,7 @@ struct resource ioport_resource = {
 EXPORT_SYMBOL(ioport_resource);
 ```
 
-Or for `iomem`, it is `iomem_resource` structure:
+Or for `iomem`, it is the `iomem_resource` structure:
 
 ```C
 struct resource iomem_resource = {
@@ -166,13 +166,13 @@ struct resource iomem_resource = {
 };
 ```
 
-As I wrote about `request_regions` is used for registering of I/O port region and this macro is used in many [places](http://lxr.free-electrons.com/ident?i=request_region) in the kernel. For example let's look at [drivers/char/rtc.c](https://github.com/torvalds/linux/blob/master/char/rtc.c). This source code file provides [Real Time Clock](http://en.wikipedia.org/wiki/Real-time_clock) interface in the linux kernel. As every kernel module, `rtc` module contains `module_init` definition:
+As I have mentioned before, `request_regions` is used to register I/O port regions and this macro is used in many [places](http://lxr.free-electrons.com/ident?i=request_region) in the kernel. For example let's look at [drivers/char/rtc.c](https://github.com/torvalds/linux/blob/master/char/rtc.c). This source code file provides the [Real Time Clock](http://en.wikipedia.org/wiki/Real-time_clock) interface in the linux kernel. As every kernel module, `rtc` module contains `module_init` definition:
 
 ```C
 module_init(rtc_init);
 ```
 
-where `rtc_init` is `rtc` initialization function. This function is defined in the same `rtc.c` source code file. In the `rtc_init` function we can see a couple calls of the `rtc_request_region` functions, which wrap `request_region` for example:
+where `rtc_init` is the `rtc` initialization function. This function is defined in the same `rtc.c` source code file. In the `rtc_init` function we can see a couple of calls to the `rtc_request_region` functions, which wrap `request_region` for example:
 
 ```C
 r = rtc_request_region(RTC_IO_EXTENT);
@@ -184,25 +184,25 @@ where `rtc_request_region` calls:
 r = request_region(RTC_PORT(0), size, "rtc");
 ```
 
-Here `RTC_IO_EXTENT` is a size of memory region and it is `0x8`, `"rtc"` is a name of region and `RTC_PORT` is:
+Here `RTC_IO_EXTENT` is the size of the memory region and it is `0x8`, `"rtc"` is the name of the region and `RTC_PORT` is:
 
 ```C
 #define RTC_PORT(x)     (0x70 + (x))
 ```
 
-So with the `request_region(RTC_PORT(0), size, "rtc")` we register memory region, started at `0x70` and with size `0x8`. Let's look on the `/proc/ioports`:
+So with the `request_region(RTC_PORT(0), size, "rtc")` we register a memory region that starts at `0x70` and and has a size of `0x8`. Let's look at `/proc/ioports`:
 
 ```
 ~$ sudo cat /proc/ioports | grep rtc
 0070-0077 : rtc0
 ```
 
-So, we got it! Ok, it was ports. The second way is use of `I/O` memory. As I wrote above this way is mapping of control registers and memory of a device to the memory address space. `I/O` memory is a set of contiguous addresses which are provided by a device to CPU through a bus. All memory-mapped I/O addresses are not used by the kernel directly. There is a special `ioremap` function which allows us to covert the physical address on a bus to the kernel virtual address or in another words `ioremap` maps I/O physical memory region to access it from the kernel. The `ioremap` function takes two parameters:
+So, we got it! Ok, that was it for the I/O ports. The second way to communicate with drivers is through the use of `I/O` memory. As I have mentioned above this works by mapping the control registers and the memory of a device to the memory address space. `I/O` memory is a set of contiguous addresses which are provided by a device to the CPU through a bus. None of the memory-mapped I/O addresses are used by the kernel directly. There is a special `ioremap` function which allows us to convert the physical address on a bus to a kernel virtual address. In other words, `ioremap` maps I/O physical memory regions to make them accessible from the kernel. The `ioremap` function takes two parameters:
 
 * start of the memory region;
 * size of the memory region;
 
-I/O memory mapping API provides functions for checking, requesting and release of a memory region as I/O ports API. There are three functions for it:
+The I/O memory mapping API provides functions to check, request and release memory regions as I/O memory. There are three functions for that:
 
 * `request_mem_region`
 * `release_mem_region`
@@ -238,7 +238,7 @@ e0000000-feafffff : PCI Bus 0000:00
 ...
 ```
 
-Part of these addresses is from the call of the `e820_reserve_resources` function. We can find call of this function in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) and the function itself is defined in the [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/e820.c). `e820_reserve_resources` goes through the [e820](http://en.wikipedia.org/wiki/E820) map and inserts memory regions to the root `iomem` resource structure. All `e820` memory regions which will be inserted to the `iomem` resource have following types:
+Part of these addresses are from the call of the `e820_reserve_resources` function. We can find a call to this function in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) and the function itself is defined in [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/e820.c). `e820_reserve_resources` goes through the [e820](http://en.wikipedia.org/wiki/E820) map and inserts memory regions into the root `iomem` resource structure. All `e820` memory regions which are inserted into the `iomem` resource have the following types:
 
 ```C
 static inline const char *e820_type_to_string(int e820_type)
@@ -256,13 +256,13 @@ static inline const char *e820_type_to_string(int e820_type)
 
 and we can see them in the `/proc/iomem` (read above).
 
-Now let's try to understand how `ioremap` works. We already know a little about `ioremap`, we saw it in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. If you have read this part, you can remember the call of the `early_ioremap_init` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c). Initialization of the `ioremap` is split inn two parts: there is the early part which we can use before the normal `ioremap` is available and the normal `ioremap` which is available after `vmalloc` initialization and call of the `paging_init`. We do not know anything about `vmalloc` for now, so let's consider early initialization of the `ioremap`. First of all `early_ioremap_init` checks that `fixmap` is aligned on page middle directory boundary:
+Now let's try to understand how `ioremap` works. We already know a little about `ioremap`, we saw it in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. If you have read this part, you can remember the call of the `early_ioremap_init` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c). Initialization of the `ioremap` is split into two parts: there is the early part which we can use before the normal `ioremap` is available and the normal `ioremap` which is available after `vmalloc` initialization and the call of `paging_init`. We do not know anything about `vmalloc` for now, so let's consider early initialization of the `ioremap`. First of all `early_ioremap_init` checks that `fixmap` is aligned on page middle directory boundary:
 
 ```C
 BUILD_BUG_ON((fix_to_virt(0) + PAGE_SIZE) & ((1 << PMD_SHIFT) - 1));
 ```
 
-more about `BUILD_BUG_ON` you can read in the first part about [Linux Kernel initialization](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html). So `BUILD_BUG_ON` macro raises compilation error if the given expression is true. In the next step after this check, we can see call of the `early_ioremap_setup` function from the [mm/early_ioremap.c](https://github.com/torvalds/linux/blob/master/mm/early_ioremap.c). This function presents generic initialization of the `ioremap`. `early_ioremap_setup` function fills the `slot_virt` array with the virtual addresses of the early fixmaps. All early fixmaps are after `__end_of_permanent_fixed_addresses` in memory. They are stats from the `FIX_BITMAP_BEGIN` (top) and ends with `FIX_BITMAP_END` (down). Actually there are `512` temporary boot-time mappings, used by early `ioremap`:
+more about `BUILD_BUG_ON` you can read in the first part about [Linux Kernel initialization](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html). So `BUILD_BUG_ON` macro raises a compilation error if the given expression is true. In the next step after this check, we can see call of the `early_ioremap_setup` function from the [mm/early_ioremap.c](https://github.com/torvalds/linux/blob/master/mm/early_ioremap.c). This function presents generic initialization of the `ioremap`. `early_ioremap_setup` function fills the `slot_virt` array with the virtual addresses of the early fixmaps. All early fixmaps are after `__end_of_permanent_fixed_addresses` in memory. They start at `FIX_BITMAP_BEGIN` (top) and end with `FIX_BITMAP_END` (down). Actually there are `512` temporary boot-time mappings, used by early `ioremap`:
 
 ```
 #define NR_FIX_BTMAPS		64
@@ -294,7 +294,7 @@ static unsigned long prev_size[FIX_BTMAPS_SLOTS] __initdata;
 static unsigned long slot_virt[FIX_BTMAPS_SLOTS] __initdata;
 ```
 
-`slot_virt` contains virtual addresses of the `fix-mapped` areas, `prev_map` array contains addresses of the early ioremap areas. Note that I wrote above: `Actually there are 512 temporary boot-time mappings, used by early ioremap` and you can see that all arrays defined with the `__initdata` attribute which means that this memory will be released after kernel initialization process. After `early_ioremap_setup` finished its work, we're getting page middle directory where early ioremap begins with the `early_ioremap_pmd` function which just gets the base address of the page global directory and calculates the page middle directory for the given address:
+`slot_virt` contains the virtual addresses of the `fix-mapped` areas, `prev_map` array contains addresses of the early ioremap areas. Note that I wrote above: `Actually there are 512 temporary boot-time mappings, used by early ioremap` and you can see that all arrays are defined with the `__initdata` attribute which means that this memory will be released after the kernel initialization process. After `early_ioremap_setup` has finished its work, we're getting page middle directory where early ioremap begins with the `early_ioremap_pmd` function which just gets the base address of the page global directory and calculates the page middle directory for the given address:
 
 ```C
 static inline pmd_t * __init early_ioremap_pmd(unsigned long addr)
@@ -307,7 +307,7 @@ static inline pmd_t * __init early_ioremap_pmd(unsigned long addr)
 }
 ```
 
-After this we fills `bm_pte` (early ioremap page table entries) with zeros and call the `pmd_populate_kernel` function:
+After this we fill `bm_pte` (early ioremap page table entries) with zeros and call the `pmd_populate_kernel` function:
 
 ```C
 pmd = early_ioremap_pmd(fix_to_virt(FIX_BTMAP_BEGIN));
@@ -325,7 +325,7 @@ pmd_populate_kernel(&init_mm, pmd, bm_pte);
 static pte_t bm_pte[PAGE_SIZE/sizeof(pte_t)] __page_aligned_bss;
 ```
 
-The `pmd_popularte_kernel` function defined in the [arch/x86/include/asm/pgalloc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/pgalloc.) and populates given page middle directory (`pmd`) with the given page table entries (`bm_pte`):
+The `pmd_populate_kernel` function is defined in the [arch/x86/include/asm/pgalloc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/pgalloc.) and populates the page middle directory (`pmd`) provided as an argument with the given page table entries (`bm_pte`):
 
 ```C
 static inline void pmd_populate_kernel(struct mm_struct *mm,
@@ -356,18 +356,18 @@ That's all. Early `ioremap` is ready to use. There are a couple of checks in the
 Use of early ioremap
 --------------------------------------------------------------------------------
 
-As early `ioremap` is setup, we can use it. It provides two functions:
+As soon as early `ioremap` has been setup successfully, we can use it. It provides two functions:
 
 * early_ioremap
 * early_iounmap
 
-for mapping/unmapping of IO physical address to virtual address. Both functions depends on `CONFIG_MMU` configuration option. [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit) is a special block of memory management. Main purpose of this block is translation physical addresses to virtual addresses. Technically memory management unit knows about high-level page table address (`pgd`) from the `cr3` control register. If `CONFIG_MMU` options is set to `n`, `early_ioremap` just returns the given physical address and `early_iounmap` does not nothing. In other way, if `CONFIG_MMU` option is set to `y`, `early_ioremap` calls `__early_ioremap` which takes three parameters:
+for mapping/unmapping of I/O physical address to virtual address. Both functions depend on the `CONFIG_MMU` configuration option. [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit) is a special block of memory management. The main purpose of this block is the translation of physical addresses to virtual addresses. The memory management unit knows about the high-level page table addresses (`pgd`) from the `cr3` control register. If `CONFIG_MMU` options is set to `n`, `early_ioremap` just returns the given physical address and `early_iounmap` does nothing. If `CONFIG_MMU` option is set to `y`, `early_ioremap` calls `__early_ioremap` which takes three parameters:
 
 * `phys_addr` - base physical address of the `I/O` memory region to map on virtual addresses;
 * `size`      - size of the `I/O` memory region;
 * `prot`      - page table entry bits.
 
-First of all in the `__early_ioremap`, we goes through the all early ioremap fixmap slots and check first free are in the `prev_map` array and remember it's number in the `slot` variable and set up size as we found it:
+First of all in the `__early_ioremap`, we go through all early ioremap fixmap slots and search for the first free one in the `prev_map` array. When we found it we remember its number in the `slot` variable and set up size:
 
 ```C
 slot = -1;
@@ -406,7 +406,7 @@ nrpages = size >> PAGE_SHIFT;
 idx = FIX_BTMAP_BEGIN - NR_FIX_BTMAPS*slot;
 ```
 
-Now we can fill `fix-mapped` area with the given physical addresses. Every iteration in the loop, we call `__early_set_fixmap` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c), increase given physical address on page size which is `4096` bytes and update `addresses` index and number of pages: 
+Now we can fill `fix-mapped` area with the given physical addresses. On every iteration in the loop, we call the `__early_set_fixmap` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c), increase the given physical address by the page size which is `4096` bytes and update the `addresses` index and the number of pages:
 
 ```C
 while (nrpages > 0) {
@@ -423,7 +423,7 @@ The `__early_set_fixmap` function gets the page table entry (stored in the `bm_p
 pte = early_ioremap_pte(addr);
 ```
 
-In the next step of the `early_ioremap_pte` we check the given page flags with the `pgprot_val` macro and calls `set_pte` or `pte_clear` depends on it:
+In the next step of `early_ioremap_pte` we check the given page flags with the `pgprot_val` macro and call `set_pte` or `pte_clear` depending on the flags given:
 
 ```C
 if (pgprot_val(flags))
@@ -438,13 +438,13 @@ As you can see above, we passed `FIXMAP_PAGE_IO` as flags to the `__early_iorema
 (__PAGE_KERNEL_EXEC | _PAGE_NX)
 ```
 
-flags, so we call `set_pte` function for setting page table entry which works in the same manner as `set_pmd` but for PTEs (read above about it). As we set all `PTEs` in the loop, we can see the call of the `__flush_tlb_one` function:
+flags, so we call `set_pte` function to set the page table entry which works in the same manner as `set_pmd` but for PTEs (read above about it). As we have set all `PTEs` in the loop, we can now take a look at the call of the `__flush_tlb_one` function:
 
 ```C
 __flush_tlb_one(addr);
 ```
 
-This function is defined in the [arch/x86/include/asm/tlbflush.h](https://github.com/torvalds/linux/blob/master) and calls `__flush_tlb_single` or `__flush_tlb` depends on value of the `cpu_has_invlpg`:
+This function is defined in [arch/x86/include/asm/tlbflush.h](https://github.com/torvalds/linux/blob/master) and calls `__flush_tlb_single` or `__flush_tlb` depending on the value of `cpu_has_invlpg`:
 
 ```C
 static inline void __flush_tlb_one(unsigned long addr)
@@ -456,13 +456,13 @@ static inline void __flush_tlb_one(unsigned long addr)
 }
 ```
 
-`__flush_tlb_one` function invalidates given address in the [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer). As you just saw we updated paging structure, but `TLB` is not informed of the changes, that's why we need to do it manually. There are two ways to do it. First is update `cr3` control register and `__flush_tlb` function does this:
+The `__flush_tlb_one` function invalidates the given address in the [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer). As you just saw we updated the paging structure, but `TLB` is not informed of the changes, that's why we need to do it manually. There are two ways to do it. The first is to update the `cr3` control register and the `__flush_tlb` function does this:
 
 ```C
 native_write_cr3(native_read_cr3());
 ```
 
-The second method is to use `invlpg` instruction to invalidates `TLB` entry. Let's look on `__flush_tlb_one` implementation. As you can see first of all it checks `cpu_has_invlpg` which defined as:
+The second method is to use the `invlpg` instruction to invalidate the `TLB` entry. Let's look at the `__flush_tlb_one` implementation. As you can see, first of all the function checks `cpu_has_invlpg` which is defined as:
 
 ```C
 #if defined(CONFIG_X86_INVLPG) || defined(CONFIG_X86_64)
@@ -472,7 +472,7 @@ The second method is to use `invlpg` instruction to invalidates `TLB` entry. Let
 #endif
 ```
 
-If a CPU support `invlpg` instruction, we call the `__flush_tlb_single` macro which expands to the call of the `__native_flush_tlb_single`:
+If a CPU supports the `invlpg` instruction, we call the `__flush_tlb_single` macro which expands to the call of `__native_flush_tlb_single`:
 
 ```C
 static inline void __native_flush_tlb_single(unsigned long addr)
@@ -481,7 +481,7 @@ static inline void __native_flush_tlb_single(unsigned long addr)
 }
 ```
 
-or call `__flush_tlb` which just updates `cr3` register as we saw it above. After this step execution of the `__early_set_fixmap` function is finished and we can back to the `__early_ioremap` implementation. As we have set fixmap area for the given address, we need to save the base virtual address of the I/O Re-mapped area in the `prev_map` with the `slot` index:
+or call `__flush_tlb` which just updates the `cr3` register as we have seen. After this step execution of the `__early_set_fixmap` function is finished and we can go back to the `__early_ioremap` implementation. When we have set up the fixmap area for the given address, we need to save the base virtual address of the I/O Re-mapped area in the `prev_map` using the `slot` index:
 
 ```C
 prev_map[slot] = (void __iomem *)(offset + slot_virt[slot]);
@@ -489,13 +489,13 @@ prev_map[slot] = (void __iomem *)(offset + slot_virt[slot]);
 
 and return it.
 
-The second function is - `early_iounmap` - unmaps an `I/O` memory region. This function takes two parameters: base address and size of a `I/O` region and generally looks very similar on `early_ioremap`. It also goes through fixmap slots and looks for slot with the given address. After this it gets the index of the fixmap slot and calls `__late_clear_fixmap` or `__early_set_fixmap` depends on `after_paging_init` value. It calls `__early_set_fixmap` with on difference then it does `early_ioremap`: it passes `zero` as physical address. And in the end it sets address of the I/O memory region to `NULL`:
+The second function, `early_iounmap`, unmaps an `I/O` memory region. This function takes two parameters: base address and size of a `I/O` region and generally looks very similar to `early_ioremap`. It also goes through fixmap slots and looks for a slot with the given address. After that, it gets the index of the fixmap slot and calls `__late_clear_fixmap` or `__early_set_fixmap` depending on the `after_paging_init` value. It calls `__early_set_fixmap` with one difference to how `early_ioremap` does it: `early_iounmap` passes `zero` as physical address. And in the end it sets the address of the I/O memory region to `NULL`:
 
 ```C
 prev_map[slot] = NULL;
 ```
 
-That's all about `fixmaps` and `ioremap`. Of course this part does not cover full features of the `ioremap`, it was only early ioremap, but there is also normal ioremap. But we need to know more things before it.
+That's all about `fixmaps` and `ioremap`. Of course this part does not cover all features of `ioremap`, only early ioremap but there is also normal ioremap. But we need to know more things before we study that in more detail.
 
 So, this is the end!
 
