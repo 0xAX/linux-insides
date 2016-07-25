@@ -55,9 +55,12 @@ struct memblock_region {
 `memblock_region` provides the base address and size of the memory region as well as a flags field which can have the following values:
 
 ```C
-#define MEMBLOCK_ALLOC_ANYWHERE	(~(phys_addr_t)0)
-#define MEMBLOCK_ALLOC_ACCESSIBLE	0
-#define MEMBLOCK_HOTPLUG	0x1
+enum {
+    MEMBLOCK_NONE	= 0x0,	/* No special request */
+    MEMBLOCK_HOTPLUG	= 0x1,	/* hotpluggable region */
+    MEMBLOCK_MIRROR	= 0x2,	/* mirrored region */
+    MEMBLOCK_NOMAP	= 0x4,	/* don't add to kernel direct mapping */
+};
 ```
 
 Also `memblock_region` provides an integer field - [numa](http://en.wikipedia.org/wiki/Non-uniform_memory_access) node selector, if the `CONFIG_HAVE_MEMBLOCK_NODE_MAP` configuration option is enabled.
