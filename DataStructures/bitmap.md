@@ -180,7 +180,7 @@ static inline void __clear_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-Yes. As we see, it takes the same set of arguments and contains very similar block of inline assembler. It just uses the [btr](http://x86.renejeschke.de/html/file_module_x86_id_24.html) instruction instead of `bts`. As we can understand form the function's name, it clears a given bit by the given address. The `btr` instruction acts like `btr`. This instruction also selects a given bit which is specified in the first operand, stores its value in the `CF` flag register and clears this bit in the given bit array which is specified with second operand.
+Yes. As we see, it takes the same set of arguments and contains very similar block of inline assembler. It just uses the [btr](http://x86.renejeschke.de/html/file_module_x86_id_24.html) instruction instead of `bts`. As we can understand form the function's name, it clears a given bit by the given address. The `btr` instruction acts like `bts`. This instruction also selects a given bit which is specified in the first operand, stores its value in the `CF` flag register and clears this bit in the given bit array which is specified with second operand.
 
 The atomic variant of the `__clear_bit` is `clear_bit`:
 
@@ -283,7 +283,7 @@ static inline void change_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-It is similar on `set_bit` function, but also has two differences. The first difference is `xor` operation instead of `or` and the second is `bts` instead of `bts`.
+It is similar on `set_bit` function, but also has two differences. The first difference is `xor` operation instead of `or` and the second is `btc` instead of `bts`.
 
 For this moment we know the most important architecture-specific operations with bit arrays. Time to look at generic bitmap API.
 
