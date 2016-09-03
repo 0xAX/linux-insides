@@ -227,9 +227,9 @@ boot_heap:
 
 where the `BOOT_HEAP_SIZE` is macro which expands to `0x8000` (`0x400000` in a case of `bzip2` kernel) and represents the size of the heap.
 
-After heap pointers initialization, the next step is the call of the `choose_kernel_location` function from [arch/x86/boot/compressed/aslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/aslr.c#L298) source code file. As we can guess from the function name, it chooses the memory location where the kernel image will be decompressed. It may look weird that we need to find or even `choose` location where to decompress the compressed kernel image, but the Linux kernel supports [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) which allows decompression of the kernel into a random address, for security reasons. Let's open the [arch/x86/boot/compressed/aslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/aslr.c#L298) source code file and look at `choose_kernel_location`.
+After heap pointers initialization, the next step is the call of the `choose_random_location` function from [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c#L425) source code file. As we can guess from the function name, it chooses the memory location where the kernel image will be decompressed. It may look weird that we need to find or even `choose` location where to decompress the compressed kernel image, but the Linux kernel supports [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) which allows decompression of the kernel into a random address, for security reasons. Let's open the [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c#L425) source code file and look at `choose_random_location`.
 
-First, `choose_kernel_location` tries to find the `kaslr` option in the Linux kernel command line if `CONFIG_HIBERNATION` is set, and `nokaslr` otherwise:
+First, `choose_random_location` tries to find the `kaslr` option in the Linux kernel command line if `CONFIG_HIBERNATION` is set, and `nokaslr` otherwise:
 
 ```C
 #ifdef CONFIG_HIBERNATION
@@ -252,7 +252,7 @@ out:
 	return (unsigned char *)choice;
 ```
 
-which just returns the `output` parameter which we passed to the `choose_kernel_location`, unchanged. If the `CONFIG_HIBERNATION` kernel configuration option is disabled and the `nokaslr` option is in the kernel command line, we jump to `out` again.
+which just returns the `output` parameter which we passed to the `choose_random_location`, unchanged. If the `CONFIG_HIBERNATION` kernel configuration option is disabled and the `nokaslr` option is in the kernel command line, we jump to `out` again.
 
 For now, let's assume the kernel was configured with randomization enabled and try to understand what `kASLR` is. We can find information about it in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt):
 
@@ -268,7 +268,7 @@ hibernation will be disabled.
 
 It means that we can pass the `kaslr` option to the kernel's command line and get a random address for the decompressed kernel (you can read more about ASLR [here](https://en.wikipedia.org/wiki/Address_space_layout_randomization)). So, our current goal is to find random address where we can `safely` to decompress the Linux kernel. I repeat: `safely`. What does it mean in this context? You may remember that besides the code of decompressor and directly the kernel image, there are some unsafe places in memory. For example, the [initrd](https://en.wikipedia.org/wiki/Initrd) image is in memory too, and we must not overlap it with the decompressed kernel.
 
-The next function will help us to find a safe place where we can decompress kernel. This function is `mem_avoid_init`. It defined in the same source code [file](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/aslr.c), and takes four arguments that we already saw in the `decompress_kernel` function:
+The next function will help us to find a safe place where we can decompress kernel. This function is `mem_avoid_init`. It defined in the same source code [file](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c), and takes four arguments that we already saw in the `decompress_kernel` function:
 
 * `input_data` - pointer to the start of the compressed kernel, or in other words, the pointer to `arch/x86/boot/compressed/vmlinux.bin.bz2`;
 * `input_len` - the size of the compressed kernel;
@@ -426,7 +426,7 @@ if (slot_max == 0)
 return slots[get_random_long() % slot_max];
 ```
 
-where `get_random_long` function checks different CPU flags as `X86_FEATURE_RDRAND` or `X86_FEATURE_TSC` and chooses a method for getting random number (it can be the RDRAND instruction, the time stamp counter, the programmable interval timer, etc...). After retrieving the random address, execution of the `choose_kernel_location` is finished.
+where `get_random_long` function checks different CPU flags as `X86_FEATURE_RDRAND` or `X86_FEATURE_TSC` and chooses a method for getting random number (it can be the RDRAND instruction, the time stamp counter, the programmable interval timer, etc...). After retrieving the random address, execution of the `choose_random_location` is finished.
 
 Now let's back to [misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c#L404). After getting the address for the kernel image, there need to be some checks to be sure that the retrieved random address is correctly aligned and address is not wrong. 
 
@@ -486,7 +486,7 @@ Program Headers:
                  0x0000000000138000 0x000000000029b000  RWE    200000
 ```
 
-The goal of the `parse_elf` function is to load these segments to the `output` address we got from the `choose_kernel_location` function. This function starts with checking the [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) signature:
+The goal of the `parse_elf` function is to load these segments to the `output` address we got from the `choose_random_location` function. This function starts with checking the [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) signature:
 
 ```C
 Elf64_Ehdr ehdr;
