@@ -209,6 +209,7 @@ As you already may guess, the `LOCK_CONTENDED` macro does all job for us. Let's 
 ```C
 #define LOCK_CONTENDED(_lock, try, lock) \
         lock(_lock)
+```
 
 As we may see it just calls the `lock` function which is third parameter of the `LOCK_CONTENDED` macro with the given `rw_semaphore`. In our case the third parameter of the `LOCK_CONTENDED` macro is the `__down_write` function which is architecture specific function and located in the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/rwsem.h) header file. Let's look at the implementation of the `__down_write` function:
 
