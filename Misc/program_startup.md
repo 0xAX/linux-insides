@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-But if you interested in low-level programming, maybe you already now that the `main` function isn't actual entry point of a program. We can make sure in this, if we will look at this simple program:
+But if you interested in low-level programming, maybe you already know that the `main` function isn't actual entry point of a program. We can make sure in this, if we will look at this simple program:
 
 ```C
 int main(int argc, char *argv[]) {
@@ -69,7 +69,7 @@ Local exec file:
 	0x0000000000601034 - 0x0000000000601038 is .bss
 ```
 
-Note on `Entry point: 0x400430` line. Now we know actuall address of entry point of our program. Let's put breakpoint by this address, run our program and will see what happens:
+Note on `Entry point: 0x400430` line. Now we know the actual address of entry point of our program. Let's put breakpoint by this address, run our program and will see what happens:
 
 ```
 (gdb) break *0x400430
@@ -80,7 +80,7 @@ Starting program: /home/alex/program
 Breakpoint 1, 0x0000000000400430 in _start ()
 ```
 
-Interesting. We don't see execution of `main` function here, but we may see that another function is called. This function is - `_start` and as debugger showed us, it is actual entry point of our program. Where is this function come from? Who does call `main` and when it will be called. I will try to answer on all of these questions in this post.
+Interesting. We don't see execution of `main` function here, but we may see that another function is called. This function is - `_start` and as debugger showed us, it is actual entry point of our program. Where is this function come from? Who does call `main` and when it will be called. I will try to answer all of these questions in this post.
 
 How kernel does start new program
 --------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ SYSCALL_DEFINE3(execve,
 }
 ```
 
-It takes executable file name, set of command line arguments and set of enviroment variables. As you may guess, everything is done by the `do_execve` function. I will not describe implementation of the `do_execve` function in detais because you can read about this in [here](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. As the setup of new binary image is done, the `start_thread` function which will execute setup of new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/process_64.c#L231) source code file.
+It takes executable file name, set of command line arguments and set of enviroment variables. As you may guess, everything is done by the `do_execve` function. I will not describe implementation of the `do_execve` function in details because you can read about this in [here](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. As the setup of new binary image is done, the `start_thread` function which will execute setup of new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/process_64.c#L231) source code file.
 
 The `start_thread` function sets new value of [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation) and program execution address. From this point, new process is ready to start. Once the [context switch](https://en.wikipedia.org/wiki/Context_switch) will be done, control will be returned to the userspace with new values of registers and new executable will be started to execute.
 
@@ -163,7 +163,7 @@ $ gcc -v -ggdb program.c -o sum
 ...
 ```
 
-The `cc1` compiler will compile our `C` source code and produce assembly `/tmp/ccvUWZkF.s` file. After this we may see that our assembly file will be compiled into object file with `GNU as` compiler:
+The `cc1` compiler will compile our `C` source code and produce assembly `/tmp/ccvUWZkF.s` file. After this we may see that our assembly file will be compiled into object file with `GNU as` assembler:
 
 ```
 $ gcc -v -ggdb program.c -o sum
@@ -240,7 +240,7 @@ Disassembly of section .text:
   29:	f4                   	hlt    
 ```
 
-As `crt1.o` is shared object file, we may see only stubs here instead of real calls. Let's look at the source code of the `_start` function. As this function is architecture specific, implemenetation for `_start` will be located in the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file.
+As `crt1.o` is a shared object file, we see only stubs here instead of real calls. Let's look at the source code of the `_start` function. As this function is architecture specific, implementation for `_start` will be located in the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file.
 
 The `_start` starts from the clearing of `%ebp` register as [ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf) suggests
 
@@ -276,7 +276,7 @@ STATIC int LIBC_START_MAIN (int (*main) (int, char **, char **),
 			                void *stack_end)
 ```
 
-It takes address of the `main` function of a program, `argc` and `argv`. `init` and `fini` functions are constructor and destructor of the program. The `rtld_fini` is termiation function which will be called after the programm will be exited to terminate and free dynamic section. The last parameter of the `__libc_start_main` is the pointer to the stack of the program. Before we can call the `__libc_start_main` function, all of these parameters must be prepared and passed to it. Let's return to the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file and continue to see what happens before the `__libc_start_main` function will be called from there.
+It takes address of the `main` function of a program, `argc` and `argv`. `init` and `fini` functions are constructor and destructor of the program. The `rtld_fini` is termination function which will be called after the program will be exited to terminate and free dynamic section. The last parameter of the `__libc_start_main` is the pointer to the stack of the program. Before we can call the `__libc_start_main` function, all of these parameters must be prepared and passed to it. Let's return to the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file and continue to see what happens before the `__libc_start_main` function will be called from there.
 
 All of we need for the `__libc_start_main` function, we can get from the stack. As `_start` is called, our stack is looks like:
 
@@ -340,7 +340,7 @@ $ gcc -nostdlib /lib64/crt1.o -lc -ggdb program.c -o program
 collect2: error: ld returned 1 exit status
 ```
 
-Nowe we see another error that both `__libc_csu_fini` and `__libc_csu_init` functions are not found. We know that addresses of both of these functions are passed to the `__libc_start_main` as parameters and also these functions are constructor and destructor of our programs. But what are `constructor` and `destructor` in terms of `C` program means? We already saw the quote from the [ELF](http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf) specification:
+Now we see another error that both `__libc_csu_fini` and `__libc_csu_init` functions are not found. We know that addresses of both of these functions are passed to the `__libc_start_main` as parameters and also these functions are constructor and destructor of our programs. But what are `constructor` and `destructor` in terms of `C` program means? We already saw the quote from the [ELF](http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf) specification:
 
 > After the dynamic linker has built the process image and performed the relocations, each shared object
 > gets the opportunity to execute some initialization code.
@@ -363,9 +363,9 @@ We can find it with `readelf` util:
   [15] .fini             PROGBITS         0000000000400504  00000504
 ```
 
-Both of these sections will be placed at the start and end of binary image and contain routines which are called constructor and destructor respectively. The main point of these routines is to do some initialization/finalization like initialization of global variables like [errno](http://man7.org/linux/man-pages/man3/errno.3.html), allocation and deallocation of memory for system routines and etc., before actual code a program will be executed.
+Both of these sections will be placed at the start and end of binary image and contain routines which are called constructor and destructor respectively. The main point of these routines is to do some initialization/finalization like initialization of global variables like [errno](http://man7.org/linux/man-pages/man3/errno.3.html), allocation and deallocation of memory for system routines and etc., before actual code of a program will be executed.
 
-As you may understand from names of these functions, they will be called before `main` and after the `main` function will be finsihed. Definition of `.init` and `.fini` sections located in the `/lib64/crti.o` and if we will add this object file:
+As you may understand from names of these functions, they will be called before `main` and after the `main` function will be finished. Definition of `.init` and `.fini` sections located in the `/lib64/crti.o` and if we will add this object file:
 
 ```
 $ gcc -nostdlib /lib64/crt1.o /lib64/crti.o  -lc -ggdb program.c -o program
