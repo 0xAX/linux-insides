@@ -75,6 +75,7 @@
     * [How the kernel is compiled](Misc/how_kernel_compiled.md)
     * [Linkers](Misc/linkers.md)
     * [Linux kernel development](Misc/contribute.md)
+    * [Program startup process in userspace](Misc/program_startup.md)
     * [Write and Submit your first Linux kernel Patch]()
     * [Data types in the kernel]()
 * [KernelStructures](KernelStructures/README.md)
