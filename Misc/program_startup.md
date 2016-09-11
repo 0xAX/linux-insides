@@ -157,7 +157,7 @@ $ gcc -v -ggdb program.c -o sum
 ...
 ...
 ...
-/usr/libexec/gcc/x86_64-redhat-linux/6.1.1/cc1 -quiet -v test.c -quiet -dumpbase test.c -mtune=generic -march=x86-64 -auxbase test -ggdb -version -o /tmp/ccvUWZkF.s
+/usr/libexec/gcc/x86_64-redhat-linux/6.1.1/cc1 -quiet -v program.c -quiet -dumpbase program.c -mtune=generic -march=x86-64 -auxbase test -ggdb -version -o /tmp/ccvUWZkF.s
 ...
 ...
 ...
@@ -211,7 +211,7 @@ collect2: error: ld returned 1 exit status
 Besides other errors, we also see that `_start` symbol is undefined. So now we are sure that the `_start` function comes from standard library. But even if we will link it with standard library, it will not be compiled successfully anyway:
 
 ```
-~$ gcc -nostdlib -lc -ggdb test.c -o program
+~$ gcc -nostdlib -lc -ggdb program.c -o program
 /usr/bin/ld: warning: cannot find entry symbol _start; defaulting to 0000000000400350
 ```
 
@@ -332,7 +332,7 @@ After stack aligning we push address of the stack, addresses of contstructor and
 Before we will look at the `__libc_start_main` function let's add the `/lib64/crt1.o` and try to compile our program again:
 
 ```
-$ gcc -nostdlib /lib64/crt1.o -lc -ggdb test.c -o program
+$ gcc -nostdlib /lib64/crt1.o -lc -ggdb program.c -o program
 /lib64/crt1.o: In function `_start':
 (.text+0x12): undefined reference to `__libc_csu_fini'
 /lib64/crt1.o: In function `_start':
