@@ -6,7 +6,7 @@ Introduction
 
 Despite the [linux-insides](https://www.gitbook.com/book/0xax/linux-insides/details) described mostly Linux kernel related stuff, I have decided to write this one part which mostly related to userspace.
 
-There is already fourth [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) of [system calls](https://en.wikipedia.org/wiki/System_call) chapter which describes what does the Linux kernel do when we want to start a program. In this part I want to explore what happens when a we run a program on Linux machine from userspace perspective.
+There is already fourth [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) of [system calls](https://en.wikipedia.org/wiki/System_call) chapter which describes what does the Linux kernel do when we want to start a program. In this part I want to explore what happens when we run a program on Linux machine from userspace perspective.
 
 I don't know how about you, but I learned in my university that a `C` program starts to execute from the function which is called `main`. And that's partly true. Everytime, when we are starting to write new program, we start our program from the following lines of code:
 
