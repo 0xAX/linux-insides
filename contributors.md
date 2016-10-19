@@ -96,3 +96,4 @@ Thank you to all contributors:
 * [Connor Mullen](https://github.com/mullen3)
 * [Alex Gonzalez](https://github.com/alex-gonz)
 * [Tim Konick](https://github.com/tijko)
+* [Anastas Stoyanovsky](https://github.com/anastasds)
