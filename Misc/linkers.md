@@ -492,25 +492,29 @@ With the linker language we can control:
 Commands written in the linker control language are usually placed in a file called linker script. We can pass it to `ld` with the `-T` command line option. The main command in a linker script is the `SECTIONS` command. Each linker script must contain this command and it determines the `map` of the output file. The special variable `.` contains current position of the output. Let's write a simple assembly program and we will look at how we can use a linker script to control linking of this program. We will take a hello world program for this example:
 
 ```assembly
-section .data
-	msg	db "hello, world!",`\n`
-section .text
-	global	_start
+.data
+        msg:    .ascii  "hello, world!\n"
+
+.text
+
+.global _start
+
 _start:
-	mov	rax, 1
-	mov	rdi, 1
-	mov	rsi, msg
-	mov	rdx, 14
-	syscall
-	mov	rax, 60
-	mov	rdi, 0
-	syscall
+        mov    $1,%rax
+        mov    $1,%rdi
+        mov    $msg,%rsi
+        mov    $14,%rdx
+        syscall
+
+        mov    $60,%rax
+        mov    $0,%rdi
+        syscall
 ```
 
 We can compile and link it with the following commands:
 
 ```
-$ nasm -f elf64 -o hello.o hello.asm
+$ as -o hello.o hello.asm
 $ ld -o hello hello.o
 ```
 
@@ -540,14 +544,14 @@ SECTIONS
 
 On the first three lines you can see a comment written in `C` style. After it the `OUTPUT` and the `OUTPUT_FORMAT` commands specify the name of our executable file and its format. The next command, `INPUT`, specifies the input file to the `ld` linker. Then, we can see the main `SECTIONS` command, which, as I already wrote, must be present in every linker script. The `SECTIONS` command represents the set and order of the sections which will be in the output file. At the beginning of the `SECTIONS` command we can see following line `. = 0x200000`. I already wrote above that `.` command points to the current position of the output. This line says that the code should be loaded at address `0x200000` and the line `. = 0x400000` says that data section should be loaded at address `0x400000`. The second line after the `. = 0x200000` defines `.text` as an output section. We can see `*(.text)` expression inside it. The `*` symbol is wildcard that matches any file name. In other words, the `*(.text)` expression says all `.text` input sections in all input files. We can rewrite it as `hello.o(.text)` for our example. After the following location counter `. = 0x400000`, we can see definition of the data section.
 
-We can compile and link it with the:
+We can compile and link it with the following command:
 
 ```
-$ nasm  -f elf64 -o hello.o hello.S && ld -T linker.script && ./hello
+$ as -o hello.o hello.S && ld -T linker.script && ./hello
 hello, world!
 ```
 
-If we will look inside it with the `objdump` util, we can see that `.text` section starts from the address `0x200000` and the `.data` sections starts from the address `0x400000`:
+If we look inside it with the `objdump` util, we can see that `.text` section starts from the address `0x200000` and the `.data` sections starts from the address `0x400000`:
 
 ```
 $ objdump -D hello
@@ -555,7 +559,7 @@ $ objdump -D hello
 Disassembly of section .text:
 
 0000000000200000 <_start>:
-  200000:	b8 01 00 00 00       	mov    $0x1,%eax
+  200000:	48 c7 c0 01 00 00 00 	mov    $0x1,%rax
   ...
 
 Disassembly of section .data:
