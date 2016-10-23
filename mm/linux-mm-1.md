@@ -310,7 +310,7 @@ As we update the size of the first memory region with the size of the next memor
 memmove(next, next + 1, (type->cnt - (i + 2)) * sizeof(*next));
 ```
 
-And decrease the count of the memory regions which belong to the `memblock_type`:
+The `memmove` here moves all regions which are located after the `next` region to the base address of the `next` region. In the end we just decrease the count of the memory regions which belong to the `memblock_type`:
 
 ```C
 type->cnt--;
@@ -328,6 +328,8 @@ After this we will get two memory regions merged into one:
 |                                                |
 +------------------------------------------------+
 ```
+
+As we decreased counts of regions in a memblock with certain type, increased size of the `this` region and shifted all regions which are located after `next` region to its place.
 
 That's all. This is the whole principle of the work of the `memblock_add_range` function.
 
