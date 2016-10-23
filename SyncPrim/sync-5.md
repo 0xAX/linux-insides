@@ -57,7 +57,7 @@ config RWSEM_GENERIC_SPINLOCK
 	def_bool !RWSEM_XCHGADD_ALGORITHM
 ```
 
-So, as this [book](https://0xax.gitbooks.io/linux-insides/content) describes only [x86_64](https://en.wikipedia.org/wiki/X86-64) related stuff, we will skip the case when the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration is enabled and consider definition of the `rw_semaphore` structure only from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file.
+So, as this [book](https://0xax.gitbooks.io/linux-insides/content) describes only [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture related stuff, we will skip the case when the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration is enabled and consider definition of the `rw_semaphore` structure only from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file.
 
 If we will take a look at the definition of the `rw_semaphore` structure, we will notice that first three fields are the same that in the `semaphore` structure. It contains `count` field which represents amount of available resources, the `wait_list` field which represents [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html) of processes which are waiting to acquire a lock and `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) for protection of this list. Notice that `rw_semaphore.count` field is `long` type unlike the same field in the `semaphore` structure.
 
