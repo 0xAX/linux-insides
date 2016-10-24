@@ -97,3 +97,4 @@ Thank you to all contributors:
 * [Alex Gonzalez](https://github.com/alex-gonz)
 * [Tim Konick](https://github.com/tijko)
 * [Anastas Stoyanovsky](https://github.com/anastasds)
+* [Andrew Hayes](https://github.com/AndrewRussellHayes)
