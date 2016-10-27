@@ -4,9 +4,9 @@ Interrupts and Interrupt Handling. Part 2.
 Start to dive into interrupt and exceptions handling in the Linux kernel
 --------------------------------------------------------------------------------
 
-We saw some theory about an interrupts and an exceptions handling in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) and as I already wrote in that part, we will start to dive into interrupts and exceptions in the Linux kernel source code in this part. As you already can note, the previous part mostly described theoretical aspects and since this part we will start to dive directly into the Linux kernel source code. We will start to do it as we did it in other chapters, from the very early places. We will not see the Linux kernel source code from the earliest [code lines](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L292) as we saw it for example in the [Linux kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter, but we will start from the earliest code which is related to the interrupts and exceptions. Since this part we will try to go through the all interrupts and exceptions related stuff which we can find in the Linux kernel source code.
+We saw some theory about interrupts and exception handling in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) and as I already wrote in that part, we will start to dive into interrupts and exceptions in the Linux kernel source code in this part. As you already can note, the previous part mostly described theoretical aspects and in this part we will start to dive directly into the Linux kernel source code. We will start to do it as we did it in other chapters, from the very early places. We will not see the Linux kernel source code from the earliest [code lines](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L292) as we saw it for example in the [Linux kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter, but we will start from the earliest code which is related to the interrupts and exceptions. In this part we will try to go through the all interrupts and exceptions related stuff which we can find in the Linux kernel source code.
 
-If you've read the previous parts, you can remember that the earliest place in the Linux kernel `x86_64` architecture-specifix source code which is related to the interrupt is located in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c) source code file and represents the first setup of the [Interrupt Descriptor Table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table). It occurs right before the transition into the [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the `go_to_protected_mode` function by the call of the `setup_idt`:
+If you've read the previous parts, you can remember that the earliest place in the Linux kernel `x86_64` architecture-specific source code which is related to the interrupt is located in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c) source code file and represents the first setup of the [Interrupt Descriptor Table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table). It occurs right before the transition into the [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the `go_to_protected_mode` function by the call of the `setup_idt`:
 
 ```C
 void go_to_protected_mode(void)
@@ -17,7 +17,7 @@ void go_to_protected_mode(void)
 }
 ```
 
-The `setup_idt` function defined in the same source code file as the `go_to_protected_mode` function and just loads address of the `NULL` interrupts descriptor table:
+The `setup_idt` function is defined in the same source code file as the `go_to_protected_mode` function and just loads the address of the `NULL` interrupts descriptor table:
 
 ```C
 static void setup_idt(void)
@@ -27,7 +27,7 @@ static void setup_idt(void)
 }
 ```
 
-where `gdt_ptr` represents special 48-bit `GTDR` register which must contain base address of the `Global Descriptor Table`:
+where `gdt_ptr` represents a special 48-bit `GDTR` register which must contain the base address of the `Global Descriptor Table`:
 
 ```C
 struct gdt_ptr {
@@ -36,18 +36,18 @@ struct gdt_ptr {
 } __attribute__((packed));
 ```
 
-Of course in our case the `gdt_ptr` does not represent `GDTR` register, but `IDTR` since we set `Interrupt Descriptor Table`. You will not find `idt_ptr` structure, because if it had been in the Linux kernel source code, it would have been the same as `gdt_ptr` but with different name. So, as you can understand there is no sense to have two similar structures which are differ only in a name. You can note here, that we do not fill the `Interrupt Descriptor Table` with entries, because it is too early to handle any interrupts or exceptions for this moment. That's why we just fill the `IDT` with the `NULL`.
+Of course in our case the `gdt_ptr` does not represent the `GDTR` register, but `IDTR` since we set `Interrupt Descriptor Table`. You will not find an `idt_ptr` structure, because if it had been in the Linux kernel source code, it would have been the same as `gdt_ptr` but with different name. So, as you can understand there is no sense to have two similar structures which differ only by name. You can note here, that we do not fill the `Interrupt Descriptor Table` with entries, because it is too early to handle any interrupts or exceptions at this point. That's why we just fill the `IDT` with `NULL`.
 
-And after the setup of the [Interrupt descriptor table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table), [Global Descriptor Table](http://en.wikipedia.org/wiki/GDT) and other stuff we jump into [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the - [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S). More about it you can read in the [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) which describes transition to the protected mode.
+After the setup of the [Interrupt descriptor table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table), [Global Descriptor Table](http://en.wikipedia.org/wiki/GDT) and other stuff we jump into [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the - [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S). You can read more about it in the [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) which describes the transition to protected mode.
 
-We already know from the earliest parts that entry of the protected mode located in the `boot_params.hdr.code32_start` and you can see that we pass the entry of the protected mode and `boot_params` to the `protected_mode_jump` in the end of the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c):
+We already know from the earliest parts that entry to protected mode is located in the `boot_params.hdr.code32_start` and you can see that we pass the entry of the protected mode and `boot_params` to the `protected_mode_jump` in the end of the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c):
 
 ```C
 protected_mode_jump(boot_params.hdr.code32_start,
 			    (u32)&boot_params + (ds() << 4));
 ```
 
-The `protected_mode_jump` defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) and gets these two parameters in the `ax` and `dx` registers using one of the [8086](http://en.wikipedia.org/wiki/Intel_8086) calling  [convention](http://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions):
+The `protected_mode_jump` is defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) and gets these two parameters in the `ax` and `dx` registers using one of the [8086](http://en.wikipedia.org/wiki/Intel_8086) calling  [conventions](http://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions):
 
 ```assembly
 GLOBAL(protected_mode_jump)
@@ -63,7 +63,7 @@ GLOBAL(protected_mode_jump)
 ENDPROC(protected_mode_jump)
 ```
 
-where `in_pm32` contains jump to the 32-bit entrypoint:
+where `in_pm32` contains a jump to the 32-bit entry point:
 
 ```assembly
 GLOBAL(in_pm32)
@@ -75,12 +75,12 @@ GLOBAL(in_pm32)
 ENDPROC(in_pm32)
 ```
 
-As you can remember 32-bit entry point is in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly file, although it contains `_64` in the its name. We can see the two similar files in the `arch/x86/boot/compressed` directory:
+As you can remember the 32-bit entry point is in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly file, although it contains `_64` in its name. We can see the two similar files in the `arch/x86/boot/compressed` directory:
 
 * `arch/x86/boot/compressed/head_32.S`.
 * `arch/x86/boot/compressed/head_64.S`;
 
-But the 32-bit mode entry point the the second file in our case. The first file even not compiled for `x86_64`. Let's look on the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile):
+But the 32-bit mode entry point is the second file in our case. The first file is not even compiled for `x86_64`. Let's look at the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile):
 
 ```
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
@@ -100,7 +100,7 @@ else
 endif
 ```
 
-Now as we jumped on the `startup_32` from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) we will not find anything related to the interrupt handling here. The `startup_32` contains code that makes preparations before transition into the [long mode](http://en.wikipedia.org/wiki/Long_mode) and directly jumps in it. The `long mode` entry located `startup_64` and it makes preparation before the [kernel decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) that occurs in the `decompress_kernel` from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c). After kernel decompressed, we jump on the `startup_64` from the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S). In the `startup_64` we start to build identity-mapped pages. After we have built identity-mapped pages, checked [NX](http://en.wikipedia.org/wiki/NX_bit) bit, made setup of the `Extended Feature Enable Register` (see in links), updated early `Global Descriptor Table` wit the `lgdt` instruction, we need to setup `gs` register with the following code:
+Now as we jumped on the `startup_32` from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) we will not find anything related to the interrupt handling here. The `startup_32` contains code that makes preparations before the transition into [long mode](http://en.wikipedia.org/wiki/Long_mode) and directly jumps in to it. The `long mode` entry is located in `startup_64` and it makes preparations before the [kernel decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) that occurs in the `decompress_kernel` from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c). After the kernel is decompressed, we jump on the `startup_64` from the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S). In the `startup_64` we start to build identity-mapped pages. After we have built identity-mapped pages, checked the [NX](http://en.wikipedia.org/wiki/NX_bit) bit, setup the `Extended Feature Enable Register` (see in links), and updated the early `Global Descriptor Table` with the `lgdt` instruction, we need to setup `gs` register with the following code:
 
 ```assembly
 movl	$MSR_GS_BASE,%ecx
@@ -109,27 +109,27 @@ movl	initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-We already saw this code in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) and not time to know better what is going on here. First of all pay attention on the last `wrmsr` instruction. This instruction writes data from the `edx:eax` registers to the [model specific register](http://en.wikipedia.org/wiki/Model-specific_register) specified by the `ecx` register. We can see that `ecx` contains `$MSR_GS_BASE` which declared in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h) and looks:
+We already saw this code in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html). First of all pay attention on the last `wrmsr` instruction. This instruction writes data from the `edx:eax` registers to the [model specific register](http://en.wikipedia.org/wiki/Model-specific_register) specified by the `ecx` register. We can see that `ecx` contains `$MSR_GS_BASE` which is declared in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h) and looks like:
 
 ```C
 #define MSR_GS_BASE             0xc0000101
 ```
 
-From this we can understand that `MSR_GS_BASE` defines number of the `model specific register`. Since registers `cs`, `ds`, `es`, and `ss` are not used in the 64-bit mode, their fields are ignored. But we can access memory over `fs` and `gs` registers. The model specific register provides `back door` to the hidden parts of these segment registers and allows to use 64-bit base address for segment register addressed by the `fs` and `gs`. So the `MSR_GS_BASE` is the hidden part and this part is mapped on the `GS.base` field. Let's look on the `initial_gs`:
+From this we can understand that `MSR_GS_BASE` defines the number of the `model specific register`. Since registers `cs`, `ds`, `es`, and `ss` are not used in the 64-bit mode, their fields are ignored. But we can access memory over `fs` and `gs` registers. The model specific register provides a `back door` to the hidden parts of these segment registers and allows to use 64-bit base address for segment register addressed by the `fs` and `gs`. So the `MSR_GS_BASE` is the hidden part and this part is mapped on the `GS.base` field. Let's look on the `initial_gs`:
 
 ```assembly
 GLOBAL(initial_gs)
 	.quad	INIT_PER_CPU_VAR(irq_stack_union)
 ```
 
-We pass `irq_stack_union` symbol to the `INIT_PER_CPU_VAR` macro which just concatenates `init_per_cpu__` prefix with the given symbol. In our case we will get `init_per_cpu__irq_stack_union` symbol. Let's look on the [linker](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) script. There we can see following definition:
+We pass `irq_stack_union` symbol to the `INIT_PER_CPU_VAR` macro which just concatenates the `init_per_cpu__` prefix with the given symbol. In our case we will get the `init_per_cpu__irq_stack_union` symbol. Let's look at the [linker](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) script. There we can see following definition:
 
 ```
 #define INIT_PER_CPU(x) init_per_cpu__##x = x + __per_cpu_load
 INIT_PER_CPU(irq_stack_union);
 ```
 
-It tells us that address of the `init_per_cpu__irq_stack_union` will be `irq_stack_union + __per_cpu_load`. Now we need to understand where are `init_per_cpu__irq_stack_union` and `__per_cpu_load` and what they mean. The first `irq_stack_union` defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h) with the `DECLARE_INIT_PER_CPU` macro which expands to call of the `init_per_cpu_var` macro:
+It tells us that the address of the `init_per_cpu__irq_stack_union` will be `irq_stack_union + __per_cpu_load`. Now we need to understand where `init_per_cpu__irq_stack_union` and `__per_cpu_load` are what they mean. The first `irq_stack_union` is defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h) with the `DECLARE_INIT_PER_CPU` macro which expands to call the `init_per_cpu_var` macro:
 
 ```C
 DECLARE_INIT_PER_CPU(irq_stack_union);
@@ -140,7 +140,7 @@ DECLARE_INIT_PER_CPU(irq_stack_union);
 #define init_per_cpu_var(var)  init_per_cpu__##var
 ```
 
-If we will expand all macro we will get the same `init_per_cpu__irq_stack_union` as we got after expanding of the `INIT_PER_CPU` macro, but you can note that it is already not just symbol, but variable. Let's look on the `typeof(percpu_var(var))` expression. Our `var` is `irq_stack_union` and `per_cpu_var` macro defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h):
+If we expand all macros we will get the same `init_per_cpu__irq_stack_union` as we got after expanding the `INIT_PER_CPU` macro, but you can note that it is not just a symbol, but a variable. Let's look at the `typeof(per_cpu_var(var))` expression. Our `var` is `irq_stack_union` and the `per_cpu_var` macro is defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h):
 
 ```C
 #define PER_CPU_VAR(var)        %__percpu_seg:var
@@ -154,13 +154,13 @@ where:
 endif
 ```
 
-So, we accessing `gs:irq_stack_union` and geting its type which is `irq_union`. Ok, we defined the first variable and know its address, now let's look on the second `__per_cpu_load` symbol. There are a couple of percpu variables which are located after this symbol. The `__per_cpu_load` defined in the [include/asm-generic/sections.h](https://github.com/torvalds/linux/blob/master/include/asm-generic-sections.h):
+So, we are accessing `gs:irq_stack_union` and getting its type which is `irq_union`. Ok, we defined the first variable and know its address, now let's look at the second `__per_cpu_load` symbol. There are a couple of `per-cpu` variables which are located after this symbol. The `__per_cpu_load` is defined in the [include/asm-generic/sections.h](https://github.com/torvalds/linux/blob/master/include/asm-generic-sections.h):
 
 ```C
 extern char __per_cpu_load[], __per_cpu_start[], __per_cpu_end[];
 ```
 
-and presented base address of the `per-cpu` variables from the data area. So, we know address of the `irq_stack_union`, `__per_cpu_load` and we know that `init_per_cpu__irq_stack_union` must be placed right after `__per_cpu_load`. And we can see it in the [System.map](http://en.wikipedia.org/wiki/System.map):
+and presented base address of the `per-cpu` variables from the data area. So, we know the address of the `irq_stack_union`, `__per_cpu_load` and we know that `init_per_cpu__irq_stack_union` must be placed right after `__per_cpu_load`. And we can see it in the [System.map](http://en.wikipedia.org/wiki/System.map):
 
 ```
 ...
@@ -174,7 +174,7 @@ ffffffff819ed000 A init_per_cpu__irq_stack_union
 ...
 ```
 
-Now we know about `initia_gs`, so let's book to the our code:
+Now we know about `initial_gs`, so let's look at the code:
 
 ```assembly
 movl	$MSR_GS_BASE,%ecx
@@ -183,7 +183,7 @@ movl	initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-Here we specified model specific register with `MSR_GS_BASE`, put 64-bit address of the `initial_gs` to the `edx:eax` pair and execute `wrmsr` instruction for filling the `gs` register with base address of the `init_per_cpu__irq_stack_union` which will be bottom of the interrupt stack. After this we will jump to the C code on the `x86_64_start_kernel` from the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c). In the `x86_64_start_kernel` function we do the last preparations before we jump into the generic and architecture-independent kernel code and on of these preparations is filling of the early `Interrupt Descriptor Table` with the interrupts handlres entries or `early_idt_handlers`. You can remember it, if you have read the part about the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) and can remember following code:
+Here we specified a model specific register with `MSR_GS_BASE`, put the 64-bit address of the `initial_gs` to the `edx:eax` pair and execute the `wrmsr` instruction for filling the `gs` register with the base address of the `init_per_cpu__irq_stack_union` which will be at the bottom of the interrupt stack. After this we will jump to the C code on the `x86_64_start_kernel` from the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c). In the `x86_64_start_kernel` function we do the last preparations before we jump into the generic and architecture-independent kernel code and one of these preparations is filling the early `Interrupt Descriptor Table` with the interrupts handlers entries or `early_idt_handlers`. You can remember it, if you have read the part about the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) and can remember following code:
 
 ```C
 for (i = 0; i < NUM_EXCEPTION_VECTORS; i++)
@@ -266,7 +266,7 @@ union irq_stack_union {
 };
 ```
 
-which defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h). We know that [unioun](http://en.wikipedia.org/wiki/Union_type) in the [C](http://en.wikipedia.org/wiki/C_%28programming_language%29) programming language is a data structure which stores only one field in a memory. We can see here that structure has first field - `gs_base` which is 40 bytes size and represents bottom of the `irq_stack`. So, after this our check with the `BUILD_BUG_ON` macro should end successfully. (you can read the first part about Linux kernel initialization [process](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) if you're interesting about the `BUILD_BUG_ON` macro).
+which defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h). We know that [union](http://en.wikipedia.org/wiki/Union_type) in the [C](http://en.wikipedia.org/wiki/C_%28programming_language%29) programming language is a data structure which stores only one field in a memory. We can see here that structure has first field - `gs_base` which is 40 bytes size and represents bottom of the `irq_stack`. So, after this our check with the `BUILD_BUG_ON` macro should end successfully. (you can read the first part about Linux kernel initialization [process](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) if you're interesting about the `BUILD_BUG_ON` macro).
 
 After this we calculate new `canary` value based on the random number and [Time Stamp Counter](http://en.wikipedia.org/wiki/Time_Stamp_Counter):
 
@@ -304,7 +304,7 @@ This macro defined in the [include/linux/irqflags.h](https://github.com/torvalds
 #endif
 ```
 
-They are both similar and as you can see have only one difference: the `local_irq_disable` macro contains call of the `trace_hardirqs_off` when `CONFIG_TRACE_IRQFLAGS_SUPPORT` is enabled. There is special feature in the [lockdep](http://lwn.net/Articles/321663/) subsystem - `irq-flags tracing` for tracing `hardirq` and `stoftirq` state. In ourcase `lockdep` subsytem can give us interesting information about hard/soft irqs on/off events which are occurs in the system. The `trace_hardirqs_off` function defined in the [kernel/locking/lockdep.c](https://github.com/torvalds/linux/blob/master/kernel/locking/lockdep.c):
+They are both similar and as you can see have only one difference: the `local_irq_disable` macro contains call of the `trace_hardirqs_off` when `CONFIG_TRACE_IRQFLAGS_SUPPORT` is enabled. There is special feature in the [lockdep](http://lwn.net/Articles/321663/) subsystem - `irq-flags tracing` for tracing `hardirq` and `softirq` state. In our case `lockdep` subsystem can give us interesting information about hard/soft irqs on/off events which are occurs in the system. The `trace_hardirqs_off` function defined in the [kernel/locking/lockdep.c](https://github.com/torvalds/linux/blob/master/kernel/locking/lockdep.c):
 
 ```C
 void trace_hardirqs_off(void)
@@ -314,7 +314,7 @@ void trace_hardirqs_off(void)
 EXPORT_SYMBOL(trace_hardirqs_off);
 ```
 
-and just calls `trace_hardirqs_off_caller` function. The `trace_hardirqs_off_caller` checks the `hardirqs_enabled` filed of the current process increment the `redundant_hardirqs_off` if call of the `local_irq_disable` was redundant or the `hardirqs_off_events` if it was not. These two fields and other `lockdep` statistic related fields are defined in the [kernel/locking/lockdep_internals.h](https://github.com/torvalds/linux/blob/master/kernel/locking/lockdep_internals.h) and located in the `lockdep_stats` structure:
+and just calls `trace_hardirqs_off_caller` function. The `trace_hardirqs_off_caller` checks the `hardirqs_enabled` field of the current process and increases the `redundant_hardirqs_off` if call of the `local_irq_disable` was redundant or the `hardirqs_off_events` if it was not. These two fields and other `lockdep` statistic related fields are defined in the [kernel/locking/lockdep_insides.h](https://github.com/torvalds/linux/blob/master/kernel/locking/lockdep_insides.h) and located in the `lockdep_stats` structure:
 
 ```C
 struct lockdep_stats {
@@ -340,7 +340,7 @@ static void lockdep_stats_debug_show(struct seq_file *m)
 							 hr1 = debug_atomic_read(redundant_hardirqs_on),
     ...
 	...
-	... 
+	...
     seq_printf(m, " hardirq on events:             %11llu\n", hi1);
     seq_printf(m, " hardirq off events:            %11llu\n", hi2);
     seq_printf(m, " redundant hardirq ons:         %11llu\n", hr1);
@@ -371,7 +371,7 @@ static inline void native_irq_disable(void)
 }
 ```
 
-And you already must remember that `cli` instruction clears the [IF](http://en.wikipedia.org/wiki/Interrupt_flag) flag which determines ability of a processor to handle and interrupt or an exception. Besides the `local_irq_disable`, as you already can know there is an inverse macr - `local_irq_enable`. This macro has the same tracing mechanism and very similar on the `local_irq_enable`, but as you can understand from its name, it enables interrupts with the `sti` instruction:
+And you already must remember that `cli` instruction clears the [IF](http://en.wikipedia.org/wiki/Interrupt_flag) flag which determines ability of a processor to handle an interrupt or an exception. Besides the `local_irq_disable`, as you already can know there is an inverse macro - `local_irq_enable`. This macro has the same tracing mechanism and very similar on the `local_irq_enable`, but as you can understand from its name, it enables interrupts with the `sti` instruction:
 
 ```C
 static inline void native_irq_enable(void)
@@ -499,7 +499,7 @@ static inline void set_system_intr_gate_ist(int n, void *addr, unsigned ist)
 }
 ```
 
-Do you see it? Look on the fourth parameter of the `_set_gate`. It is `0x3`. In the `set_intr_gate` it was `0x0`. We know that this parameter represent `DPL` or privilege level. We also know that `0` is the highest privilge level and `3` is the lowest.Now we know how `set_system_intr_gate_ist`, `set_intr_gate_ist`, `set_intr_gate` are work and we can return to the `early_trap_init` function. Let's look on it again:
+Do you see it? Look on the fourth parameter of the `_set_gate`. It is `0x3`. In the `set_intr_gate` it was `0x0`. We know that this parameter represent `DPL` or privilege level. We also know that `0` is the highest privilege level and `3` is the lowest.Now we know how `set_system_intr_gate_ist`, `set_intr_gate_ist`, `set_intr_gate` are work and we can return to the `early_trap_init` function. Let's look on it again:
 
 ```C
 set_intr_gate_ist(X86_TRAP_DB, &debug, DEBUG_STACK);
@@ -519,9 +519,9 @@ Conclusion
 
 It is the end of the second part about interrupts and interrupt handling in the Linux kernel. We saw the some theory in the previous part and started to dive into interrupts and exceptions handling in the current part. We have started from the earliest parts in the Linux kernel source code which are related to the interrupts. In the next part we will continue to dive into this interesting theme and will know more about interrupt handling process.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------
@@ -530,7 +530,7 @@ Links
 * [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)
 * [List of x86 calling conventions](http://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions)
 * [8086](http://en.wikipedia.org/wiki/Intel_8086)
-* [Long mode](http://en.wikipedia.org/wiki/Long_mode) 
+* [Long mode](http://en.wikipedia.org/wiki/Long_mode)
 * [NX](http://en.wikipedia.org/wiki/NX_bit)
 * [Extended Feature Enable Register](http://en.wikipedia.org/wiki/Control_register#Additional_Control_registers_in_x86-64_series)
 * [Model-specific register](http://en.wikipedia.org/wiki/Model-specific_register)

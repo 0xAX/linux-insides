@@ -62,7 +62,7 @@ native_irq_return_iret:
 iretq
 ```
 
-More about the `idtentry` macro you can read in the thirt part of the [http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) chapter. Ok, now we saw the preparation before an exception handler will be executed and now time to look on the handlers. First of all let's look on the following handlers:
+More about the `idtentry` macro you can read in the third part of the [http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) chapter. Ok, now we saw the preparation before an exception handler will be executed and now time to look on the handlers. First of all let's look on the following handlers:
 
 * divide_error
 * overflow
@@ -93,7 +93,7 @@ As we can see the `DO_ERROR` macro takes 4 parameters:
 * String which describes an exception;
 * Exception handler entry point.
 
-This macro defined in the same souce code file and expands to the function with the `do_handler` name:
+This macro defined in the same source code file and expands to the function with the `do_handler` name:
 
 ```C
 #define DO_ERROR(trapnr, signr, str, name)                              \
@@ -192,7 +192,7 @@ static ATOMIC_NOTIFIER_HEAD(die_chain);
 return atomic_notifier_call_chain(&die_chain, val, &args);
 ```
 
-which just expands to the `atomit_notifier_head` structure that contains lock and `notifier_block`:
+which just expands to the `atomic_notifier_head` structure that contains lock and `notifier_block`:
 
 ```C
 struct atomic_notifier_head {
@@ -211,7 +211,7 @@ static inline void conditional_sti(struct pt_regs *regs)
 }
 ```
 
-more about `local_irq_enable` macro you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html) of this chapter. The next and last call in the `do_error_trap` is the `do_trap` function. First of all the `do_trap` function defined the `tsk` variable which has `trak_struct` type and represents the current interrupted process. After the definition of the `tsk`, we can see the call of the `do_trap_no_signal` function:
+more about `local_irq_enable` macro you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html) of this chapter. The next and last call in the `do_error_trap` is the `do_trap` function. First of all the `do_trap` function defined the `tsk` variable which has `task_struct` type and represents the current interrupted process. After the definition of the `tsk`, we can see the call of the `do_trap_no_signal` function:
 
 ```C
 struct task_struct *tsk = current;
@@ -280,7 +280,7 @@ This is the end of the `do_trap`. We just saw generic implementation for eight d
 Double fault
 --------------------------------------------------------------------------------
 
-The next exception is `#DF` or `Double fault`. This exception occurrs when the processor detected a second exception while calling an exception handler for a prior exception. We set the trap gate for this exception in the previous part:
+The next exception is `#DF` or `Double fault`. This exception occurs when the processor detected a second exception while calling an exception handler for a prior exception. We set the trap gate for this exception in the previous part:
 
 ```C
 set_intr_gate_ist(X86_TRAP_DF, &double_fault, DOUBLEFAULT_STACK);
@@ -292,14 +292,14 @@ Note that this exception runs on the `DOUBLEFAULT_STACK` [Interrupt Stack Table]
 #define DOUBLEFAULT_STACK 1
 ```
 
-The `double_fault` is handler for this exception and defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). The `double_fault` handler starts from the definition of two variables: string that describes excetpion and interrupted process, as other exception handlers:
+The `double_fault` is handler for this exception and defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). The `double_fault` handler starts from the definition of two variables: string that describes exception and interrupted process, as other exception handlers:
 
 ```C
 static const char str[] = "double fault";
 struct task_struct *tsk = current;
 ```
 
-The handler of the double fault exception splitted on two parts. The first part is the check which checks that a fault is a `non-IST` fault on the `espfix64` stack. Actually the `iret` instruction restores only the bottom `16` bits when returning to a `16` bit segment. The `espfix` feature solves this problem. So if the `non-IST` fault on the espfix64 stack we modify the stack to make it look like `General Protection Fault`:
+The handler of the double fault exception split on two parts. The first part is the check which checks that a fault is a `non-IST` fault on the `espfix64` stack. Actually the `iret` instruction restores only the bottom `16` bits when returning to a `16` bit segment. The `espfix` feature solves this problem. So if the `non-IST` fault on the espfix64 stack we modify the stack to make it look like `General Protection Fault`:
 
 ```C
 struct pt_regs *normal_regs = task_pt_regs(current);
@@ -311,13 +311,13 @@ regs->sp = (unsigned long)&normal_regs->orig_ax;
 return;
 ```
 
-In the second case we do almost the same that we did in the previous excetpion handlers. The first is the call of the `ist_enter` function that discards previous context, `user` in our case:
+In the second case we do almost the same that we did in the previous exception handlers. The first is the call of the `ist_enter` function that discards previous context, `user` in our case:
 
 ```C
 ist_enter(regs);
 ```
 
-And after this we fill the interrupted process with the vector number of the `Double fault` excetpion and error code as we did it in the previous handlers:
+And after this we fill the interrupted process with the vector number of the `Double fault` exception and error code as we did it in the previous handlers:
 
 ```C
 tsk->thread.error_code = error_code;
@@ -348,7 +348,7 @@ The next exception is the `#NM` or `Device not available`. The `Device not avail
 
 * The processor executed an [x87 FPU](https://en.wikipedia.org/wiki/X87) floating-point instruction while the EM flag in [control register](https://en.wikipedia.org/wiki/Control_register) `cr0` was set;
 * The processor executed a `wait` or `fwait` instruction while the `MP` and `TS` flags of register `cr0` were set;
-* The processor executed an [x87 FPU](https://en.wikipedia.org/wiki/X87), [MMX](https://en.wikipedia.org/wiki/MMX_%28instruction_set%29) or [SSE](https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) instruction while the `TS` falg in control register `cr0` was set and the `EM` flag is clear.
+* The processor executed an [x87 FPU](https://en.wikipedia.org/wiki/X87), [MMX](https://en.wikipedia.org/wiki/MMX_%28instruction_set%29) or [SSE](https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) instruction while the `TS` flag in control register `cr0` was set and the `EM` flag is clear.
 
 The handler of the `Device not available` exception is the `do_device_not_available` function and it defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c) source code file too. It starts and ends from the getting of the previous context, as other traps which we saw in the beginning of this part:
 
@@ -465,9 +465,9 @@ Conclusion
 
 It is the end of the fifth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and we saw implementation of some interrupt handlers in this part. In the next part we will continue to dive into interrupt and exception handlers and will see handler for the [Non-Maskable Interrupts](https://en.wikipedia.org/wiki/Non-maskable_interrupt), handling of the math [coprocessor](https://en.wikipedia.org/wiki/Coprocessor) and [SIMD](https://en.wikipedia.org/wiki/SIMD) coprocessor exceptions and many many more.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

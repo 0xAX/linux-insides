@@ -1,10 +1,10 @@
 Kernel initialization. Part 6.
 ================================================================================
 
-Architecture-specific initializations, again...
+Architecture-specific initialization, again...
 ================================================================================
 
-In the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) we saw architecture-specific (`x86_64` in our case) initialization stuff from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) and finished on `x86_configure_nx` function which sets the `_PAGE_NX` flag depends on support of [NX bit](http://en.wikipedia.org/wiki/NX_bit). As I wrote before `setup_arch` function and `start_kernel` are very big, so in this and in the next part we will continue to learn about architecture-specific initialization process. The next function after `x86_configure_nx` is `parse_early_param`. This function defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) and as you can understand from its name, this function parses kernel command line and setups different some services depends on give parameters (all kernel command line parameters you can find in the [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)). You can remember how we setup `earlyprintk` in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html). On the early stage we looked for kernel parameters and their value with the `cmdline_find_option` function and `__cmdline_find_option`, `__cmdline_find_option_bool` helpers from the [arch/x86/boot/cmdline.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cmdline.c). There we're in the generic kernel part which does not depend on architecture and here we use another approach. If you are reading linux kernel source code, you already can note calls like this:
+In the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) we saw architecture-specific (`x86_64` in our case) initialization stuff from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) and finished on `x86_configure_nx` function which sets the `_PAGE_NX` flag depends on support of [NX bit](http://en.wikipedia.org/wiki/NX_bit). As I wrote before `setup_arch` function and `start_kernel` are very big, so in this and in the next part we will continue to learn about architecture-specific initialization process. The next function after `x86_configure_nx` is `parse_early_param`. This function is defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) and as you can understand from its name, this function parses kernel command line and setups different services depends on the given parameters (all kernel command line parameters you can find are in the [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)). You may remember how we setup `earlyprintk` in the earliest [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html). On the early stage we looked for kernel parameters and their value with the `cmdline_find_option` function and `__cmdline_find_option`, `__cmdline_find_option_bool` helpers from the [arch/x86/boot/cmdline.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cmdline.c). There we're in the generic kernel part which does not depend on architecture and here we use another approach. If you are reading linux kernel source code, you already note calls like this:
 
 ```C
 early_param("gbpages", parse_direct_gbpages_on);
@@ -13,7 +13,7 @@ early_param("gbpages", parse_direct_gbpages_on);
 `early_param` macro takes two parameters:
 
 * command line parameter name;
-* function which will be called if given parameter passed.
+* function which will be called if given parameter is passed.
 
 and defined as:
 
@@ -48,7 +48,7 @@ and contains three fields:
 
 * name of the kernel parameter;
 * function which setups something depend on parameter;
-* field determinies is parameter early (1) or not (0).
+* field determines is parameter early (1) or not (0).
 
 Note that `__set_param` macro defines with `__section(.init.setup)` attribute. It means that all `__setup_str_*` will be placed in the `.init.setup` section, moreover, as we can see in the [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h), they will be placed between `__setup_start` and `__setup_end`:
 
@@ -78,7 +78,7 @@ void __init parse_early_param(void)
 }
 ```
 
-The `parse_early_param` function defines two static variables. First `done` check that `parse_early_param` already called and the second is temporary storage for kernel command line. After this we copy `boot_command_line` to the temporary commad line which we just defined and call the `parse_early_options` function from the the same source code `main.c` file. `parse_early_options` calls the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/master/) where `parse_args` parses given command line and calls `do_early_param` function. This [function](https://github.com/torvalds/linux/blob/master/init/main.c#L413) goes from the ` __setup_start` to `__setup_end`, and calls the function from the `obs_kernel_param` if a parameter is early. After this all services which are depend on early command line parameters were setup and the next call after the `parse_early_param` is `x86_report_nx`. As I wrote in the beginning of this part, we already set `NX-bit` with the `x86_configure_nx`. The next `x86_report_nx` function the [arch/x86/mm/setup_nx.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/setup_nx.c) just prints information about the `NX`. Note that we call `x86_report_nx` not right after the `x86_configure_nx`, but after the call of the `parse_early_param`. The answer is simple: we call it after the `parse_early_param` because the kernel support `noexec` parameter:
+The `parse_early_param` function defines two static variables. First `done` check that `parse_early_param` already called and the second is temporary storage for kernel command line. After this we copy `boot_command_line` to the temporary command line which we just defined and call the `parse_early_options` function from the same source code `main.c` file. `parse_early_options` calls the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/master/) where `parse_args` parses given command line and calls `do_early_param` function. This [function](https://github.com/torvalds/linux/blob/master/init/main.c#L413) goes from the ` __setup_start` to `__setup_end`, and calls the function from the `obs_kernel_param` if a parameter is early. After this all services which are depend on early command line parameters were setup and the next call after the `parse_early_param` is `x86_report_nx`. As I wrote in the beginning of this part, we already set `NX-bit` with the `x86_configure_nx`. The next `x86_report_nx` function from the [arch/x86/mm/setup_nx.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/setup_nx.c) just prints information about the `NX`. Note that we call `x86_report_nx` not right after the `x86_configure_nx`, but after the call of the `parse_early_param`. The answer is simple: we call it after the `parse_early_param` because the kernel support `noexec` parameter:
 
 ```
 noexec		[X86]
@@ -97,7 +97,7 @@ After this we can see call of the:
 	memblock_x86_reserve_range_setup_data();
 ```
 
-function. This function defined in the same [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file and remaps memory for the `setup_data` and reserved memory block for the `setup_data` (more about `setup_data` you can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) and about `ioremap` and `memblock` you can read in the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)).
+function. This function is defined in the same [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file and remaps memory for the `setup_data` and reserved memory block for the `setup_data` (more about `setup_data` you can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) and about `ioremap` and `memblock` you can read in the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)).
 
 In the next step we can see following conditional statement:
 
@@ -110,7 +110,7 @@ In the next step we can see following conditional statement:
 	}
 ```
 
-The first `acpi_mps_check` function from the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/acpi/boot.c) depends on `CONFIG_X86_LOCAL_APIC` and `CNOFIG_x86_MPPARSE` configuration options:
+The first `acpi_mps_check` function from the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/acpi/boot.c) depends on `CONFIG_X86_LOCAL_APIC` and `CONFIG_x86_MPPARSE` configuration options:
 
 ```C
 int __init acpi_mps_check(void)
@@ -128,9 +128,7 @@ int __init acpi_mps_check(void)
 }
 ```
 
-It checks the built-in `MPS` or [MultiProcessor Specification](http://en.wikipedia.org/wiki/MultiProcessor_Specification) table. If `CONFIG_X86_LOCAL_APIC` is set and `CONFIG_x86_MPPAARSE` is not set, `acpi_mps_check` prints warning message if the one of the command line options: `acpi=off`, `acpi=noirq` or `pci=noacpi` passed to the kernel. If `acpi_mps_check` returns `1` which means that
-
-we disable local [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) and clears `X86_FEATURE_APIC` bit in the of the current CPU with the `setup_clear_cpu_cap` macro. (more about CPU mask you can read in the [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)).
+It checks the built-in `MPS` or [MultiProcessor Specification](http://en.wikipedia.org/wiki/MultiProcessor_Specification) table. If `CONFIG_X86_LOCAL_APIC` is set and `CONFIG_x86_MPPAARSE` is not set, `acpi_mps_check` prints warning message if the one of the command line options: `acpi=off`, `acpi=noirq` or `pci=noacpi` passed to the kernel. If `acpi_mps_check` returns `1` it means that we disable local [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) and clear `X86_FEATURE_APIC` bit in the of the current CPU with the `setup_clear_cpu_cap` macro. (more about CPU mask you can read in the [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)).
 
 Early PCI dump
 --------------------------------------------------------------------------------
@@ -144,13 +142,13 @@ In the next step we make a dump of the [PCI](http://en.wikipedia.org/wiki/Conven
 #endif
 ```
 
-`pci_early_dump_regs` variable defined in the [arch/x86/pci/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/pci/common.c) and its value depends on the kernel command line parameter: `pci=earlydump`. We can find defition of this parameter in the [drivers/pci/pci.c](https://github.com/torvalds/linux/blob/master/arch):
+`pci_early_dump_regs` variable defined in the [arch/x86/pci/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/pci/common.c) and its value depends on the kernel command line parameter: `pci=earlydump`. We can find definition of this parameter in the [drivers/pci/pci.c](https://github.com/torvalds/linux/blob/master/arch):
 
 ```C
 early_param("pci", pci_setup);
 ```
 
-`pci_setup` function gets the string after the `pci=` and analyzes it. This function calls `pcibios_setup` which defined as `__weak` in the [drivers/pci/pci.c](https://github.com/torvalds/linux/blob/master/arch) and every architecture defines the same function which overrides `__weak` analog. For example `x86_64` architecture-depened version is in the [arch/x86/pci/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/pci/common.c):
+`pci_setup` function gets the string after the `pci=` and analyzes it. This function calls `pcibios_setup` which defined as `__weak` in the [drivers/pci/pci.c](https://github.com/torvalds/linux/blob/master/arch) and every architecture defines the same function which overrides `__weak` analog. For example `x86_64` architecture-dependent version is in the [arch/x86/pci/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/pci/common.c):
 
 ```C
 char *__init pcibios_setup(char *str) {
@@ -190,7 +188,7 @@ for (bus = 0; bus < 256; bus++) {
 
 and read the `pci` config with the `read_pci_config` function.
 
-That's all. We will no go deep in the `pci` details, but will see more details in the special `Drivers/PCI` part.
+That's all. We will not go deep in the `pci` details, but will see more details in the special `Drivers/PCI` part.
 
 Finish with memory parsing
 --------------------------------------------------------------------------------
@@ -210,14 +208,14 @@ After the `early_dump_pci_devices`, there are a couple of function related with 
 	early_reserve_e820_mpc_new();
 ```
 
-Let's look on it. As you can see the first function is `e820_reserve_setup_data`. This function does almost the same as `memblock_x86_reserve_range_setup_data` which we saw above, but it also calls `e820_update_range` which adds new regions to the `e820map` with the given type which is `E820_RESERVED_KERN` in our case. The next function is `finish_e820_parsing` which sanitazes `e820map` with the `sanitize_e820_map` function. Besides this two functions we can see a couple of functions related to the [e820](http://en.wikipedia.org/wiki/E820). You can see it in the listing which is above. `e820_add_kernel_range` function takes the physical address of the kernel start and end:
+Let's look on it. As you can see the first function is `e820_reserve_setup_data`. This function does almost the same as `memblock_x86_reserve_range_setup_data` which we saw above, but it also calls `e820_update_range` which adds new regions to the `e820map` with the given type which is `E820_RESERVED_KERN` in our case. The next function is `finish_e820_parsing` which sanitizes `e820map` with the `sanitize_e820_map` function. Besides this two functions we can see a couple of functions related to the [e820](http://en.wikipedia.org/wiki/E820). You can see it in the listing above. `e820_add_kernel_range` function takes the physical address of the kernel start and end:
 
 ```C
 u64 start = __pa_symbol(_text);
 u64 size = __pa_symbol(_end) - start;
 ```
 
-checks that `.text` `.data` and `.bss` marked as `E820RAM` in the `e820map` and prints the warning message if not. The next function `trm_bios_range` update first 4096 bytes in `e820Map` as `E820_RESERVED` and sanitizes it again with the call of the `sanitize_e820_map`. After this we get the last page frame number with the call of the `e820_end_of_ram_pfn` function. Every memory page has an unique number - `Page frame number`  and `e820_end_of_ram_pfn` function returns the maximum with the call of the `e820_end_pfn`:
+checks that `.text` `.data` and `.bss` marked as `E820RAM` in the `e820map` and prints the warning message if not. The next function `trm_bios_range` update first 4096 bytes in `e820Map` as `E820_RESERVED` and sanitizes it again with the call of the `sanitize_e820_map`. After this we get the last page frame number with the call of the `e820_end_of_ram_pfn` function. Every memory page has a unique number - `Page frame number`  and `e820_end_of_ram_pfn` function returns the maximum with the call of the `e820_end_pfn`:
 
 ```C
 unsigned long __init e820_end_of_ram_pfn(void)
@@ -226,7 +224,7 @@ unsigned long __init e820_end_of_ram_pfn(void)
 }
 ```
 
-where `e820_end_pfn` takes maximum page frame number on the certain architecture (`MAX_ARCH_PFN` is `0x400000000` for `x86_64`). In the `e820_end_pfn` we go through the all `e820` slots and check that `e820` entry has `E820_RAM` or `E820_PRAM` type because we calcluate page frame numbers only for these types, gets the base address and end address of the page frame number for the current `e820` entry and makes some checks for these addresses:
+where `e820_end_pfn` takes maximum page frame number on the certain architecture (`MAX_ARCH_PFN` is `0x400000000` for `x86_64`). In the `e820_end_pfn` we go through the all `e820` slots and check that `e820` entry has `E820_RAM` or `E820_PRAM` type because we calculate page frame numbers only for these types, gets the base address and end address of the page frame number for the current `e820` entry and makes some checks for these addresses:
 
 ```C
 for (i = 0; i < e820.nr_map; i++) {
@@ -260,7 +258,7 @@ for (i = 0; i < e820.nr_map; i++) {
 	return last_pfn;
 ```
 
-After this we check that `last_pfn` which we got in the loop is not greater that maximum page frame number for the certain architecture (`x86_64` in our case), print inofmration about last page frame number and return it. We can see the `last_pfn` in the `dmesg` output:
+After this we check that `last_pfn` which we got in the loop is not greater that maximum page frame number for the certain architecture (`x86_64` in our case), print information about last page frame number and return it. We can see the `last_pfn` in the `dmesg` output:
 
 ```
 ...
@@ -268,7 +266,7 @@ After this we check that `last_pfn` which we got in the loop is not greater that
 ...
 ```
 
-After this, as we have calculated the biggest page frame number, we calculate `max_low_pfn` which is the biggest page frame number in the `low memory` or bellow first `4` gigabytes. If installed more than 4 gigabytes of RAM, `max_low_pfn` will be result of the `e820_end_of_low_ram_pfn` function which does the same `e820_end_of_ram_pfn` but with 4 gigabytes limit, in other way `max_low_pfn` will be the same as `max_pfn`:
+After this, as we have calculated the biggest page frame number, we calculate `max_low_pfn` which is the biggest page frame number in the `low memory` or below first `4` gigabytes. If installed more than 4 gigabytes of RAM, `max_low_pfn` will be result of the `e820_end_of_low_ram_pfn` function which does the same `e820_end_of_ram_pfn` but with 4 gigabytes limit, in other way `max_low_pfn` will be the same as `max_pfn`:
 
 ```C
 if (max_pfn > (1UL<<(32 - PAGE_SHIFT)))
@@ -279,7 +277,7 @@ else
 high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
 ```
 
-Next we calculate `high_memory` (defines the upper bound on direct map memory) with `__va` macro which returns a virtual address by the given physical.
+Next we calculate `high_memory` (defines the upper bound on direct map memory) with `__va` macro which returns a virtual address by the given physical memory.
 
 DMI scanning 
 -------------------------------------------------------------------------------
@@ -291,7 +289,7 @@ dmi_scan_machine();
 dmi_memdev_walk();
 ```
 
-First is `dmi_scan_machine` defined in the [drivers/firmware/dmi_scan.c](https://github.com/torvalds/linux/blob/master/drivers/firmware/dmi_scan.c). This function goes through the [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS) structures and extracts informantion. There are two ways specified to gain access to the `SMBIOS` table: get the pointer to the `SMBIOS` table from the [EFI](http://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface)'s configuration table and scanning the physycal memory between `0xF0000` and `0x10000` addresses. Let's look on the second approach. `dmi_scan_machine` function remaps memory between `0xf0000` and `0x10000` with the `dmi_early_remap` which just expands to the `early_ioremap`:
+First is `dmi_scan_machine` defined in the [drivers/firmware/dmi_scan.c](https://github.com/torvalds/linux/blob/master/drivers/firmware/dmi_scan.c). This function goes through the [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS) structures and extracts information. There are two ways specified to gain access to the `SMBIOS` table: get the pointer to the `SMBIOS` table from the [EFI](http://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface)'s configuration table and scanning the physical memory between `0xF0000` and `0x10000` addresses. Let's look on the second approach. `dmi_scan_machine` function remaps memory between `0xf0000` and `0x10000` with the `dmi_early_remap` which just expands to the `early_ioremap`:
 
 ```C
 void __init dmi_scan_machine(void)
@@ -321,14 +319,14 @@ for (q = p; q < p + 0x10000; q += 16) {
 }
 ```
 
-`_SM_` string must be between `000F0000h` and `0x000FFFFF`. Here we copy 16 bytes to the `buf` with `memcpy_fromio` which is the same `memcpy` and execute `dmi_smbios3_present` and `dmi_present` on the buffer. These functions check that first 4 bytes is `_SM_` string, get `SMBIOS` version and gets `_DMI_` attributes as `DMI` structure table length, table address and etc... After one of these function will finish to execute, you will see the result of it in the `dmesg` output:
+`_SM_` string must be between `000F0000h` and `0x000FFFFF`. Here we copy 16 bytes to the `buf` with `memcpy_fromio` which is the same `memcpy` and execute `dmi_smbios3_present` and `dmi_present` on the buffer. These functions check that first 4 bytes is `_SM_` string, get `SMBIOS` version and gets `_DMI_` attributes as `DMI` structure table length, table address and etc... After one of these functions finish, you will see the result of it in the `dmesg` output:
 
 ```
 [    0.000000] SMBIOS 2.7 present.
 [    0.000000] DMI: Gigabyte Technology Co., Ltd. Z97X-UD5H-BK/Z97X-UD5H-BK, BIOS F6 06/17/2014
 ```
 
-In the end of the `dmi_scan_machine`, we unmap the previously remaped memory:
+In the end of the `dmi_scan_machine`, we unmap the previously remapped memory:
 
 ```C
 dmi_early_unmap(p, 0x10000);
@@ -381,7 +379,7 @@ static inline void find_smp_config(void)
 }
 ```
 
-inside. `x86_init.mpparse.find_smp_config` is a `default_find_smp_config` function from the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/mpparse.c). In the `default_find_smp_config` function we are scanning a couple of memory regions for `SMP` config and return if they are not:
+inside. `x86_init.mpparse.find_smp_config` is the `default_find_smp_config` function from the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/mpparse.c). In the `default_find_smp_config` function we are scanning a couple of memory regions for `SMP` config and return if they are found:
 
 ```C
 if (smp_scan_config(0x0, 0x400) ||
@@ -414,7 +412,7 @@ struct mpf_intel {
 };
 ```
 
-As we can read in the documentation - one of the main functions of the system BIOS is to construct the MP floating pointer structure and the MP configuration table. And operating system must have access to this information about the multiprocessor configuration and `mpf_intel` stores the physical address (look at second parameter) of the multiprocessor configuration table. So, `smp_scan_config` going in a loop through the given memory range and tries to find `MP floating pointer structure` there. It checks that current byte points to the `SMP` signature, checks checksum, checks that `mpf->specification` is 1 (it must be `1` or `4` by specification) in the loop:
+As we can read in the documentation - one of the main functions of the system BIOS is to construct the MP floating pointer structure and the MP configuration table. And operating system must have access to this information about the multiprocessor configuration and `mpf_intel` stores the physical address (look at second parameter) of the multiprocessor configuration table. So, `smp_scan_config` going in a loop through the given memory range and tries to find `MP floating pointer structure` there. It checks that current byte points to the `SMP` signature, checks checksum, checks if `mpf->specification` is 1 or 4(it must be `1` or `4` by specification) in the loop:
 
 ```C
 while (length > 0) {
@@ -432,12 +430,12 @@ if ((*bp == SMP_MAGIC_IDENT) &&
 }
 ```
 
-reserves given memory block if search is successful with `memblock_reserve` and reserves physical address of the multiprocessor configuration table. All documentation about this you can find in the - [MultiProcessor Specification](http://www.intel.com/design/pentium/datashts/24201606.pdf). More details you can read in the special part about `SMP`.
+reserves given memory block if search is successful with `memblock_reserve` and reserves physical address of the multiprocessor configuration table. You can find documentation about this in the - [MultiProcessor Specification](http://www.intel.com/design/pentium/datashts/24201606.pdf). You can read More details in the special part about `SMP`.
 
 Additional early memory initialization routines
 --------------------------------------------------------------------------------
 
-In the next step of the `setup_arch` we can see the call of the `early_alloc_pgt_buf` function which allocates the page table buffer for early stage. The page table buffer will be place in the `brk` area. Let's look on its implementation:
+In the next step of the `setup_arch` we can see the call of the `early_alloc_pgt_buf` function which allocates the page table buffer for early stage. The page table buffer will be placed in the `brk` area. Let's look on its implementation:
 
 ```C
 void  __init early_alloc_pgt_buf(void)
@@ -453,7 +451,7 @@ void  __init early_alloc_pgt_buf(void)
 }
 ```
 
-First of all it get the size of the page table buffer, it will be `INIT_PGT_BUF_SIZE` which is `(6 * PAGE_SIZE)` in the current linux kernel 4.0. As we got the size of the page table buffer, we call `extend_brk` function with two parameters: size and align. As you can understand from its name, this function extends the `brk` area. As we can see in the linux kernel linker script `brk` in memory right after the [BSS](http://en.wikipedia.org/wiki/.bss):
+First of all it get the size of the page table buffer, it will be `INIT_PGT_BUF_SIZE` which is `(6 * PAGE_SIZE)` in the current linux kernel 4.0. As we got the size of the page table buffer, we call `extend_brk` function with two parameters: size and align. As you can understand from its name, this function extends the `brk` area. As we can see in the linux kernel linker script `brk` is in memory right after the [BSS](http://en.wikipedia.org/wiki/.bss):
 
 ```C
 	. = ALIGN(PAGE_SIZE);
@@ -469,7 +467,7 @@ Or we can find it with `readelf` util:
 
 ![brk area](http://oi61.tinypic.com/71lkeu.jpg)
 
-After that we got physical address of the new `brk` with the `__pa` macro, we calculate the base address and the end of the page table buffer. In the next step as we got page table buffer, we reserve memory block for the brk are with the `reserve_brk` function:
+After that we got physical address of the new `brk` with the `__pa` macro, we calculate the base address and the end of the page table buffer. In the next step as we got page table buffer, we reserve memory block for the brk area with the `reserve_brk` function:
 
 ```C
 static void __init reserve_brk(void)
@@ -482,7 +480,7 @@ static void __init reserve_brk(void)
 }
 ```
 
-Note that in the end of the `reserve_brk`, we set `brk_start` to zero, because after this we will not allocate it anymore. The next step after reserving memory block for the `brk`, we need to unmap out-of-range memory areas in the kernel mapping with the `cleanup_highmap` function. Remeber that kernel mapping is `__START_KERNEL_map` and `_end - _text` or `level2_kernel_pgt` maps the kernel `_text`, `data` and `bss`. In the start of the `clean_high_map` we define these parameters:
+Note that in the end of the `reserve_brk`, we set `brk_start` to zero, because after this we will not allocate it anymore. The next step after reserving memory block for the `brk`, we need to unmap out-of-range memory areas in the kernel mapping with the `cleanup_highmap` function. Remember that kernel mapping is `__START_KERNEL_map` and `_end - _text` or `level2_kernel_pgt` maps the kernel `_text`, `data` and `bss`. In the start of the `clean_high_map` we define these parameters:
 
 ```C
 unsigned long vaddr = __START_KERNEL_map;
@@ -517,18 +515,18 @@ MEMBLOCK configuration:
  reserved[0x2]	[0x0000007ec89000-0x0000007fffffff], 0x1377000 bytes flags: 0x0
 ```
 
-The rest functions after the `memblock_x86_fill` are: `early_reserve_e820_mpc_new` alocates additional slots in the `e820map` for MultiProcessor Specification table, `reserve_real_mode` - reserves low memory from `0x0` to 1 megabyte for the trampoline to the real mode (for rebootin and etc...), `trim_platform_memory_ranges` - trims certain memory regions started from `0x20050000`, `0x20110000` and etc... these regions must be excluded because [Sandy Bridge](http://en.wikipedia.org/wiki/Sandy_Bridge) has problems with these regions, `trim_low_memory_range` reserves the first 4 killobytes page in `memblock`, `init_mem_mapping` function reconstructs direct memory mapping and setups the direct mapping of the physical memory at `PAGE_OFFSET`, `early_trap_pf_init` setups `#PF` handler (we will look on it in the chapter about interrupts) and `setup_real_mode` function setups trampoline to the [real mode](http://en.wikipedia.org/wiki/Real_mode) code.
+The rest functions after the `memblock_x86_fill` are: `early_reserve_e820_mpc_new` allocates additional slots in the `e820map` for MultiProcessor Specification table, `reserve_real_mode` - reserves low memory from `0x0` to 1 megabyte for the trampoline to the real mode (for rebooting, etc.), `trim_platform_memory_ranges` - trims certain memory regions started from `0x20050000`, `0x20110000`, etc. these regions must be excluded because [Sandy Bridge](http://en.wikipedia.org/wiki/Sandy_Bridge) has problems with these regions, `trim_low_memory_range` reserves the first 4 kilobyte page in `memblock`, `init_mem_mapping` function reconstructs direct memory mapping and setups the direct mapping of the physical memory at `PAGE_OFFSET`, `early_trap_pf_init` setups `#PF` handler (we will look on it in the chapter about interrupts) and `setup_real_mode` function setups trampoline to the [real mode](http://en.wikipedia.org/wiki/Real_mode) code.
 
-That's all. You can note that this part will not cover all functions which are in the `setup_arch` (like `early_gart_iommu_check`, [mtrr](http://en.wikipedia.org/wiki/Memory_type_range_register) initalization and etc...). As I already wrote many times, `setup_arch` is big, and linux kernel is big. That's why I can't cover every line in the linux kernel. I don't think that we missed something important,... but you can say something like: each line of code is important. Yes, it's true, but I missed they anyway, because I think that it is not real to cover full linux kernel. Anyway we will often return to the idea that we have already seen, and if something will be unfamiliar, we will cover this theme.
+That's all. You can note that this part will not cover all functions which are in the `setup_arch` (like `early_gart_iommu_check`, [mtrr](http://en.wikipedia.org/wiki/Memory_type_range_register) initialization, etc.). As I already wrote many times, `setup_arch` is big, and linux kernel is big. That's why I can't cover every line in the linux kernel. I don't think that we missed something important, but you can say something like: each line of code is important. Yes, it's true, but I missed them anyway, because I think that it is not realistic to cover full linux kernel. Anyway we will often return to the idea that we have already seen, and if something is unfamiliar, we will cover this theme.
 
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the sixth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function again It was long part, but we not finished with it. Yes, `setup_arch` is big, hope that next part will be last about this function.
+It is the end of the sixth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function again and it was long part, but we are not finished with it. Yes, `setup_arch` is big, hope that next part will be the last part about this function.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

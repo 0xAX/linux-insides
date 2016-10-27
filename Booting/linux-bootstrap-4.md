@@ -4,23 +4,23 @@ Kernel booting process. Part 4.
 Transition to 64-bit mode
 --------------------------------------------------------------------------------
 
-It is the fourth part of the `Kernel booting process` and we will see first steps in the [protected mode](http://en.wikipedia.org/wiki/Protected_mode), like checking that cpu supports the [long mode](http://en.wikipedia.org/wiki/Long_mode) and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions), [paging](http://en.wikipedia.org/wiki/Paging) and initialization of the page tables and transition to the long mode in in the end of this part.
+This is the fourth part of the `Kernel booting process` where we will see first steps in [protected mode](http://en.wikipedia.org/wiki/Protected_mode), like checking that cpu supports [long mode](http://en.wikipedia.org/wiki/Long_mode) and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions), [paging](http://en.wikipedia.org/wiki/Paging), initializes the page tables and at the end we will discuss the transition to [long mode](https://en.wikipedia.org/wiki/Long_mode).
 
-**NOTE: will be much assembly code in this part, so if you have poor knowledge, read a book about it**
+**NOTE: there will be much assembly code in this part, so if you are not familiar with that, you might want to consult a book about it**
 
-In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md) we stopped at the jump to the 32-bit entry point in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S):
+In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md) we stopped at the jump to the 32-bit entry point in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S):
 
 ```assembly
 jmpl	*%eax
 ```
 
-Remind that `eax` register contains the address of the 32-bit entry point. We can read about this point from the linux kernel x86 boot protocol:
+You will recall that `eax` register contains the address of the 32-bit entry point. We can read about this in the [linux kernel x86 boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt):
 
 ```
 When using bzImage, the protected-mode kernel was relocated to 0x100000
 ```
 
-And now we can make sure that it is true. Let's look on registers value in 32-bit entry point:
+Let's make sure that it is true by looking at the register values at the 32-bit entry point:
 
 ```
 eax            0x100000	1048576
@@ -41,12 +41,12 @@ fs             0x18	24
 gs             0x18	24
 ```
 
-We can see here that `cs` register contains - `0x10` (as you can remember from the previous part, it is the second index in the Global Descriptor Table), `eip` register is `0x100000` and base address of the all segments include code segment is zero. So we can get physical address, it will be `0:0x100000` or just `0x100000`, as in boot protocol. Now let's start with 32-bit entry point.
+We can see here that `cs` register contains - `0x10` (as you will remember from the previous part, this is the second index in the Global Descriptor Table), `eip` register is `0x100000` and base address of all segments including the code segment are zero. So we can get the physical address, it will be `0:0x100000` or just `0x100000`, as specified by the boot protocol. Now let's start with the 32-bit entry point.
 
 32-bit entry point
 --------------------------------------------------------------------------------
 
-We can find definition of the 32-bit entry point in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
+We can find the definition of the 32-bit entry point in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
 ```assembly
 	__HEAD
@@ -58,14 +58,14 @@ ENTRY(startup_32)
 ENDPROC(startup_32)
 ```
 
-First of all why `compressed` directory? Actually `bzimage` is a gzipped `vmlinux + header + kernel setup code`. We saw the kernel setup code in the all of previous parts. So, the main goal of the `head_64.S` is to prepare for entering long mode, enter into it and decompress the kernel. We will see all of these steps besides kernel decompression in this part.
+First of all why `compressed` directory? Actually `bzimage` is a gzipped `vmlinux + header + kernel setup code`. We saw the kernel setup code in all of the previous parts. So, the main goal of the `head_64.S` is to prepare for entering long mode, enter into it and then decompress the kernel. We will see all of the steps up to kernel decompression in this part.
 
-Also you can note that there are two files in the `arch/x86/boot/compressed` directory:
+There were two files in the `arch/x86/boot/compressed` directory:
 
-* head_32.S
-* head_64.S
+* [head_32.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_32.S)
+* [head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)
 
-We will see only `head_64.S` because we are learning linux kernel for `x86_64`. `head_32.S` even not compiled in our case. Let's look on the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile), we can see there following target:
+but we will see only `head_64.S` because, as you may remember, this book is only `x86_64` related; `head_32.S` is not used in our case. Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile). There we can see the following target:
 
 ```Makefile
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
@@ -73,26 +73,26 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
 
-Note on `$(obj)/head_$(BITS).o`. It means that compilation of the head_{32,64}.o depends on value of the `$(BITS)`. We can find it in the other Makefile - [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/Makefile):
+Note `$(obj)/head_$(BITS).o`. This means that we will select which file to link based on what `$(BITS)` is set to, either head_32.o or head_64.o.   `$(BITS)` is defined elsewhere in [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) based on the .config file:
 
 ```Makefile
 ifeq ($(CONFIG_X86_32),y)
-	    BITS := 32
+        BITS := 32
         ...
-		...
+        ...
 else
-		...
-		...
         BITS := 64
+        ...
+        ...
 endif
 ```
 
 Now we know where to start, so let's do it.
 
-Reload the segments if need
+Reload the segments if needed
 --------------------------------------------------------------------------------
 
-As i wrote above, we start in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S). First of all we can see before `startup_32` definition:
+As indicated above, we start in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file. First we see the definition of the special section attribute before the `startup_32` definition:
 
 ```assembly
     __HEAD
@@ -100,13 +100,13 @@ As i wrote above, we start in the [arch/x86/boot/compressed/head_64.S](https://g
 ENTRY(startup_32)
 ```
 
-`__HEAD` defined in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) and looks as:
+The `__HEAD` is macro which is defined in [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file and expands to the definition of the following section:
 
 ```C
 #define __HEAD		.section	".head.text","ax"
 ```
 
-We can find this section in the [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) linker script:
+with `.head.text` name and `ax` flags. In our case, these flags show us that this section is [executable](https://en.wikipedia.org/wiki/Executable) or in other words contains code. We can find definition of this section in the [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) linker script:
 
 ```
 SECTIONS
@@ -119,17 +119,17 @@ SECTIONS
 	}
 ```
 
-Note on `. = 0;`. `.` is a special variable of linker - location counter. Assigning a value to it, is an offset relative to the offset of the segment. As we assign zero to it, we can read from comments:
+If you are not familiar with syntax of `GNU LD` linker scripting language, you can find more information in the [documentation](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts). In short, the `.` symbol is a special variable of linker - location counter. The value assigned to it is an offset relative to the offset of the segment. In our case we assign zero to location counter. This means that that our code is linked to run from the `0` offset in memory. Moreover, we can find this information in comments:
 
 ```
 Be careful parts of head_64.S assume startup_32 is at address 0.
 ```
 
-Ok, now we know where we are, and now the best time to look inside the `startup_32` function. 
+Ok, now we know where we are, and now is the best time to look inside the `startup_32` function.
 
-In the start of the `startup_32` we can see the `cld` instruction which clears `DF` flag. After this, string operations like `stosb` and other will increment the index registers `esi` or `edi`.
+In the beginning of the `startup_32` function, we can see the `cld` instruction which clears the `DF` bit in the [flags](https://en.wikipedia.org/wiki/FLAGS_register) register. When direction flag is clear, all string operations like [stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html), [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html) and others will increment the index registers `esi` or `edi`. We need to clear direction flag because later we will use strings operations for clearing space for page tables, etc.
 
-The Next we can see the check of `KEEP_SEGMENTS` flag from `loadflags`. If you remember we already saw `loadflags` in the `arch/x86/boot/head.S` (there we checked flag `CAN_USE_HEAP`). Now we need to check `KEEP_SEGMENTS` flag. We can find description of this flag in the linux boot protocol:
+After we have cleared the `DF` bit, next step is the check of the `KEEP_SEGMENTS` flag from `loadflags` kernel setup header field. If you remember we already saw `loadflags` in the very first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. There we checked `CAN_USE_HEAP` flag to get ability to use heap. Now we need to check the `KEEP_SEGMENTS` flag. This flags is described in the linux [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) documentation:
 
 ```
 Bit 6 (write): KEEP_SEGMENTS
@@ -139,8 +139,8 @@ Bit 6 (write): KEEP_SEGMENTS
     Assume that %cs %ds %ss %es are all set to flat segments with
 	a base of 0 (or the equivalent for their environment).
 ```
-	
-and if `KEEP_SEGMENTS` is not set, we need to set `ds`, `ss` and `es` registers to flat segment with base 0. That we do:
+
+So, if the `KEEP_SEGMENTS` bit is not set in the `loadflags`, we need to reset `ds`, `ss` and `es` segment registers to a flat segment with base `0`. That we do:
 
 ```C
 	testb $(1 << 6), BP_loadflags(%esi)
@@ -153,11 +153,29 @@ and if `KEEP_SEGMENTS` is not set, we need to set `ds`, `ss` and `es` registers 
 	movl	%eax, %ss
 ```
 
-remember that `__BOOT_DS` is `0x18` (index of data segment in the Global Descriptor Table). If `KEEP_SEGMENTS` is not set, we jump to the label `1f` or update segment registers with `__BOOT_DS` if this flag is set. 
+Remember that the `__BOOT_DS` is `0x18` (index of data segment in the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)). If `KEEP_SEGMENTS` is set, we jump to the nearest `1f` label or update segment registers with `__BOOT_DS` if it is not set. It is pretty easy, but here is one interesting moment. If you've read the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), you may remember that we already updated these segment registers right after we switched to [protected mode](https://en.wikipedia.org/wiki/Protected_mode) in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S). So why do we need to care about values of segment registers again? The answer is easy. The Linux kernel also has a 32-bit boot protocol and if a bootloader uses it to load the Linux kernel all code before the `startup_32` will be missed. In this case, the `startup_32` will be first entry point of the Linux kernel right after bootloader and there are no guarantees that segment registers will be in known state.
 
-If you read previous the [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), you can remember that we already updated segment registers in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S), so why we need to set up it again? Actually linux kernel has also 32-bit boot protocol, so `startup_32` can be first function which will be executed right after a bootloader transfers control to the kernel.
+After we have checked the `KEEP_SEGMENTS` flag and put the correct value to the segment registers, the next step is to calculate difference between where we loaded and compiled to run. Remember that `setup.ld.S` contains following definition: `. = 0` at the start of the `.head.text` section. This means that the code in this section is compiled to run from `0` address. We can see this in `objdump` output:
 
-As we checked `KEEP_SEGMENTS` flag and put the correct value to the segment registers, next step is calculate difference between where we loaded and compiled to run (remember that `setup.ld.S` contains `. = 0` at the start of the section):
+```
+arch/x86/boot/compressed/vmlinux:     file format elf64-x86-64
+
+
+Disassembly of section .head.text:
+
+0000000000000000 <startup_32>:
+   0:   fc                      cld
+   1:   f6 86 11 02 00 00 40    testb  $0x40,0x211(%rsi)
+```
+
+The `objdump` util tells us that the address of the `startup_32` is `0`. But actually it is not so. Our current goal is to know where actually we are. It is pretty simple to do in [long mode](https://en.wikipedia.org/wiki/Long_mode), because it support `rip` relative addressing, but currently we are in [protected mode](https://en.wikipedia.org/wiki/Protected_mode). We will use common pattern to know the address of the `startup_32`. We need to define a label and make a call to this label and pop the top of the stack to a register:
+
+```assembly
+call label
+label: pop %reg
+```
+
+After this a register will contain the address of a label. Let's look to the similar code which search address of the `startup_32` in the Linux kernel:
 
 ```assembly
 	leal	(BP_scratch+4)(%esi), %esp
@@ -166,16 +184,71 @@ As we checked `KEEP_SEGMENTS` flag and put the correct value to the segment regi
 	subl	$1b, %ebp
 ```
 
-Here `esi` register contains address of the [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) structure. `boot_params` contains special field `scratch` with offset `0x1e4`. We are getting address of the `scratch` field + 4 bytes and put it to the `esp` register (we will use it as stack for these calculations). After this we can see call instruction and `1f` label as operand of it. What does it mean `call`? It means that it pushes `ebp` value in the stack, next `esp` value, next function arguments and return address in the end. After this we pop return address from the stack into `ebp` register (`ebp` will contain return address) and subtract address of the previous label `1`. 
+As you remember from the previous part, the `esi` register contains the address of the [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) structure which was filled before we moved to the protected mode. The `boot_params` structure contains a special field `scratch` with offset `0x1e4`. These four bytes field will be temporary stack for `call` instruction. We are getting the address of the `scratch` field + 4 bytes and putting it in the `esp` register. We add `4` bytes to the base of the `BP_scratch` field because, as just described, it will be a temporary stack and the stack grows from top to down in `x86_64` architecture. So our stack pointer will point to the top of the stack. Next we can see the pattern that I've described above. We make a call to the `1f` label and put the address of this label to the `ebp` register, because we have return address on the top of stack after the `call` instruction will be executed. So, for now we have an address of the `1f` label and now it is easy to get address of the `startup_32`. We just need to subtract address of label from the address which we got from the stack:
 
-After this we have address where we loaded in the `ebp` - `0x100000`.
+```
+startup_32 (0x0)     +-----------------------+
+                     |                       |
+                     |                       |
+                     |                       |
+                     |                       |
+                     |                       |
+                     |                       |
+                     |                       |
+                     |                       |
+1f (0x0 + 1f offset) +-----------------------+ %ebp - real physical address
+                     |                       |
+                     |                       |
+                     +-----------------------+
+```
 
-Now we can setup the stack and verify CPU that it has support of the long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions).
+`startup_32` is linked to run at address `0x0` and this means that `1f` has the address `0x0 + offset to 1f`, approximately `0x21` bytes. The `ebp` register contains the real physical address of the `1f` label. So, if we subtract `1f` from the `ebp` we will get the real physical address of the `startup_32`. The Linux kernel [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) describes that the base of the protected mode kernel is `0x100000`. We can verify this with [gdb](https://en.wikipedia.org/wiki/GNU_Debugger). Let's start the debugger and put breakpoint to the `1f` address, which is `0x100021`. If this is correct we will see `0x100021` in the `ebp` register:
+
+```
+$ gdb
+(gdb)$ target remote :1234
+Remote debugging using :1234
+0x0000fff0 in ?? ()
+(gdb)$ br *0x100022
+Breakpoint 1 at 0x100022
+(gdb)$ c
+Continuing.
+
+Breakpoint 1, 0x00100022 in ?? ()
+(gdb)$ i r
+eax            0x18	0x18
+ecx            0x0	0x0
+edx            0x0	0x0
+ebx            0x0	0x0
+esp            0x144a8	0x144a8
+ebp            0x100021	0x100021
+esi            0x142c0	0x142c0
+edi            0x0	0x0
+eip            0x100022	0x100022
+eflags         0x46	[ PF ZF ]
+cs             0x10	0x10
+ss             0x18	0x18
+ds             0x18	0x18
+es             0x18	0x18
+fs             0x18	0x18
+gs             0x18	0x18
+```
+
+If we execute the next instruction, `subl $1b, %ebp`, we will see:
+
+```
+nexti
+...
+ebp            0x100000	0x100000
+...
+```
+
+Ok, that's true. The address of the `startup_32` is `0x100000`. After we know the address of the `startup_32` label, we can prepare for the transition to [long mode](https://en.wikipedia.org/wiki/Long_mode). Our next goal is to setup the stack and verify that the CPU supports long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions).
 
 Stack setup and CPU verification
 --------------------------------------------------------------------------------
 
-The next we can see assembly code which setups new stack for kernel decompression:
+We could not setup the stack while we did not know the address of the `startup_32` label. We can imagine the stack as an array and the stack pointer register `esp` must point to the end of this array. Of course we can define an array in our code, but we need to know its actual address to configure the stack pointer in a correct way. Let's look at the code:
 
 ```assembly
 	movl	$boot_stack_end, %eax
@@ -183,7 +256,7 @@ The next we can see assembly code which setups new stack for kernel decompressio
 	movl	%eax, %esp
 ```
 
-`boots_stack_end` is in the `.bss` section, we can see definition of it in the end of `head_64.S`:
+The `boot_stack_end` label, defined in the same [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file and located in the [.bss](https://en.wikipedia.org/wiki/.bss) section:
 
 ```assembly
 	.bss
@@ -195,9 +268,9 @@ boot_stack:
 boot_stack_end:
 ```
 
-First of all we put address of the `boot_stack_end` into `eax` register and add to it value of the `ebp` (remember that `ebp` now contains address where we loaded - `0x100000`). In the end we just put `eax` value into `esp` and that's all, we have correct stack pointer.
+First of all, we put the address of `boot_stack_end` into the `eax` register, so the `eax` register contains the address of `boot_stack_end` where it was linked, which is `0x0 + boot_stack_end`. To get the real address of `boot_stack_end`, we need to add the real address of the `startup_32`. As you remember, we have found this address above and put it to the `ebp` register. In the end, the register `eax` will contain real address of the `boot_stack_end` and we just need to put to the stack pointer.
 
-The next step is CPU verification. Need to check that CPU has support of `long mode` and `SSE`:
+After we have set up the stack, next step is CPU verification. As we are going to execute transition to the `long mode`, we need to check that the CPU supports `long mode` and `SSE`. We will do it by the call of the `verify_cpu` function:
 
 ```assembly
 	call	verify_cpu
@@ -205,9 +278,9 @@ The next step is CPU verification. Need to check that CPU has support of `long m
 	jnz	no_longmode
 ```
 
-It just calls `verify_cpu` function from the [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) which contains a couple of calls of the `cpuid` instruction. `cpuid` is instruction which is used for getting information about processor. In our case it checks long mode and SSE support and returns `0` on success or `1` on fail in the `eax` register. 
+This function defined in the [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) assembly file and just contains a couple of calls to the [cpuid](https://en.wikipedia.org/wiki/CPUID) instruction. This instruction is used for getting information about the processor. In our case it checks `long mode` and `SSE` support and returns `0` on success or `1` on fail in the `eax` register.
 
-If `eax` is not zero, we jump to the `no_longmode` label which just stops the CPU with `hlt` instruction while any hardware interrupt will not happen.
+If the value of the `eax` is not zero, we jump to the `no_longmode` label which just stops the CPU by the call of the `hlt` instruction while no hardware interrupt will not happen:
 
 ```assembly
 no_longmode:
@@ -216,12 +289,29 @@ no_longmode:
 	jmp     1b
 ```
 
-We set stack, cheked CPU and now can move on the next step.
+If the value of the `eax` register is zero, everything is ok and we are able to continue.
 
 Calculate relocation address
 --------------------------------------------------------------------------------
 
-The next step is calculating relocation address for decompression if need. We can see following assembly code:
+The next step is calculating relocation address for decompression if needed. First we need to know what it means for a kernel to be `relocatable`. We already know that the base address of the 32-bit entry point of the Linux kernel is `0x100000`, but that is a 32-bit entry point. The default base address of the Linux kernel is determined by the value of the `CONFIG_PHYSICAL_START` kernel configuration option. Its default value is `0x1000000` or `1 MB`. The main problem here is that if the Linux kernel crashes, a kernel developer must have a `rescue kernel` for [kdump](https://www.kernel.org/doc/Documentation/kdump/kdump.txt) which is configured to load from a different address. The Linux kernel provides special configuration option to solve this problem: `CONFIG_RELOCATABLE`. As we can read in the documentation of the Linux kernel:
+
+```
+This builds a kernel image that retains relocation information
+so it can be loaded someplace besides the default 1MB.
+
+Note: If CONFIG_RELOCATABLE=y, then the kernel runs from the address
+it has been loaded at and the compile time physical address
+(CONFIG_PHYSICAL_START) is used as the minimum location.
+```
+
+In simple terms this means that the Linux kernel with the same configuration can be booted from different addresses. Technically, this is done by compiling the decompressor as [position independent code](https://en.wikipedia.org/wiki/Position-independent_code). If we look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile), we will see that the decompressor is indeed compiled with the `-fPIC` flag:
+
+```Makefile
+KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
+```
+
+When we are using position-independent code an address is obtained by adding the address field of the command and the value of the program counter. We can load code which uses such addressing from any address. That's why we had to get the real physical address of `startup_32`. Now let's get back to the Linux kernel code. Our current goal is to calculate an address where we can relocate the kernel for decompression. Calculation of this address depends on `CONFIG_RELOCATABLE` kernel configuration option. Let's look at the code:
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
@@ -239,22 +329,7 @@ The next step is calculating relocation address for decompression if need. We ca
 	addl	$z_extract_offset, %ebx
 ```
 
-First of all note on `CONFIG_RELOCATABLE` macro. This configuration option defined in the [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) and as we can read from it's description:
-
-```
-This builds a kernel image that retains relocation information
-so it can be loaded someplace besides the default 1MB.
-
-Note: If CONFIG_RELOCATABLE=y, then the kernel runs from the address
-it has been loaded at and the compile time physical address
-(CONFIG_PHYSICAL_START) is used as the minimum location.
-```
-
-In short words, this code calculates address where to move kernel for decompression put it to `ebx` register if the kernel is relocatable or bzimage will decompress itself above `LOAD_PHYSICAL_ADDR`.
-
-Let's look on the code. If we have `CONFIG_RELOCATABLE=n` in our kernel configuration file, it just puts `LOAD_PHYSICAL_ADDR` to the `ebx` register and adds `z_extract_offset` to `ebx`. As `ebx` is zero for now, it will contain `z_extract_offset`. Now let's try to understand these two values.
-
-`LOAD_PHYSICAL_ADDR` is the macro which defined in the [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) and it looks like this:
+Remember that the value of the `ebp` register is the physical address of the `startup_32` label. If the `CONFIG_RELOCATABLE` kernel configuration option is enabled during kernel configuration, we put this address in the `ebx` register, align it to a multiple of `2MB` and compare it with the `LOAD_PHYSICAL_ADDR` value. The `LOAD_PHYSICAL_ADDR` macro is defined in the [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) header file and it looks like this:
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -262,27 +337,14 @@ Let's look on the code. If we have `CONFIG_RELOCATABLE=n` in our kernel configur
 				& ~(CONFIG_PHYSICAL_ALIGN - 1))
 ```
 
-Here we calculates aligned address where kernel is loaded (`0x100000` or 1 megabyte in our case). `PHYSICAL_ALIGN` is an alignment value to which kernel should be aligned, it ranges from `0x200000` to `0x1000000` for x86_64. With the default values we will get 2 megabytes in the `LOAD_PHYSICAL_ADDR`:
+As we can see it just expands to the aligned `CONFIG_PHYSICAL_ALIGN` value which represents the physical address of where to load the kernel. After comparison of the `LOAD_PHYSICAL_ADDR` and value of the `ebx` register, we add the offset from the `startup_32` where to decompress the compressed kernel image. If the `CONFIG_RELOCATABLE` option is not enabled during kernel configuration, we just put the default address where to load kernel and add `z_extract_offset` to it.
 
-```python
->>> 0x100000 + (0x200000 - 1) & ~(0x200000 - 1)
-2097152
-```
-
-After that we got alignment unit, we adds `z_extract_offset` (which is `0xe5c000` in my case) to the 2 megabytes. In the end we will get 17154048 byte offset. You can find `z_extract_offset` in the `arch/x86/boot/compressed/piggy.S`. This file generated in compile time by [mkpiggy](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/mkpiggy.c) program.
-
-Now let's try to understand the code if `CONFIG_RELOCATABLE` is `y`. 
-
-First of all we put `ebp` value to the `ebx` (remember that `ebp` contains address where we loaded) and `kernel_alignment` field from kernel setup header to the `eax` register. `kernel_alignment`  is a physical address of alignment required for the kernel. Next we do the same as in the previous case (when kernel is not relocatable), but we just use value of the `kernel_alignment` field as align unit and `ebx` (address where we loaded) as base address instead of `CONFIG_PHYSICAL_ALIGN` and `LOAD_PHYSICAL_ADDR`. 
-
-After that we calculated address, we compare it with `LOAD_PHYSICAL_ADDR` and add `z_extract_offset` to it again or put `LOAD_PHYSICAL_ADDR` in the `ebx` if calculated address is less than we need.
-
-After all of this calculation we will have `ebp` which contains address where we loaded and `ebx` with address where to move kernel for decompression.
+After all of these calculations we will have `ebp` which contains the address where we loaded it and `ebx` set to the address of where kernel will be moved after decompression.
 
 Preparation before entering long mode
 --------------------------------------------------------------------------------
 
-Now we need to do the last preparations before we can see transition to the 64-bit mode. At first we need to update Global Descriptor Table for this:
+When we have the base address where we will relocate the compressed kernel image, we need to do one last step before we can transition to 64-bit mode. First we need to update the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table):
 
 ```assembly
 	leal	gdt(%ebp), %eax
@@ -290,9 +352,7 @@ Now we need to do the last preparations before we can see transition to the 64-b
 	lgdt	gdt(%ebp)
 ```
 
-Here we put the address from `ebp` with `gdt` offset to `eax` register, next we put this address into `ebp` with offset `gdt+2` and load Global Descriptor Table with the `lgdt` instruction. 
-
-Let's look on Global Descriptor Table definition:
+Here we put the base address from `ebp` register with `gdt` offset into the `eax` register. Next we put this address into `ebp` register with offset `gdt+2` and load the `Global Descriptor Table` with the `lgdt` instruction. To understand the magic with `gdt` offsets we need to look at the definition of the `Global Descriptor Table`. We can find its definition in the same source code [file](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 	.data
@@ -305,11 +365,17 @@ gdt:
 	.quad	0x00cf92000000ffff	/* __KERNEL_DS */
 	.quad	0x0080890000000000	/* TS descriptor */
 	.quad   0x0000000000000000	/* TS continued */
+gdt_end:
 ```
 
-It defined in the same file in the `.data` section. It contains 5 descriptors: null descriptor, for kernel code segment, kernel data segment and two task descriptors. We already loaded GDT in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), we're doing almost the same here, but descriptors with `CS.L = 1` and `CS.D = 0` for execution in the 64 bit mode.
+We can see that it is located in the `.data` section and contains five descriptors: `null` descriptor, kernel code segment, kernel data segment and two task descriptors. We already loaded the `Global Descriptor Table` in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), and now we're doing almost the same here, but descriptors with `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode. As we can see, the definition of the `gdt` starts from two bytes: `gdt_end - gdt` which represents last byte in the `gdt` table or table limit. The next four bytes contains base address of the `gdt`. Remember that the `Global Descriptor Table` is stored in the `48-bits GDTR` which consists of two parts:
 
-After we have loaded Global Descriptor Table, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) mode with putting value of `cr4` register into `eax`, setting 5 bit in it and load it again in the `cr4` :
+* size(16-bit) of global descriptor table;
+* address(32-bit) of the global descriptor table.
+
+So, we put address of the `gdt` to the `eax` register and then we put it to the `.long	gdt` or `gdt+2` in our assembly code. From now we have formed structure for the `GDTR` register and can load the `Global Descriptor Table` with the `lgtd` instruction.
+
+After we have loaded the `Global Descriptor Table`, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) mode by putting the value of the `cr4` register into `eax`, setting 5 bit in it and loading it again into `cr4`:
 
 ```assembly
 	movl	%cr4, %eax
@@ -317,49 +383,49 @@ After we have loaded Global Descriptor Table, we must enable [PAE](http://en.wik
 	movl	%eax, %cr4
 ```
 
-Now we finished almost with all preparations before we can move into 64-bit mode. The last step is to build page tables, but before some information about long mode.
+Now we are almost finished with all preparations before we can move into 64-bit mode. The last step is to build page tables, but before that, here is some information about long mode.
 
 Long mode
 --------------------------------------------------------------------------------
 
-Long mode is the native mode for x86_64 processors. First of all let's look on some difference between `x86_64` and `x86`.
+[Long mode](https://en.wikipedia.org/wiki/Long_mode) is the native mode for [x86_64](https://en.wikipedia.org/wiki/X86-64) processors. First let's look at some differences between `x86_64` and the `x86`.
 
-It provides some features as:
+The `64-bit` mode provides features such as:
 
-* New 8 general purpose registers from `r8` to `r15` + all general purpose registers are 64-bit now
-* 64-bit instruction pointer - `RIP`
-* New operating mode - Long mode
-* 64-Bit Addresses and Operands
-* RIP Relative Addressing (we will see example if it in the next parts)
+* New 8 general purpose registers from `r8` to `r15` + all general purpose registers are 64-bit now;
+* 64-bit instruction pointer - `RIP`;
+* New operating mode - Long mode;
+* 64-Bit Addresses and Operands;
+* RIP Relative Addressing (we will see an example of it in the next parts).
 
-Long mode is an extension of legacy protected mode. It consists from two sub-modes:
+Long mode is an extension of legacy protected mode. It consists of two sub-modes:
 
-* 64-bit mode
-* compatibility mode
+* 64-bit mode;
+* compatibility mode.
 
-To switch into 64-bit mode we need to do following things:
+To switch into `64-bit` mode we need to do following things:
 
-* enable PAE (we already did it, see above)
-* build page tables and load the address of top level page table into `cr3` register 
-* enable `EFER.LME`
-* enable paging
+* Enable [PAE](https://en.wikipedia.org/wiki/Physical_Address_Extension);
+* Build page tables and load the address of the top level page table into the `cr3` register;
+* Enable `EFER.LME`;
+* Enable paging.
 
-We already enabled `PAE` with setting the PAE bit in the `cr4` register. Now let's look on paging.
+We already enabled `PAE` by setting the `PAE` bit in the `cr4` control register. Our next goal is to build the structure for [paging](https://en.wikipedia.org/wiki/Paging). We will see this in next paragraph.
 
-Early page tables initialization
+Early page table initialization
 --------------------------------------------------------------------------------
 
-Before we can move in the 64-bit mode, we need to build page tables, so, let's look on building of early 4G boot page tables. 
+So, we already know that before we can move into `64-bit` mode, we need to build page tables, so, let's look at the building of early `4G` boot page tables.
 
-**NOTE: I will not describe theory of virtual memory here, if you need to know more about it, see links in the end**
+**NOTE: I will not describe the theory of virtual memory here. If you need to know more about it, see links at the end of this part.**
 
-Linux kernel uses 4-level paging, and generally we build 6 page tables:
+The Linux kernel uses `4-level` paging, and we generally build 6 page tables:
 
-* One PML4 table
-* One PDP  table
-* Four Page Directory tables
+* One `PML4` or `Page Map Level 4` table with one entry;
+* One `PDP` or `Page Directory Pointer` table with four entries;
+* Four Page Directory tables with a total of `2048` entries.
 
-Let's look on the implementation of it. First of all we clear buffer for the page tables in the memory. Every table is 4096 bytes, so we need 24 kilobytes buffer:
+Let's look at the implementation of this. First of all we clear the buffer for the page tables in memory. Every table is `4096` bytes, so we need clear `24` kilobyte buffer:
 
 ```assembly
 	leal	pgtable(%ebx), %edi
@@ -368,7 +434,9 @@ Let's look on the implementation of it. First of all we clear buffer for the pag
 	rep	stosl
 ```
 
-We put address which stored in `ebx` (remember that `ebx` contains the address where to relocate kernel for decompression) with `pgtable` offset to the `edi` register. `pgtable` defined in the end of `head_64.S` and looks:
+We put the address of `pgtable` plus `ebx` (remember that `ebx` contains the address to relocate the kernel for decompression) in the `edi` register, clear the `eax` register and set the `ecx` register to `6144`. The `rep stosl` instruction will write the value of the `eax` to `edi`, increase value of the `edi` register by `4` and decrease the value of the `ecx` register by `1`. This operation will be repeated while the value of the `ecx` register is greater than zero. That's why we put `6144` in `ecx`.
+
+`pgtable` is defined at the end of [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly file and is:
 
 ```assembly
 	.section ".pgtable","a",@nobits
@@ -377,9 +445,9 @@ pgtable:
 	.fill 6*4096, 1, 0
 ```
 
-It is in the `.pgtable` section and it size is 24 kilobytes. After we put address to the `edi`, we zero out `eax` register and writes zeros to the buffer with `rep stosl` instruction.
+As we can see, it is located in the `.pgtable` section and its size is `24` kilobytes.
 
-Now we can build top level page table - `PML4` with:
+After we have got buffer for the `pgtable` structure, we can start to build the top level page table - `PML4` - with:
 
 ```assembly
 	leal	pgtable + 0(%ebx), %edi
@@ -387,9 +455,9 @@ Now we can build top level page table - `PML4` with:
 	movl	%eax, 0(%edi)
 ```
 
-Here we get address which stored in the `ebx` with `pgtable` offset and put it to the `edi`. Next we put this address with offset `0x1007` to the `eax` register. `0x1007` is 4096 bytes (size of the PML4) + 7 (PML4 entry flags - `PRESENT+RW+USER`) and puts `eax` to the `edi`. After this manipulations `edi` will contain the address of the first Page Directory Pointer Entry with flags - `PRESENT+RW+USER`.
+Here again, we put the address of the `pgtable` relative to `ebx` or in other words relative to address of the `startup_32` to the `edi` register. Next we put this address with offset `0x1007` in the `eax` register. The `0x1007` is `4096` bytes which is the size of the `PML4` plus `7`. The `7` here represents flags of the `PML4` entry. In our case, these flags are `PRESENT+RW+USER`. In the end we just write first the address of the first `PDP` entry to the `PML4`.
 
-In the next step we build 4 Page Directory entry in the Page Directory Pointer table, where first entry will be with `0x7` flags and other with `0x8`:
+In the next step we will build four `Page Directory` entries in the `Page Directory Pointer` table with the same `PRESENT+RW+USE` flags:
 
 ```assembly
 	leal	pgtable + 0x1000(%ebx), %edi
@@ -402,11 +470,7 @@ In the next step we build 4 Page Directory entry in the Page Directory Pointer t
 	jnz	1b
 ```
 
-We put base address of the page directory pointer table to the `edi` and address of the first page directory pointer entry to the `eax`. Put `4` to the `ecx` register, it will be counter in the following loop and write the address of the first page directory pointer table entry  to the `edi` register. 
-
-After this `edi` will contain address of the first page directory pointer entry with flags `0x7`. Next we just calculates address of following page directory pointer entries with flags `0x8` and writes their addresses to the `edi`.
-
-The next step is building of `2048` page table entries by 2 megabytes:
+We put the base address of the page directory pointer which is `4096` or `0x1000` offset from the `pgtable` table in `edi` and the address of the first page directory pointer entry in `eax` register. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry to the `edi` register. After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries where each entry is `8` bytes, and write their addresses to `eax`. The last step of building paging structure is the building of the `2048` page table entries with `2-MByte` pages:
 
 ```assembly
 	leal	pgtable + 0x2000(%ebx), %edi
@@ -419,21 +483,26 @@ The next step is building of `2048` page table entries by 2 megabytes:
 	jnz	1b
 ```
 
-Here we do almost the same that in the previous example, just first entry will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ` and all another with `0x8`. In the end we will have 2048 pages by 2 megabytes.
+Here we do almost the same as in the previous example, all entries will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ`. In the end we will have `2048` pages with `2-MByte` page or:
 
-Our early page table structure are done, it maps 4 gigabytes of memory and now we can put address of the high-level page table - `PML4` to the `cr3` control register:
+```python
+>>> 2048 * 0x00200000
+4294967296
+```
+
+`4G` page table. We just finished to build our early page table structure which maps `4` gigabytes of memory and now we can put the address of the high-level page table - `PML4` - in `cr3` control register:
 
 ```assembly
 	leal	pgtable(%ebx), %eax
 	movl	%eax, %cr3
 ```
 
-That's all now we can see transition to the long mode.
+That's all. All preparation are finished and now we can see transition to the long mode.
 
-Transition to the long mode
+Transition to the 64-bit mode
 --------------------------------------------------------------------------------
 
-First of all we need to set `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
+First of all we need to set the `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
 
 ```assembly
 	movl	$MSR_EFER, %ecx
@@ -442,31 +511,31 @@ First of all we need to set `EFER.LME` flag in the [MSR](http://en.wikipedia.org
 	wrmsr
 ```
 
-Here we put `MSR_EFER` flag (which defined in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7)) to the `ecx` register and call `rdmsr` instruction which reads [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executed, we will have result data in the `edx:eax` which depends on `ecx` value. We check  `EFER_LME` bit with `btsl` instruction and write data from `eax` to the `MSR` register with `wrmsr` instruction.
+Here we put the `MSR_EFER` flag (which is defined in [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7)) in the `ecx` register and call `rdmsr` instruction which reads the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executes, we will have the resulting data in `edx:eax` which depends on the `ecx` value. We check the `EFER_LME` bit with the `btsl` instruction and write data from `eax` to the `MSR` register with the `wrmsr` instruction.
 
-In next step we push address of the kernel segment code to the stack (we defined it in the GDT) and put address of the `startup_64` routine to the `eax`.
+In the next step we push the address of the kernel segment code to the stack (we defined it in the GDT) and put the address of the `startup_64` routine in `eax`.
 
 ```assembly
 	pushl	$__KERNEL_CS
 	leal	startup_64(%ebp), %eax
 ```
 
-After this we push this address to the stack and enable paging with setting `PG` and `PE` bits in the `cr0` register:
+After this we push this address to the stack and enable paging by setting `PG` and `PE` bits in the `cr0` register:
 
 ```assembly
 	movl	$(X86_CR0_PG | X86_CR0_PE), %eax
 	movl	%eax, %cr0
 ```
 
-and call:
+and execute:
 
 ```assembly
 lret
 ```
 
-Remember that we pushed address of the `startup_64` function to the stack in the previous step, and after `lret` instruction, CPU extracts address of it and jumps there. 
+instruction. Remember that we pushed the address of the `startup_64` function to the stack in the previous step, and after the `lret` instruction, the CPU extracts the address of it and jumps there.
 
-After all of these steps we're finally in the 64-bit mode:
+After all of these steps we're finally in 64-bit mode:
 
 ```assembly
 	.code64
@@ -482,11 +551,11 @@ That's all!
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fourth part linux kernel booting process. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-internals/issues/new).
+This is the end of the fourth part linux kernel booting process. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
 
 In the next part we will see kernel decompression and many more.
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
 
 Links
 --------------------------------------------------------------------------------

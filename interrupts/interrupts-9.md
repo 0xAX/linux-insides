@@ -4,9 +4,21 @@ Interrupts and Interrupt Handling. Part 9.
 Introduction to deferred interrupts (Softirq, Tasklets and Workqueues)
 --------------------------------------------------------------------------------
 
-It is the ninth part of the [linux-insides](https://www.gitbook.com/book/0xax/linux-insides/details) book and in the previous [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
+It is the nine part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) and in the previous [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
 
-After the `init_IRQ` function we can see the call of the `softirq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). This function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c) source code file and as we can understand from its name, this function makes initialization of the `softirq` or in other words initialization of the `deferred interrupts`. What is it deferreed intrrupt? We already saw a little bit about it in the ninth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-9.html) of the chapter that describes initialization process of the Linux kernel. There are three types of `deffered interrupts` in the Linux kernel:
+Interrupts may have different important characteristics and there are two among them:
+
+* Handler of an interrupt must execute quickly;
+* Sometime an interrupt handler must do a large amount of work.
+
+As you can understand, it is almost impossible to make so that both characteristics were valid. Because of these, previously the handling of interrupts was split into two parts:
+
+* Top half;
+* Bottom half;
+
+Once the Linux kernel was one of the ways the organization postprocessing, and which was called: `the bottom half` of the processor, but now it is already not actual. Now this term has remained as a common noun referring to all the different ways of organizing deferred processing of an interrupt.The deferred processing of an interrupt suggests that some of the actions for an interrupt may be postponed to a later execution when the system will be less loaded. As you can suggests, an interrupt handler can do large amount of work that is impermissible as it executes in the context where interrupts are disabled. That's why processing of an interrupt can be split on two different parts. In the first part, the main handler of an interrupt does only minimal and the most important job. After this it schedules the second part and finishes its work. When the system is less busy and context of the processor allows to handle interrupts, the second part starts its work and finishes to process remaining part of a deferred interrupt.
+
+There are three types of `deferred interrupts` in the Linux kernel:
 
 * `softirqs`;
 * `tasklets`;
@@ -14,22 +26,10 @@ After the `init_IRQ` function we can see the call of the `softirq_init` function
 
 And we will see description of all of these types in this part. As I said, we saw only a little bit about this theme, so, now is time to dive deep into details about this theme.
 
-Deferred interrupts
+Softirqs
 ----------------------------------------------------------------------------------
 
-Interrupts may have different important characteristics and there are two among them:
-
-* Handler of an interrupt must execute quickly;
-* Sometime an interrupt handler must do a large amount of work.
-
-As you can understand, it is almost impossible to make so that both characteristics were valid. Because of these, previously the handling of interrupts was splitted into two parts:
-
-* Top half;
-* Bottom half;
-
-Once the Linux kernel was one of the ways the organization postprocessing, and which was called: `the bottom half` of the processor, but now it is already not actual. Now this term has remained as a common noun referring to all the different ways of organizing deffered processing of an interrupt. With the advent of parallelisms in the Linux kernel, all new schemes of implementation of the bottom half handlers are built on the performance of the processor specific kernel thread that called `ksoftirqd` (will be discussed below). The `softirq` mechanism represents handling of interrupts that are `almost` as important as the handling of the hardware interrupts. The deferred processing of an interrupt suggests that some of the actions for an interrupt may be postponed to a later execution when the system will be less loaded. As you can suggests, an interrupt handler can do large amount of work that is impermissible as it executes in the context where interrupts are disabled. That's why processing of an interrupt can be splitted on two different parts. In the first part, the main handler of an interrupt does only minimal and the most important job. After this it schedules the second part and finishes its work. When the system is less busy and context of the processor allows to handle interrupts, the second part starts its work and finishes to process remaing part of a deferred interrupt. That is main explanation of the deferred interrupt handling.
-
-As I already wrote above, handling of deferred interrupts (or `softirq` in other words) and accordingly `tasklets` is performed by a set of the special kernel threads (one thread per processor). Each processor has its own thread that is called `ksoftirqd/n` where the `n` is the number of the processor. We can see it in the output of the `systemd-cgls` util:
+With the advent of parallelisms in the Linux kernel, all new schemes of implementation of the bottom half handlers are built on the performance of the processor specific kernel thread that called `ksoftirqd` (will be discussed below). Each processor has its own thread that is called `ksoftirqd/n` where the `n` is the number of the processor. We can see it in the output of the `systemd-cgls` util:
 
 ```
 $ systemd-cgls -k | grep ksoft
@@ -49,7 +49,7 @@ The `spawn_ksoftirqd` function starts this these threads. As we can see this fun
 early_initcall(spawn_ksoftirqd);
 ```
 
-Deferred interrupts are determined statically at compile-time of the Linux kernel and the `open_softirq` function takes care of `softirq` initialization. The `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c):
+Softirqs are determined statically at compile-time of the Linux kernel and the `open_softirq` function takes care of `softirq` initialization. The `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c):
 
 
 ```C
@@ -61,7 +61,7 @@ void open_softirq(int nr, void (*action)(struct softirq_action *))
 
 and as we can see this function uses two parameters:
 
-* the index of the `softirq_vec` array; 
+* the index of the `softirq_vec` array;
 * a pointer to the softirq function to be executed;
 
 First of all let's look on the `softirq_vec` array:
@@ -145,7 +145,7 @@ The `raise_softirq_irqoff` function marks the softirq as deffered by setting the
 __raise_softirq_irqoff(nr);
 ```
 
-macro. After this, it checks the result of the `in_interrupt` that returns `irq_count` value. We already saw the `irq_count` in the first [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) of this chapter and it is used to check if a CPU is already on an interrupt stack or not. We just exit from the `raise_softirq_irqoff`, restore `IF` flang and enable interrupts on the local processor, if we are in the interrupt context, otherwise  we call the `wakeup_softirqd`:
+macro. After this, it checks the result of the `in_interrupt` that returns `irq_count` value. We already saw the `irq_count` in the first [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) of this chapter and it is used to check if a CPU is already on an interrupt stack or not. We just exit from the `raise_softirq_irqoff`, restore `IF` flag and enable interrupts on the local processor, if we are in the interrupt context, otherwise  we call the `wakeup_softirqd`:
 
 ```C
 if (!in_interrupt())
@@ -164,7 +164,7 @@ static void wakeup_softirqd(void)
 }
 ```
 
-Each `ksoftirqd` kernel thread runs the `run_ksoftirqd` function that checks existence of deferred interrupts and calls the `__do_softirq` function depends on result. This function reads the `__softirq_pending` softirq bit mask of the local processor and executes the deferrable functions corresponding to every bit set. During execution of a deferred function, new pending `softirqs` might occur. The main problem here that execution of the userspace code can be delayed for a long time while the `__do_softirq` function will handle deferred interrupts. For this purpose, it has the limit of the time when it must be finsihed:
+Each `ksoftirqd` kernel thread runs the `run_ksoftirqd` function that checks existence of deferred interrupts and calls the `__do_softirq` function depends on result. This function reads the `__softirq_pending` softirq bit mask of the local processor and executes the deferrable functions corresponding to every bit set. During execution of a deferred function, new pending `softirqs` might occur. The main problem here that execution of the userspace code can be delayed for a long time while the `__do_softirq` function will handle deferred interrupts. For this purpose, it has the limit of the time when it must be finished:
 
 ```C
 unsigned long end = jiffies + MAX_SOFTIRQ_TIME;
@@ -196,7 +196,7 @@ if (!in_interrupt() && local_softirq_pending())
     invoke_softirq();
 ```
 
-that executes the `__do_softirq` too. So what do we have in summary. Each `softirq` goes through the following stages: Registration of a `softirq` with the `open_softirq` function. Activation of a `softirq` by marking it as deferred with the `raise_softirq` function. After this, all marked `softirqs` will be runned in the next time the Linux kernel schedules a round of executions of deferrable functions. And execution of the deferred functions that have the same type.
+that executes the `__do_softirq` too. So what do we have in summary. Each `softirq` goes through the following stages: Registration of a `softirq` with the `open_softirq` function. Activation of a `softirq` by marking it as deferred with the `raise_softirq` function. After this, all marked `softirqs` will be r in the next time the Linux kernel schedules a round of executions of deferrable functions. And execution of the deferred functions that have the same type.
 
 As I already wrote, the `softirqs` are statically allocated and it is a problem for a kernel module that can be loaded. The second concept that built on top of `softirq` -- the `tasklets` solves this problem.
 
@@ -286,7 +286,7 @@ open_softirq(TASKLET_SOFTIRQ, tasklet_action);
 open_softirq(HI_SOFTIRQ, tasklet_hi_action);
 ```
 
-at the end of the `softirq_init` function. The main purpose of the `open_softirq` function is the initalization of `softirq`. Let's look on the implementation of the `open_softirq` function.
+at the end of the `softirq_init` function. The main purpose of the `open_softirq` function is the initialization of `softirq`. Let's look on the implementation of the `open_softirq` function.
 
 , in our case they are: `tasklet_action` and the `tasklet_hi_action` or the `softirq` function associated with the `HI_SOFTIRQ` softirq is named `tasklet_hi_action` and `softirq` function associated with the `TASKLET_SOFTIRQ` is named `tasklet_action`. The Linux kernel provides API for the manipulating of `tasklets`. First of all it is the `tasklet_init` function that takes `tasklet_struct`, function and parameter for it and initializes the given `tasklet_struct` with the given data:
 
@@ -364,7 +364,7 @@ static void tasklet_action(struct softirq_action *a)
 }
 ```
 
-In the beginning of the `tasketl_action` function, we disable interrupts for the local processor with the help of the `local_irq_disable` macro (you can read about this macro in the second [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html) of this chapter). In the next step, we take a head of the list that contains tasklets with normal priority and set this per-cpu list to `NULL` because all tasklets must be executed in a generaly way. After this we enable interrupts for the local processor and go through the list of taklets in the loop. In every iteration of the loop we call the `tasklet_trylock` function for the given tasklet that updates state of the given tasklet on `TASKLET_STATE_RUN`: 
+In the beginning of the `tasklet_action` function, we disable interrupts for the local processor with the help of the `local_irq_disable` macro (you can read about this macro in the second [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html) of this chapter). In the next step, we take a head of the list that contains tasklets with normal priority and set this per-cpu list to `NULL` because all tasklets must be executed in a generally way. After this we enable interrupts for the local processor and go through the list of tasklets in the loop. In every iteration of the loop we call the `tasklet_trylock` function for the given tasklet that updates state of the given tasklet on `TASKLET_STATE_RUN`: 
 
 ```C
 static inline int tasklet_trylock(struct tasklet_struct *t)
@@ -460,13 +460,24 @@ static inline bool queue_work(struct workqueue_struct *wq,
 }
 ```
 
-The `queue_work` function just calls the `queue_work_on` function that queue work on specific processor. Note that in our case we pass the `WORK_STRUCT_PENDING_BIT` to the `queue_work_on` function. It is a part of the `enum` that is defined in the [include/linux/workqueue.h](https://github.com/torvalds/linux/blob/master/include/linux/workqueue.h) and represents workqueue which are not bound to any specific processor. The `queue_work_on` function tests and set the `WORK_STRUCT_PENDING_BIT` bit of the given `work` and executes the `__queue_work` function with the `workqueue` for the given processor and given `work`:
+The `queue_work` function just calls the `queue_work_on` function that queue work on specific processor. Note that in our case we pass the `WORK_CPU_UNBOUND` to the `queue_work_on` function. It is a part of the `enum` that is defined in the [include/linux/workqueue.h](https://github.com/torvalds/linux/blob/master/include/linux/workqueue.h) and represents workqueue which are not bound to any specific processor. The `queue_work_on` function tests and set the `WORK_STRUCT_PENDING_BIT` bit of the given `work` and executes the `__queue_work` function with the `workqueue` for the given processor and given `work`:
 
 ```C
-__queue_work(cpu, wq, work);
+bool queue_work_on(int cpu, struct workqueue_struct *wq,
+           struct work_struct *work)
+{
+    bool ret = false;
+    ...
+    if (!test_and_set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(work))) {
+        __queue_work(cpu, wq, work);
+        ret = true;
+    }
+    ...
+    return ret;
+}
 ```
 
-The `__queue_work` function gets the `work pool`. Yes, the `work pool` not `workqueue`. Actually, all `works` are not placed in the `workqueue`, but to the `work pool` that is represented by the `worker_pool` structure in the Linux kernel. As you can see above, the `workqueue_struct` structure has the `pwqs` field which is list of `worker_pools`. When we create a `workqueue`, it stands out for each processor the `pool_workqueue`. Each `pool_workqueue` associated with `worker_pool`, which is allocated on the same processor and corresponds to the type of priority queue. Through them `workqueue` interacts with `worker_pool`. So in the `__queue_work` function we set the cpu to the current processor with the `raw_smp_processor_id` (you can find information about this marco in the fouth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process chapter), getting the `pool_workqueue` for the given `workqueue_struct` and insert the given `work` to the given `workqueue`:
+The `__queue_work` function gets the `work pool`. Yes, the `work pool` not `workqueue`. Actually, all `works` are not placed in the `workqueue`, but to the `work pool` that is represented by the `worker_pool` structure in the Linux kernel. As you can see above, the `workqueue_struct` structure has the `pwqs` field which is list of `worker_pools`. When we create a `workqueue`, it stands out for each processor the `pool_workqueue`. Each `pool_workqueue` associated with `worker_pool`, which is allocated on the same processor and corresponds to the type of priority queue. Through them `workqueue` interacts with `worker_pool`. So in the `__queue_work` function we set the cpu to the current processor with the `raw_smp_processor_id` (you can find information about this macro in the fourth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process chapter), getting the `pool_workqueue` for the given `workqueue_struct` and insert the given `work` to the given `workqueue`:
 
 ```C
 static void __queue_work(int cpu, struct workqueue_struct *wq,
@@ -501,7 +512,7 @@ The next part will be last part of the `Interrupts and Interrupt Handling` chapt
 
 If you have any questions or suggestions, write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

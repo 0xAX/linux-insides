@@ -16,7 +16,7 @@ in this part. So, let's start.
 Non-Maskable interrupt handling
 --------------------------------------------------------------------------------
 
-A [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt is a hardware interrupt that cannot be ignore by standard masking techniques. In a general way, a non-maskable interrupt can be generated in either of two ways:
+A [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt is a hardware interrupt that cannot be ignored by standard masking techniques. In a general way, a non-maskable interrupt can be generated in either of two ways:
 
 * External hardware asserts the non-maskable interrupt [pin](https://en.wikipedia.org/wiki/CPU_socket) on the CPU.
 * The processor receives a message on the system bus or the APIC serial bus with a delivery mode `NMI`.
@@ -83,7 +83,7 @@ first_nmi:
 	pushq	$1
 ```
 
-Why do we push `1` on the stack? As the comment says: `We allow breakpoints in NMIs`. On the [x86_64](https://en.wikipedia.org/wiki/X86-64), like other architectures, the CPU will not execute another `NMI` until the first `NMI` is complete. A `NMI` interrupt finished with the [iret](http://faydoc.tripod.com/cpu/iret.htm) instruction like other interrupts and exceptions do it. If the `NMI` handler triggers either a [page fault](https://en.wikipedia.org/wiki/Page_fault) or [breakpoint](https://en.wikipedia.org/wiki/Breakpoint) or another exception which are use `iret` instruction too. If this happens while in `NMI` context, the CPU will leave `NMI` context and a new `NMI` may come in. The `iret` used to return from those exceptions will re-enable `NMIs` and we will get nested non-maskable interrupts. The problem the `NMI` handler will not return to the state that it was, when the exception triggered, but instead it will return to a state that will allow new `NMIs` to preempt the running `NMI` handler. If another `NMI` comes in before the first NMI handler is complete, the new NMI will write all over the preempted `NMIs` stack. We can have nested `NMIs` where the next `NMI` is using the top of the stack of the previous `NMI`. It means that we cannot execute it because a nested non-maskable interrupt will corrupt stack of a previous non-maskable interrupt. That's why we have allocated space on the stack for temporary variable. We will check this variable that it was set when a previous `NMI` is executing and clear if it is not nested `NMI`. We push `1` here to the previously allocated space on the stack to denote that a `non-maskable` interrupt executed currently. Remember that when and `NMI` or another exception occurs we have the following [stack frame](https://en.wikipedia.org/wiki/Call_stack):
+Why do we push `1` on the stack? As the comment says: `We allow breakpoints in NMIs`. On the [x86_64](https://en.wikipedia.org/wiki/X86-64), like other architectures, the CPU will not execute another `NMI` until the first `NMI` is completed. A `NMI` interrupt finished with the [iret](http://faydoc.tripod.com/cpu/iret.htm) instruction like other interrupts and exceptions do it. If the `NMI` handler triggers either a [page fault](https://en.wikipedia.org/wiki/Page_fault) or [breakpoint](https://en.wikipedia.org/wiki/Breakpoint) or another exception which are use `iret` instruction too. If this happens while in `NMI` context, the CPU will leave `NMI` context and a new `NMI` may come in. The `iret` used to return from those exceptions will re-enable `NMIs` and we will get nested non-maskable interrupts. The problem the `NMI` handler will not return to the state that it was, when the exception triggered, but instead it will return to a state that will allow new `NMIs` to preempt the running `NMI` handler. If another `NMI` comes in before the first NMI handler is complete, the new NMI will write all over the preempted `NMIs` stack. We can have nested `NMIs` where the next `NMI` is using the top of the stack of the previous `NMI`. It means that we cannot execute it because a nested non-maskable interrupt will corrupt stack of a previous non-maskable interrupt. That's why we have allocated space on the stack for temporary variable. We will check this variable that it was set when a previous `NMI` is executing and clear if it is not nested `NMI`. We push `1` here to the previously allocated space on the stack to denote that a `non-maskable` interrupt executed currently. Remember that when and `NMI` or another exception occurs we have the following [stack frame](https://en.wikipedia.org/wiki/Call_stack):
 
 ```
 +------------------------+
@@ -215,7 +215,7 @@ movq	$-1, %rsi
 call	do_nmi
 ```
 
-We will back to the `do_nmi` little later in this part, but now let's look what occurs after the `do_nmi` will finish its execution. After the `do_nmi` handler will be finished we check the `cr2` register, because we can got page fault during `do_nmi` performed and if we got it we restore original `cr2`, in other way we jump on the label `1`. After this we test content of the `ebx` register (remember it must contain `0` if we have used `swapgs` instruction and `1` if we didn't use it) and execute `SWAPGS_UNSAFE_STACK` if it contains `1` or jump to the `nmi_restore` label. The `SWAPGS_UNSAFE_STACK` macro just expands to the `swapgs` instruction. In the `nmi_restore` label we restore general purpose registers, clear allocated space on the stack for this registers clear our temporary variable and exit from the interrupt handler with the `INTERRUPT_RETURN` macro:
+We will back to the `do_nmi` little later in this part, but now let's look what occurs after the `do_nmi` will finish its execution. After the `do_nmi` handler will be finished we check the `cr2` register, because we can got page fault during `do_nmi` performed and if we got it we restore original `cr2`, in other way we jump on the label `1`. After this we test content of the `ebx` register (remember it must contain `0` if we have used `swapgs` instruction and `1` if we didn't use it) and execute `SWAPGS_UNSAFE_STACK` if it contains `1` or jump to the `nmi_restore` label. The `SWAPGS_UNSAFE_STACK` macro just expands to the `swapgs` instruction. In the `nmi_restore` label we restore general purpose registers, clear allocated space on the stack for this registers, clear our temporary variable and exit from the interrupt handler with the `INTERRUPT_RETURN` macro:
 
 ```assembly
 	movq	%cr2, %rcx
@@ -290,7 +290,7 @@ handled = nmi_handle(NMI_LOCAL, regs, b2b);
 __this_cpu_add(nmi_stats.normal, handled);
 ```
 
-And than non-specific `NMIs` depends on its reason:
+And then non-specific `NMIs` depends on its reason:
 
 ```C
 reason = x86_platform.get_nmi_reason();
@@ -448,9 +448,9 @@ Conclusion
 
 It is the end of the sixth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally we have finsihed with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c).
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

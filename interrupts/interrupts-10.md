@@ -24,7 +24,7 @@ module_init(serial21285_init);
 module_exit(serial21285_exit);
 ```
 
-The most part of device drivers can be compiled as a loadable kernel [module](https://en.wikipedia.org/wiki/Loadable_kernel_module) or in another way they can be statically linked into the Linux kernel. In the first case initialization of a device driver will be produced via the `module_init` and `module_Exit` macros that are defined in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h):
+The most part of device drivers can be compiled as a loadable kernel [module](https://en.wikipedia.org/wiki/Loadable_kernel_module) or in another way they can be statically linked into the Linux kernel. In the first case initialization of a device driver will be produced via the `module_init` and `module_exit` macros that are defined in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h):
 
 ```C
 #define module_init(initfn)                                     \
@@ -179,7 +179,7 @@ Now let's look at the calls of the `request_irq` functions in our example. As we
 #define _DC21285_IRQ(x)         (16 + (x))
 ```
 
-The [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) IRQs on this board are from `0` to `15`, so, our interrupts will have first two numbers: `16` and `17`. Second parameters for two calls of the `request_irq` functions are `serial21285_rx_chars` and `serial21285_tx_chars`. These functions will be called when an `RX` or `TX` interrupt occured. We will not dive in this part into details of these functions, because this chapter covers the interrupts and interrupts handling but not device and drivers. The next parameter - `flags` and as we can see, it is zero in both calls of the `request_irq` function. All acceptable flags are defined as `IRQF_*` macros in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h). Some of it:
+The [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) IRQs on this board are from `0` to `15`, so, our interrupts will have first two numbers: `16` and `17`. Second parameters for two calls of the `request_irq` functions are `serial21285_rx_chars` and `serial21285_tx_chars`. These functions will be called when an `RX` or `TX` interrupt occurred. We will not dive in this part into details of these functions, because this chapter covers the interrupts and interrupts handling but not device and drivers. The next parameter - `flags` and as we can see, it is zero in both calls of the `request_irq` function. All acceptable flags are defined as `IRQF_*` macros in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h). Some of it:
 
 * `IRQF_SHARED` - allows sharing the irq among several devices;
 * `IRQF_PERCPU` - an interrupt is per cpu;
@@ -219,7 +219,7 @@ if (((irqflags & IRQF_SHARED) && !dev_id) ||
                return -EINVAL;
 ```
 
-First of all we check that real `dev_id` is passed for the shared interrupt and the `IRQF_COND_SUSPEND` only makes sense for shared interrupts. Othrewise we exit from this function with the `-EINVAL` error. After this we convert the given `irq` number to the `irq` descriptor wit the help of the `irq_to_desc` function that defined in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c) source code file and exit from this function with the `-EINVAL` error if it was not successful:
+First of all we check that real `dev_id` is passed for the shared interrupt and the `IRQF_COND_SUSPEND` only makes sense for shared interrupts. Otherwise we exit from this function with the `-EINVAL` error. After this we convert the given `irq` number to the `irq` descriptor wit the help of the `irq_to_desc` function that defined in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c) source code file and exit from this function with the `-EINVAL` error if it was not successful:
 
 ```C
 desc = irq_to_desc(irq);
@@ -296,7 +296,7 @@ if (new->thread_fn && !nested) {
 }
 ```
 
-And fill the rest of the given interrupt descriptor fields in the end. So, our `16` and `17` interrupt request lines are registered and the `` and `` functions will be invoked when an interrupt controller will get event releated to these interrupts. Now let's look at what happens when an interrupt occurs. 
+And fill the rest of the given interrupt descriptor fields in the end. So, our `16` and `17` interrupt request lines are registered and the `serial21285_rx_chars` and `serial21285_tx_chars` functions will be invoked when an interrupt controller will get event releated to these interrupts. Now let's look at what happens when an interrupt occurs. 
 
 Prepare to handle an interrupt
 --------------------------------------------------------------------------------
@@ -331,14 +331,14 @@ ENTRY(irq_entries_start)
 END(irq_entries_start)
 ```
 
-Here we can see the [GNU assembler](https://en.wikipedia.org/wiki/GNU_Assembler) `.rept` instruction which repeats the the sequence of lines that are before `.endr` - `FIRST_SYSTEM_VECTOR - FIRST_EXTERNAL_VECTOR` times. As we already know, the `FIRST_SYSTEM_VECTOR` is `0xef`, and the `FIRST_EXTERNAL_VECTOR` is equal to `0x20`. So, it will work:
+Here we can see the [GNU assembler](https://en.wikipedia.org/wiki/GNU_Assembler) `.rept` instruction which repeats the sequence of lines that are before `.endr` - `FIRST_SYSTEM_VECTOR - FIRST_EXTERNAL_VECTOR` times. As we already know, the `FIRST_SYSTEM_VECTOR` is `0xef`, and the `FIRST_EXTERNAL_VECTOR` is equal to `0x20`. So, it will work:
 
 ```python
 >>> 0xef - 0x20
 207
 ```
 
-times. In the body of the `.rept` instruction we push entry stubs on the stack (note that we use negative numbers for the interrupt vector numbers, because positive numbers already reserved to identify [system calls](https://en.wikipedia.org/wiki/System_call)), increment the `vector` variable and jump on the `common_interrupt` label. In the `common_interrupt` we adjust vector number on the stack and execute `interrupt` number with the `do_IRQ` parameter:
+times. In the body of the `.rept` instruction we push entry stubs on the stack (note that we use negative numbers for the interrupt vector numbers, because positive numbers already reserved to identify [system calls](https://en.wikipedia.org/wiki/System_call)), increase the `vector` variable and jump on the `common_interrupt` label. In the `common_interrupt` we adjust vector number on the stack and execute `interrupt` number with the `do_IRQ` parameter:
 
 ```assembly
 common_interrupt:
@@ -346,7 +346,7 @@ common_interrupt:
 	interrupt do_IRQ
 ```
 
-The macro `interrupt` defined in the same source code file and saves [general purpose](https://en.wikipedia.org/wiki/Processor_register) registers on the stack, change the userspace `gs` on the kernel with the `SWAPGS` assembler instruction if need, increment [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) - `irq_count` variable that shows that we are in interrupt and call the `do_IRQ` function. This function defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) source code file and handles our device interrupt. Let's look at this function. The `do_IRQ` function takes one parameter - `pt_regs` structure that stores values of the userspace registers:
+The macro `interrupt` defined in the same source code file and saves [general purpose](https://en.wikipedia.org/wiki/Processor_register) registers on the stack, change the userspace `gs` on the kernel with the `SWAPGS` assembler instruction if need, increase [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) - `irq_count` variable that shows that we are in interrupt and call the `do_IRQ` function. This function defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) source code file and handles our device interrupt. Let's look at this function. The `do_IRQ` function takes one parameter - `pt_regs` structure that stores values of the userspace registers:
 
 ```C
 __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
@@ -363,7 +363,7 @@ __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
 }
 ```
 
-At the beginning of this function we can see call of the `set_irq_regs` function that returns saved `per-cpu` irq register pointer and the calls of the `irq_enter` and `exit_idle` functions. The first function `irq_enter` enters to an interrupt context with the updating `__preempt_count` variable and the section function - `exit_idle` checks that current process is `idle` with [pid](https://en.wikipedia.org/wiki/Process_identifier) - `0` and notify the `idle_notifier` with the `IDLE_END`.
+At the beginning of this function we can see call of the `set_irq_regs` function that returns saved `per-cpu` irq register pointer and the calls of the `irq_enter` and `exit_idle` functions. The first function `irq_enter` enters to an interrupt context with the updating `__preempt_count` variable and the second function - `exit_idle` checks that current process is `idle` with [pid](https://en.wikipedia.org/wiki/Process_identifier) - `0` and notify the `idle_notifier` with the `IDLE_END`.
 
 In the next step we read the `irq` for the current cpu and call the `handle_irq` function:
 
@@ -413,7 +413,7 @@ We already know that when an `IRQ` finishes its work, deferred interrupts will b
 Exit from interrupt
 --------------------------------------------------------------------------------
 
-Ok, the interrupt handler finished its execution and now we must return from the interrupt. When the work of the `do_IRQ` function will be finsihed, we will return back to the assembler code in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) to the `ret_from_intr` label. First of all we disable interrupts with the `DISABLE_INTERRUPTS` macro that expands to the `cli` instruction and decrement value of the `irq_count` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable. Remember, this variable had value - `1`, when we were in interrupt context:
+Ok, the interrupt handler finished its execution and now we must return from the interrupt. When the work of the `do_IRQ` function will be finsihed, we will return back to the assembler code in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) to the `ret_from_intr` label. First of all we disable interrupts with the `DISABLE_INTERRUPTS` macro that expands to the `cli` instruction and decreases value of the `irq_count` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable. Remember, this variable had value - `1`, when we were in interrupt context:
 
 ```assembly
 DISABLE_INTERRUPTS(CLBR_NONE)
@@ -448,11 +448,11 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the tenth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and as you have read in the beginning of this part - it is the last part of this chapter. This chapter started from the explanation of the theory of interrupts and we have learned what is it interrupt and kinds of interrupts, then we saw exceptions and handling of this kind of interrupts, deferred interrupts and finally we looked on the hardware interrupts and thanlding of their in this part. Of course, this part and even this chapter does not cover full aspects of interrupts and interrupt handling in the Linux kernel. It is not realistic to do this. At least for me. It was the big part, I don't know how about you, but it was really big for me. This theme is much bigger than this chapter and I am not sure that somewhere there is a book that covers it. We have missed many part and aspects of interrupts and interrupt handling, but I think it will be good point to dive in the kernel code related to the interrupts and interrupts handling.
+It is the end of the tenth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and as you have read in the beginning of this part - it is the last part of this chapter. This chapter started from the explanation of the theory of interrupts and we have learned what is it interrupt and kinds of interrupts, then we saw exceptions and handling of this kind of interrupts, deferred interrupts and finally we looked on the hardware interrupts and the handling of theirs in this part. Of course, this part and even this chapter does not cover full aspects of interrupts and interrupt handling in the Linux kernel. It is not realistic to do this. At least for me. It was the big part, I don't know how about you, but it was really big for me. This theme is much bigger than this chapter and I am not sure that somewhere there is a book that covers it. We have missed many part and aspects of interrupts and interrupt handling, but I think it will be good point to dive in the kernel code related to the interrupts and interrupts handling.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------

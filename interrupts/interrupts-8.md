@@ -6,7 +6,7 @@ Non-early initialization of the IRQs
 
 This is the eighth part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-7.html) we started to dive into the external hardware [interrupts](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). We looked on the implementation of the `early_irq_init` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c) source code file and saw the initialization of the `irq_desc` structure in this function. Remind that `irq_desc` structure (defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/master/include/linux/irqdesc.h#L46) is the foundation of interrupt management code in the Linux kernel and represents an interrupt descriptor. In this part we will continue to dive into the initialization stuff which is related to the external hardware interrupts.
 
-Right after the call of the `early_irq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) we can see the call of the `init_IRQ` function. This function is architecture-specfic and defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/kernel/irqinit.c). The `init_IRQ` function makes initialization of the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable that defined in the same [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/kernel/irqinit.c) source code file:
+Right after the call of the `early_irq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) we can see the call of the `init_IRQ` function. This function is architecture-specific and defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/kernel/irqinit.c). The `init_IRQ` function makes initialization of the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable that defined in the same [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/kernel/irqinit.c) source code file:
 
 ```C
 ...
@@ -66,7 +66,7 @@ __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
 }
 ```
 
-Why is `legacy` here? Actuall all interrupts handled by the modern [IO-APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs) controller. But these interrupts (from `0x30` to `0x3f`) by legacy interrupt-controllers like [Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller). If these interrupts are handled by the `I/O APIC` then this vector space will be freed and re-used. Let's look on this code closer. First of all the `nr_legacy_irqs` defined in the [arch/x86/include/asm/i8259.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/i8259.h) and just returns the `nr_legacy_irqs` field from the `legacy_pic` strucutre:
+Why is `legacy` here? Actually all interrupts are handled by the modern [IO-APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs) controller. But these interrupts (from `0x30` to `0x3f`) by legacy interrupt-controllers like [Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller). If these interrupts are handled by the `I/O APIC` then this vector space will be freed and re-used. Let's look on this code closer. First of all the `nr_legacy_irqs` defined in the [arch/x86/include/asm/i8259.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/i8259.h) and just returns the `nr_legacy_irqs` field from the `legacy_pic` structure:
 
 ```C
 static inline int nr_legacy_irqs(void)
@@ -91,7 +91,7 @@ struct legacy_pic {
 };
 ```
 
-Actuall default maximum number of the legacy interrupts represtented by the `NR_IRQ_LEGACY` macro from the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irq_vectors.h):
+Actual default maximum number of the legacy interrupts represented by the `NR_IRQ_LEGACY` macro from the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irq_vectors.h):
 
 ```C
 #define NR_IRQS_LEGACY                    16
@@ -107,7 +107,7 @@ In the loop we are accessing the `vecto_irq` per-cpu array with the `per_cpu` ma
 
 Why is `0x30` here? You can remember from the first [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) of this chapter that first 32 vector numbers from `0` to `31` are reserved by the processor and used for the processing of architecture-defined exceptions and interrupts. Vector numbers from `0x30` to `0x3f` are reserved for the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture). So, it means that we fill the `vector_irq` from the `IRQ0_VECTOR` which is equal to the `32` to the `IRQ0_VECTOR + 16` (before the `0x30`).
 
-In the end of the `init_IRQ` functio we can see the call of the following function:
+In the end of the `init_IRQ` function we can see the call of the following function:
 
 ```C
 x86_init.irqs.intr_init();
@@ -161,7 +161,7 @@ $ cat /proc/interrupts
   8:          1          0          0          0          0          0          0          0   IO-APIC   8-edge      rtc0
 ```
 
-look on the last columnt;
+look on the last column;
 
 * `(*irq_mask)(struct irq_data *data)`  - mask an interrupt source;
 * `(*irq_ack)(struct irq_data *data)` - start of a new interrupt;
@@ -200,7 +200,7 @@ and writing it with the help of the `apic_write` function:
 apic_write(APIC_SPIV, value);
 ```
 
-After we have enabled `APIC` for the bootstrap processor, we return to the `init_ISA_irqs` function and in the next step we initalize legacy `Programmable Interrupt Controller` and set the legacy chip and handler for the each legacy irq:
+After we have enabled `APIC` for the bootstrap processor, we return to the `init_ISA_irqs` function and in the next step we initialize legacy `Programmable Interrupt Controller` and set the legacy chip and handler for the each legacy irq:
 
 ```C
 legacy_pic->init(0);
@@ -229,9 +229,9 @@ struct legacy_pic default_legacy_pic = {
 }
 ```
 
-The `init_8259A` function defined in the same source code file and executes initialization of the [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259) ``Programmable Interrupt Controller` (more about it will be in the separate chapter abot `Programmable Interrupt Controllers` and `APIC`).
+The `init_8259A` function defined in the same source code file and executes initialization of the [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259) ``Programmable Interrupt Controller` (more about it will be in the separate chapter about `Programmable Interrupt Controllers` and `APIC`).
 
-Now we can return to the `native_init_IRQ` function, after the `init_ISA_irqs` function finished its work. The next step is the call of the `apic_intr_init` function that allocates special interrupt gates which are used by the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) architecture for the [Inter-processor interrupt](https://en.wikipedia.org/wiki/Inter-processor_interrupt). The `alloc_intr_gate` macro from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h) used for the interrupt descriptor allocation allocation:
+Now we can return to the `native_init_IRQ` function, after the `init_ISA_irqs` function finished its work. The next step is the call of the `apic_intr_init` function that allocates special interrupt gates which are used by the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) architecture for the [Inter-processor interrupt](https://en.wikipedia.org/wiki/Inter-processor_interrupt). The `alloc_intr_gate` macro from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h) used for the interrupt descriptor allocation:
 
 ```C
 #define alloc_intr_gate(n, addr)                        \
@@ -326,7 +326,7 @@ int main() {
 }
 ```
 
-and will look on the assembly output of our example we will see followig assembly code:
+and will look on the assembly output of our example we will see following assembly code:
 
 ```assembly
 pushq	%rbp
@@ -351,7 +351,7 @@ movl	%eax, %edi
 call	variable_test_bit
 ```
 
-for the `variable_test_bit`. These two code listings starts with the same part, first of all we save base of the current stack frame in the `%rbp` register. But after this code for both examples is different. In the first example we put `$268435456` (here the `$268435456` is our second parameter - `0x10000000`) to the `esi` and `$25` (our first parameter) to the `edi` register and call `constant_test_bit`. We put functuin parameters to the `esi` and `edi` registers because as we are learning Linux kernel for the `x86_64` architecture we use `System V AMD64 ABI` [calling convention](https://en.wikipedia.org/wiki/X86_calling_conventions). All is pretty simple. When we are using predifined constant, the compiler can just substitute its value. Now let's look on the second part. As you can see here, the compiler can not substitute value from the `nr` variable. In this case compiler must calcuate its offset on the programm's [stack frame](https://en.wikipedia.org/wiki/Call_stack). We substract `16` from the `rsp` register to allocate stack for the local variables data and put the `$24` (value of the `nr` variable) to the `rbp` with offset `-4`. Our stack frame will be like this:
+for the `variable_test_bit`. These two code listings starts with the same part, first of all we save base of the current stack frame in the `%rbp` register. But after this code for both examples is different. In the first example we put `$268435456` (here the `$268435456` is our second parameter - `0x10000000`) to the `esi` and `$25` (our first parameter) to the `edi` register and call `constant_test_bit`. We put function parameters to the `esi` and `edi` registers because as we are learning Linux kernel for the `x86_64` architecture we use `System V AMD64 ABI` [calling convention](https://en.wikipedia.org/wiki/X86_calling_conventions). All is pretty simple. When we are using predefined constant, the compiler can just substitute its value. Now let's look on the second part. As you can see here, the compiler can not substitute value from the `nr` variable. In this case compiler must calculate its offset on the program's [stack frame](https://en.wikipedia.org/wiki/Call_stack). We subtract `16` from the `rsp` register to allocate stack for the local variables data and put the `$24` (value of the `nr` variable) to the `rbp` with offset `-4`. Our stack frame will be like this:
 
 ```
          <- stack grows 
@@ -369,7 +369,7 @@ for the `variable_test_bit`. These two code listings starts with the same part, 
 
 After this we put this value to the `eax`, so `eax` register now contains value of the `nr`. In the end we do the same that in the first example, we put the `$268435456` (the first parameter of the `variable_test_bit` function) and the value of the `eax` (value of `nr`) to the `edi` register (the second parameter of the `variable_test_bit function`). 
 
-The next step after the `apic_intr_init` function will finish its work is the setting interrup gates from the `FIRST_EXTERNAL_VECTOR` or `0x20` to the `0x256`:
+The next step after the `apic_intr_init` function will finish its work is the setting interrupt gates from the `FIRST_EXTERNAL_VECTOR` or `0x20` to the `0x256`:
 
 ```C
 i = FIRST_EXTERNAL_VECTOR;
@@ -392,7 +392,7 @@ for_each_clear_bit_from(i, used_vectors, NR_VECTORS)
 #endif
 ```
 
-Where the `spurious_interrupt` function represent interrupt handler fro the `spurious` interrupt. Here the `used_vectors` is the `unsigned long` that contains already initialized interrupt gates. We already filled first `32` interrupt vectors in the `trap_init` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file:
+Where the `spurious_interrupt` function represent interrupt handler for the `spurious` interrupt. Here the `used_vectors` is the `unsigned long` that contains already initialized interrupt gates. We already filled first `32` interrupt vectors in the `trap_init` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file:
 
 ```C
 for (i = 0; i < FIRST_EXTERNAL_VECTOR; i++)
@@ -414,7 +414,7 @@ First of all let's deal with the condition. The `acpi_ioapic` variable represent
 #define acpi_ioapic 0
 ```
 
-The second condition - `!of_ioapic && nr_legacy_irqs()` checks that we do not use [Open Firmware](https://en.wikipedia.org/wiki/Open_Firmware) `I/O APIC` and legacy interrupt controller. We already know about the `nr_legacy_irqs`. The second is `of_ioapic` variable defined in the [arch/x86/kernel/devicetree.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/devicetree.c) and initialized in the `dtb_ioapic_setup` function that build information about `APICs` in the [devicetree](https://en.wikipedia.org/wiki/Device_tree). Note that `of_ioapic` variable depends on the `CONFIG_OF` Linux kernel configuration opiotn. If this option is not set, the value of the `of_ioapic` will be zero too:
+The second condition - `!of_ioapic && nr_legacy_irqs()` checks that we do not use [Open Firmware](https://en.wikipedia.org/wiki/Open_Firmware) `I/O APIC` and legacy interrupt controller. We already know about the `nr_legacy_irqs`. The second is `of_ioapic` variable defined in the [arch/x86/kernel/devicetree.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/devicetree.c) and initialized in the `dtb_ioapic_setup` function that build information about `APICs` in the [devicetree](https://en.wikipedia.org/wiki/Device_tree). Note that `of_ioapic` variable depends on the `CONFIG_OF` Linux kernel configuration option. If this option is not set, the value of the `of_ioapic` will be zero too:
 
 ```C
 #ifdef CONFIG_OF
@@ -430,7 +430,7 @@ extern int of_ioapic;
 #endif
 ```
 
-If the condition will return non-zero vaule we call the:
+If the condition will return non-zero value we call the:
 
 ```C
 setup_irq(2, &irq2);
@@ -446,7 +446,7 @@ static struct irqaction irq2 = {
 };
 ```
 
-Some time ago interrupt controller consisted of two chips and one was connected to second. The second chip that was connected to the first chip via this `IRQ 2` line. This chip serviced lines from `8` to `15` and after after this lines of the first chip. So, for example [Intel 8259A](https://en.wikipedia.org/wiki/Intel_8259) has following lines:
+Some time ago interrupt controller consisted of two chips and one was connected to second. The second chip that was connected to the first chip via this `IRQ 2` line. This chip serviced lines from `8` to `15` and after this lines of the first chip. So, for example [Intel 8259A](https://en.wikipedia.org/wiki/Intel_8259) has following lines:
 
 * `IRQ 0`  - system time;
 * `IRQ 1`  - keyboard;
@@ -513,9 +513,9 @@ It is the end of the eighth part of the [Interrupts and Interrupt Handling](http
 
 In the next part we will continue to learn interrupts handling related stuff and will see initialization of the `softirqs`.
 
-If you will have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you will find any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------
