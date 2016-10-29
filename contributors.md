@@ -100,3 +100,4 @@ Thank you to all contributors:
 * [Faiz Halde](https://github.com/7coder7)
 * [Andrew Hayes](https://github.com/AndrewRussellHayes)
 * [Matthew Fernandez](https://github.com/Smattr)
+* [Yoshihiro YUNOMAE](https://github.com/yunomae)
