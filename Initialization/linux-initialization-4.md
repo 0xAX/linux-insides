@@ -352,7 +352,7 @@ This function starts from the reserving memory block for the kernel `_text` and 
 memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)_text);
 ```
 
-You can read about `memblock` in the [Linux kernel memory management Part 1.](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html). As you can remember `memblock_reserve` function takes two parameters:
+You can read about `memblock` in the [Linux kernel memory management Part 1.](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html). As you can remember `memblock_reserve` function takes two parameters:
 
 * base physical address of a memory block;
 * size of a memory block.

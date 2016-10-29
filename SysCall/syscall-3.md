@@ -80,7 +80,7 @@ __vsyscall_page:
 	ret
 ```
 
-Let's go back to the implementation of the `map_vsyscall` function and return to the implementation of the `__vsyscall_page`, later. After we receiving the physical address of the `__vsyscall_page`, we check the value of the `vsyscall_mode` variable and set the [fix-mapped](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html) address for the `vsyscall` page with the `__set_fixmap` macro:
+Let's go back to the implementation of the `map_vsyscall` function and return to the implementation of the `__vsyscall_page`, later. After we receiving the physical address of the `__vsyscall_page`, we check the value of the `vsyscall_mode` variable and set the [fix-mapped](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html) address for the `vsyscall` page with the `__set_fixmap` macro:
 
 ```C
 if (vsyscall_mode != NONE)
@@ -390,7 +390,7 @@ Links
 * [virtual address](https://en.wikipedia.org/wiki/Virtual_address_space)
 * [Segmentation](https://en.wikipedia.org/wiki/Memory_segmentation)
 * [enum](https://en.wikipedia.org/wiki/Enumerated_type)
-* [fix-mapped addresses](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html)
+* [fix-mapped addresses](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html)
 * [glibc](https://en.wikipedia.org/wiki/GNU_C_Library)
 * [BUILD_BUG_ON](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
