@@ -180,7 +180,7 @@ All virtual system call requests will fall into the `__vsyscall_page` + `VSYSCAL
 
 In the second case, if we pass `vsyscall=emulate` parameter to the kernel command line, an attempt to perform virtual system call handler will cause a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception. Of course, remember, the `vsyscall` page has `__PAGE_KERNEL_VVAR` access rights that forbid execution. The `do_page_fault` function is the `#PF` or page fault handler. It tries to understand the reason of the last page fault. And one of the reason can be situation when virtual system call called and `vsyscall` mode is `emulate`. In this case `vsyscall` will be handled by the `emulate_vsyscall` function that defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file.
 
-The `emulate_vsyscall` function gets the number of a virtual system call, checks it, prints error and sends [segmentation fault](https://en.wikipedia.org/wiki/Segmentation_fault) single:
+The `emulate_vsyscall` function gets the number of a virtual system call, checks it, prints error and sends [segmentation fault](https://en.wikipedia.org/wiki/Segmentation_fault) simply:
 
 ```C
 ...
