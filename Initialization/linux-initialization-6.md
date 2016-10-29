@@ -500,7 +500,7 @@ for (; pmd < last_pmd; pmd++, vaddr += PMD_SIZE) {
 }
 ```
 
-After this we set the limit for the `memblock` allocation with the `memblock_set_current_limit` function (read more about `memblock` you can in the [Linux kernel memory management Part 2](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md)), it will be `ISA_END_ADDRESS` or `0x100000` and fill the `memblock` information according to `e820` with the call of the `memblock_x86_fill` function. You can see the result of this function in the kernel initialization time:
+After this we set the limit for the `memblock` allocation with the `memblock_set_current_limit` function (read more about `memblock` you can in the [Linux kernel memory management Part 2](https://github.com/0xAX/linux-insides/blob/master/MM/linux-mm-2.md)), it will be `ISA_END_ADDRESS` or `0x100000` and fill the `memblock` information according to `e820` with the call of the `memblock_x86_fill` function. You can see the result of this function in the kernel initialization time:
 
 ```
 MEMBLOCK configuration:

@@ -214,7 +214,7 @@ There are many different function calls after the `early_trap_pf_init` in the `s
 #endif
 ```
 
-Note that it depends on the `CONFIG_EISA` kernel configuration parameter which represents `EISA` support. Here we use `early_ioremap` function to map `I/O` memory on the page tables. We use `readl` function to read first `4` bytes from the mapped region and if they are equal to `EISA` string we set `EISA_bus` to one. In the end we just unmap previously mapped region. More about `early_ioremap` you can read in the part which describes [Fix-Mapped Addresses and ioremap](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html).
+Note that it depends on the `CONFIG_EISA` kernel configuration parameter which represents `EISA` support. Here we use `early_ioremap` function to map `I/O` memory on the page tables. We use `readl` function to read first `4` bytes from the mapped region and if they are equal to `EISA` string we set `EISA_bus` to one. In the end we just unmap previously mapped region. More about `early_ioremap` you can read in the part which describes [Fix-Mapped Addresses and ioremap](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html).
 
 After this we start to fill the `Interrupt Descriptor Table` with the different interrupt gates. First of all we set `#DE` or `Divide Error` and `#NMI` or `Non-maskable Interrupt`:
 
@@ -329,7 +329,7 @@ __set_fixmap(FIX_RO_IDT, __pa_symbol(idt_table), PAGE_KERNEL_RO);
 idt_descr.address = fix_to_virt(FIX_RO_IDT);
 ```
 
-and write its address to the `idt_descr.address` (more about fix-mapped addresses you can read in the second part of the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html) chapter). After this we can see the call of the `cpu_init` function that defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c). This function makes initialization of the all `per-cpu` state. In the beginning of the `cpu_init` we do the following things: First of all we wait while current cpu is initialized and than we call the `cr4_init_shadow` function which stores shadow copy of the `cr4` control register for the current cpu and load CPU microcode if need with the following function calls:
+and write its address to the `idt_descr.address` (more about fix-mapped addresses you can read in the second part of the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html) chapter). After this we can see the call of the `cpu_init` function that defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c). This function makes initialization of the all `per-cpu` state. In the beginning of the `cpu_init` we do the following things: First of all we wait while current cpu is initialized and than we call the `cr4_init_shadow` function which stores shadow copy of the `cr4` control register for the current cpu and load CPU microcode if need with the following function calls:
 
 ```C
 wait_for_master_cpu(cpu);
@@ -449,7 +449,7 @@ Links
 * [CPU caches](https://en.wikipedia.org/wiki/CPU_cache)
 * [VFS](https://en.wikipedia.org/wiki/Virtual_file_system) 
 * [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
-* [Fix-Mapped Addresses and ioremap](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html)
+* [Fix-Mapped Addresses and ioremap](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html)
 * [Extended Industry Standard Architecture](https://en.wikipedia.org/wiki/Extended_Industry_Standard_Architecture)
 * [INT isntruction](https://en.wikipedia.org/wiki/INT_%28x86_instruction%29)
 * [INTO](http://x86.renejeschke.de/html/file_module_x86_id_142.html)
