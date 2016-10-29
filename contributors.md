@@ -99,3 +99,4 @@ Thank you to all contributors:
 * [Anastas Stoyanovsky](https://github.com/anastasds)
 * [Faiz Halde](https://github.com/7coder7)
 * [Andrew Hayes](https://github.com/AndrewRussellHayes)
+* [Matthew Fernandez](https://github.com/Smattr)
