@@ -89,7 +89,7 @@ struct radix_tree_node {
 };
 ```
 
-This structure contains information about the offset in a parent and height from the bottom, count of the child nodes and fields for accessing and freeing a node. This fields are described below:
+This structure contains information about the offset in a parent and height from the bottom, count of the child nodes and fields for accessing and freeing a node. These fields are described below:
 
 * `path` - offset in parent & height from the bottom;
 * `count` - count of the child nodes;
@@ -98,7 +98,7 @@ This structure contains information about the offset in a parent and height from
 * `rcu_head` - used for freeing a node;
 * `private_list` - used by the user of a tree;
 
-The two last fields of the `radix_tree_node` - `tags` and `slots` are important and interesting. Every node can contains a set of slots which are store pointers to the data. Empty slots in the linux kernel radix tree implementation store `NULL`. Radix trees in the linux kernel also supports tags which are associated with the `tags` fields in the `radix_tree_node` structure. Tags allow individual bits to be set on records which are stored in the radix tree.
+The two last fields of the `radix_tree_node` - `tags` and `slots` are important and interesting. Every node can contains a set of slots which store pointers to the data. Empty slots in the linux kernel radix tree implementation store `NULL`. Radix trees in the linux kernel also supports tags which are associated with the `tags` fields in the `radix_tree_node` structure. Tags allow individual bits to be set on records which are stored in the radix tree.
 
 Now that we know about radix tree structure, it is time to look on its API.
 
