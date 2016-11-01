@@ -337,7 +337,7 @@ Last two steps of the `kmemcheck_fault` function is to call the `kmemcheck_acces
 static struct kmemcheck_error error_fifo[CONFIG_KMEMCHECK_QUEUE_SIZE];
 ```
 
-The `kmemcheck` mechanism declares special [tasklet](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html):
+The `kmemcheck` mechanism declares special [tasklet](https://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html):
 
 ```C
 static DECLARE_TASKLET(kmemcheck_tasklet, &do_wakeup, 0);
@@ -429,6 +429,6 @@ Links
 * [translation lookaside buffer](https://en.wikipedia.org/wiki/Translation_lookaside_buffer)
 * [per-cpu variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
-* [tasklet](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html)
+* [tasklet](https://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html)
 * [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html)

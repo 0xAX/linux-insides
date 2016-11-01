@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 9.
 Introduction to deferred interrupts (Softirq, Tasklets and Workqueues)
 --------------------------------------------------------------------------------
 
-It is the nine part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) and in the previous [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
+It is the nine part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) and in the previous [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
 
 Interrupts may have different important characteristics and there are two among them:
 
@@ -145,7 +145,7 @@ The `raise_softirq_irqoff` function marks the softirq as deffered by setting the
 __raise_softirq_irqoff(nr);
 ```
 
-macro. After this, it checks the result of the `in_interrupt` that returns `irq_count` value. We already saw the `irq_count` in the first [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) of this chapter and it is used to check if a CPU is already on an interrupt stack or not. We just exit from the `raise_softirq_irqoff`, restore `IF` flag and enable interrupts on the local processor, if we are in the interrupt context, otherwise  we call the `wakeup_softirqd`:
+macro. After this, it checks the result of the `in_interrupt` that returns `irq_count` value. We already saw the `irq_count` in the first [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-1.html) of this chapter and it is used to check if a CPU is already on an interrupt stack or not. We just exit from the `raise_softirq_irqoff`, restore `IF` flag and enable interrupts on the local processor, if we are in the interrupt context, otherwise  we call the `wakeup_softirqd`:
 
 ```C
 if (!in_interrupt())
@@ -364,7 +364,7 @@ static void tasklet_action(struct softirq_action *a)
 }
 ```
 
-In the beginning of the `tasklet_action` function, we disable interrupts for the local processor with the help of the `local_irq_disable` macro (you can read about this macro in the second [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html) of this chapter). In the next step, we take a head of the list that contains tasklets with normal priority and set this per-cpu list to `NULL` because all tasklets must be executed in a generally way. After this we enable interrupts for the local processor and go through the list of tasklets in the loop. In every iteration of the loop we call the `tasklet_trylock` function for the given tasklet that updates state of the given tasklet on `TASKLET_STATE_RUN`: 
+In the beginning of the `tasklet_action` function, we disable interrupts for the local processor with the help of the `local_irq_disable` macro (you can read about this macro in the second [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-2.html) of this chapter). In the next step, we take a head of the list that contains tasklets with normal priority and set this per-cpu list to `NULL` because all tasklets must be executed in a generally way. After this we enable interrupts for the local processor and go through the list of tasklets in the loop. In every iteration of the loop we call the `tasklet_trylock` function for the given tasklet that updates state of the given tasklet on `TASKLET_STATE_RUN`: 
 
 ```C
 static inline int tasklet_trylock(struct tasklet_struct *t)
@@ -523,4 +523,4 @@ Links
 * [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
 * [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
 * [Workqueue](https://github.com/torvalds/linux/blob/master/Documentation/workqueue.txt)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-8.html)
