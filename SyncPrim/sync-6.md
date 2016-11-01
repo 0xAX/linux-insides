@@ -303,7 +303,7 @@ static inline void raw_write_seqcount_end(seqcount_t *s)
 
 and in the end we just call the `spin_unlock` macro to give access for other readers or writers.
 
-That's all about `sequential lock` mechanism in the Linux kernel. Of course we did not consider full [API](https://en.wikipedia.org/wiki/Application_programming_interface) of this mechanism in this part. But all other functions are based on these which we described here. For example, Linux kernel also provides some safe macros/functions to use `sequential lock` mechanism in [interrupt handlers](https://en.wikipedia.org/wiki/Interrupt_handler) of [softirq](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html): `write_seqclock_irq` and `write_sequnlock_irq`:
+That's all about `sequential lock` mechanism in the Linux kernel. Of course we did not consider full [API](https://en.wikipedia.org/wiki/Application_programming_interface) of this mechanism in this part. But all other functions are based on these which we described here. For example, Linux kernel also provides some safe macros/functions to use `sequential lock` mechanism in [interrupt handlers](https://en.wikipedia.org/wiki/Interrupt_handler) of [softirq](https://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html): `write_seqclock_irq` and `write_sequnlock_irq`:
 
 ```C
 static inline void write_seqlock_irq(seqlock_t *sl)
@@ -347,6 +347,6 @@ Links
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [Timers and time management in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/Timers/)
 * [interrupt handlers](https://en.wikipedia.org/wiki/Interrupt_handler)
-* [softirq](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html)
+* [softirq](https://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html)
 * [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_(PC_architecture))
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-5.html)

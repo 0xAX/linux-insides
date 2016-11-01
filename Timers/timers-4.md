@@ -240,7 +240,7 @@ The last step in the `init_timers` function is the call of the:
 open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
 ```
 
-function. The `open_softirq` function may be already familar to you if you have read the ninth [part](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) about the interrupts and interrupt handling in the Linux kernel. In short words, the `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c) source code file and executes initialization of the deferred interrupt handler.
+function. The `open_softirq` function may be already familar to you if you have read the ninth [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html) about the interrupts and interrupt handling in the Linux kernel. In short words, the `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c) source code file and executes initialization of the deferred interrupt handler.
 
 In our case the deferred function is the `run_timer_softirq` function that is will be called after a hardware interrupt in the `do_IRQ` function which defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) source code file. The main point of this function is to handle a software dynamic timer. The Linux kernel does not do this thing during the hardware timer interrupt handling because this is time consuming operation.
 

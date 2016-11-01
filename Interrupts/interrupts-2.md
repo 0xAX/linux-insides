@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 2.
 Start to dive into interrupt and exceptions handling in the Linux kernel
 --------------------------------------------------------------------------------
 
-We saw some theory about interrupts and exception handling in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) and as I already wrote in that part, we will start to dive into interrupts and exceptions in the Linux kernel source code in this part. As you already can note, the previous part mostly described theoretical aspects and in this part we will start to dive directly into the Linux kernel source code. We will start to do it as we did it in other chapters, from the very early places. We will not see the Linux kernel source code from the earliest [code lines](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L292) as we saw it for example in the [Linux kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter, but we will start from the earliest code which is related to the interrupts and exceptions. In this part we will try to go through the all interrupts and exceptions related stuff which we can find in the Linux kernel source code.
+We saw some theory about interrupts and exception handling in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-1.html) and as I already wrote in that part, we will start to dive into interrupts and exceptions in the Linux kernel source code in this part. As you already can note, the previous part mostly described theoretical aspects and in this part we will start to dive directly into the Linux kernel source code. We will start to do it as we did it in other chapters, from the very early places. We will not see the Linux kernel source code from the earliest [code lines](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L292) as we saw it for example in the [Linux kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter, but we will start from the earliest code which is related to the interrupts and exceptions. In this part we will try to go through the all interrupts and exceptions related stuff which we can find in the Linux kernel source code.
 
 If you've read the previous parts, you can remember that the earliest place in the Linux kernel `x86_64` architecture-specific source code which is related to the interrupt is located in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c) source code file and represents the first setup of the [Interrupt Descriptor Table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table). It occurs right before the transition into the [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the `go_to_protected_mode` function by the call of the `setup_idt`:
 
@@ -109,7 +109,7 @@ movl	initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-We already saw this code in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html). First of all pay attention on the last `wrmsr` instruction. This instruction writes data from the `edx:eax` registers to the [model specific register](http://en.wikipedia.org/wiki/Model-specific_register) specified by the `ecx` register. We can see that `ecx` contains `$MSR_GS_BASE` which is declared in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h) and looks like:
+We already saw this code in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-1.html). First of all pay attention on the last `wrmsr` instruction. This instruction writes data from the `edx:eax` registers to the [model specific register](http://en.wikipedia.org/wiki/Model-specific_register) specified by the `ecx` register. We can see that `ecx` contains `$MSR_GS_BASE` which is declared in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h) and looks like:
 
 ```C
 #define MSR_GS_BASE             0xc0000101
@@ -253,7 +253,7 @@ If the `CONFIG_CC_STACKPROTECTOR` kernel configuration option is set, the `boot_
 #endif
 ```
 
-As we can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) the `irq_stack_union` represented by the following union:
+As we can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-1.html) the `irq_stack_union` represented by the following union:
 
 ```C
 union irq_stack_union {
@@ -432,7 +432,7 @@ static inline void set_intr_gate_ist(int n, void *addr, unsigned ist)
 }
 ```
 
-First of all we can see the check that `n` which is [vector number](http://en.wikipedia.org/wiki/Interrupt_vector_table) of the interrupt is not greater than `0xff` or 255. We need to check it because we remember from the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) that vector number of an interrupt must be between `0` and `255`. In the next step we can see the call of the `_set_gate` function that sets a given interrupt gate to the `IDT` table:
+First of all we can see the check that `n` which is [vector number](http://en.wikipedia.org/wiki/Interrupt_vector_table) of the interrupt is not greater than `0xff` or 255. We need to check it because we remember from the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-1.html) that vector number of an interrupt must be between `0` and `255`. In the next step we can see the call of the `_set_gate` function that sets a given interrupt gate to the `IDT` table:
 
 ```C
 static inline void _set_gate(int gate, unsigned type, void *addr,
@@ -544,4 +544,4 @@ Links
 * [vector number](http://en.wikipedia.org/wiki/Interrupt_vector_table)
 * [Interrupt Stack Table](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks)
 * [Privilege level](http://en.wikipedia.org/wiki/Privilege_level)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-1.html)
