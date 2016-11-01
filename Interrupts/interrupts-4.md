@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 4.
 Initialization of non-early interrupt gates
 --------------------------------------------------------------------------------
 
-This is fourth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) we saw first early `#DB` and `#BP` exceptions handlers from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We stopped on the right after the `early_trap_init` function that called in the `setup_arch` function which defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/setup.c). In this part we will continue to dive into an interrupts and exceptions handling in the Linux kernel for `x86_64` and continue to do it from the place where we left off in the last part. First thing which is related to the interrupts and exceptions handling is the setup of the `#PF` or [page fault](https://en.wikipedia.org/wiki/Page_fault) handler with the `early_trap_pf_init` function. Let's start from it.
+This is fourth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html) we saw first early `#DB` and `#BP` exceptions handlers from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We stopped on the right after the `early_trap_init` function that called in the `setup_arch` function which defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/setup.c). In this part we will continue to dive into an interrupts and exceptions handling in the Linux kernel for `x86_64` and continue to do it from the place where we left off in the last part. First thing which is related to the interrupts and exceptions handling is the setup of the `#PF` or [page fault](https://en.wikipedia.org/wiki/Page_fault) handler with the `early_trap_pf_init` function. Let's start from it.
 
 Early page fault handler
 --------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ void __init early_trap_pf_init(void)
 }
 ```
 
-This macro defined in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/desc.h). We already saw macros like this in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) - `set_system_intr_gate` and `set_intr_gate_ist`. This macro checks that given vector number is not greater than `255` (maximum vector number) and calls `_set_gate` function as `set_system_intr_gate` and `set_intr_gate_ist` did it:
+This macro defined in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/desc.h). We already saw macros like this in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html) - `set_system_intr_gate` and `set_intr_gate_ist`. This macro checks that given vector number is not greater than `255` (maximum vector number) and calls `_set_gate` function as `set_system_intr_gate` and `set_intr_gate_ist` did it:
 
 ```C
 #define set_intr_gate(n, addr)                                  \
@@ -64,7 +64,7 @@ When the `early_trap_pf_init` will be called, the `set_intr_gate` will be expand
 trace_idtentry page_fault do_page_fault has_error_code=1
 ```
 
-We saw in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) how `#DB` and `#BP` handlers defined. They were defined with the `idtentry` macro, but here we can see `trace_idtentry`. This macro defined in the same source code file and depends on the `CONFIG_TRACING` kernel configuration option:
+We saw in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html) how `#DB` and `#BP` handlers defined. They were defined with the `idtentry` macro, but here we can see `trace_idtentry`. This macro defined in the same source code file and depends on the `CONFIG_TRACING` kernel configuration option:
 
 ```assembly
 #ifdef CONFIG_TRACING
@@ -79,7 +79,7 @@ idtentry \sym \do_sym has_error_code=\has_error_code
 #endif
 ```
 
-We will not dive into exceptions [Tracing](https://en.wikipedia.org/wiki/Tracing_%28software%29) now. If `CONFIG_TRACING` is not set, we can see that `trace_idtentry` macro just expands to the normal `idtentry`. We already saw implementation of the `idtentry` macro in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html), so let's start from the `page_fault` exception handler.
+We will not dive into exceptions [Tracing](https://en.wikipedia.org/wiki/Tracing_%28software%29) now. If `CONFIG_TRACING` is not set, we can see that `trace_idtentry` macro just expands to the normal `idtentry`. We already saw implementation of the `idtentry` macro in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html), so let's start from the `page_fault` exception handler.
 
 As we can see in the `idtentry` definition, the handler of the `page_fault` is `do_page_fault` function which defined in the [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/fault.c) and as all exceptions handlers it takes two arguments:
 
@@ -223,7 +223,7 @@ set_intr_gate(X86_TRAP_DE, divide_error);
 set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
 ```
 
-We use `set_intr_gate` macro to set the interrupt gate for the `#DE` exception and `set_intr_gate_ist` for the `#NMI`. You can remember that we already used these macros when we have set the interrupts gates for the page fault handler, debug handler and etc, you can find explanation of it in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html). After this we setup exception gates for the following exceptions:
+We use `set_intr_gate` macro to set the interrupt gate for the `#DE` exception and `set_intr_gate_ist` for the `#NMI`. You can remember that we already used these macros when we have set the interrupts gates for the page fault handler, debug handler and etc, you can find explanation of it in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html). After this we setup exception gates for the following exceptions:
 
 ```C
 set_system_intr_gate(X86_TRAP_OF, &overflow);
@@ -421,7 +421,7 @@ set_system_intr_gate_ist(X86_TRAP_BP, &int3, DEBUG_STACK);
 #endif
 ```
 
-Here we copy `idt_table` to the `nmi_dit_table` and setup exception handlers for the `#DB` or `Debug exception` and `#BR` or `Breakpoint exception`. You can remember that we already set these interrupt gates in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html), so why do we need to setup it again? We setup it again because when we initialized it before in the `early_trap_init` function, the `Task State Segment` was not ready yet, but now it is ready after the call of the `cpu_init` function.
+Here we copy `idt_table` to the `nmi_dit_table` and setup exception handlers for the `#DB` or `Debug exception` and `#BR` or `Breakpoint exception`. You can remember that we already set these interrupt gates in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html), so why do we need to setup it again? We setup it again because when we initialized it before in the `early_trap_init` function, the `Task State Segment` was not ready yet, but now it is ready after the call of the `cpu_init` function.
 
 That's all. Soon we will consider all handlers of these interrupts/exceptions.
 
@@ -462,4 +462,4 @@ Links
 * [cpumasks and bitmaps](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
 * [NX](https://en.wikipedia.org/wiki/NX_bit)
 * [Task State Segment](https://en.wikipedia.org/wiki/Task_state_segment)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html)

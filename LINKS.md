@@ -50,6 +50,11 @@ Other architectures
 
 * [PowerPC and Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
 
+Memory management
+------------------------
+
+* [NUMA Deep Dive Series](http://frankdenneman.nl/2016/07/07/numa-deep-dive-part-1-uma-numa/)
+
 Useful links
 ------------------------
 

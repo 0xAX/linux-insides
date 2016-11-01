@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 10.
 Last part
 -------------------------------------------------------------------------------
 
-This is the tenth part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about interrupts and interrupt handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) we saw a little about deferred interrupts and related concepts like `softirq`, `tasklet` and `workqeue`. In this part we will continue to dive into this theme and now it's time to look at real hardware driver.
+This is the tenth part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about interrupts and interrupt handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html) we saw a little about deferred interrupts and related concepts like `softirq`, `tasklet` and `workqeue`. In this part we will continue to dive into this theme and now it's time to look at real hardware driver.
 
 Let's consider serial driver of the [StrongARM** SA-110/21285 Evaluation Board](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf) board for example and will look how this driver requests an [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) line, 
 what happens when an interrupt is triggered and etc. The source code of this driver is placed in the [drivers/tty/serial/21285.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/21285.c) source code file. Ok, we have source code, let's start.
@@ -301,7 +301,7 @@ And fill the rest of the given interrupt descriptor fields in the end. So, our `
 Prepare to handle an interrupt
 --------------------------------------------------------------------------------
 
-In the previous paragraph we saw the requesting of the irq line for the given interrupt descriptor and registration of the `irqaction` structure for the given interrupt. We already know that when an interrupt event occurs, an interrupt controller notifies the processor about this event and processor tries to find appropriate interrupt gate for this interrupt. If you have read the eighth [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html) of this chapter, you may remember the `native_init_IRQ` function. This function makes initialization of the local [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). The following part of this function is the most interesting part for us right now: 
+In the previous paragraph we saw the requesting of the irq line for the given interrupt descriptor and registration of the `irqaction` structure for the given interrupt. We already know that when an interrupt event occurs, an interrupt controller notifies the processor about this event and processor tries to find appropriate interrupt gate for this interrupt. If you have read the eighth [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-8.html) of this chapter, you may remember the `native_init_IRQ` function. This function makes initialization of the local [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). The following part of this function is the most interesting part for us right now: 
 
 ```C
 for_each_clear_bit_from(i, used_vectors, first_system_vector) {
@@ -473,4 +473,4 @@ Links
 * [pid](https://en.wikipedia.org/wiki/Process_identifier)
 * [device tree](https://en.wikipedia.org/wiki/Device_tree)
 * [system calls](https://en.wikipedia.org/wiki/System_call)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html)
