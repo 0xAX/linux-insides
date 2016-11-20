@@ -1,10 +1,10 @@
-# Kernel Boot Process
+# Процесс загрузки ядра
 
-This chapter describes the linux kernel boot process. Here you will see a
-couple of posts which describes the full cycle of the kernel loading process:
+Эта глава описывает процесс загрузки ядра Linux. 
+Здесь вы увидите несколько статей, которые описывают полный цикл загрузки ядра:
 
-* [From the bootloader to kernel](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) - describes all stages from turning on the computer to running the first instruction of the kernel.
-* [First steps in the kernel setup code](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) - describes first steps in the kernel setup code. You will see heap initialization, query of different parameters like EDD, IST and etc...
-* [Video mode initialization and transition to protected mode](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) - describes video mode initialization in the kernel setup code and transition to protected mode.
-* [Transition to 64-bit mode](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-4.html) - describes preparation for transition into 64-bit mode and details of transition.
-* [Kernel Decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) - describes preparation before kernel decompression and details of direct decompression.
+* [От загрузчика к ядру](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) - описывает все стадии от включения компьютера до запуска первой инструкции ядра.
+* [Первые шаги в коде настройки ядра](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) - описывает первые шаги в коде настройки ядра. Вы увидите инициализацию динамической памяти, запросы различных параметров, таких как EDD, IST и др. ...
+* [Инициализация видео-режима и переход в защищённый режим](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) - описывает инициализацию видео-режима в коде настройки ядра и переход в защищённый режим.
+* [Переход в 64-битный режим](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-4.html) - описывает подготовку к переходу в 64-битный режим и детали перехода.
+* [Распаковка ядра](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) - описывает подготовку перед распаковкой ядра и детали самой распаковки.
