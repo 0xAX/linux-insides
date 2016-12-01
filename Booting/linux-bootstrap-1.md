@@ -1,73 +1,71 @@
-Kernel booting process. Part 1.
+Процесс загрузки ядра. Часть 1.
 ================================================================================
 
-From the bootloader to the kernel
+От загрузчика к ядру
 --------------------------------------------------------------------------------
 
-If you have been reading my previous [blog posts](http://0xax.blogspot.com/search/label/asm), then you can see that, for some time, I have been starting to get involved in low-level programming. I have written some posts about x86_64 assembly programming for Linux and, at the same time, I have also started to dive into the Linux source code. I have a great interest in understanding how low-level things work, how programs run on my computer, how are they located in memory, how the kernel manages processes & memory, how the network stack works at a low level, and many many other things. So, I have decided to write yet another series of posts about the Linux kernel for **x86_64**.
+Если вы читали предыдущие [статьи](http://0xax.blogspot.com/search/label/asm) моего блога, то могли заметить, что некоторое время назад я начал увлекаться низкоуровневым программированием. Я написал несколько статей о программировании под x86_64 в Linux. В то же время я начал "погружаться" в исходный код Linux. Я имею большой интерес к пониманию того, как работают низкоуровневые вещи, как запускаются программы на моем компьютере, как они расположены в памяти, как ядро управляет процессами и памятью, как работает сетевой стек на низком уровне и многие другие вещи. Поэтому я решил написать еще одну серию статей о ядре Linux для **x86_64**.
 
-Note that I'm not a professional kernel hacker and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). I appreciate it. All posts will also be accessible at [linux-insides](https://github.com/0xAX/linux-insides) and, if you find something wrong with my English or the post content, feel free to send a pull request.
+Замечу, что я не профессиональный хакер ядра и не пишу под него код на работе. Это просто хобби. Мне просто нравятся низкоуровневые вещи и мне интересно наблюдать за тем, как они работают. Так что, если вас что-то будет смущать или у вас появятся вопросы или замечания, пишите мне в твиттер [0xAX](https://twitter.com/0xAX), присылайте письма на [email](anotherworldofworld@gmail.com) или просто создавайте [issue](https://github.com/0xAX/linux-insides/issues/new). Я ценю это. Все статьи также будут доступны на странице [linux-insides](https://github.com/0xAX/linux-insides), и, если вы обнаружите какую-нибудь ошибку в моём английском или в содержимом статьи, присылайте pull request.
 
+*Заметьте, что это не официальная документация, а просто материал для обучения и обмена знаниями.*
 
-*Note that this isn't official documentation, just learning and sharing knowledge.*
+**Требуемые знания**
 
-**Required knowledge**
+* Понимание кода на языке C
+* Понимание кода на языке ассемблера (AT&T синтаксис)
 
-* Understanding C code
-* Understanding assembly code (AT&T syntax)
+В любом случае, если вы только начинаете изучать некоторые инструменты, я постараюсь объяснить некоторые детали этой и последующих частей. Ладно, простое введение закончилось, и теперь можно начать "погружение" в ядро и низкоуровневые вещи.
 
-Anyway, if you just start to learn some tools, I will try to explain some parts during this and the following posts. Alright, this is the end of the simple introduction, and now we can start to dive into the kernel and low-level stuff.
+Весь код, представленный здесь, в основном для ядра версии 3.18. Если есть какие-то изменения, позже я обновлю статьи соответствующим образом.
 
-All code is actually for the 3.18 kernel. If there are changes, I will update the posts accordingly.
-
-The Magical Power Button, What happens next?
+Магическая кнопка включения, что происходит дальше?
 --------------------------------------------------------------------------------
 
-Although this is a series of posts about the Linux kernel, we will not be starting from the kernel code - at least not, in this paragraph. As soon as you press the magical power button on your laptop or desktop computer, it starts working. The motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply). After receiving the signal, the power supply provides the proper amount of electricity to the computer. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to start the CPU. The CPU resets all leftover data in its registers and sets up predefined values for each of them.
+Несмотря на то, что это серия статей о ядре Linux, мы не будем начинать с его исходного кода (по крайней мере в этом параграфе). Как только вы нажмёте магическую кнопку включения на вашем ноутбуке или настольном компьютере, он начинает работать. Материнская плата посылает сигнал к [источнику питания](https://en.wikipedia.org/wiki/Power_supply). После получения сигнала, источник питания обеспечивает компьютер надлежащим количеством электричества. После того как материнская плата получает сигнал ["питание в норме" (Power good signal)](https://en.wikipedia.org/wiki/Power_good_signal), она пытается запустить ЦПУ. ЦПУ сбрасывает все остаточные данные в регистрах и записывает предустановленные значения каждого из них.
 
-
-[80386](https://en.wikipedia.org/wiki/Intel_80386) and later CPUs define the following predefined data in CPU registers after the computer resets:
+ЦПУ серии [Intel 80386](https://en.wikipedia.org/wiki/Intel_80386) и старше после перезапуска компьютера заполняют регистры следующими предустановленными значениями:
 
 ```
 IP          0xfff0
 CS selector 0xf000
 CS base     0xffff0000
 ```
-
-The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode). Let's back up a little and try to understand memory segmentation in this mode. Real mode is supported on all x86-compatible processors, from the [8086](https://en.wikipedia.org/wiki/Intel_8086) all the way to the modern Intel 64-bit CPUs. The 8086 processor has a 20-bit address bus, which means that it could work with a 0-0x100000 address space (1 megabyte). But it only has 16-bit registers, which have a maximum address of 2^16 - 1 or 0xffff (64 kilobytes). [Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all the address space available. All memory is divided into small, fixed-size segments of 65536 bytes (64 KB). Since we cannot address memory above 64 KB with 16 bit registers, an alternate method is devised. An address consists of two parts: a segment selector, which has a base address, and an offset from this base address. In real mode, the associated base address of a segment selector is `Segment Selector * 16`. Thus, to get a physical address in memory, we need to multiply the segment selector part by 16 and add the offset:
+Процессор начинает свою работу в [режиме реальных адресов](https://en.wikipedia.org/wiki/Real_mode). Давайте немного задержимся и попытаемся понять сегментацию памяти в этом режиме. Режим реальных адресов поддерживается всеми x86-совместимыми процессорами, от [8086](https://en.wikipedia.org/wiki/Intel_8086) до самых новых 64-битных ЦПУ Intel. Процессор 8086 имел 20-битную шину адреса, т.е. он мог работать с адресным пространством в диапазоне 0-0x100000 (1 мегабайт). Но регистры у него были только 16-битные, а в таком случае максимальный размер адресуемой памяти составляет 2^16 - 1 или 0xffff (64 килобайта). [Сегментация памяти](http://en.wikipedia.org/wiki/Memory_segmentation) используется для того, чтобы задействовать всё доступное адресное пространство. Вся память делится на небольшие, фиксированного размера сегменты по 65536 байт (64 Кб). Поскольку мы не можем адресовать память свыше 64 Кб с помощью 16-битных регистров, был придуман альтернативный метод. Адрес состоит из двух частей: селектора сегмента, который содержит базовый адрес, и смещение от этого базового адреса. В режиме реальных адресов базовый адрес селектора сегмента это `Селектор Сегмента * 16`. Таким образом, чтобы получить физический адрес в памяти, нужно умножить селектор сегмента на 16 и прибавить смещение:
 
 ```
-PhysicalAddress = Segment Selector * 16 + Offset
+Физический адрес = Селектор сегмента * 16 + Смещение
 ```
 
-For example, if `CS:IP` is `0x2000:0x0010`, then the corresponding physical address will be:
+Например, если `CS:IP` содержит `0x2000:0x0010`, то соответствующий физический адрес будет:
 
 ```python
 >>> hex((0x2000 << 4) + 0x0010)
 '0x20010'
 ```
 
-But, if we take the largest segment selector and offset, `0xffff:0xffff`, then the resulting address will be:
+Но если мы возьмём максимально доступный селектор сегментов и смещение: `0xffff:0xffff`, то итоговый адрес будет:
 
 ```python
 >>> hex((0xffff << 4) + 0xffff)
 '0x10ffef'
 ```
 
-which is 65520 bytes past the first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](https://en.wikipedia.org/wiki/A20_line).
+что больше первого мегабайта на 65520 байт. Поскольку в режиме реальных адресов доступен только один мегабайт, с отключённой [адресной линией A20](https://en.wikipedia.org/wiki/A20_line) `0x10ffef` становится `0x00ffef`.
 
-Ok, now we know about real mode and memory addressing. Let's get back to discussing register values after reset:
+Хорошо, теперь мы знаем о режиме реальных адресов и адресации памяти. Давайте вернёмся к обсуждению значений регистров после сброса.
 
-The `CS` register consists of two parts: the visible segment selector, and the hidden base address. While the base address is normally formed by multiplying the segment selector value by 16, during a hardware reset the segment selector in the CS register is loaded with 0xf000 and the base address is loaded with 0xffff0000; the processor uses this special base address until `CS` is changed.
+Регистр `CS` состоит из двух частей: видимый селектор сегмента и скрытый базовый адрес.
+В то время как базовый адрес, как правило, формируется путём умножения значения селектора сегмента на 16, во время аппаратного перезапуска в селектор сегмента в регистре `CS` записывается 0xf000, а в базовый адрес - 0xffff0000. Процессор использует этот специальный базовый адрес, пока регистр `CS` не изменится.
 
-The starting address is formed by adding the base address to the value in the EIP register:
+Начальный адрес формируется путём добавления базового адреса к значению в регистре `EIP`:
 
 ```python
 >>> 0xffff0000 + 0xfff0
 '0xfffffff0'
 ```
 
-We get `0xfffffff0`, which is 4GB (16 bytes). This point is called the [Reset vector](http://en.wikipedia.org/wiki/Reset_vector). This is the memory location at which the CPU expects to find the first instruction to execute after reset. It contains a [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction that usually points to the BIOS entry point. For example, if we look in the [coreboot](http://www.coreboot.org/) source code, we see:
+Мы получили `0xfffffff0`, т.е. 4 Гб (16 байт). По этому адресу располагается так называемый [вектор прерываний](http://en.wikipedia.org/wiki/Reset_vector). Это область памяти, в которой ЦПУ ожидает найти первую инструкцию для выполнения после сброса. Она содержит инструкцию [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`), которая обычно указывает на точку входа в BIOS. Например, если мы взглянем на исходный код [coreboot](http://www.coreboot.org/), то увидим следующее:
 
 ```assembly
     .section ".reset"
@@ -79,7 +77,7 @@ reset_vector:
     ...
 ```
 
-Here we can see the `jmp` instruction [opcode](http://ref.x86asm.net/coder32.html#xE9), which is 0xe9, and its destination address at `_start - ( . + 2)`. We can also see that the `reset` section is 16 bytes, and that it starts at `0xfffffff0`:
+Здесь мы можем видеть [опкод инструкции jmp](http://ref.x86asm.net/coder32.html#xE9) - 0xe9, и его адрес назначения `_start - ( . + 2)`. Мы также можем видеть, что секция `reset` занимает 16 байт и начинается с `0xfffffff0`:
 
 ```
 SECTIONS {
@@ -93,11 +91,11 @@ SECTIONS {
 }
 ```
 
-Now the BIOS starts; after initializing and checking the hardware, the BIOS needs to find a bootable device. A boot order is stored in the BIOS configuration, controlling which devices the BIOS attempts to boot from. When attempting to boot from a hard drive, the BIOS tries to find a boot sector. On hard drives partitioned with an MBR partition layout, the boot sector is stored in the first 446 bytes of the first sector, where each sectoris 512 bytes. The final two bytes of the first sector are `0x55` and `0xaa`, which designates to the BIOS that this device is bootable. For example:
+Теперь запускается BIOS; после инициализации и проверки оборудования, BIOS нужно найти загрузочное устройство. Порядок загрузки хранится в конфигурации BIOS, которая определяет, с каких устройств BIOS пытается загрузиться. При попытке загрузиться с жёсткого диска, BIOS пытается найти загрузочный сектор. На размеченных жёстких дисках со схемой разделов MBR, загрузочный сектор расположен в первых 446 байтах первого сектора, размер которого 512 байт. Последние два байта первого сектора - `0x55` и `0xaa`, которые оповещают BIOS о том, что устройство является загрузочным. Например:
 
 ```assembly
 ;
-; Note: this example is written in Intel Assembly syntax
+; Замечание: этот пример написан с использованием Intel синтаксиса
 ;
 [BITS 16]
 [ORG  0x7c00]
@@ -117,78 +115,76 @@ db 0x55
 db 0xaa
 ```
 
-Build and run this with:
+Собрать и запустить этот код можно таким образом:
 
 ```
 nasm -f bin boot.nasm && qemu-system-x86_64 boot
 ```
 
-This will instruct [QEMU](http://qemu.org) to use the `boot` binary that we just built as a disk image. Since the binary generated by the assembly code above fulfills the requirements of the boot sector (the origin is set to `0x7c00` and we end with the magic sequence), QEMU will treat the binary as the master boot record (MBR) of a disk image.
+Команда оповещает эмулятор [QEMU](http://qemu.org) о необходимости использовать в качестве образа диска созданный только что бинарный файл. Пока последний проверяет, удовлетворяет ли загрузочный сектор всем необходимым требованиям (в origin записывается `0x7c00`, а в конце магическая последовательность), QEMU будет работать с бинарным файлом как с главной загрузочной записью (MBR) образа диска.
 
-You will see:
+Вы увидите:
 
-![Simple bootloader which prints only `!`](http://oi60.tinypic.com/2qbwup0.jpg)
+![Простой загрузчик, который печатает только `!`](http://oi60.tinypic.com/2qbwup0.jpg)
 
-In this example we can see that the code will be executed in 16 bit real mode and will start at `0x7c00` in memory. After starting, it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt, which just prints the `!` symbol; it fills the remaining 510 bytes with zeros and finishes with the two magic bytes `0xaa` and `0x55`.
+В этом примере мы можем видеть, что код будет выполнен в 16-битном режиме реальных адресов и начнёт выполнение с адреса `0x7c00`. После запуска он вызывает прерывание [0x10](http://www.ctyme.com/intr/rb-0106.htm), которое просто печатает символ `!`. Оставшиеся 510 байт заполняются нулями, и код заканчивается двумя магическими байтами `0xaa` и `0x55`.
 
-You can see a binary dump of this using the `objdump` utility:
+Вы можете увидеть бинарный дамп с помощью утилиты `objdump`:
 
 ```
 nasm -f bin boot.nasm
 objdump -D -b binary -mi386 -Maddr16,data16,intel boot
 ```
 
-A real-world boot sector has code for continuing the boot process and a partition table instead of a bunch of 0's and an exclamation mark :) From this point onwards, the BIOS hands over control to the bootloader.
+Реальный загрузочный сектор имеет код для продолжения процесса загрузки и таблицу разделов вместо кучи нулей и восклицательного знака :) С этого момента BIOS передаёт управление загрузчику.
 
-**NOTE**: As explained above, the CPU is in real mode; in real mode, calculating the physical address in memory is done as follows:
+**ЗАМЕЧАНИЕ**: Как уже было упомянуто ранее, ЦПУ находится в режиме реальных адресов; в этом режиме вычисление физического адреса в памяти выполняется следующим образом:
 
 ```
-PhysicalAddress = Segment Selector * 16 + Offset
+Физический адрес = Селектор сегмента * 16 + Смещение
 ```
-
-just as explained before. We have only 16 bit general purpose registers; the maximum value of a 16 bit register is `0xffff`, so if we take the largest values, the result will be:
+так же, как было упомянуто выше. У нас есть только 16-битные регистры общего назначения; максимальное значение 16-битного регистра - `0xffff`. Поэтому, если мы возьмём максимальное возможное значение, то результат будет следующий:
 
 ```python
 >>> hex((0xffff * 16) + 0xffff)
 '0x10ffef'
 ```
 
-where `0x10ffef` is equal to `1MB + 64KB - 16b`. A [8086](https://en.wikipedia.org/wiki/Intel_8086) processor (which was the first processor with real mode), in contrast, has a 20 bit address line. Since `2^20 = 1048576` is 1MB, this means that the actual available memory is 1MB.
+где `0x10ffef` равен `1 Мб + 64 Кб - 16 байт`. Процессор [8086](https://en.wikipedia.org/wiki/Intel_8086) (который был первым процессором с режимом реальных адресов), в отличии от этого, имеет 20 битную шину адресации. Поскольку `2^20 = 1048576` это 1 Мб, получается, что фактический объём доступной памяти составляет 1 Мб.
 
-General real mode's memory map is as follows:
-
-```
-0x00000000 - 0x000003FF - Real Mode Interrupt Vector Table
-0x00000400 - 0x000004FF - BIOS Data Area
-0x00000500 - 0x00007BFF - Unused
-0x00007C00 - 0x00007DFF - Our Bootloader
-0x00007E00 - 0x0009FFFF - Unused
-0x000A0000 - 0x000BFFFF - Video RAM (VRAM) Memory
-0x000B0000 - 0x000B7777 - Monochrome Video Memory
-0x000B8000 - 0x000BFFFF - Color Video Memory
-0x000C0000 - 0x000C7FFF - Video ROM BIOS
-0x000C8000 - 0x000EFFFF - BIOS Shadow Area
-0x000F0000 - 0x000FFFFF - System BIOS
-```
-
-In the beginning of this post, I wrote that the first instruction executed by the CPU is located at address `0xFFFFFFF0`, which is much larger than `0xFFFFF` (1MB). How can the CPU access this address in real mode? The answer is in the [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) documentation:
+Основная карта разделов в режиме реальных адресов выглядит следующим образом:
 
 ```
-0xFFFE_0000 - 0xFFFF_FFFF: 128 kilobyte ROM mapped into address space
+0x00000000 - 0x000003FF - Таблица векторов прерываний
+0x00000400 - 0x000004FF - Данные BIOS
+0x00000500 - 0x00007BFF - Не используется
+0x00007C00 - 0x00007DFF - Наш загрузчик
+0x00007E00 - 0x0009FFFF - Не используется
+0x000A0000 - 0x000BFFFF - RAM (VRAM) видео-память
+0x000B0000 - 0x000B7777 - Память для монохромного видео
+0x000B8000 - 0x000BFFFF - Память для цветного видео
+0x000C0000 - 0x000C7FFF - BIOS ROM видео-памяти
+0x000C8000 - 0x000EFFFF - Скрытая область BIOS
+0x000F0000 - 0x000FFFFF - Системная BIOS
 ```
 
-At the start of execution, the BIOS is not in RAM, but in ROM.
+В начале статьи я написал, что первая инструкция, выполняемая ЦПУ, расположена по адресу `0xFFFFFFF0`, значение которого намного больше, чем `0xFFFFF` (1 Мб). Каким образом ЦПУ получает доступ к этому участку в режиме реальных адресов? Ответ на этот вопрос находится в документации [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map):
 
-Bootloader
+```
+0xFFFE_0000 - 0xFFFF_FFFF: 128 Кб ROM отображаются на адресное пространство
+```
+В начале выполнения BIOS находится не в RAM, а в ROM.
+
+Загрузчик
 --------------------------------------------------------------------------------
 
-There are a number of bootloaders that can boot Linux, such as [GRUB 2](https://www.gnu.org/software/grub/) and [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which specifies the requirements for a bootloader to implement Linux support. This example will describe GRUB 2.
+Существует несколько загрузчиков Linux, такие как [GRUB 2](https://www.gnu.org/software/grub/) и [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). Ядро Linux имеет [протокол загрузки](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt), который определяет требования к загрузчику для реализации поддержки Linux. В этом примере будет описан GRUB 2.
 
-Continuing from before, now that the BIOS has chosen a boot device and transferred control to the boot sector code, execution starts from [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD). This code is very simple, due to the limited amount of space available, and contains a pointer which is used to jump to the location of GRUB 2's core image. The core image begins with [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD), which is usually stored immediately after the first sector in the unused space before the first partition. The above code loads the rest of the core image, which contains GRUB 2's kernel and drivers for handling filesystems, into memory. After loading the rest of the core image, it executes [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c).
+Теперь, когда BIOS выбрал загрузочное устройство и передал контроль управления коду в загрузочном секторе, начинается выполнение [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD). Этот код очень простой в связи с ограниченным количеством свободного пространства и содержит указатель, который используется для перехода к основному образу GRUB 2. Основной образ начинается с [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD), который обычно располагается сразу после первого сектора в неиспользуемой области перед первым разделом. Приведённый выше код загружает оставшуюся часть основного образа, который содержит ядро и драйверы GRUB 2 для управления файловой системой. После загрузки остальной части основного образа, код выполняет [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c).
 
-`grub_main` initializes the console, gets the base address for modules, sets the root device, loads/parses the grub configuration file, loads modules, etc. At the end of execution, `grub_main` moves grub to normal mode. `grub_normal_execute` (from `grub-core/normal/main.c`) completes the final preparations and shows a menu to select an operating system. When we select one of the grub menu entries, `grub_menu_execute_entry` runs, executing the grub `boot` command and booting the selected operating system.
+`grub_main` инициализирует консоль, получает базовый адрес для модулей, устанавливает корневое устройство, загружает/обрабатывает файл настроек grub, загружает модули и т.д. В конце выполнения, `grub_main` переводит grub обратно в нормальный режим. `grub_normal_execute` (из `grub-core/normal/main.c`) завершает последние приготовления и отображает меню выбора операционной системы. Когда мы выбираем один из пунктов меню, запускается `grub_menu_execute_entry`, который в свою очередь запускает команду grub `boot`, загружающую выбранную операционную систему.
 
-As we can read in the kernel boot protocol, the bootloader must read and fill some fields of the kernel setup header, which starts at the `0x01f1` offset from the kernel setup code. The kernel header [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) starts from:
+Из протокола загрузки видно, что загрузчик должен читать и заполнять некоторые поля в заголовке ядра, который начинается со смещения `0x01f1` в коде настроек. Заголовок ядра [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) начинается с:
 
 ```assembly
     .globl hdr
@@ -202,63 +198,61 @@ hdr:
     boot_flag:   .word 0xAA55
 ```
 
-The bootloader must fill this and the rest of the headers (which are only marked as being type `write` in the Linux boot protocol, such as in [this example](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) with values which it has either received from the  command line or calculated. (We will not go over full descriptions and explanations for all fields of the kernel setup header now but instead when the discuss how kernel uses them; you can find a description of all fields in the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).)
+Загрузчик должен заполнить этот и другие заголовки (которые помеченные как тип `write` в протоколе загрузки Linux, например, в [данном примере](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) значениями, которые он получил из командной строки или вычисленными значениями. (Мы не будет вдаваться в подробности и описывать все поля заголовка ядра, но, когда он будет их использовать, вернёмся к этому; тем не менее вы можете найти полное описание всех полей в [протоколе загрузки](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).)
 
-As we can see in the kernel boot protocol, the memory map will be the following after loading the kernel:
+Как мы видим из протокола, после загрузки ядра карта распределения памяти будет выглядеть следующим образом:
 
 ```shell
-         | Protected-mode kernel  |
-100000   +------------------------+
-         | I/O memory hole        |
-0A0000   +------------------------+
-         | Reserved for BIOS      | Leave as much as possible unused
-         ~                        ~
-         | Command line           | (Can also be below the X+10000 mark)
-X+10000  +------------------------+
-         | Stack/heap             | For use by the kernel real-mode code.
-X+08000  +------------------------+
-         | Kernel setup           | The kernel real-mode code.
-         | Kernel boot sector     | The kernel legacy boot sector.
-       X +------------------------+
-         | Boot loader            | <- Boot sector entry point 0x7C00
-001000   +------------------------+
-         | Reserved for MBR/BIOS  |
-000800   +------------------------+
-         | Typically used by MBR  |
-000600   +------------------------+
-         | BIOS use only          |
-000000   +------------------------+
+         | Ядро защищённого режима  |
+100000   +--------------------------+
+         | Память I/O               |
+0A0000   +--------------------------+
+         | Резерв для BIOS          | Оставлен максимально допустимый размер
+         ~                          ~
+         | Командная строка         | (Может быть ниже X+10000)
+X+10000  +--------------------------+
+         | Стек/куча                | Используется кодом ядра в режиме реальных адресов
+X+08000  +--------------------------+
+         | Настройки ядра           | Код ядра режима реальных адресов.
+         | Загрузочный сектор ядра  | Унаследованный загрузочный сектор ядра.
+       X +--------------------------+
+         | Загрузчик                | <- Точка входа загрузочного сектора 0x7C00
+001000   +--------------------------+
+         | Резерв для MBR/BIOS      |
+000800   +--------------------------+
+         | Обычно используется MBR  |
+000600   +--------------------------+
+         | Используется только BIOS |
+000000   +--------------------------+
 
 ```
 
-So, when the bootloader transfers control to the kernel, it starts at:
+Итак, когда загрузчик передаёт управление ядру, он запускается с:
 
 ```
 0x1000 + X + sizeof(KernelBootSector) + 1
 ```
+где `X` -  это адрес загруженного сектора загрузки ядра. В моем случае `X` это `0x10000`, как мы можем видеть в дампе памяти:
 
-where `X` is the address of the kernel boot sector being loaded. In my case, `X` is `0x10000`, as we can see in a memory dump:
+![Первый адрес ядра](http://oi57.tinypic.com/16bkco2.jpg)
 
-![kernel first address](http://oi57.tinypic.com/16bkco2.jpg)
+Сейчас загрузчик поместил ядро Linux в память, заполнил поля заголовка, а затем переключился на него. Теперь мы можем перейти непосредственно к коду настройки ядра.
 
-The bootloader has now loaded the Linux kernel into memory, filled the header fields, and then jumped to the corresponding memory address. We can now move directly to the kernel setup code.
-
-Start of Kernel Setup
+Запуск настройки ядра
 --------------------------------------------------------------------------------
+Наконец-то, мы находимся в ядре! Технически, ядро ещё не работает; во-первых, нам нужно настроить ядро, менеджер памяти, менеджер процессов и т.д. Настройка ядра начинается в [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S), начиная со [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). Это немного странно на первый взгляд, так как перед этим есть ещё несколько инструкций.
 
-Finally, we are in the kernel! Technically, the kernel hasn't run yet; first, we need to set up the kernel, memory manager, process manager, etc. Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is a little strange at first sight, as there are several instructions before it.
-
-A long time ago, the Linux kernel used to have its own bootloader. Now, however, if you run, for example,
+Давным-давно у Linux был свой загрузчик, но сейчас, если вы запустите, например:
 
 ```
 qemu-system-x86_64 vmlinuz-3.18-generic
 ```
 
-then you will see:
+то увидите:
 
-![Try vmlinuz in qemu](http://oi60.tinypic.com/r02xkz.jpg)
+![Попытка использовать vmlinuz в qemu](http://oi60.tinypic.com/r02xkz.jpg)
 
-Actually, `header.S` starts from [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) (see image above), the error message printing and following the [PE](https://en.wikipedia.org/wiki/Portable_Executable) header:
+На самом деле, `header.S`  начинается с [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) (см. картинку выше), вывода сообщения об ошибке и [PE](https://en.wikipedia.org/wiki/Portable_Executable) заголовка:
 
 ```assembly
 #ifdef CONFIG_EFI_STUB
@@ -274,28 +268,28 @@ pe_header:
     .word 0
 ```
 
-It needs this to load an operating system with [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface). We won't be looking into its inner workings right now and will cover it in upcoming chapters.
+Это нужно, чтобы загрузить операционную систему с [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface). Мы не будем смотреть на его внутреннюю работу прямо сейчас; это будет в одной из следующих глав.
 
-The actual kernel setup entry point is:
+Настоящая настройка ядра начинается с:
 
 ```assembly
-// header.S line 292
+// header.S строка 292
 .globl _start
 _start:
 ```
 
-The bootloader (grub2 and others) knows about this point (`0x200` offset from `MZ`) and makes a jump directly to it, despite the fact that `header.S` starts from the `.bstext` section, which prints an error message:
+Загрузчик (grub2 или другой) знает об этой метке (смещение `0x200` от `MZ`) и сразу переходит на неё, несмотря на то, что `header.S` начинается с секции `.bstext`, которая выводит сообщение об ошибке:
 
 ```
 //
 // arch/x86/boot/setup.ld
 //
-. = 0;                    // current position
-.bstext : { *(.bstext) }  // put .bstext section to position 0
+. = 0;                    // текущая позиция
+.bstext : { *(.bstext) }  // поместить секцию .bstext в позицию 0
 .bsdata : { *(.bsdata) }
 ```
 
-The kernel setup entry point is:
+Точка входа настройки ядра:
 
 ```assembly
     .globl _start
@@ -304,13 +298,13 @@ _start:
     .byte  start_of_setup-1f
 1:
     //
-    // rest of the header
+    // остальная часть заголовка
     //
 ```
 
-Here we can see a `jmp` instruction opcode (`0xeb`) that jumps to the `start_of_setup-1f` point. In `Nf` notation, `2f` refers to the following local `2:` label; in our case, it is label `1` that is present right after jump, and it contains the rest of the setup [header](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156). Right after the setup header, we see the `.entrytext` section, which starts at the `start_of_setup` label.
+Здесь мы можем видеть опкод инструкции `jmp` (`0xeb`) к метке `start_of_setup-1f`. Нотация `Nf` означает, что `2f` ссылается на следующую локальную метку `2:`; в нашем случае это метка `1`, которая расположена сразу после инструкции jump и содержит оставшуюся часть [заголовка](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156). Сразу после заголовка настроек мы видим секцию .entrytext, которая начинается с метки `start_of_setup`.
 
-This is the first code that actually runs (aside from the previous jump instructions, of course). After the kernel setup received control from the bootloader, the first `jmp` instruction is located at the `0x200` offset from the start of the kernel real mode, i.e., after the first 512 bytes. This we can both read in the Linux kernel boot protocol and see in the grub2 source code:
+Это первый код, который на самом деле запускается (отдельно от предыдущей инструкции jump, конечно). После того, как настройщик ядра получил управление от загрузчика, первая инструкция `jmp` располагалась в смещении `0x200` от начала реальных адресов, т.е после первых 512 байт. Об этом можно узнать из протокола загрузки ядра Linux, а также увидеть в исходном коде grub2:
 
 ```C
 segment = grub_linux_real_target >> 4;
@@ -318,28 +312,29 @@ state.gs = state.fs = state.es = state.ds = state.ss = segment;
 state.cs = segment + 0x20;
 ```
 
-This means that segment registers will have the following values after kernel setup starts:
+Это означает, что после начала настройки ядра регистры сегмента будут иметь следующие значения:
 
 ```
 gs = fs = es = ds = ss = 0x1000
 cs = 0x1020
 ```
 
-In my case, the kernel is loaded at `0x10000`.
 
-After the jump to `start_of_setup`, the kernel needs to do the following:
+В моём случае, ядро загружается в `0x10000`.
 
-* Make sure that all segment register values are equal
-* Set up a correct stack, if needed
-* Set up [bss](https://en.wikipedia.org/wiki/.bss)
-* Jump to the C code in [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)
+После перехода на метку `start_of_setup`, необходимо соблюсти следующие условия:
 
-Let's look at the implementation.
+* Убедиться, что все значения всех сегментных регистров равны
+* Правильно настроить стек, если это необходимо
+* Настроить [BSS](https://en.wikipedia.org/wiki/.bss)
+* Перейти к C-коду в [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)
 
-Segment registers align
+Давайте посмотрим, как эти условия выполняются.
+
+Выравнивание сегментных регистров
 --------------------------------------------------------------------------------
 
-First of all, the kernel ensures that `ds` and `es` segment registers point to the same address. Next, it clears the direction flag using the `cld` instruction:
+Прежде всего, ядро гарантирует, что сегментные регистры `ds` и `es` указывают на один и тот же адрес. Затем оно сбрасывает флаг направления с помощью инструкции `cld`:
 
 ```assembly
     movw    %ds, %ax
@@ -347,15 +342,14 @@ First of all, the kernel ensures that `ds` and `es` segment registers point to t
     cld
 ```
 
-As I wrote earlier, grub2 loads kernel setup code at address `0x10000` and `cs` at `0x1020` because execution doesn't start from the start of file, but from
+Как я уже писал ранее, grub2 загружает код настройки ядра по адресу `0x10000` и `cs` по адресу `0x1020`, потому что исполнение не начинается с начала файла, а с
 
 ```assembly
 _start:
     .byte 0xeb
     .byte start_of_setup-1f
 ```
-
-`jump`, which is at a 512 byte offset from [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L47). It also needs to align `cs` from `0x10200` to `0x10000`, as well as all other segment registers. After that, we set up the stack:
+инструкции `jump`, расположение которой смещено на 512 байт от [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L47). Также необходимо выровнять `cs` с `0x10200` на `0x10000`, а также остальные сегментные регистры. После этого мы настраиваем стек:
 
 ```assembly
     pushw   %ds
@@ -363,12 +357,12 @@ _start:
     lretw
 ```
 
-which pushes the value of `ds` to the stack with the address of the [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) label and executes the `lretw` instruction. When the `lretw` instruction is called, it loads the address of label `6` into the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter) register and loads `cs` with the value of `ds`. Afterwards, `ds` and `cs` will have the same values.
+кладём значение `ds` на стек по адресу метки [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) и выполняем инструкцию `lretw`. Когда мы вызываем `lretw`, она загружает адрес метки `6` в регистр [счётчика команд (IP)](https://en.wikipedia.org/wiki/Program_counter), и загружает `cs` со значением `ds`. После этого `ds` и `cs` будут иметь одинаковые значения.
 
-Stack Setup
+Настройка стека
 --------------------------------------------------------------------------------
 
-Almost all of the setup code is in preparation for the C language environment in real mode. The next [step](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L467) is checking the `ss` register value and making a correct stack if `ss` is wrong:
+Почти весь код настройки - это подготовка для среды языка C в режиме реальных адресов. Следующим [шагом](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L467) является проверка значения регистра `ss` и создании правильного стека, если значение `ss` неверно:
 
 ```assembly
     movw    %ss, %dx
@@ -377,15 +371,15 @@ Almost all of the setup code is in preparation for the C language environment in
     je      2f
 ```
 
-This can lead to 3 different scenarios:
+Это может привести к трём различны сценариям:
 
-* `ss` has valid value 0x10000 (as do all other segment registers beside `cs`)
-* `ss` is invalid and `CAN_USE_HEAP` flag is set     (see below)
-* `ss` is invalid and `CAN_USE_HEAP` flag is not set (see below)
+* `ss` имеет верное значение 0x10000 (как и все остальные сегментные регистры рядом с `cs`)
+* `ss` является некорректным и установлен флаг `CAN_USE_HEAP` (см. ниже)
+* `ss` является некорректным и флаг `CAN_USE_HEAP` не установлен (см. ниже)
 
-Let's look at all three of these scenarios in turn:
+Давайте рассмотрим все три сценария:
 
-* `ss` has a correct address (0x10000). In this case, we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
+* `ss` имеет верный адрес (0x10000). В этом случае мы переходим к метке [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
 
 ```assembly
 2:  andw    $~3, %dx
@@ -396,11 +390,12 @@ Let's look at all three of these scenarios in turn:
     sti
 ```
 
-Here we can see the alignment of `dx` (contains `sp` given by bootloader) to 4 bytes and a check for whether or not it is zero. If it is zero, we put `0xfffc` (4 byte aligned address before the maximum segment size of 64 KB) in `dx`. If it is not zero, we continue to use `sp`, given by the bootloader (0xf7f4 in my case). After this, we put the `ax` value into `ss`, which stores the correct segment address of `0x10000` and sets up a correct `sp`. We now have a correct stack:
 
-![stack](http://oi58.tinypic.com/16iwcis.jpg)
+Здесь мы видим выравнивание сегмента `dx` (содержащего значение `sp`, полученное загрузчиком) 4 байтами и проверку - является ли полученное значение нулём. Если ноль, то помещаем `0xfffx` (выровненный 4 байтами адрес до максимального значения сегмента за вычетом 64 Кб) в `dx`. Если не ноль, продолжаем использовать `sp`, полученный от загрузчика (в моём случае 0xf7f4). После этого мы помещаем значение `ax` в `ss`, который хранит правильный адрес сегмента `0x10000` и устанавливает правильное значение `sp`. Теперь мы имеем правильный стек:
 
-* In the second scenario, (`ss` != `ds`). First, we put the value of [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) (the address of the end of the setup code) into `dx` and check the `loadflags` header field using the `testb` instruction to see whether we can use the heap. [loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
+![стек](http://oi58.tinypic.com/16iwcis.jpg)
+
+* Второй сценарий (когда `ss` != `ds`). Во-первых, поместим значение [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481) (адрес окончания кода настройки) в `dx` и проверим поле заголовока `loadflags` инструкцией `testb`, чтобы проверить, можем ли мы использовать кучу (heap). [loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) является заголовком с битовой маской, который определяется как:
 
 ```C
 #define LOADED_HIGH     (1<<0)
@@ -409,7 +404,7 @@ Here we can see the alignment of `dx` (contains `sp` given by bootloader) to 4 b
 #define CAN_USE_HEAP    (1<<7)
 ```
 
-and, as we can read in the boot protocol,
+и, как мы можем узнать из протокола загрузки:
 
 ```
 Field name: loadflags
@@ -421,30 +416,28 @@ Field name: loadflags
     heap_end_ptr is valid.  If this field is clear, some setup code
     functionality will be disabled.
 ```
+Если бит `CAN_USE_HEAP` установлен, мы помещаем `heap_end_ptr` в `dx` (который указывает на `_end`) и добавляем к нему `STACK_SIZE` (минимальный размер стека, 512 байт). После этого, если `dx` без переноса (так и будет, dx = _end + 512), переходим на метку `2` (как в предыдущем случае) и создаём правильный стек.
 
-If the `CAN_USE_HEAP` bit is set, we put `heap_end_ptr` into `dx` (which points to `_end`) and add `STACK_SIZE` (minimum stack size, 512 bytes) to it. After this, if `dx` is not carried (it will not be carried, dx = _end + 512), jump to label `2` (as in the previous case) and make a correct stack.
+![стек](http://oi62.tinypic.com/dr7b5w.jpg)
 
-![stack](http://oi62.tinypic.com/dr7b5w.jpg)
+* Когда флаг `CAN_USE_HEAP` не установлен, мы просто используем минимальный стек от `_end` до `_end + STACK_SIZE`:
 
-* When `CAN_USE_HEAP` is not set, we just use a minimal stack from `_end` to `_end + STACK_SIZE`:
+![минимальный стек](http://oi60.tinypic.com/28w051y.jpg)
 
-![minimal stack](http://oi60.tinypic.com/28w051y.jpg)
-
-BSS Setup
+Настройка BSS
 --------------------------------------------------------------------------------
 
-The last two steps that need to happen before we can jump to the main C code are setting up the [BSS](https://en.wikipedia.org/wiki/.bss) area and checking the "magic" signature. First, signature checking:
+Последние два шага, которые нужно выполнить перед тем, как мы сможем перейти к основному C-коду, это настройка [BSS](https://en.wikipedia.org/wiki/.bss)  и проверка "магических" сигнатур. Сначала проверка сигнатур:
 
 ```assembly
     cmpl    $0x5a5aaa55, setup_sig
     jne     setup_bad
 ```
+Это просто сравнение [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) с магическим числом `0x5a5aaa55`. Если они не равны, возникает фатальная ошибка.
 
-This simply compares the [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) with the magic number `0x5a5aaa55`. If they are not equal, a fatal error is reported.
+Если магические числа совпадают, зная, что у нас есть набор правильно настроенных сегментных регистров и стек, нам всего лишь нужно настроить BSS, прежде чем перейти к C-коду.
 
-If the magic number matches, knowing we have a set of correct segment registers and a stack, we only need to set up the BSS section before jumping into the C code.
-
-The BSS section is used to store statically allocated, uninitialized data. Linux carefully ensures this area of memory is first zeroed using the following code:
+Секция BSS используется для хранения статически выделенных, неинициализированных данных. Linux тщательно обнуляет эту область памяти, используя следующий код:
 
 ```assembly
     movw    $__bss_start, %di
@@ -454,40 +447,39 @@ The BSS section is used to store statically allocated, uninitialized data. Linux
     shrw    $2, %cx
     rep; stosl
 ```
-
-First, the [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) address is moved into `di`. Next, the `_end + 3` address (+3 - aligns to 4 bytes) is moved into `cx`. The `eax` register is cleared (using a `xor` instruction), and the bss section size (`cx`-`di`) is calculated and put into `cx`. Then, `cx` is divided by four (the size of a 'word'), and the `stosl` instruction is used repeatedly, storing the value of `eax` (zero) into the address pointed to by `di`, automatically increasing `di` by four, repeating until `cx` reaches zero). The net effect of this code is that zeros are written through all words in memory from `__bss_start` to `_end`:
+Во-первых, адрес [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) помещается в `di`. Далее, адрес `_end + 3` (+3 - выравнивает до 4 байт) помещается в `cx`. Регистр `eax` очищается (с помощью инструкции `xor`), а размер секции BSS (`cx`-`di`) вычисляется и помещается в `cx`. Затем `cx` делится на 4 (размер 'слова' (англ. word)), а инструкция `stosl` используется повторно, сохраняя значение `eax` (ноль) в адрес, на который указывает `di`, автоматически увеличивая `di` на 4 (это продолжается до тех пор, пока `cx` не достигнет нуля). Эффект от этого кода в том, что теперь все 'слова' в памяти от `__bss_start` до `_end` заполнены нулями:
 
 ![bss](http://oi59.tinypic.com/29m2eyr.jpg)
 
-Jump to main
+Переход к основному коду
 --------------------------------------------------------------------------------
 
-That's all - we have the stack and BSS, so we can jump to the `main()` C function:
+Вот и все, теперь у нас есть стек и BSS, поэтому мы можем перейти к C-функции `main()`:
 
 ```assembly
     calll main
 ```
 
-The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). You can read about what this does in the next part.
+Функция `main()` находится в файле [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). О том, что она делает, вы сможете узнать в следующей части.
 
-Conclusion
+Заключение
 --------------------------------------------------------------------------------
 
-This is the end of the first part about Linux kernel insides. If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-internals/issues/new). In the next part, we will see the first C code that executes in the Linux kernel setup, the implementation of memory routines such as `memset`, `memcpy`, `earlyprintk`, early console implementation and initialization, and much more.
+Это конец первой части о внутренностях ядра Linux. Если у вас есть вопросы или предложения, пишите мне в твиттер [0xAX](https://twitter.com/0xAX), на мой [email](anotherworldofworld@gmail.com) или просто откройте [issue](https://github.com/0xAX/linux-internals/issues/new). В следующей части мы увидим первый код на языке C, который выполняется при настройке ядра Linux, реализацию процедур для работы с памятью, таких как `memset`, `memcpy`, `earlyprintk`, инициализацию консоли и многое другое.
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
+**Пожалуйста, имейте в виду, что английский - не мой родной язык, и я очень извиняюсь за неудобства. Если вы найдете какие-нибудь ошибки, пожалуйста, пришлите pull request в [linux-insides](https://github.com/0xAX/linux-internals).**
 
-Links
+Ссылки
 --------------------------------------------------------------------------------
 
-  * [Intel 80386 programmer's reference manual 1986](http://css.csail.mit.edu/6.858/2014/readings/i386.pdf)
-  * [Minimal Boot Loader for Intel® Architecture](https://www.cs.cmu.edu/~410/doc/minimal_boot.pdf)
+  * [Справочник программиста Intel 80386 1986](http://css.csail.mit.edu/6.858/2014/readings/i386.pdf)
+  * [Минимальный загрузчик для архитектуры Intel®](https://www.cs.cmu.edu/~410/doc/minimal_boot.pdf)
   * [8086](http://en.wikipedia.org/wiki/Intel_8086)
   * [80386](http://en.wikipedia.org/wiki/Intel_80386)
-  * [Reset vector](http://en.wikipedia.org/wiki/Reset_vector)
-  * [Real mode](http://en.wikipedia.org/wiki/Real_mode)
-  * [Linux kernel boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt)
-  * [CoreBoot developer manual](http://www.coreboot.org/Developer_Manual)
-  * [Ralf Brown's Interrupt List](http://www.ctyme.com/intr/int.htm)
-  * [Power supply](http://en.wikipedia.org/wiki/Power_supply)
-  * [Power good signal](http://en.wikipedia.org/wiki/Power_good_signal)
+  * [Вектор прерываний](http://en.wikipedia.org/wiki/Reset_vector)
+  * [Режим реальных адресов](http://en.wikipedia.org/wiki/Real_mode)
+  * [Протокол загрузки ядра Linux](https://www.kernel.org/doc/Documentation/x86/boot.txt)
+  * [Справочник разработчика CoreBoot](http://www.coreboot.org/Developer_Manual)
+  * [Список прерываний Ральфа Брауна](http://www.ctyme.com/intr/int.htm)
+  * [Источник питания](http://en.wikipedia.org/wiki/Power_supply)
+  * [Сигнал "Питание в норме"](http://en.wikipedia.org/wiki/Power_good_signal)
