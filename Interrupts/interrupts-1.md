@@ -297,7 +297,7 @@ or `16384` bytes. The per-cpu interrupt stack represented by the `irq_stack_unio
 union irq_stack_union {
 	char irq_stack[IRQ_STACK_SIZE];
 
-    struct {
+        struct {
 		char gs_base[40];
 		unsigned long stack_canary;
 	};
@@ -350,56 +350,26 @@ DECLARE_PER_CPU(char *, irq_stack_ptr);
 DECLARE_PER_CPU(unsigned int, irq_count);
 ```
 
-The first is the `irq_stack_ptr`. From the variable's name, it is obvious that this is a pointer to the top of the stack. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function in [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c):
+The first is the `irq_stack_ptr` pointer. From the variable's name, it is obvious that this is a pointer to the top of the stack. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function in [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c) source code file and looks:
 
 ```C
 void __init setup_per_cpu_areas(void)
 {
-...
-...
 #ifdef CONFIG_X86_64
 for_each_possible_cpu(cpu) {
     ...
     ...
     ...
     per_cpu(irq_stack_ptr, cpu) =
-            per_cpu(irq_stack_union.irq_stack, cpu) +
-            IRQ_STACK_SIZE - 64;
+            per_cpu(irq_stack_union.irq_stack, cpu) + IRQ_STACK_SIZE;
     ...
     ...
     ...
 #endif
-...
-...
 }
 ```
 
-Here we go over all the CPUs one-by-one and setup `irq_stack_ptr`. This turns out to be equal to the top of the interrupt stack minus `64`. Why `64`?TODO  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c) source code file is following:
-
-```C
-void load_percpu_segment(int cpu)
-{
-        ...
-        ...
-        ...
-        loadsegment(gs, 0);
-        wrmsrl(MSR_GS_BASE, (unsigned long)per_cpu(irq_stack_union.gs_base, cpu));
-}
-```
-
-and as we already know the `gs` register points to the bottom of the interrupt stack.
-
-```assembly
-	movl	$MSR_GS_BASE,%ecx
-	movl	initial_gs(%rip),%eax
-	movl	initial_gs+4(%rip),%edx
-	wrmsr
-
-	GLOBAL(initial_gs)
-	.quad	INIT_PER_CPU_VAR(irq_stack_union)
-```
-
-Here we can see the `wrmsr` instruction which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case the model specific register is `MSR_GS_BASE` which contains the base address of the memory segment pointed by the `gs` register. `edx:eax` points to the address of the `initial_gs` which is the base address of our `irq_stack_union`.
+Here we go over all the CPUs one-by-one and setup `irq_stack_ptr`.
 
 We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides the ability to switch to a new stack for events non-maskable interrupt, double fault etc. There can be up to seven `IST` entries per-cpu. Some of them are:
 
