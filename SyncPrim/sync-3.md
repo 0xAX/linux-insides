@@ -89,7 +89,7 @@ static inline void sema_init(struct semaphore *sem, int val)
 }
 ```
 
-Let's consider implementation of this function. It looks pretty easy and actually it does almost the same. Thus function executes initialization of the given `semaphore` with the `__SEMAPHORE_INITIALIZER` macro which we just saw. As I already wrote in the previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will skip the stuff which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
+Let's consider implementation of this function. It looks pretty easy and actually it does almost the same. This function executes initialization of the given `semaphore` with the `__SEMAPHORE_INITIALIZER` macro which we just saw. As I already wrote in the previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will skip the stuff which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
 
 So, from now we are able to initialize a `semaphore` let's look at how to lock and unlock. The Linux kernel provides following [API](https://en.wikipedia.org/wiki/Application_programming_interface) to manipulate `semaphores`:
 
@@ -102,7 +102,7 @@ int  down_trylock(struct semaphore *sem);
 int  down_timeout(struct semaphore *sem, long jiffies);
 ```
 
-The first two functions: `down` and `up` are for acquiring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the `count` field of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may returned to ruined state by [signal](https://en.wikipedia.org/wiki/Unix_signal).
+The first two functions: `down` and `up` are for acquiring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the `count` field of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may return to running state by a [signal](https://en.wikipedia.org/wiki/Unix_signal).
 
 The `down_killable` function does the same as the `down_interruptible` function, but set the `TASK_KILLABLE` flag for the current process. This means that the waiting process may be interrupted by the kill signal.
 
