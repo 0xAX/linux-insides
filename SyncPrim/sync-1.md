@@ -135,7 +135,7 @@ Let's look at the operations that can performed on a spinlock:
 * `spin_is_locked` - returns the state of the given `spinlock`;
 * and etc.
 
-and the implementation of the `spin_lock_init` macro (from include/linux/spinlock.h](https://github.com/torvalds/linux/master/include/linux/spinlock.h)):
+and the implementation of the `spin_lock_init` macro (from [include/linux/spinlock.h](https://github.com/torvalds/linux/master/include/linux/spinlock.h)):
 
 ```C
 #define spin_lock_init(_lock)		\

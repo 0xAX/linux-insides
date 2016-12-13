@@ -53,7 +53,7 @@ The next two fields of the `mutex` structure - `wait_lock` and `wait_list` are [
 
 The first field - `owner` represents [process](https://en.wikipedia.org/wiki/Process_%28computing%29) which acquired a lock. As we may see, existence of this field in the `mutex` structure depends on the `CONFIG_DEBUG_MUTEXES` or `CONFIG_MUTEX_SPIN_ON_OWNER` kernel configuration options. Main point of this field and the next `osq` fields is support of `optimistic spinning` which we will see later. The last two fields - `magic` and `dep_map` are used only in [debugging](https://en.wikipedia.org/wiki/Debugging) mode. The `magic` field is to storing a `mutex` related information for debugging and the second field - `lockdep_map` is for [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
 
-Now, after we have considered the `mutex` structure, we may consider how this synchronization primitive works in the Linux kernel. As you may guess, a process which wants to acquire a lock, must to decrease value of the `mutex->count` if possible. And if a process wants to release a lock, it must to increase the same value. That's true. But as you may also guess, it is not so simple in the Linux kernel.
+Now, after we have considered the `mutex` structure, we may consider how this synchronization primitive works in the Linux kernel. As you may guess, a process which wants to acquire a lock, must decrease value of the `mutex->count` if possible. And if a process wants to release a lock, it must increase the same value. That's true. But as you may also guess, it is not so simple in the Linux kernel.
 
 Actually, when a process try to acquire a `mutex`, there three possible paths:
 
@@ -63,7 +63,7 @@ Actually, when a process try to acquire a `mutex`, there three possible paths:
 
 which may be taken, depending on the current state of the `mutex`. The first path or `fastpath` is the fastest as you may understand from its name. Everything is easy in this case. Nobody acquired a `mutex`, so the value of the `count` field of the `mutex` structure may be directly decremented. In a case of unlocking of a `mutex`, the algorithm is the same. A process just increments the value of the `count` field of the `mutex` structure. Of course, all of these operations must be [atomic](https://en.wikipedia.org/wiki/Linearizability).
 
-Yes, this looks pretty easy. But what happens if a process wants to acquire a `mutex` which is already acquired by other process? In this case, the control will be transferred to the second path - `midpath`. The `midpath` or `optimistic spinning` tries to [spin](https://en.wikipedia.org/wiki/Spinlock) with already familiar for us [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) while the lock owner is running. This path will be executed only if there are no other processes ready to run that have higher priority. This path is called `optimistic` because the waiting task will not be sleep and rescheduled. This allows to avoid expensive [context switch](https://en.wikipedia.org/wiki/Context_switch).
+Yes, this looks pretty easy. But what happens if a process wants to acquire a `mutex` which is already acquired by other process? In this case, the control will be transferred to the second path - `midpath`. The `midpath` or `optimistic spinning` tries to [spin](https://en.wikipedia.org/wiki/Spinlock) with already familiar for us [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) while the lock owner is running. This path will be executed only if there are no other processes ready to run that have higher priority. This path is called `optimistic` because the waiting task will not sleep and will not be rescheduled. This allows to avoid expensive [context switch](https://en.wikipedia.org/wiki/Context_switch).
 
 In the last case, when the `fastpath` and `midpath` may not be executed, the last path - `slowpath` will be executed. This path acts like a [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) lock. If the lock is unable to be acquired by a process, this process will be added to `wait queue` which is represented by the following:
 
@@ -77,7 +77,7 @@ struct mutex_waiter {
 };
 ```
 
-structure from the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file and will be sleep. Before we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) which is provided by the Linux kernel for manipulation with `mutexes`, let's consider the `mutex_waiter` structure. If you have read the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-3.html) of this chapter, you may notice that the `mutex_waiter` structure is similar to the `semaphore_waiter` structure from the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file:
+structure from the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file and will sleep. Before we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) which is provided by the Linux kernel for manipulation with `mutexes`, let's consider the `mutex_waiter` structure. If you have read the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-3.html) of this chapter, you may notice that the `mutex_waiter` structure is similar to the `semaphore_waiter` structure from the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file:
 
 ```C
 struct semaphore_waiter {
@@ -87,7 +87,7 @@ struct semaphore_waiter {
 };
 ```
 
-It also contains `list` and `task` fields which are represent entry of the mutex wait queue. The one difference here that the `mutex_waiter` does not contains `up` field, but contains the `magic` field which depends on the `CONFIG_DEBUG_MUTEXES` kernel configuration option and used to store a `mutex` related information for debugging purpose.
+It also contains `list` and `task` fields which are represent entry of the mutex wait queue. The one difference here that the `mutex_waiter` does not contain `up` field, but contains the `magic` field which depends on the `CONFIG_DEBUG_MUTEXES` kernel configuration option and used to store a `mutex` related information for debugging purpose.
 
 Now we know what is it `mutex` and how it is represented the Linux kernel. In this case, we may go ahead and start to look at the [API](https://en.wikipedia.org/wiki/Application_programming_interface) which the Linux kernel provides for manipulation of `mutexes`.
 
