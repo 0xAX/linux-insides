@@ -20,6 +20,7 @@ First steps in the kernel
 Okay, we got the address of the decompressed kernel image from the `decompress_kernel` function into `rax` register and just jumped there. As we already know the entry point of the decompressed kernel image starts in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) assembly source code file and at the beginning of it, we can see following definitions:
 
 ```assembly
+    .text
 	__HEAD
 	.code64
 	.globl startup_64
@@ -91,7 +92,11 @@ Here we just compare low part of the `rbp` register with the complemented value 
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
+```
 
+where `PMD_PAGE_SIZE` macro defined as:
+
+```
 #define PMD_PAGE_SIZE           (_AC(1, UL) << PMD_SHIFT)
 #define PMD_SHIFT       21
 ```
@@ -207,10 +212,6 @@ After this we store address of the `_text` in the `rax` and get the index of the
 ```assembly
 	movq	%rdi, %rax
 	shrq	$PGDIR_SHIFT, %rax
-
-	leaq	(4096 + _KERNPG_TABLE)(%rbx), %rdx
-	movq	%rdx, 0(%rbx,%rax,8)
-	movq	%rdx, 8(%rbx,%rax,8)
 ```
 
 where `PGDIR_SHIFT` is `39`. `PGDIR_SHFT` indicates the mask for page global directory bits in a virtual address. There are macro for all types of page directories:
@@ -221,45 +222,50 @@ where `PGDIR_SHIFT` is `39`. `PGDIR_SHFT` indicates the mask for page global dir
 #define PMD_SHIFT       21
 ```
 
-After this we put the address of the first `level3_kernel_pgt` in the `rdx` with the `_KERNPG_TABLE` access rights (see above) and fill the `early_level4_pgt` with the 2 `level3_kernel_pgt` entries.
+After this we put the address of the first entry of the `early_dynamic_pgts` page table to the `rdx` register with the `_KERNPG_TABLE` access rights (see above) and fill the `early_level4_pgt` with the 2 `early_dynamic_pgts` entries:
 
-After this we add `4096` (size of the `early_level4_pgt`) to the `rdx` (it now contains the address of the first entry of the `level3_kernel_pgt`) and put `rdi` (it now contains physical address of the `_text`)  to the `rax`. And after this we write addresses of the two page upper directory entries to the `level3_kernel_pgt`:
+```assembly
+	leaq	(4096 + _KERNPG_TABLE)(%rbx), %rdx
+	movq	%rdx, 0(%rbx,%rax,8)
+	movq	%rdx, 8(%rbx,%rax,8)
+```
+
+The `rbx` register contains address of the `early_level4_pgt` and `%rax * 8` here is index of a page global directory occupied by the `_text` address. So here we fill two entries of the `early_level4_pgt` with address of two entries of the `early_dynamic_pgts` which is related to `_text`. The `early_dynamic_pgts` is array of arrays:
+
+```C
+extern pmd_t early_dynamic_pgts[EARLY_DYNAMIC_PAGE_TABLES][PTRS_PER_PMD];
+```
+
+which will store temporary page tables for early kernel which we will not move to the `init_level4_pgt`.
+
+After this we add `4096` (size of the `early_level4_pgt`) to the `rdx` (it now contains the address of the first entry of the `early_dynamic_pgts`) and put `rdi` (it now contains physical address of the `_text`)  to the `rax`. Now we shift address of the `_text` ot `PUD_SHIFT` to get index of an entry from page upper directory which contains this address and clears high bits to get only `pud` related part:
 
 ```assembly
 	addq	$4096, %rdx
 	movq	%rdi, %rax
 	shrq	$PUD_SHIFT, %rax
 	andl	$(PTRS_PER_PUD-1), %eax
+```
+
+As we have index of a page upper directory we write two addresses of the second entry of the `early_dynamic_pgts` array to the first entry of this temporary page directory:
+
+```assembly
 	movq	%rdx, 4096(%rbx,%rax,8)
 	incl	%eax
 	andl	$(PTRS_PER_PUD-1), %eax
 	movq	%rdx, 4096(%rbx,%rax,8)
 ```
 
-In the next step we write addresses of the page middle directory entries to the `level2_kernel_pgt` and the last step is correcting of the kernel text+data virtual addresses:
+In the next step we do the same operation for last page table directory, but filling not two entries, but all entries to cover full size of the kernel.
+
+After our early page table directories filled, we put physical address of the `early_level4_pgt` to the `rax` register and jump to label `1`:
 
 ```assembly
-	leaq	level2_kernel_pgt(%rip), %rdi
-	leaq	4096(%rdi), %r8
-1:	testq	$1, 0(%rdi)
-	jz	2f
-	addq	%rbp, 0(%rdi)
-2:	addq	$8, %rdi
-	cmp	%r8, %rdi
-	jne	1b
-```
-
-Here we put the address of the `level2_kernel_pgt` to the `rdi` and address of the page table entry to the `r8` register. Next we check the present bit in the `level2_kernel_pgt` and if it is zero we're moving to the next page by adding 8 bytes to `rdi` which contains address of the `level2_kernel_pgt`. After this we compare it with `r8` (contains address of the page table entry) and go back to label `1` or move forward.
-
-In the next step we correct `phys_base` physical address with `rbp` (contains physical address of the `_text`), put physical address of the `early_level4_pgt` and jump to label `1`:
-
-```assembly
-	addq	%rbp, phys_base(%rip)
 	movq	$(early_level4_pgt - __START_KERNEL_map), %rax
 	jmp 1f
 ```
 
-where `phys_base` matches the first entry of the `level2_kernel_pgt` which is `512` MB kernel mapping.
+That's all for now. Our early paging is prepared and we just need to finish last preparation before we will jump into C code and kernel entry point later.
 
 Last preparation before jump at the kernel entry point
 --------------------------------------------------------------------------------
@@ -343,16 +349,16 @@ movq	%rax, %cr0
 We already know that to run any code, and even more [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code from assembly, we need to setup a stack. As always, we are doing it by the setting of [stack pointer](https://en.wikipedia.org/wiki/Stack_register) to a correct place in memory and resetting [flags](https://en.wikipedia.org/wiki/FLAGS_register) register after this:
 
 ```assembly
-movq stack_start(%rip), %rsp
+movq initial_stack(%rip), %rsp
 pushq $0
 popfq
 ```
 
-The most interesting thing here is the `stack_start`. It defined in the same [source](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) code file and looks like:
+The most interesting thing here is the `initial_stack`. This symbol is defined in the [source](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) code file and looks like:
 
 ```assembly
-GLOBAL(stack_start)
-.quad  init_thread_union+THREAD_SIZE-8
+GLOBAL(initial_stack)
+    .quad  init_thread_union+THREAD_SIZE-8
 ```
 
 The `GLOBAL` is already familiar to us from. It defined in the [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h) header file expands to the `global` symbol definition:
@@ -372,7 +378,7 @@ The `THREAD_SIZE` macro is defined in the [arch/x86/include/asm/page_64_types.h]
 
 We consider when the [kasan](http://lxr.free-electrons.com/source/Documentation/kasan.txt) is disabled and the `PAGE_SIZE` is `4096` bytes. So the `THREAD_SIZE` will expands to `16` kilobytes and represents size of the stack of a thread. Why is `thread`? You may already know that each [process](https://en.wikipedia.org/wiki/Process_%28computing%29) may have parent [processes](https://en.wikipedia.org/wiki/Parent_process) and [child](https://en.wikipedia.org/wiki/Child_process) processes. Actually, a parent process and child process differ in stack. A new kernel stack is allocated for a new process. In the Linux kernel this stack is represented by the [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with the `thread_info` structure.
 
-And as we can see the `init_thread_union` is represented by the `thread_union`, which defined as:
+And as we can see the `init_thread_union` is represented by the `thread_union` [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B). Earlier this union looked like:
 
 ```C
 union thread_union {
@@ -381,46 +387,40 @@ union thread_union {
 };
 ```
 
-and `init_thread_union` looks like:
+but from the Linux kernel `4.9-rc1` release, `thread_info` was moved to the `task_struct` structure which represents a thread. So, for now `thread_union` looks like:
 
 ```C
-union thread_union init_thread_union __init_task_data =
-	{ INIT_THREAD_INFO(init_task) };
+union thread_union {
+#ifndef CONFIG_THREAD_INFO_IN_TASK
+	struct thread_info thread_info;
+#endif
+	unsigned long stack[THREAD_SIZE/sizeof(long)];
+};
 ```
 
-Where the `INIT_THREAD_INFO` macro takes `task_struct` structure which represents process descriptor in the Linux kernel and does some basic initialization of the given `task_struct` structure:
+where the `CONFIG_THREAD_INFO_IN_TASK` kernel configuration option is enabled for `x86_64` architecture. So, as we consider only `x86_64` architecture in this book, an instance of `thread_union` will contain only stack and `thread_info` structure will be placed in the `task_struct`.
 
-```C
-#define INIT_THREAD_INFO(tsk)		\
-{                                               \
-	.task		= &tsk,                         \
-	.flags		= 0,                            \
-	.cpu		= 0,                            \
-	.addr_limit	= KERNEL_DS,                    \
-}
-```
-
-So, the `thread_union` contains low-level information about a process and process's stack and placed in the bottom of stack:
+The `init_thread_union` looks like:
 
 ```
-+-----------------------+
-|                       |
-|                       |
-|                       |
-|     Kernel stack      |
-|                       |
-|                       |
-|                       |
-|-----------------------|
-|                       |
-|  struct thread_info   |
-|                       |
-+-----------------------+
+union thread_union init_thread_union __init_task_data = {
+#ifndef CONFIG_THREAD_INFO_IN_TASK
+	INIT_THREAD_INFO(init_task)
+#endif
+};
 ```
 
-Note that we reserve `8` bytes at the to of stack. This is necessary to guarantee illegal access of the next page memory.
+which represents just thread stack. Now we may understand this expression:
 
-After the early boot stack is set, to update the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table) with `lgdt` instruction:
+```assembly
+GLOBAL(initial_stack)
+    .quad  init_thread_union+THREAD_SIZE-8
+```
+
+
+that `initial_stack` symbol points to the start of the `thread_union.stack` array + `THREAD_SIZE` which is 16 killobytes and - 8 bytes. Here we need to subtract `8` bytes at the to of stack. This is necessary to guarantee illegal access of the next page memory.
+
+After the early boot stack is set, to update the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table) with the `lgdt` instruction:
 
 ```assembly
 lgdt	early_gdt_descr(%rip)
@@ -441,7 +441,9 @@ We need to reload `Global Descriptor Table` because now kernel works in the low 
 #define GDT_ENTRIES 32
 ```
 
-for kernel code, data, thread local storage segments and etc... it's simple. Now let's look at the `early_gdt_descr_base`. First of `gdt_page` defined as:
+for kernel code, data, thread local storage segments and etc... it's simple. Now let's look at the definition of the `early_gdt_descr_base`.
+
+First of `gdt_page` defined as:
 
 ```C
 struct gdt_page {
@@ -516,10 +518,9 @@ We need to put `MSR_GS_BASE` to the `ecx` register and load data from the `eax` 
 In the next step we put the address of the real mode bootparam structure to the `rdi` (remember `rsi` holds pointer to this structure from the start) and jump to the C code with:
 
 ```assembly
-	movq	initial_code(%rip),%rax
-	pushq	$0
-	pushq	$__KERNEL_CS
-	pushq	%rax
+	movq	initial_code(%rip), %rax
+	pushq	$__KERNEL_CS	# set correct cs
+	pushq	%rax		# target address in negative space
 	lretq
 ```
 
