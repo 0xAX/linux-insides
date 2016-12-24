@@ -8,9 +8,9 @@ In the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initializat
 
 ```
 ----------------------------------------------------------------------------------------------
-|Vector|Mnemonic|Description         |Type |Error Code|Source                                |
+|Vector|Mnemonic|Description         |Type |Error Code|Source                   |
 ----------------------------------------------------------------------------------------------
-|3     | #BP    |Breakpoint          |Trap |NO        |INT 3                                 |
+|3     | #BP    |Breakpoint          |Trap |NO        |INT 3                    |
 ----------------------------------------------------------------------------------------------
 ```
 
@@ -29,7 +29,9 @@ We already saw implementation of the `set_intr_gate` in the previous part about 
 
 * number of the interrupt;
 * base address of the interrupt/exception handler;
-* third parameter is - `Interrupt Stack Table`. `IST` is a new mechanism in the `x86_64` and part of the [TSS](http://en.wikipedia.org/wiki/Task_state_segment). Every active thread in kernel mode has own kernel stack which is 16 kilobytes. While a thread in user space, kernel stack is empty except `thread_info` (read about it previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html)) at the bottom. In addition to per-thread stacks, there are a couple of specialized stacks associated with each CPU. All about these stack you can read in the linux kernel documentation - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks). `x86_64` provides feature which allows to switch to a new `special` stack for during any events as non-maskable interrupt and etc... And the name of this feature is - `Interrupt Stack Table`. There can be up to 7 `IST` entries per CPU and every entry points to the dedicated stack. In our case this is `DEBUG_STACK`.
+* third parameter is - `Interrupt Stack Table`. `IST` is a new mechanism in the `x86_64` and part of the [TSS](http://en.wikipedia.org/wiki/Task_state_segment). Every active thread in kernel mode has own kernel stack which is `16` kilobytes. While a thread in user space, this kernel stack is empty.
+
+In addition to per-thread stacks, there are a couple of specialized stacks associated with each CPU. All about these stack you can read in the linux kernel documentation - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks). `x86_64` provides feature which allows to switch to a new `special` stack for during any events as non-maskable interrupt and etc... And the name of this feature is - `Interrupt Stack Table`. There can be up to 7 `IST` entries per CPU and every entry points to the dedicated stack. In our case this is `DEBUG_STACK`.
 
 `set_intr_gate_ist` and `set_system_intr_gate_ist` work by the same principle as `set_intr_gate` with only one difference. Both of these functions checks
 interrupt number and call `_set_gate` inside:
