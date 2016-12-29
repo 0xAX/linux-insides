@@ -1,5 +1,3 @@
-# Summary
-
 ## Содержание
 * [Введение](README.md)
 * [Процесс загрузки ядра](Booting/README.md)
