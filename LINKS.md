@@ -1,62 +1,62 @@
-Useful links
+Полезные ссылки
 ========================
 
-Linux boot
+Загрузка Linux
 ------------------------
 
-* [Linux/x86 boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt)
-* [Linux kernel parameters](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
+* [Протокол загрузки Linux/x86](https://www.kernel.org/doc/Documentation/x86/boot.txt)
+* [Параметры ядра Linux](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
 
-Protected mode
+Защищённый режим
 ------------------------
 
 * [64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)
 
-Memory management in the Linux kernel
+Управление памятью в ядре Linux
 --------------------------------------
 
-* [Notes on the linux kernel VM subsystem by @lorenzo-stoakes](https://github.com/lorenzo-stoakes/linux-vm-notes)
+* [Заметки @lorenzo-stoakes о подсистеме VM в ядре Linux](https://github.com/lorenzo-stoakes/linux-vm-notes)
 
-Serial programming
+Программирование последовательного порта
 ------------------------
 
-* [8250 UART Programming](http://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming#UART_Registers)
-* [Serial ports on OSDEV](http://wiki.osdev.org/Serial_Ports)
+* [Программирование 8250 UART](http://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming#UART_Registers)
+* [Последовательные порты на OSDEV](http://wiki.osdev.org/Serial_Ports)
 
 VGA
 ------------------------
 
 * [Video Graphics Array (VGA)](http://en.wikipedia.org/wiki/Video_Graphics_Array)
 
-IO
+Ввод/вывод
 ------------------------
 
-* [IO port programming](http://www.tldp.org/HOWTO/text/IO-Port-Programming)
+* [Программирвоание портов ввода/вывода](http://www.tldp.org/HOWTO/text/IO-Port-Programming)
 
-GCC and GAS
+GCC и GAS
 ------------------------
 
-* [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
-* [Assembler Directives](http://www.chemie.fu-berlin.de/chemnet/use/info/gas/gas_toc.html#TOC65)
+* [Типы атрибутов GCC](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
+* [Директивы ассемблера](http://www.chemie.fu-berlin.de/chemnet/use/info/gas/gas_toc.html#TOC65)
 
 
-Important data structures
+Важные структуры данных
 --------------------------
 
-* [task_struct definition](http://lxr.free-electrons.com/source/include/linux/sched.h#L1274)
+* [Определение task_struct](http://lxr.free-electrons.com/source/include/linux/sched.h#L1274)
 
-Other architectures
+Прочие архитектуры
 ------------------------
 
-* [PowerPC and Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
+* [PowerPC и Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
 
-Memory management
+Управление памятью
 ------------------------
 
-* [NUMA Deep Dive Series](http://frankdenneman.nl/2016/07/07/numa-deep-dive-part-1-uma-numa/)
+* [Серия статей "NUMA Deep Dive"](http://frankdenneman.nl/2016/07/07/numa-deep-dive-part-1-uma-numa/)
 
-Useful links
+Полезные ссылки
 ------------------------
 
-* [Linux x86 Program Start Up](http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html)
-* [Memory Layout in Program Execution (32 bits)](http://fgiasson.com/articles/memorylayout.txt)
+* [Запуск программ в Linux x86](http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html)
+* [Разметка памяти при выполнении программы (32 бита)](http://fgiasson.com/articles/memorylayout.txt)

@@ -2,7 +2,7 @@
 
 * [Процесс загрузки ядра](Booting/README.md)
     * [От загрузчика к ядру](Booting/linux-bootstrap-1.md)
-    * [First steps in the kernel setup code](Booting/linux-bootstrap-2.md)
+    * [Первые шаги в коде настройки ядра](Booting/linux-bootstrap-2.md)
     * [Video mode initialization and transition to protected mode](Booting/linux-bootstrap-3.md)
     * [Transition to 64-bit mode](Booting/linux-bootstrap-4.md)
     * [Kernel decompression](Booting/linux-bootstrap-5.md)
@@ -82,5 +82,5 @@
     * [Data types in the kernel]()
 * [KernelStructures](KernelStructures/README.md)
     * [IDT](KernelStructures/idt.md)    
-* [Useful links](LINKS.md)
-* [Contributors](contributors.md)
+* [Полезные ссылки](LINKS.md)
+* [Участники](contributors.md)

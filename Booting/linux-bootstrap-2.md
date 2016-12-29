@@ -1,141 +1,141 @@
-Kernel booting process. Part 2.
+Процесс загрузки ядра. Часть 2.
 ================================================================================
 
-First steps in the kernel setup
+Первые шаги в настройке ядра
 --------------------------------------------------------------------------------
 
-We started to dive into linux kernel insides in the previous [part](linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call to the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). 
+Мы начали изучение внутренностей Linux в предыдущей [части](linux-bootstrap-1.md) и увидели начальную часть кода настройки ядра. Мы остановились на вызове функции `main` (это первая функция, написанная на C) из [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c).
 
-In this part we will continue to research the kernel setup code and 
-* see what `protected mode` is,
-* some preparation for the transition into it,
-* the heap and console initialization,
-* memory detection, cpu validation, keyboard initialization
-* and much much more.
+В этой части мы продолжим исследовать код установки ядра и
 
-So, Let's go ahead.
+* увидим `защищённый режим`,
+* некоторую подготовку для перехода в него,
+* инициализацию кучи и консоли,
+* обнаружение памяти, проверку ЦПУ, инициализацию клавиатуры
+* и многое другое.
 
-Protected mode
+Итак, давайте начнём.
+
+Защищённый режим
 --------------------------------------------------------------------------------
 
-Before we can move to the native Intel64 [Long Mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode.
+Прежде чем мы сможем перейти к нативному для Intel 64 режиму [Long Mode](http://en.wikipedia.org/wiki/Long_mode), ядро должно переключить ЦПУ в защищённый режим.
 
-What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from the [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode came.
+Что такое [защищённый режим](https://en.wikipedia.org/wiki/Protected_mode)? Защищённый режим был впервые добавлен в архитектуре x86 в 1982 году и был основным режимом процессоров Intel начиная с [80286](http://en.wikipedia.org/wiki/Intel_80286), пока в Intel 64 не появился режим Long Mode.
 
-The main reason to move away from [Real mode](http://wiki.osdev.org/Real_Mode) is that there is very limited access to the RAM. As you may remember from the previous part, there is only 2<sup>20</sup> bytes or 1 Megabyte, sometimes even only 640 Kilobytes of RAM available in the Real mode.
+Основная причина не использовать [режим реальных адресов](http://wiki.osdev.org/Real_Mode) заключается в том, что возможен лишь очень ограниченный доступ к оперативной памяти. Как вы помните из предыдущей части, есть только 2<sup>20</sup> байт или 1 мегабайт, а иногда даже 640 килобайт оперативной памяти, доступной в режиме реальных адресов.
 
-Protected mode brought many changes, but the main one is the difference in memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs 1 Megabyte of real mode. Also [paging](http://en.wikipedia.org/wiki/Paging) support was added, which you can read about in the next sections.
+Защищённый режим принёс много изменений, но главным является отличие в управлении памятью. 20-битная адресная шина была заменена на 32-битную. Это позволило обеспечить доступ к 4 Гб памяти против 1 мегабайта в режиме реальных адресов. Также была добавлена поддержка [подкачки страниц](http://en.wikipedia.org/wiki/Paging), про которую вы можете прочитать в следующих разделах.
 
-Memory management in Protected mode is divided into two, almost independent parts:
+Управление памятью в защищённом режиме разделяется на две, почти независимые части:
 
-* Segmentation
-* Paging
+* Сегментация
+* Подкачка страниц
 
-Here we will only see segmentation. Paging will be discussed in the next sections. 
+Здесь мы будем рассматривать только сегментацию. Подкачка страниц будет обсуждаться в следующих разделах. 
 
-As you can read in the previous part, addresses consist of two parts in real mode:
+Как вы можете знать из предыдущей части, адреса в режиме реальных адресов состоят из двух частей:
 
-* Base address of the segment
-* Offset from the segment base
+* Базовый адрес сегмента
+* Смещение от базового сегмента
 
-And we can get the physical address if we know these two parts by:
+И мы можем получить физический адрес, если нам известны эти две части:
 
 ```
-PhysicalAddress = Segment Selector * 16 + Offset
+Физический адрес = Селектор сегмента * 16 + Смещение
 ```
+Сегментация памяти в защищённом режиме была полностью переделана. В нём нет фиксированных 64 килобайтных сегментов. Вместо этого, размер и расположение каждого сегмента описывается структурой данных, называемой _дескриптором сегмента_. Дескрипторы сегментов хранятся в структуре данных под названием `глобальная дескрипторная таблица` (GDT).
 
-Memory segmentation was completely redone in protected mode. There are no 64 Kilobyte fixed-size segments. Instead, the size and location of each segment is described by an associated data structure called _Segment Descriptor_. The segment descriptors are stored in a data structure called `Global Descriptor Table` (GDT).
-
-The GDT is a structure which resides in memory. It has no fixed place in the memory so, its address is stored in the special `GDTR` register. Later we will see the GDT loading in the Linux kernel code. There will be an operation for loading it into memory, something like:
+GDT представляет собой структуру, которая находится в памяти. Она не имеет постоянного места в памяти, поэтому её адрес хранится в специальном регистре `GDTR`. Позже мы увидим загрузку GDT в коде ядра Linux. Там будет операция для её загрузки в память, что-то вроде:
 
 ```assembly
 lgdt gdt
 ```
+где инструкция `lgdt` загружает базовый адрес и ограничение (размер) глобальной дескрипторной таблицы в регистр `GDTR`. `GDTR` является 48-битным регистром и состоит из двух частей:
 
-where the `lgdt` instruction loads the base address and limit(size) of global descriptor table to the `GDTR` register. `GDTR` is a 48-bit register and consists of two parts:
+ * размер (16 бит) глобальной дескрипторной таблицы;
+ * адрес (32 бит) глобальной дескрипторной таблицы.
 
- * size(16-bit) of global descriptor table;
- * address(32-bit) of the global descriptor table.
-
-As mentioned above the GDT contains `segment descriptors` which describe memory segments.  Each descriptor is 64-bits in size. The general scheme of a descriptor is:
+Как упоминалось ранее, GDT содержит `дескрипторы сегментов`, которые описывают сегменты памяти. Каждый дескриптор является 64-битным. Общая схема дескриптора такова:
 
 ```
-31          24        19      16              7            0
-------------------------------------------------------------
-|             | |B| |A|       | |   | |0|E|W|A|            |
-| BASE 31:24  |G|/|L|V| LIMIT |P|DPL|S|  TYPE | BASE 23:16 | 4
-|             | |D| |L| 19:16 | |   | |1|C|R|A|            |
-------------------------------------------------------------
-|                             |                            |
-|        BASE 15:0            |       LIMIT 15:0           | 0
-|                             |                            |
-------------------------------------------------------------
+31                   24        19       16              7                     0
+-------------------------------------------------------------------------------
+|                      | |B| |A|        | |   | |0|E|W|A|                     |
+| БАЗОВЫЙ АДРЕС 31:24  |G|/|L|V| ПРЕДЕЛ |P|DPL|S|  ТИП  | БАЗОВЫЙ АДРЕС 23:16 | 4
+|                      | |D| |L| 19:16  | |   | |1|C|R|A|                     |
+-------------------------------------------------------------------------------
+|                                       |                                     |
+|          БАЗОВЫЙ АДРЕС 15:0           |             ПРЕДЕЛ 15:0             | 0
+|                                       |                                     |
+-------------------------------------------------------------------------------
 ```
+Не волнуйтесь, я знаю, после режима реальных адресов это выглядит немного страшно, но на самом деле это легко. Например, ПРЕДЕЛ 15:0 означает, что биты 0-15 дескриптора содержат значение предела. Остальная его часть находится в ПРЕДЕЛ 19:16. Таким образом, размер предела составляет 0-19, т.е 20 бит. Давайте внимательно взглянем на это:
 
-Don't worry, I know it looks a little scary after real mode, but it's easy. For example LIMIT 15:0 means that bit 0-15 of the Descriptor contain the value for the limit. The rest of it is in LIMIT 19:16. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
+1. Предел (20 бит) находится в пределах 0-15, 16-19 бит. Он определяет `длину_сегмента - 1`. Это зависит от бита `G` (гранулярность).
 
-1. Limit[20-bits] is at 0-15,16-19 bits. It defines `length_of_segment - 1`. It depends on `G`(Granularity) bit.
+  * Если `G` (бит 55) и предел сегмента равен 0, то размер сегмента составляет 1 байт
+  * Если `G` равен 1, а предел сегмента равен 0, то размер сегмента составляет 4096 байт
+  * Если `G` равен 0, а предел сегмента равен 0xfffff, то размер сегмента составляет 1 мегабайт
+  * Если `G` равен 1, а предел сегмента равен 0xfffff, то размер сегмента составляет 4 гигабайт
 
-  * if `G` (bit 55) is 0 and segment limit is 0, the size of the segment is 1 Byte
-  * if `G` is 1 and segment limit is 0, the size of the segment is 4096 Bytes
-  * if `G` is 0 and segment limit is 0xfffff, the size of the segment is 1 Megabyte
-  * if `G` is 1 and segment limit is 0xfffff, the size of the segment is 4 Gigabytes
-
-  So, it means that if
-  * if G is 0, Limit is interpreted in terms of 1 Byte and the maximum size of the segment can be 1 Megabyte.
-  * if G is 1, Limit is interpreted in terms of 4096 Bytes = 4 KBytes = 1 Page and the maximum size of the segment can be 4 Gigabytes. Actually when G is 1, the value of Limit is shifted to the left by 12 bits. So, 20 bits + 12 bits = 32 bits and 2<sup>32</sup> = 4 Gigabytes.
-
-2. Base[32-bits] is at (0-15, 32-39 and 56-63 bits). It defines the physical address of the segment's starting location.
-
-3. Type/Attribute (40-47 bits) defines the type of segment and kinds of access to it. 
-  * `S` flag at bit 44 specifies descriptor type. If `S` is 0 then this segment is a system segment, whereas if `S` is 1 then this is a code or data segment (Stack segments are data segments which must be read/write segments).
+  Таким образом, если
   
-To determine if the segment is a code or data segment we can check its Ex(bit 43) Attribute marked as 0 in the above diagram. If it is 0, then the segment is a Data segment otherwise it is a code segment.
+  * G равен 0, предел интерпретируется в терминах 1 байта, а максимальный размер сегмента может составлять 1 мегабайт.
+  * G равен 1, предел интерпретируется в терминах 4096 байт = 4 килобайта = 1 страница, а максимальный размер сегмента может составлять 4 гигабайта. На самом деле, когда G равен 1, значение предела сдвигается на 12 бит влево. Таким образом, 20 бит + 12 бит = 32 бита и 2<sup>32</sup> = 4 гигабайта.
 
-A segment can be of one of the following types:
+2. Базовый адрес (32 бита) находится в пределах 0-15, 32-39 и 56-63 бит. Он определяет физический адрес начального расположения сегмента.
+
+3. Тип/Атрибут (40-47 бит) определяет тип сегмента и виды доступа к нему. 
+  * Флаг `S` (бит 44) определяет тип дескриптора. Если `S` равен 0, то этот сегмент является системным сегментом, а если `S` равен 1, то этот сегмент является сегментом кода или сегментом данных (сегменты стека являются сегментами данных, которые должны быть сегментами для чтения/записи).
+  
+Для того чтобы определить, является ли сегмент сегментом кода или сегментом данных, мы можем проверить атрибут (бит 43), установленный в 0 в приведённой выше схеме. Если он равен 0, то сегмент является сегментом данных, в противном случае это сегмент кода.
+
+Сегмент может быть одного из следующих типов:
 
 ```
-|           Type Field        | Descriptor Type | Description
+|           Поле типа         | Тип дескриптора | Описание
 |-----------------------------|-----------------|------------------
-| Decimal                     |                 |
+| Десятичное                  |                 |
 |             0    E    W   A |                 |
-| 0           0    0    0   0 | Data            | Read-Only
-| 1           0    0    0   1 | Data            | Read-Only, accessed
-| 2           0    0    1   0 | Data            | Read/Write
-| 3           0    0    1   1 | Data            | Read/Write, accessed
-| 4           0    1    0   0 | Data            | Read-Only, expand-down
-| 5           0    1    0   1 | Data            | Read-Only, expand-down, accessed
-| 6           0    1    1   0 | Data            | Read/Write, expand-down
-| 7           0    1    1   1 | Data            | Read/Write, expand-down, accessed
+| 0           0    0    0   0 | Данные          | Только для чтения
+| 1           0    0    0   1 | Данные          | Только для чтения, было обращение
+| 2           0    0    1   0 | Данные          | Чтение/запись
+| 3           0    0    1   1 | Данные          | Чтение/запись, было обращение
+| 4           0    1    0   0 | Данные          | Только для чтения, растёт вниз
+| 5           0    1    0   1 | Данные          | Только для чтения, растёт вниз, было обращение
+| 6           0    1    1   0 | Данные          | Чтение/запись, растёт вниз
+| 7           0    1    1   1 | Данные          | Чтение/запись, растёт вниз, было обращение
 |                  C    R   A |                 |
-| 8           1    0    0   0 | Code            | Execute-Only
-| 9           1    0    0   1 | Code            | Execute-Only, accessed
-| 10          1    0    1   0 | Code            | Execute/Read
-| 11          1    0    1   1 | Code            | Execute/Read, accessed
-| 12          1    1    0   0 | Code            | Execute-Only, conforming
-| 14          1    1    0   1 | Code            | Execute-Only, conforming, accessed
-| 13          1    1    1   0 | Code            | Execute/Read, conforming
-| 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed
+| 8           1    0    0   0 | Код             | Только для выполнения
+| 9           1    0    0   1 | Код             | Только для выполнения, было обращение
+| 10          1    0    1   0 | Код             | Выполнение/чтение
+| 11          1    0    1   1 | Код             | Выполнение/чтение, было обращение
+| 12          1    1    0   0 | Код             | Только для выполнения, подчинённый
+| 14          1    1    0   1 | Код             | Только для выполнения, подчинённый, было обращение
+| 13          1    1    1   0 | Код             | Выполнение/чтение, подчинённый
+| 15          1    1    1   1 | Код             | Выполнение/чтение, подчинённый, было обращение
 ```
 
-As we can see the first bit(bit 43) is `0` for a _data_ segment and `1` for a _code_ segment. The next three bits(40, 41, 42, 43) are either `EWA`(*E*xpansion *W*ritable *A*ccessible) or CRA(*C*onforming *R*eadable *A*ccessible).
-  * if E(bit 42) is 0, expand up other wise expand down. Read more [here](http://www.sudleyplace.com/dpmione/expanddown.html).
-  * if W(bit 41)(for Data Segments) is 1, write access is allowed otherwise not. Note that read access is always allowed on data segments.
-  * A(bit 40) - Whether the segment is accessed by processor or not.
-  * C(bit 43) is conforming bit(for code selectors). If C is 1, the segment code can be executed from a lower level privilege e.g. user level. If C is 0, it can only be executed from the same privilege level.
-  * R(bit 41)(for code segments). If 1 read access to segment is allowed otherwise not. Write access is never allowed to code segments.
+Как мы можем видеть, первый бит (бит 43) равен `0` для сегмента _данных_ и `1` для сегмента _кода_. Следующие три бита (40, 41, 42, 43): либо биты `EWA` (бит направления расширения (*E*xpansion), бит записи (*W*ritable), бит обращения (*A*ccessible)), либо `CRA` (бит подчинения (*C*onforming), бит чтения (*R*eadable), бит доступа (*A*ccessible)).
 
-4. DPL[2-bits] (Descriptor Privilege Level) is at bits 45-46. It defines the privilege level of the segment. It can be 0-3 where 0 is the most privileged.
+  * Если E (бит 42) равен 0, то сегмент растёт вверх, в противном случае растёт вниз. Подробнее [здесь](http://www.sudleyplace.com/dpmione/expanddown.html).
+  * Если W (бит 41) (для сегмента данных) равен 1, то запись в сегмент разрешена. Обратите внимание, что право на чтение всегда разрешено для сегментов данных.
+  * A (бит 40) - было ли обращение процессора к сегменту.
+  * C (бит 43) -  бит подчинения (для сегмента кода). Если C равен 1, то сегмент кода может быть выполнен из более низкого уровня привилегий, например, из уровня пользователя. Если C равно 0, то сегмент может быть выполнен только из того же уровня привилегий.
+  * R (бит 41) (для сегмента кода). Если он равен 1, то чтение сегмента разрешено. Право на запись всегда запрещено для сегмента кода.
 
-5. P flag(bit 47) - indicates if the segment is present in memory or not. If P is 0, the segment will be presented as _invalid_ and the processor will refuse to read this segment.
+4. DPL [2 бита] (уровень привилегий сегмента (Descriptor Privilege Level)) находится в 45-46 битах. Определяет уровень привилегий сегмента от 0 до 3, где 0 является самым привилегированным.
 
-6. AVL flag(bit 52) - Available and reserved bits. It is ignored in Linux.
+5. Флаг P (бит 47) - указывает на присутствие сегмента в памяти. Если P равен 0, то сегмент является _недействительным_ и процессор откажется читать этот сегмент.
 
-7. L flag(bit 53) - indicates whether a code segment contains native 64-bit code. If 1 then the code segment executes in 64 bit mode.
+6. Флаг AVL (бит 52) - доступный и зарезервированный бит. Игнорируется в Linux.
 
-8. D/B flag(bit 54) - Default/Big flag represents the operand size i.e 16/32 bits. If it is set then 32 bit otherwise 16.
+7. Флаг L (бит 53) - указывает на то, содержит ли сегмент кода нативный 64-битный код. Если он равен 1, то сегмент кода будет выполнен в 64-битном режиме.
 
-Segment registers contain segment selectors as in real mode. However, in protected mode, a segment selector is handled differently. Each Segment Descriptor has an associated Segment Selector which is a 16-bit structure:
+8. Флаг D/B (бит 54) - флаг разрядности (Default/Big, определяет размер операнда, т.е 16/32 бит. Если он установлен, то находящиеся в сегменте операнды считаются имеющими размер 32 бита, иначе 16 бит.
+
+Сегментные регистры содержат селекторы сегментов, так же как и в режиме реальных адресов. Тем не менее, в защищённом режиме селектор сегмента обрабатывается иначе. Каждый дескриптор сегмента имеет соответствующий селектор сегмента, который представляет собой 16-битную структуру:
 
 ```
 15              3  2   1  0
@@ -144,48 +144,50 @@ Segment registers contain segment selectors as in real mode. However, in protect
 -----------------------------
 ```
 
-Where,
-* **Index** shows the index number of the descriptor in the GDT.
-* **TI**(Table Indicator) shows where to search for the descriptor. If it is 0 then search in the Global Descriptor Table(GDT) otherwise it will look in Local Descriptor Table(LDT).
-* And **RPL** is Requester's Privilege Level.
+Где,
 
-Every segment register has a visible and hidden part.
-* Visible - Segment Selector is stored here
-* Hidden - Segment Descriptor(base, limit, attributes, flags)
+* **Index** определяет номер дескриптора в GDT.
+* **TI** (Указатель таблицы (Table Indicator)) определяет таблицу, в которой нужно искать дескриптор. Если он равен 0, то поиск происходит в глобальной дескрипторной таблице (GDT), в противном случае в локальной дескрипторной таблице (LDT).
+* **RPL** определяет уровень привилегий.
+
+Каждый сегментный регистр имеет видимую и скрытую часть.
+
+* Видимая - здесь хранится селектор сегмента
+* Скрытая - дескриптор сегмента (базовый адрес, предел, атрибуты, флаги)
  
-The following steps are needed to get the physical address in the protected mode:
+Необходимы следующие шаги, чтобы получить физический адрес в защищённом режиме:
 
-* The segment selector must be loaded in one of the segment registers
-* The CPU tries to find a segment descriptor by GDT address + Index from selector and load the descriptor into the *hidden* part of the segment register
-* Base address (from segment descriptor) + offset will be the linear address of the segment which is the physical address (if paging is disabled).
+* Селектор сегмента должен быть загружен в один из сегментных регистров
+* ЦПУ пытается найти дескриптор сегмента по адресу GDT + Index из селектора и загрузить дескриптор в *скрытую* часть сегментного регистра
+* Базовый адрес (из дескриптора сегмента) + смещение будет линейным адресом сегмента, который является физическим адресом (если подкачка страниц отключена).
 
-Schematically it will look like this:
+Схематично это будет выглядеть следующим образом:
 
-![linear address](http://oi62.tinypic.com/2yo369v.jpg)
+![линейный адрес](http://oi62.tinypic.com/2yo369v.jpg)
 
-The algorithm for the transition from real mode into protected mode is:
+Алгоритм перехода из режима реальных адресов в защищённый режим:
 
-* Disable interrupts
-* Describe and load GDT with `lgdt` instruction
-* Set PE (Protection Enable) bit in CR0 (Control Register 0)
-* Jump to protected mode code
+* Отключить прерывания
+* Описать и загрузить GDT с инструкцией `lgdt`
+* Установить бит PE (Protection Enable) в CR0 (регистр управления (Control Register) 0)
+* Перейти к коду защищённого режима
 
-We will see the complete transition to protected mode in the linux kernel in the next part, but before we can move to protected mode, we need to do some more preparations.
+Полный переход в защищённый режим в ядре Linux мы увидим в следующей части, но прежде чем мы сможем перейти в защищённый режим, нужно совершить ещё несколько приготовлений.
 
-Let's look at [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). We can see some routines there which perform keyboard initialization, heap initialization, etc... Let's take a look.
+Давайте посмотрим на [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). Мы можем видеть некоторые подпрограммы, которые выполняют инициализацию клавиатуры, инициализацию кучи и т.д. Рассмотрим это.
 
-Copying boot parameters into the "zeropage"
+Копирование параметров загрузки в "нулевую страницу" (zeropage)
 --------------------------------------------------------------------------------
 
-We will start from the `main` routine in "main.c". First function which is called in `main` is [`copy_boot_params(void)`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L30). It copies the kernel setup header into the field of the `boot_params` structure which is defined in the [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113).
+Мы стартуем из подпрограммы `main` в "main.c". Первая функция, которая вызывается в `main` - [`copy_boot_params(void)`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L30). Она копирует заголовок настройки ядра в поле структуры `boot_params`, которая определена в [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113).
 
-The `boot_params` structure contains the `struct setup_header hdr` field. This structure contains the same fields as defined in [linux boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) and is filled by the boot loader and also at kernel compile/build time. `copy_boot_params` does two things:
+Структура `boot_params` содержит поле `struct setup_header hdr`. Эта структура содержит те же поля, что и в [протоколе загрузки Linux](https://www.kernel.org/doc/Documentation/x86/boot.txt) и заполняется загрузчиком, а так же во время компиляции/сборки ядра. `copy_boot_params` делает две вещи:
 
-1. Copies `hdr` from [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L281) to the `boot_params` structure in `setup_header` field
+1.  Копирует `hdr` из [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L281) в структуру `boot_params` в поле `setup_header`
 
-2. Updates pointer to the kernel command line if the kernel was loaded with the old command line protocol.
+2. Обновляет указатель на командную строку ядра, если ядро было загружено со старым протоколом командной строки.
 
-Note that it copies `hdr` with `memcpy` function which is defined in the [copy.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S) source file. Let's have a look inside:
+Обратите внимание на то что он копирует `hdr` с помощью функции `memcpy`, которая определена в [copy.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S). Взглянем на неё:
 
 ```assembly
 GLOBAL(memcpy)
@@ -205,40 +207,41 @@ GLOBAL(memcpy)
 ENDPROC(memcpy)
 ```
 
-Yeah, we just moved to C code and now assembly again :) First of all we can see that `memcpy` and other routines which are defined here, start and end with the two macros: `GLOBAL` and `ENDPROC`. `GLOBAL` is described in [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h) which defines `globl` directive and the label for it. `ENDPROC` is described in [include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h) which marks the `name` symbol as a function name and ends with the size of the `name` symbol.
+Да, мы только что перешли в C-код и снова вернулись в ассемблер :) Прежде всего мы видим, что `memcpy` и другие подпрограммы, расположенные здесь, начинаются и заканчиваются двумя макросами: `GLOBAL` и `ENDPROC`. Макрос `GLOBAL` описан в [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h) и определяет директиву `globl`, а так же метку для него. `ENDPROC` описан в [include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h); отмечает символ `name` в качестве имени функции и заканчивается размером символа `name`.
 
-Implementation of `memcpy` is easy. At first, it pushes values from the `si` and `di` registers to the stack to preserve their values because they will change during the `memcpy`. `memcpy` (and other functions in copy.S) use `fastcall` calling conventions. So it gets its incoming parameters from the `ax`, `dx` and `cx` registers.  Calling `memcpy` looks like this:
+Реализация `memcpy` достаточно простая. Во-первых, она помещает значения регистров `si` and `di` в стек для их сохранения, так как они будут меняться в течении работы. `memcpy` (как и другие функции в copy.S) использует `fastcall` соглашения о вызовах. Таким образом, она получает свои входные параметры из регистров `ax`, `dx` и `cx`. Вызов `memcpy` выглядит следующим образом:
 
 ```c
 memcpy(&boot_params.hdr, &hdr, sizeof hdr);
 ```
 
-So,
-* `ax` will contain the address of the `boot_params.hdr`
-* `dx` will contain the address of `hdr`
-* `cx` will contain the size of `hdr` in bytes.
+Так,
 
-`memcpy` puts the address of `boot_params.hdr` into `di` and saves the size on the stack. After this it shifts to the right on 2 size (or divide on 4) and copies from `si` to `di` by 4 bytes. After this we restore the size of `hdr` again, align it by 4 bytes and copy the rest of the bytes from `si` to `di` byte by byte (if there is more). Restore `si` and `di` values from the stack in the end and after this copying is finished.
+* `ax` будет содержать адрес `boot_params.hdr`
+* `dx` будет содержать адрес `hdr`
+* `cx` будет содержать размер `hdr` в байтах.
 
-Console initialization
+`memcpy` помещает адрес `boot_params.hdr` в `di` и сохраняет размер в стеке. После этого она сдвигается вправо на 2 размера (или делит на 4) и копирует из `si` в `di` по 4 байта. Далее снова восстанавливает размер `hdr`, выравнивает по 4 байта и копирует остальную часть байтов из `si` в `di` побайтово (если они есть). В конце восстанавливает значения `si` и `di` из стека и после этого завершает копирование.
+
+Инициализация консоли
 --------------------------------------------------------------------------------
 
-After `hdr` is copied into `boot_params.hdr`, the next step is console initialization by calling the `console_init` function which is defined in [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c).
+После того, как `hdr` скопирован в `boot_params.hdr`, следующим шагом является инициализация консоли с помощью вызова функции `console_init`, определённой в [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c).
 
-It tries to find the `earlyprintk` option in the command line and if the search was successful, it parses the port address and baud rate of the serial port and initializes the serial port. Value of `earlyprintk` command line option can be one of these:
+Функция пытается найти опцию `earlyprintk` в командной строке и, если поиск завершился успехом, парсит адрес порта, скорость передачи данных для последовательного порта и инициализирует последовательный порт. Значение опции `earlyprintk` может быть одним из следующих:
 
 * serial,0x3f8,115200
 * serial,ttyS0,115200
 * ttyS0,115200
 
-After serial port initialization we can see the first output:
+После инициализации последовательного порта мы можем увидеть первый вывод:
 
 ```C
 if (cmdline_find_option_bool("debug"))
     puts("early console in setup code\n");
 ```
 
-The definition of `puts` is in [tty.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c). As we can see it prints character by character in a loop by calling the `putchar` function. Let's look into the `putchar` implementation:
+Определение `puts` находится в [tty.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c). Как мы видим, она печатает символ за символом в цикле, вызывая функцию `putchar`. Давайте посмотрим на реализацию `putchar`:
 
 ```C
 void __attribute__((section(".inittext"))) putchar(int ch)
@@ -252,10 +255,9 @@ void __attribute__((section(".inittext"))) putchar(int ch)
         serial_putchar(ch);
 }
 ```
+`__attribute__((section(".inittext")))` означает, что код будет находиться в секции `.inittext`. Мы можем найти его в файле линкёра [setup.ld](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L19).
 
-`__attribute__((section(".inittext")))` means that this code will be in the `.inittext` section. We can find it in the linker file [setup.ld](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L19).
-
-First of all, `putchar` checks for the `\n` symbol and if it is found, prints `\r` before. After that it outputs the character on the VGA screen by calling the BIOS with the `0x10` interrupt call:
+Прежде всего, `putchar` проверяет символ `\n` и, если он найден, печатает перед ним `\r`. После этого она выводит символ на экране VGA, вызвав BIOS с прерыванием `0x10`:
 
 ```C
 static void __attribute__((section(".inittext"))) bios_putchar(int ch)
@@ -270,8 +272,7 @@ static void __attribute__((section(".inittext"))) bios_putchar(int ch)
     intcall(0x10, &ireg, NULL);
 }
 ```
-
-Here `initregs` takes the `biosregs` structure and first fills `biosregs` with zeros using the `memset` function and then fills it with register values.
+`initregs` принимает структуру `biosregs` и в первую очередь заполняет `biosregs` нулями, используя функцию `memset`, а затем заполняет его значениями регистра.
 
 ```C
     memset(reg, 0, sizeof *reg);
@@ -282,7 +283,7 @@ Here `initregs` takes the `biosregs` structure and first fills `biosregs` with z
     reg->gs = gs();
 ```
 
-Let's look at the [memset](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S#L36) implementation:
+Давайте посмотри на реализацию [memset](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S#L36):
 
 ```assembly
 GLOBAL(memset)
@@ -300,23 +301,22 @@ GLOBAL(memset)
     retl
 ENDPROC(memset)
 ```
+Как мы можем видеть, `memset` использует `fastcall` соглашения о вызовах, так же как и `memcpy`: это означает, что функция получает свои параметры из регистров `ax`, `dx` и `cx`.
 
-As you can read above, it uses the `fastcall` calling conventions like the `memcpy` function, which means that the function gets parameters from `ax`, `dx` and `cx` registers.
+Как правило, реализация `memset` подобна реализации memcpy. Она сохраняет значение регистра `di` в стеке и помещает значение `ax` в `di`, которое является адресом структуры `biosregs`. Далее идёт инструкция `movzbl`, которая копирует значение `dl` в нижние 2 байта регистра `eax`. Оставшиеся 2 верхних байта `eax` будут заполнены нулями.
 
-Generally `memset` is like a memcpy implementation. It saves the value of the `di` register on the stack and puts the `ax` value into `di` which is the address of the `biosregs` structure. Next is the `movzbl` instruction, which copies the `dl` value to the low 2 bytes of the `eax` register. The remaining 2 high bytes  of `eax` will be filled with zeros.
+Следующая инструкция умножает `eax` на `0x01010101`. Это необходимо, так как  `memset` будет копировать 4 байта одновременно. Например, нам нужно заполнить структуру значением `0x7` с помощью memset. В этом случае `eax` будет содержать значение `0x00000007`. Так что если мы умножим `eax` на `0x01010101`, мы получим `0x07070707` и теперь мы можем скопировать эти 4 байта в структуру. `memset` использует инструкцию `rep; stosl` для копирования `eax` в `es:di`.
 
-The next instruction multiplies `eax` with `0x01010101`. It needs to because `memset` will copy 4 bytes at the same time. For example, we need to fill a structure with `0x7` with memset. `eax` will contain `0x00000007` value in this case. So if we multiply `eax` with `0x01010101`, we will get `0x07070707` and now we can copy these 4 bytes into the structure. `memset` uses `rep; stosl` instructions for copying `eax` into `es:di`.
+Остальная часть `memset` делает почти то же самое, что и `memcpy`.
 
-The rest of the `memset` function does almost the same as `memcpy`.
-
-After the `biosregs` structure is filled with `memset`, `bios_putchar` calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which prints a character. Afterwards it checks if the serial port was initialized or not and writes a character there with [serial_putchar](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c#L30) and `inb/outb` instructions if it was set.
-
-Heap initialization
+После того, как структура `biosregs` заполнена с помощью `memset`, `bios_putchar` вызывает прерывание [0x10](http://www.ctyme.com/intr/rb-0106.htm) для вывода символа. Затем она проверяет, инициализирован ли последовательный порт, и в случае если он инициализирован, записывает в него символ с помощью инструкций [serial_putchar](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c#L30) и `inb/outb`.
+ 
+Инициализация кучи
 --------------------------------------------------------------------------------
 
-After the stack and bss section were prepared in [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) (see previous [part](linux-bootstrap-1.md)), the kernel needs to initialize the [heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) with the [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function.
+После подготовки стека и BSS в [header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) (смотрите предыдущую [часть](linux-bootstrap-1.md)), ядро должно инициализировать [кучу](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) с помощью функции [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116).
 
-First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21) flag from the [`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) in the kernel setup header and calculates the end of the stack if this flag was set:
+В первую очередь `init_heap` проверяет флаг [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21) в [`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) в заголовке настройки ядра и если флаг был установлен, вычисляет конец стека:
 
 ```C
     char *stack_end;
@@ -326,22 +326,24 @@ First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds
             : "=r" (stack_end) : "i" (-STACK_SIZE));
 ```
 
-or in other words `stack_end = esp - STACK_SIZE`.
+другими словами `stack_end = esp - STACK_SIZE`.
 
-Then there is the `heap_end` calculation:
+Затем идёт расчёт `heap_end`:
+
 ```c
     heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
 ```
-which means `heap_end_ptr` or `_end` + `512`(`0x200h`). The last check is whether `heap_end` is greater than `stack_end`. If it is then `stack_end` is assigned to `heap_end` to make them equal.
+что означает `heap_end_ptr` или `_end` + `512`(`0x200h`). Последняя проверка заключается в сравнении `heap_end` и `stack_end`. Если `heap_end` больше `stack_end`, то присваиваем `stack_end` значение `heap_end`, чтобы сделать их равными.
 
-Now the heap is initialized and we can use it using the `GET_HEAP` method. We will see how it is used, how to use it and how the it is implemented in the next posts.
+Теперь куча инициализирована и мы можем использовать её с помощью метода `GET_HEAP`. В следующих постах мы увидим как она используется, как её использовать и как она реализуется.
 
-CPU validation
+Проверка ЦПУ
 --------------------------------------------------------------------------------
 
-The next step as we can see is cpu validation by `validate_cpu` from [arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c).
+Следующим шагом является проверка ЦПУ с помощью `validate_cpu` из [arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c).
 
-It calls the [`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102) function and passes cpu level and required cpu level to it and checks that the kernel launches on the right cpu level.
+Она вызывает функцию [`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102) и передаёт ей два параметра: уровень ЦПУ и необходимый уровень ЦПУ; `check_cpu` проверяет, запущено ли ядро на нужном уровне ЦПУ.
+
 ```c
 check_cpu(&cpu_level, &req_level, &err_flags);
 if (cpu_level < req_level) {
@@ -349,14 +351,15 @@ if (cpu_level < req_level) {
     return -1;
 }
 ```
-`check_cpu` checks the cpu's flags, presence of [long mode](http://en.wikipedia.org/wiki/Long_mode) in case of x86_64(64-bit) CPU, checks the processor's vendor and makes preparation for certain vendors like turning off SSE+SSE2 for AMD if they are missing, etc.
 
-Memory detection
+`check_cpu` проверяет флаги ЦПУ, наличие [long mode](http://en.wikipedia.org/wiki/Long_mode) в случае x86_64 (64-битного) ЦПУ, проверяет поставщика процессора и делает специальные подготовки для некоторых производителей, такие как отключение SSE+SSE2 для AMD в случае их отсутствия и т.д.
+
+Обнаружение памяти
 --------------------------------------------------------------------------------
 
-The next step is memory detection by the `detect_memory` function. `detect_memory` basically provides a map of available RAM to the cpu. It uses different programming interfaces for memory detection like `0xe820`, `0xe801` and `0x88`. We will see only the implementation of **0xE820** here.
+Следующим шагом является обнаружение памяти с помощью функции `detect_memory`. `detect_memory` в основном предоставляет карту доступной оперативной памяти. Она использует различные программные интерфейсы для обнаружения памяти, такие как `0xe820`, `0xe801` и `0x88`. Здесь мы будем рассматривать только реализацию **0xE820**.
 
-Let's look into the `detect_memory_e820` implementation from the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c) source file. First of all, the `detect_memory_e820` function initializes the `biosregs` structure as we saw above and fills registers with special values for the `0xe820` call:
+Давайте посмотрим на реализацию `detect_memory_e820` в [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c). Прежде всего, функция `detect_memory_e820` инициализирует структуру `biosregs`, как мы видели выше, и заполняет регистры специальными значениями для вызова `0xe820`:
 
 ```assembly
     initregs(&ireg);
@@ -366,26 +369,26 @@ Let's look into the `detect_memory_e820` implementation from the [arch/x86/boot/
     ireg.di  = (size_t)&buf;
 ```
 
-* `ax` contains the number of the function (0xe820 in our case)
-* `cx` register contains size of the buffer which will contain data about memory
-* `edx` must contain the `SMAP` magic number
-* `es:di` must contain the address of the buffer which will contain memory data
-* `ebx` has to be zero.
+* `ax` содержит номер функции (в нашем случае 0xe820)
+* `cx` содержит размер буфера, который будет содержать данные о памяти
+* `edx` должен содержать магическое число `SMAP`
+* `es:di` должен содержать адрес буфера, который будет содержать данные из памяти
+* `ebx` должен быть равен нулю.
 
-Next is a loop where data about the memory will be collected. It starts from the call of the `0x15` BIOS interrupt, which writes one line from the address allocation table. For getting the next line we need to call this interrupt again (which we do in the loop). Before the next call `ebx` must contain the value returned previously:
+Далее идёт цикл, в котором будут собраны данные о памяти. Он начинается с вызова BIOS прерывания `0x15`, который записывает одну строку из таблицы распределения адресов. Для получения следующей строки мы должны снова вызвать это прерывание (что мы и делаем в цикле). До следующего вызова `ebx` должен содержать значение, возвращённое ранее:
 
 ```C
     intcall(0x15, &ireg, &oreg);
     ireg.ebx = oreg.ebx;
 ```
 
-Ultimately, it does iterations in the loop to collect data from the address allocation table and writes this data into the `e820entry` array:
+В конечном счёте мы делаем итерации в цикле для сбора данных из таблицы распределения адресов и записываем эти данные в массив `e820entry`:
 
-* start of memory segment
-* size  of memory segment
-* type of memory segment (which can be reserved, usable and etc...).
+* начало сегмента памяти
+* размер сегмента памяти
+* тип сегмента памяти (зарезервированый, используемый и т.д).
 
-You can see the result of this in the `dmesg` output, something like:
+Вы можете увидеть результат в выводе `dmesg`, что-то вроде:
 
 ```
 [    0.000000] e820: BIOS-provided physical RAM map:
@@ -397,28 +400,30 @@ You can see the result of this in the `dmesg` output, something like:
 [    0.000000] BIOS-e820: [mem 0x00000000fffc0000-0x00000000ffffffff] reserved
 ```
 
-Keyboard initialization
+Инициализация клавиатуры
 --------------------------------------------------------------------------------
 
-The next step is the initialization of the keyboard with the call of the [`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65) function. At first `keyboard_init` initializes registers using the `initregs` function and calling the [0x16](http://www.ctyme.com/intr/rb-1756.htm) interrupt for getting the keyboard status.
+Следующим шагом является инициализация клавиатуры с помощью вызова функции [`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65). Вначале `keyboard_init` инициализирует регистры с помощью функции `initregs` и вызова прерывания [0x16](http://www.ctyme.com/intr/rb-1756.htm) для получения статуса клавиатуры.
+
 ```c
     initregs(&ireg);
-    ireg.ah = 0x02;     /* Get keyboard status */
+    ireg.ah = 0x02;     /* Получение статуса клавиатуры */
     intcall(0x16, &ireg, &oreg);
     boot_params.kbd_status = oreg.al;
 ```
-After this it calls [0x16](http://www.ctyme.com/intr/rb-1757.htm) again to set repeat rate and delay.
+После этого она ещё раз вызывает [0x16](http://www.ctyme.com/intr/rb-1757.htm) для установки частоты повторения и задержки.
+
 ```c
-    ireg.ax = 0x0305;   /* Set keyboard repeat rate */
+    ireg.ax = 0x0305;   /* Установка частоты повторения клавиатуры */
     intcall(0x16, &ireg, NULL);
 ```
 
-Querying
+Выполнение запросов
 --------------------------------------------------------------------------------
 
-The next couple of steps are queries for different parameters. We will not dive into details about these queries, but will get back to it in later parts. Let's take a short look at these functions:
+Следующие несколько шагов - запросы для различных параметров. Мы не будем погружаться в подробности этих запросов, но вернёмся к этому в последующих частях. Давайте коротко взглянем на эти функции:
 
-The [query_mca](https://github.com/torvalds/linux/blob/master/arch/x86/boot/mca.c#L18) routine calls the [0x15](http://www.ctyme.com/intr/rb-1594.htm) BIOS interrupt to get the machine model number, sub-model number, BIOS revision level, and other hardware-specific attributes:
+Функция [query_mca](https://github.com/torvalds/linux/blob/master/arch/x86/boot/mca.c#L18) вызывает BIOS прерывание [0x15](http://www.ctyme.com/intr/rb-1594.htm) для получения машинного номера модели, номера субмодели, номера ревизии BIOS, а также других аппаратно-ориентированных атрибутов:
 
 ```c
 int query_mca(void)
@@ -431,7 +436,7 @@ int query_mca(void)
     intcall(0x15, &ireg, &oreg);
 
     if (oreg.eflags & X86_EFLAGS_CF)
-        return -1;  /* No MCA present */
+        return -1;  /* MCA отсутствует */
 
     set_fs(oreg.es);
     len = rdfs16(oreg.bx);
@@ -444,36 +449,36 @@ int query_mca(void)
 }
 ```
 
-It fills  the `ah` register with `0xc0` and calls the `0x15` BIOS interruption. After the interrupt execution it checks  the [carry flag](http://en.wikipedia.org/wiki/Carry_flag) and if it is set to 1, the BIOS doesn't support [**MCA**](https://en.wikipedia.org/wiki/Micro_Channel_architecture). If carry flag is set to 0, `ES:BX` will contain a pointer to the system information table, which looks like this:
+Функция заполняет регистр `ah` значением `0xc0` и вызывает BIOS прерывание `0x15`. После выполнения прерывания она проверяет [флаг переноса](http://en.wikipedia.org/wiki/Carry_flag) и если он установлен в 1, то это означает, что BIOS не поддерживает [**MCA**](https://en.wikipedia.org/wiki/Micro_Channel_architecture). Если флаг переноса установлен в 0, `ES:BX` будет содержать указатель на таблицу системной информации, которая выглядит следующим образом:
 
 ```
-Offset  Size    Description
- 00h    WORD    number of bytes following
- 02h    BYTE    model (see #00515)
- 03h    BYTE    submodel (see #00515)
- 04h    BYTE    BIOS revision: 0 for first release, 1 for 2nd, etc.
- 05h    BYTE    feature byte 1 (see #00510)
- 06h    BYTE    feature byte 2 (see #00511)
- 07h    BYTE    feature byte 3 (see #00512)
- 08h    BYTE    feature byte 4 (see #00513)
- 09h    BYTE    feature byte 5 (see #00514)
+Смещение  Размер  Описание
+ 00h      СЛОВО   количество следующих байт
+ 02h      БАЙТ    модель (смотрите #00515)
+ 03h      БАЙТ    субмодель (смотрите #00515)
+ 04h      БАЙТ    ревизия BIOS: 0 для первой ревизии, 1 для второй и т.д
+ 05h      БАЙТ    байт свойства 1 (смотрите #00510)
+ 06h      БАЙТ    байт свойства 2 (смотрите #00511)
+ 07h      БАЙТ    байт свойства 3 (смотрите #00512)
+ 08h      БАЙТ    байт свойства 4 (смотрите #00513)
+ 09h      БАЙТ    байт свойства 5 (смотрите #00514)
 ---AWARD BIOS---
- 0Ah  N BYTEs   AWARD copyright notice
+ 0Ah    N БАЙТ    Уведомление об авторских правах AWARD 
 ---Phoenix BIOS---
- 0Ah    BYTE    ??? (00h)
- 0Bh    BYTE    major version
- 0Ch    BYTE    minor version (BCD)
- 0Dh  4 BYTEs   ASCIZ string "PTL" (Phoenix Technologies Ltd)
+ 0Ah      БАЙТ    ??? (00h)
+ 0Bh      БАЙТ    мажорная версия
+ 0Ch      БАЙТ    минорная версия (BCD)
+ 0Dh    4 БАЙТА   ASCIZ-строка "PTL" (Phoenix Technologies Ltd)
 ---Quadram Quad386---
- 0Ah 17 BYTEs   ASCII signature string "Quadram Quad386XT"
----Toshiba (Satellite Pro 435CDS at least)---
- 0Ah  7 BYTEs   signature "TOSHIBA"
- 11h    BYTE    ??? (8h)
- 12h    BYTE    ??? (E7h) product ID??? (guess)
- 13h  3 BYTEs   "JPN"
+ 0Ah   17 БАЙТ   ASCII-строка подписи "Quadram Quad386XT"
+---Toshiba (По крайней мере Satellite Pro 435CDS)---
+ 0Ah    7 БАЙТ   подпись "TOSHIBA"
+ 11h      БАЙТ    ??? (8h)
+ 12h      БАЙТ    ??? (E7h) ID продукта??? (предположительно)
+ 13h    3 БАЙТА   "JPN"
  ```
 
-Next we call the `set_fs` routine and pass the value of the `es` register to it. The implementation of `set_fs` is pretty simple:
+Далее мы вызываем функцию `set_fs` и передаём ей значение регистра `es`. Реализация `set_fs` довольно проста:
 
 ```c
 static inline void set_fs(u16 seg)
@@ -482,17 +487,17 @@ static inline void set_fs(u16 seg)
 }
 ```
 
-This function contains inline assembly which gets the value of the `seg` parameter and puts it into the `fs` register. There are many functions in [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h) like `set_fs`, for example `set_gs`, `fs`, `gs` for reading a value in it etc...
+Функция содержит ассемблерную вставку, которая получает значение параметра `seg` и помещает его в регистр `fs`. Существует много функций в [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h), похожих на `set_fs`, например, `set_gs`, `fs`, `gs` для чтения значения в нём и т.д.
 
-At the end of `query_mca` it just copies the table pointed to by `es:bx` to the `boot_params.sys_desc_table`.
+В конце функция `query_mca` просто копирует таблицу, на которую указывает `es:bx`, в `boot_params.sys_desc_table`.
 
-The next step is getting [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep) information by calling the `query_ist` function. First of all it checks the CPU level and if it is correct, calls `0x15` for getting info and saves the result to `boot_params`.
+Следующим шагом является получение информации [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep) с помощью вызова функции `query_ist`. В первую очередь она проверяет уровень ЦПУ, и если он верный, вызывает прерывание `0x15` для получения информации и сохраняет результат в `boot_params`.
 
-The following [query_apm_bios](https://github.com/torvalds/linux/blob/master/arch/x86/boot/apm.c#L21) function gets [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management) information from the BIOS. `query_apm_bios` calls the `0x15` BIOS interruption too, but with `ah` = `0x53` to check `APM` installation. After the `0x15` execution, `query_apm_bios` functions check the `PM` signature (it must be `0x504d`), carry flag (it must be 0 if `APM` supported) and value of the `cx` register (if it's 0x02, protected mode interface is supported).
+Следующая функция - [query_apm_bios](https://github.com/torvalds/linux/blob/master/arch/x86/boot/apm.c#L21) получает из BIOS информацию об [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management). `query_apm_bios` также вызывает BIOS прерывание `0x15`, но с `ah = 0x53` для проверки поддержки `APM`. После выполнения `0x15`, функция `query_apm_bios` проверяет сигнатуру `PM` (она должна быть равна `0x504d`), флаг переноса (он должен быть равен 0, если есть поддержка `APM`) и значение регистра `cx` (оно должено быть равно 0x02, если есть поддержка защищённого режима).
 
-Next it calls `0x15` again, but with `ax = 0x5304` for disconnecting the `APM` interface and connecting the 32-bit protected mode interface. In the end it fills `boot_params.apm_bios_info` with values obtained from the BIOS.
+Далее она снова вызывает `0x15`, но с `ax = 0x5304` для отсоединения от интерфейса `APM` и подключению к интерфейсу 32-битного защищённого режима. В итоге она заполняет `boot_params.apm_bios_info` значениями, полученными из BIOS.
 
-Note that `query_apm_bios` will be executed only if `CONFIG_APM` or `CONFIG_APM_MODULE` was set in the configuration file:
+Обратите внимание: `query_apm_bios` будет выполняться только если в конфигурационном файле установлен `CONFIG_APM` или `CONFIG_APM_MODULE`:
 
 ```C
 #if defined(CONFIG_APM) || defined(CONFIG_APM_MODULE)
@@ -500,11 +505,11 @@ Note that `query_apm_bios` will be executed only if `CONFIG_APM` or `CONFIG_APM_
 #endif
 ```
 
-The last is the [`query_edd`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c#L122) function, which queries `Enhanced Disk Drive` information from the BIOS. Let's look into the `query_edd` implementation.
+Последняя функция - [`query_edd`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c#L122), которая запрашивает из BIOS информацию об `Enhanced Disk Drive`. Давайте взглянем на реализацию `query_edd`.
 
-First of all it reads the [edd](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt#L1023) option from the kernel's command line and if it was set to `off` then `query_edd` just returns.
+В первую очередь она читает опцию [edd](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt#L1023) из командной строки ядра и если она установлена в `off`, то `query_edd` завершает свою работу.
 
-If EDD is enabled, `query_edd` goes over BIOS-supported hard disks and queries EDD information in the following loop:
+Если EDD включён, `query_edd` сканирует поддерживаемые BIOS жёсткие диски и запрашивает информацию о EDD в следующем цикле:
 
 ```C
 for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
@@ -518,31 +523,31 @@ for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
     ...
 ```
 
-where `0x80` is the first hard drive and the value of `EDD_MBR_SIG_MAX` macro is 16. It collects data into the array of [edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172) structures. `get_edd_info` checks that EDD is present by invoking the `0x13` interrupt with `ah` as `0x41` and if EDD is present, `get_edd_info` again calls the `0x13` interrupt, but with `ah` as `0x48` and `si` containing the address of the buffer where EDD information will be stored.
+где `0x80` - первый жёсткий диск, а значение макроса `EDD_MBR_SIG_MAX` равно 16. Она собирает данные в массив структур [edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172). `get_edd_info` проверяет наличие EDD путём вызова прерывания `0x13` с `ah = 0x41` и если EDD присутствует, `get_edd_info` снова вызывает `0x13`, но с `ah = 0x48` и `si`, содержащим адрес буфера, где будет храниться информация о EDD.
 
-Conclusion
+Заключение
 --------------------------------------------------------------------------------
 
-This is the end of the second part about Linux kernel insides. In the next part we will see video mode setting and the rest of preparations before transition to protected mode and directly transitioning into it.
+Это конец второй части о внутренностях ядра Linux. В следующей части мы увидим настройки режима видео и остальные подготовки перед переходом в защищённый режим и непосредственно переход в него.
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+Если у вас есть вопросы или предложения, пишите мне в твиттер [0xAX](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me a PR to [linux-insides](https://github.com/0xAX/linux-internals).**
+**Пожалуйста, имейте в виду, что английский - не мой родной язык, и я очень извиняюсь за возможные неудобства. Если вы найдёте какие-нибудь ошибки, пожалуйста, пришлите pull request в [linux-insides](https://github.com/0xAX/linux-internals).**
 
-Links
+Ссылки
 --------------------------------------------------------------------------------
 
-* [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)
-* [Protected mode](http://wiki.osdev.org/Protected_Mode)
+* [Защищённый режим (Википедия)](http://en.wikipedia.org/wiki/Protected_mode)
+* [Защищённый режим (OSDEV)](http://wiki.osdev.org/Protected_Mode)
 * [Long mode](http://en.wikipedia.org/wiki/Long_mode)
-* [Nice explanation of CPU Modes with code](http://www.codeproject.com/Articles/45788/The-Real-Protected-Long-mode-assembly-tutorial-for)
-* [How to Use Expand Down Segments on Intel 386 and Later CPUs](http://www.sudleyplace.com/dpmione/expanddown.html)
-* [earlyprintk documentation](http://lxr.free-electrons.com/source/Documentation/x86/earlyprintk.txt)
-* [Kernel Parameters](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
-* [Serial console](https://github.com/torvalds/linux/blob/master/Documentation/serial-console.txt)
+* [Неплохое объяснение режимов ЦПУ с кодом](http://www.codeproject.com/Articles/45788/The-Real-Protected-Long-mode-assembly-tutorial-for)
+* [Как использовать сегменты с ростом вниз на ЦПУ Intel 386 и более поздних](http://www.sudleyplace.com/dpmione/expanddown.html)
+* [Документация по earlyprintk](http://lxr.free-electrons.com/source/Documentation/x86/earlyprintk.txt)
+* [Параметры ядра](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
+* [Последовательная консоль](https://github.com/torvalds/linux/blob/master/Documentation/serial-console.txt)
 * [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
 * [APM](https://en.wikipedia.org/wiki/Advanced_Power_Management)
-* [EDD specification](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
-* [TLDP documentation for Linux Boot Process](http://www.tldp.org/HOWTO/Linux-i386-Boot-Code-HOWTO/setup.html) (old)
-* [Previous Part](linux-bootstrap-1.md)
+* [Спецификация EDD](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
+* [Документация TLDP для процесса загрузки Linux](http://www.tldp.org/HOWTO/Linux-i386-Boot-Code-HOWTO/setup.html) (старая)
+* [Предыдущая часть](linux-bootstrap-1.md)
 

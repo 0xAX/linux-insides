@@ -1,33 +1,33 @@
-Contributing
+Участие
 ================================================================================
 
-If you want to contribute to [linux-insides](https://github.com/0xAX/linux-insides), please follow these simple rules:
+Если вы хотите внести свой вклад в [linux-insides-ru](https://github.com/proninyaroslav/linux-insides-ru), пожалуйста, следуйте этим простым правилам:
 
-1. Press the fork button:
+1. Нажмите кнопку fork:
 
     ![fork](http://oi58.tinypic.com/jj2trm.jpg)
 
-2. Clone the repository from your account with:
+2. Клонируйте репозиторий из вашего аккаунта с помощью:
 
     ```
-    git clone git@github.com:your_github_username/linux-insides.git
+    git clone git@github.com:ваше_имя_пользователя_github/linux-insides-ru.git
     ```
 
-3. Create a new branch with:
+3. Создайте новую ветку:
 
     ```
     git checkout -b "linux-bootstrap-1-fix"
     ```
-    You can name it however you want.
+    Вы можете назвать её так как хотите.
 
-4. Make your changes.
+4. Сделайте изменения.
 
-5. Don't forget to add yourself in `contributors.md`.
+5. Не забудьте добавить себя в `contributors-ru.md`.
 
-6. Commit and push your changes, then make a pull request from Github.
+6. Сделайте коммит ваших изменений и отправьте его, а затем сделайте pull request в Github.
 
-**IMPORTANT**
+**ВАЖНО**
 
-Please, don't forget to update your fork. While you made your changes, the content of the `master` branch can change because other pull requests were merged and it can create conflicts. This is why you have to rebase on `master` every time before pushing your changes and check that your branch doesn't have any conflicts with `master`.
+Пожалуйста, не забудьте обновить ваш форк. В то время как вы сделали изменения, содержимое ветки `master` может измениться, потому что произошло слияние других pull resuest'ов, и это может привести к конфликтам. Вот почему вы должны сделать rebase `master` каждый раз перед нажатием изменений и убедиться, что ваша ветка не имеет никаких конфликтов с `master`.
 
-Thank you.
+Спасибо.
