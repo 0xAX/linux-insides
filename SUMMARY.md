@@ -1,7 +1,5 @@
-# Summary
+### Содержание
 
-## Резюме
-* [Введение](README.md)
 * [Процесс загрузки ядра](Booting/README.md)
     * [От загрузчика к ядру](Booting/linux-bootstrap-1.md)
     * [Первые шаги в коде настройки ядра](Booting/linux-bootstrap-2.md)
@@ -48,15 +46,15 @@
     * [Queued spinlocks](SyncPrim/sync-2.md)
     * [Semaphores](SyncPrim/sync-3.md)
     * [Mutex](SyncPrim/sync-4.md)
-    * [Reader\/Writer semaphores](SyncPrim/sync-5.md)
+    * [Reader/Writer semaphores](SyncPrim/sync-5.md)
     * [SeqLock](SyncPrim/sync-6.md)
-    * RCU
-    * Lockdep
+    * [RCU]()
+    * [Lockdep]()
 * [Memory management](mm/README.md)
     * [Memblock](MM/linux-mm-1.md)
     * [Fixmaps and ioremap](MM/linux-mm-2.md)
     * [kmemcheck](MM/linux-mm-3.md)
-* Cgroups
+* [Cgroups]()
     * [Introduction](Cgroups/cgroups1.md)
 * [Concepts](Concepts/README.md)
     * [Per-CPU variables](Concepts/per-cpu.md)
@@ -71,19 +69,18 @@
     * [Paging](Theory/Paging.md)
     * [Elf64](Theory/ELF.md)
     * [Inline assembly](Theory/asm.md)
-    * CPUID
-    * MSR
-* Initial ram disk
-    * initrd
+    * [CPUID]()
+    * [MSR]()
+* [Initial ram disk]()
+   * [initrd]()
 * [Misc](Misc/README.md)
     * [How the kernel is compiled](Misc/how_kernel_compiled.md)
     * [Linkers](Misc/linkers.md)
     * [Linux kernel development](Misc/contribute.md)
     * [Program startup process in userspace](Misc/program_startup.md)
-    * Write and Submit your first Linux kernel Patch
-    * Data types in the kernel
+    * [Write and Submit your first Linux kernel Patch]()
+    * [Data types in the kernel]()
 * [KernelStructures](KernelStructures/README.md)
-    * [IDT](KernelStructures/idt.md)
+    * [IDT](KernelStructures/idt.md)    
 * [Полезные ссылки](LINKS.md)
-* [Участники](contributors.md)
-
+* [Участники](contributors-ru.md)
