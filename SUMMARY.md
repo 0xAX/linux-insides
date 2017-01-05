@@ -48,13 +48,15 @@
     * [Mutex](SyncPrim/sync-4.md)
     * [Reader\/Writer semaphores](SyncPrim/sync-5.md)
     * [SeqLock](SyncPrim/sync-6.md)
-    * RCU
-    * Lockdep
+    * [RCU]()
+    * [Lockdep]()
 * [Memory management](mm/README.md)
-    * [Memblock](MM/linux-mm-1.md)
-    * [Fixmaps and ioremap](MM/linux-mm-2.md)
-    * [kmemcheck](MM/linux-mm-3.md)
-* Cgroups
+    * [Memblock](mm/linux-mm-1.md)
+    * [Fixmaps and ioremap](mm/linux-mm-2.md)
+    * [kmemcheck](mm/linux-mm-3.md)
+* [Cgroups](Cgroups/README.md)
+    * [Introduction to Control Groups](Cgroups/cgroups1.md)
+* [SMP]()
     * [Introduction](Cgroups/cgroups1.md)
 * [Concepts](Concepts/README.md)
     * [Per-CPU variables](Concepts/per-cpu.md)
@@ -69,17 +71,17 @@
     * [Paging](Theory/Paging.md)
     * [Elf64](Theory/ELF.md)
     * [Inline assembly](Theory/asm.md)
-    * CPUID
-    * MSR
-* Initial ram disk
-    * initrd
+    * [CPUID]()
+    * [MSR]()
+* [Initial ram disk]()
+   * [initrd]()
 * [Misc](Misc/README.md)
     * [How the kernel is compiled](Misc/how_kernel_compiled.md)
     * [Linkers](Misc/linkers.md)
     * [Linux kernel development](Misc/contribute.md)
     * [Program startup process in userspace](Misc/program_startup.md)
-    * Write and Submit your first Linux kernel Patch
-    * Data types in the kernel
+    * [Write and Submit your first Linux kernel Patch]()
+    * [Data types in the kernel]()
 * [KernelStructures](KernelStructures/README.md)
     * [IDT](KernelStructures/idt.md)
 * [Полезные ссылки](LINKS.md)
