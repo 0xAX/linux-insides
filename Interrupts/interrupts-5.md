@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 5.
 Implementation of exception handlers
 --------------------------------------------------------------------------------
 
-This is the fifth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-4.html) we stopped on the setting of interrupt gates to the [Interrupt descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table). We did it in the `trap_init` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c) source code file. We saw only setting of these interrupt gates in the previous part and in the current part we will see implementation of the exception handlers for these gates. The preparation before an exception handler will be executed is in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file and occurs in the [idtentry](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S#L820) macro that defines exceptions entry points:
+This is the fifth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-4.html) we stopped on the setting of interrupt gates to the [Interrupt descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table). We did it in the `trap_init` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c) source code file. We saw only setting of these interrupt gates in the previous part and in the current part we will see implementation of the exception handlers for these gates. The preparation before an exception handler will be executed is in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file and occurs in the [idtentry](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S#L820) macro that defines exceptions entry points:
 
 ```assembly
 idtentry divide_error			        do_divide_error			       has_error_code=0
@@ -62,7 +62,7 @@ native_irq_return_iret:
 iretq
 ```
 
-More about the `idtentry` macro you can read in the third part of the [http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html) chapter. Ok, now we saw the preparation before an exception handler will be executed and now time to look on the handlers. First of all let's look on the following handlers:
+More about the `idtentry` macro you can read in the third part of the [https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-3.html](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-3.html) chapter. Ok, now we saw the preparation before an exception handler will be executed and now time to look on the handlers. First of all let's look on the following handlers:
 
 * divide_error
 * overflow
@@ -211,7 +211,7 @@ static inline void conditional_sti(struct pt_regs *regs)
 }
 ```
 
-more about `local_irq_enable` macro you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-2.html) of this chapter. The next and last call in the `do_error_trap` is the `do_trap` function. First of all the `do_trap` function defined the `tsk` variable which has `task_struct` type and represents the current interrupted process. After the definition of the `tsk`, we can see the call of the `do_trap_no_signal` function:
+more about `local_irq_enable` macro you can read in the second [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-2.html) of this chapter. The next and last call in the `do_error_trap` is the `do_trap` function. First of all the `do_trap` function defined the `tsk` variable which has `task_struct` type and represents the current interrupted process. After the definition of the `tsk`, we can see the call of the `do_trap_no_signal` function:
 
 ```C
 struct task_struct *tsk = current;
@@ -463,7 +463,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the fifth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and we saw implementation of some interrupt handlers in this part. In the next part we will continue to dive into interrupt and exception handlers and will see handler for the [Non-Maskable Interrupts](https://en.wikipedia.org/wiki/Non-maskable_interrupt), handling of the math [coprocessor](https://en.wikipedia.org/wiki/Coprocessor) and [SIMD](https://en.wikipedia.org/wiki/SIMD) coprocessor exceptions and many many more.
+It is the end of the fifth part of the [Interrupts and Interrupt Handling](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) chapter and we saw implementation of some interrupt handlers in this part. In the next part we will continue to dive into interrupt and exception handlers and will see handler for the [Non-Maskable Interrupts](https://en.wikipedia.org/wiki/Non-maskable_interrupt), handling of the math [coprocessor](https://en.wikipedia.org/wiki/Coprocessor) and [SIMD](https://en.wikipedia.org/wiki/SIMD) coprocessor exceptions and many many more.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
@@ -490,4 +490,4 @@ Links
 * [x87 FPU](https://en.wikipedia.org/wiki/X87)
 * [control register](https://en.wikipedia.org/wiki/Control_register)
 * [MMX](https://en.wikipedia.org/wiki/MMX_%28instruction_set%29)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-4.html)
+* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-4.html)

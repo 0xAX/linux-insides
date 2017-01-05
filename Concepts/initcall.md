@@ -213,7 +213,7 @@ If you are interested, you can find these sections in the `arch/x86/kernel/vmlin
 }
 ```
 
-If you are not familiar with this then you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html) of this book.
+If you are not familiar with this then you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Misc/linkers.html) of this book.
 
 As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` and does following two things: First of all this function parses the `initcall_command_line` which is copy of usual kernel [command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c) source code file and call the `do_on_initcall` function for each level:
 
@@ -387,9 +387,9 @@ Links
 * [symbols concatenation](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html)
 * [GCC](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)
 * [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization)
-* [Introduction to linkers](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)
+* [Introduction to linkers](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Misc/linkers.html)
 * [Linux kernel command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)
 * [Process identifier](https://en.wikipedia.org/wiki/Process_identifier)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [rootfs](https://en.wikipedia.org/wiki/Initramfs)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)

@@ -4,7 +4,7 @@ Synchronization primitives in the Linux kernel. Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-This part opens new chapter in the [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) book. Timers and time management related stuff was described in the previous [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html). This chapter will describe [synchronization](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) primitives in the Linux kernel.
+This part opens new chapter in the [linux-insides](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/) book. Timers and time management related stuff was described in the previous [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/index.html). This chapter will describe [synchronization](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) primitives in the Linux kernel.
 
 As always, before we consider something synchronization related, we will look at the concept of a`synchronization primitive` in general. A synchronization primitive is a software mechanism which provides ability to two or more [parallel](https://en.wikipedia.org/wiki/Parallel_computing) processes or threads to coordinate. For example, to not execute simultaneously one the same segment of a code (such as writing different values to a shared variable). Let's look on the following piece of code:
 
@@ -22,7 +22,7 @@ clocksource_select();
 mutex_unlock(&clocksource_mutex);
 ```
 
-from the [kernel/time/clocksource.c](https://github.com/torvalds/linux/blob/master/kernel/time/clocksource.c) source code file. This code is from the `__clocksource_register_scale` function which adds the given [clocksource](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-2.html) to a list shared by more than one process. It's the `mutex_lock` and `mutex_unlock` functions we're interested in here, which take one parameter - the `clocksource_mutex` in our case. These functions provide [mutual exclusion](https://en.wikipedia.org/wiki/Mutual_exclusion) with the mutex synchronization primitive; enabling proccesses or threads to coordinate use of a shared resource. The clocksource is added with the `clocksource_enqueue` function (after the clock source in the list which has the biggest rating, the highest frequency clocksource regestered in the system):
+from the [kernel/time/clocksource.c](https://github.com/torvalds/linux/blob/master/kernel/time/clocksource.c) source code file. This code is from the `__clocksource_register_scale` function which adds the given [clocksource](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-2.html) to a list shared by more than one process. It's the `mutex_lock` and `mutex_unlock` functions we're interested in here, which take one parameter - the `clocksource_mutex` in our case. These functions provide [mutual exclusion](https://en.wikipedia.org/wiki/Mutual_exclusion) with the mutex synchronization primitive; enabling proccesses or threads to coordinate use of a shared resource. The clocksource is added with the `clocksource_enqueue` function (after the clock source in the list which has the biggest rating, the highest frequency clocksource regestered in the system):
 
 ```C
 static void clocksource_enqueue(struct clocksource *cs)
@@ -239,7 +239,7 @@ static inline void __raw_spin_lock(raw_spinlock_t *lock)
 }
 ```
 
-this, first of all, disables [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) by calling the `preempt_disable` macro (from [include/linux/preempt.h](https://github.com/torvalds/linux/blob/master/include/linux/preempt.h), more about this in [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-9.html) nine  of the Linux kernel initialization process chapter). When we unlock the given `spinlock`, preemption will be reenabled:
+this, first of all, disables [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) by calling the `preempt_disable` macro (from [include/linux/preempt.h](https://github.com/torvalds/linux/blob/master/include/linux/preempt.h), more about this in [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-9.html) nine  of the Linux kernel initialization process chapter). When we unlock the given `spinlock`, preemption will be reenabled:
 
 ```C
 static inline void __raw_spin_unlock(raw_spinlock_t *lock)
@@ -416,7 +416,7 @@ Links
 
 * [Concurrent computing](https://en.wikipedia.org/wiki/Concurrent_computing)
 * [Synchronization](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)
-* [Clocksource framework](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-2.html)
+* [Clocksource framework](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-2.html)
 * [Mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
 * [Race condition](https://en.wikipedia.org/wiki/Race_condition)
 * [Atomic operations](https://en.wikipedia.org/wiki/Linearizability)
@@ -429,4 +429,4 @@ Links
 * [xadd instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
 * [NOP](https://en.wikipedia.org/wiki/NOP)
 * [Memory barriers](https://www.kernel.org/doc/Documentation/memory-barriers.txt)
-* [Previous chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html)
+* [Previous chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/index.html)

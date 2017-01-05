@@ -129,7 +129,7 @@ Ok, now we know where we are, and now is the best time to look inside the `start
 
 In the beginning of the `startup_32` function, we can see the `cld` instruction which clears the `DF` bit in the [flags](https://en.wikipedia.org/wiki/FLAGS_register) register. When direction flag is clear, all string operations like [stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html), [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html) and others will increment the index registers `esi` or `edi`. We need to clear direction flag because later we will use strings operations for clearing space for page tables, etc.
 
-After we have cleared the `DF` bit, next step is the check of the `KEEP_SEGMENTS` flag from `loadflags` kernel setup header field. If you remember we already saw `loadflags` in the very first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. There we checked `CAN_USE_HEAP` flag to get ability to use heap. Now we need to check the `KEEP_SEGMENTS` flag. This flags is described in the linux [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) documentation:
+After we have cleared the `DF` bit, next step is the check of the `KEEP_SEGMENTS` flag from `loadflags` kernel setup header field. If you remember we already saw `loadflags` in the very first [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/linux-bootstrap-1.html) of this book. There we checked `CAN_USE_HEAP` flag to get ability to use heap. Now we need to check the `KEEP_SEGMENTS` flag. This flags is described in the linux [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) documentation:
 
 ```
 Bit 6 (write): KEEP_SEGMENTS

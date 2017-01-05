@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 9.
 Introduction to deferred interrupts (Softirq, Tasklets and Workqueues)
 --------------------------------------------------------------------------------
 
-It is the nine part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) and in the previous [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
+It is the nine part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) and in the previous [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
 
 Interrupts may have different important characteristics and there are two among them:
 
@@ -145,7 +145,7 @@ The `raise_softirq_irqoff` function marks the softirq as deffered by setting the
 __raise_softirq_irqoff(nr);
 ```
 
-macro. After this, it checks the result of the `in_interrupt` that returns `irq_count` value. We already saw the `irq_count` in the first [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-1.html) of this chapter and it is used to check if a CPU is already on an interrupt stack or not. We just exit from the `raise_softirq_irqoff`, restore `IF` flag and enable interrupts on the local processor, if we are in the interrupt context, otherwise  we call the `wakeup_softirqd`:
+macro. After this, it checks the result of the `in_interrupt` that returns `irq_count` value. We already saw the `irq_count` in the first [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-1.html) of this chapter and it is used to check if a CPU is already on an interrupt stack or not. We just exit from the `raise_softirq_irqoff`, restore `IF` flag and enable interrupts on the local processor, if we are in the interrupt context, otherwise  we call the `wakeup_softirqd`:
 
 ```C
 if (!in_interrupt())
@@ -227,7 +227,7 @@ void __init softirq_init(void)
 }
 ```
 
-We can see definition of the integer `cpu` variable at the beginning of the `softirq_init` function. Next we will use it as parameter for the `for_each_possible_cpu` macro that goes through the all possible processors in the system. If the `possible processor` is the new terminology for you, you can read more about it the [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) chapter. In short words, `possible cpus` is the set of processors that can be plugged in anytime during the life of that system boot. All `possible processors` stored in the `cpu_possible_bits` bitmap, you can find its definition in the [kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c):
+We can see definition of the integer `cpu` variable at the beginning of the `softirq_init` function. Next we will use it as parameter for the `for_each_possible_cpu` macro that goes through the all possible processors in the system. If the `possible processor` is the new terminology for you, you can read more about it the [CPU masks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) chapter. In short words, `possible cpus` is the set of processors that can be plugged in anytime during the life of that system boot. All `possible processors` stored in the `cpu_possible_bits` bitmap, you can find its definition in the [kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c):
 
 ```C
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
@@ -237,7 +237,7 @@ static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
 const struct cpumask *const cpu_possible_mask = to_cpumask(cpu_possible_bits);
 ```
 
-Ok, we defined the integer `cpu` variable and go through the all possible processors with the `for_each_possible_cpu` macro and makes initialization of the two following [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variables:
+Ok, we defined the integer `cpu` variable and go through the all possible processors with the `for_each_possible_cpu` macro and makes initialization of the two following [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) variables:
 
 * `tasklet_vec`;
 * `tasklet_hi_vec`;
@@ -364,7 +364,7 @@ static void tasklet_action(struct softirq_action *a)
 }
 ```
 
-In the beginning of the `tasklet_action` function, we disable interrupts for the local processor with the help of the `local_irq_disable` macro (you can read about this macro in the second [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-2.html) of this chapter). In the next step, we take a head of the list that contains tasklets with normal priority and set this per-cpu list to `NULL` because all tasklets must be executed in a generally way. After this we enable interrupts for the local processor and go through the list of tasklets in the loop. In every iteration of the loop we call the `tasklet_trylock` function for the given tasklet that updates state of the given tasklet on `TASKLET_STATE_RUN`: 
+In the beginning of the `tasklet_action` function, we disable interrupts for the local processor with the help of the `local_irq_disable` macro (you can read about this macro in the second [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-2.html) of this chapter). In the next step, we take a head of the list that contains tasklets with normal priority and set this per-cpu list to `NULL` because all tasklets must be executed in a generally way. After this we enable interrupts for the local processor and go through the list of tasklets in the loop. In every iteration of the loop we call the `tasklet_trylock` function for the given tasklet that updates state of the given tasklet on `TASKLET_STATE_RUN`: 
 
 ```C
 static inline int tasklet_trylock(struct tasklet_struct *t)
@@ -477,7 +477,7 @@ bool queue_work_on(int cpu, struct workqueue_struct *wq,
 }
 ```
 
-The `__queue_work` function gets the `work pool`. Yes, the `work pool` not `workqueue`. Actually, all `works` are not placed in the `workqueue`, but to the `work pool` that is represented by the `worker_pool` structure in the Linux kernel. As you can see above, the `workqueue_struct` structure has the `pwqs` field which is list of `worker_pools`. When we create a `workqueue`, it stands out for each processor the `pool_workqueue`. Each `pool_workqueue` associated with `worker_pool`, which is allocated on the same processor and corresponds to the type of priority queue. Through them `workqueue` interacts with `worker_pool`. So in the `__queue_work` function we set the cpu to the current processor with the `raw_smp_processor_id` (you can find information about this macro in the fourth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process chapter), getting the `pool_workqueue` for the given `workqueue_struct` and insert the given `work` to the given `workqueue`:
+The `__queue_work` function gets the `work pool`. Yes, the `work pool` not `workqueue`. Actually, all `works` are not placed in the `workqueue`, but to the `work pool` that is represented by the `worker_pool` structure in the Linux kernel. As you can see above, the `workqueue_struct` structure has the `pwqs` field which is list of `worker_pools`. When we create a `workqueue`, it stands out for each processor the `pool_workqueue`. Each `pool_workqueue` associated with `worker_pool`, which is allocated on the same processor and corresponds to the type of priority queue. Through them `workqueue` interacts with `worker_pool`. So in the `__queue_work` function we set the cpu to the current processor with the `raw_smp_processor_id` (you can find information about this macro in the fourth [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process chapter), getting the `pool_workqueue` for the given `workqueue_struct` and insert the given `work` to the given `workqueue`:
 
 ```C
 static void __queue_work(int cpu, struct workqueue_struct *wq,
@@ -506,7 +506,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the ninth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and we continued to dive into external hardware interrupts in this part. In the previous part we saw initialization of the `IRQs` and main `irq_desc` structure. In this part we saw three concepts: the `softirq`, `tasklet` and `workqueue` that are used for the deferred functions.
+It is the end of the ninth part of the [Interrupts and Interrupt Handling](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) chapter and we continued to dive into external hardware interrupts in this part. In the previous part we saw initialization of the `IRQs` and main `irq_desc` structure. In this part we saw three concepts: the `softirq`, `tasklet` and `workqueue` that are used for the deferred functions.
 
 The next part will be last part of the `Interrupts and Interrupt Handling` chapter and we will look on the real hardware driver and will try to learn how it works with the interrupts subsystem.
 
@@ -520,7 +520,7 @@ Links
 * [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/index.html)
 * [IF](https://en.wikipedia.org/wiki/Interrupt_flag)
 * [eflags](https://en.wikipedia.org/wiki/FLAGS_register)
-* [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
-* [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
+* [CPU masks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
+* [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
 * [Workqueue](https://github.com/torvalds/linux/blob/master/Documentation/workqueue.txt)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-8.html)
+* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-8.html)
