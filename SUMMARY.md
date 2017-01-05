@@ -55,9 +55,8 @@
     * [Fixmaps and ioremap](mm/linux-mm-2.md)
     * [kmemcheck](mm/linux-mm-3.md)
 * [Cgroups](Cgroups/README.md)
-    * [Introduction to Control Groups](Cgroups/cgroups1.md)
+    * [Introduction to Control Groups][Cgroups/cgroups1.md]
 * [SMP]()
-    * [Introduction](Cgroups/cgroups1.md)
 * [Concepts](Concepts/README.md)
     * [Per-CPU variables](Concepts/per-cpu.md)
     * [Cpumasks](Concepts/cpumask.md)
