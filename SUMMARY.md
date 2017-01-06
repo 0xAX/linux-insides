@@ -17,7 +17,7 @@
     * [Scheduler initialization](Initialization/linux-initialization-8.md)
     * [RCU initialization](Initialization/linux-initialization-9.md)
     * [End of initialization](Initialization/linux-initialization-10.md)
-* [Interrupts](interrupts/README.md)
+* [Interrupts](Interrupts/README.md)
     * [Introduction](Interrupts/interrupts-1.md)
     * [Start to dive into interrupts](Interrupts/interrupts-2.md)
     * [Interrupt handlers](Interrupts/interrupts-3.md)
