@@ -25,9 +25,9 @@ linux-insides
 Участие
 --------------
 
-Если у Вас возникнут какие-либо проблемы, не стесняйтесь создавать [issues](https://github.com/0xAX/linux-insides) или [pull-request](https://github.com/proninyaroslav/linux-insides-ru/pulls).
+Если у Вас возникнут какие-либо проблемы, не стесняйтесь создавать [issues](https://github.com/proninyaroslav/linux-insides-ru) или [pull-request](https://github.com/proninyaroslav/linux-insides-ru/pulls).
 
-**Пожулуйста, прочтите [CONTRIBUTING.md](https://github.com/0xAX/linux-insides/blob/master/CONTRIBUTING.md), прежде чем внести изменения.**
+**Пожулуйста, прочтите [CONTRIBUTING.md](https://github.com/proninyaroslav/linux-insides-ru/blob/master/CONTRIBUTING.md), прежде чем внести изменения.**
 
 ![image](http://oi58.tinypic.com/23upobq.jpg)
 
