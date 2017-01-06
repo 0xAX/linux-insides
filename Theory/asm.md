@@ -309,7 +309,7 @@ a = 100
 Or for example `I` which represents an immediate 32-bit integer. The difference between `i` and `I` is that `i` is general, whereas `I` is strictly specified to 32-bit integer data. For example if you try to compile the following
 
 ```C
-int test_asm(int nr)
+unsigned long test_asm(int nr)
 {
         unsigned long a = 0;
 
@@ -332,7 +332,7 @@ test.c:7:9: error: impossible constraint in ‘asm’
 when at the same time
 
 ```C
-int test_asm(int nr)
+unsigned long test_asm(int nr)
 {
         unsigned long a = 0;
 
@@ -360,7 +360,7 @@ int main(void)
         static unsigned long element;
         
         __asm__ volatile("movq 16+%1, %0" : "=r"(element) : "o"(arr));
-        printf("%d\n", element);
+        printf("%lu\n", element);
         return 0;
 }
 ```

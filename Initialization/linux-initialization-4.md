@@ -130,7 +130,7 @@ void set_task_stack_end_magic(struct task_struct *tsk)
 }
 ```
 
-Its implementation is simple. `set_task_stack_end_magic` gets the end of the stack for the given `task_struct` with the `end_of_stack` function. The end of a process stack depends on the `CONFIG_STACK_GROWSUP` configuration option. As we learn in `x86_64` architecture, the stack grows down. So the end of the process stack will be:
+Its implementation is simple. `set_task_stack_end_magic` gets the end of the stack for the given `task_struct` with the `end_of_stack` function. Earlier (and now for all architectures besides `x86_64`) stack was located in the `thread_info` structure. So the end of a process stack depends on the `CONFIG_STACK_GROWSUP` configuration option. As we learn in `x86_64` architecture, the stack grows down. So the end of the process stack will be:
 
 ```C
 (unsigned long *)(task_thread_info(p) + 1);
@@ -142,13 +142,52 @@ where `task_thread_info` just returns the stack which we filled with the `INIT_T
 #define task_thread_info(task)  ((struct thread_info *)(task)->stack)
 ```
 
+From the Linux kernel `v4.9-rc1` release, `thread_info` structure may contains only flags and stack pointer resides in `task_struct` structure which represents a thread in the Linux kernel. This depends on `CONFIG_THREAD_INFO_IN_TASK` kernel configuration option which is enabled by default for `x86_64`. You can be sure in this if you will look in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) configuration build file:
+
+```
+config THREAD_INFO_IN_TASK
+	bool
+	help
+	  Select this to move thread_info off the stack into task_struct.  To
+	  make this work, an arch will need to remove all thread_info fields
+	  except flags and fix any runtime bugs.
+
+	  One subtle change that will be needed is to use try_get_task_stack()
+	  and put_task_stack() in save_thread_stack_tsk() and get_wchan().
+```
+
+and [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig):
+
+```
+config X86
+	def_bool y
+        ...
+        ...
+        ...
+        select THREAD_INFO_IN_TASK
+        ...
+        ...
+        ...
+```
+
+So, in this way we may just get end of a thread stack from the given `task_struct` structure:
+
+```C
+#ifdef CONFIG_THREAD_INFO_IN_TASK
+static inline unsigned long *end_of_stack(const struct task_struct *task)
+{
+	return task->stack;
+}
+#endif
+```
+
 As we got the end of the init process stack, we write `STACK_END_MAGIC` there. After `canary` is set, we can check it like this:
 
 ```C
 if (*end_of_stack(task) != STACK_END_MAGIC) {
         //
         // handle stack overflow here
-		//
+	//
 }
 ```
 

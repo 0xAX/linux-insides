@@ -54,7 +54,7 @@ CPU uses vector number as an index in the `Interrupt Descriptor Table` (we will 
 |---------------------------------------------------------------------------------------------
 |7     | #NM    |Device Not Available|Fault|NO        |Floating point or [F]WAIT             |
 |---------------------------------------------------------------------------------------------
-|8     | #DF    |Double Fault        |Abort|YES       |Ant instrctions which can generate NMI|
+|8     | #DF    |Double Fault        |Abort|YES       |An instruction which can generate NMI |
 |---------------------------------------------------------------------------------------------
 |9     | ---    |Reserved            |Fault|NO        |                                      |
 |---------------------------------------------------------------------------------------------

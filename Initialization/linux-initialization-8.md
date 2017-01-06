@@ -332,7 +332,7 @@ It takes three parameters:
 * `period` - period over which real-time task bandwidth enforcement is measured in `us`;
 * `runtime` - part of the period that we allow tasks to run in `us`.
 
-As `period` and `runtime` we pass result of the `global_rt_period` and `global_rt_runtime` functions. Which are `1s` second and and `0.95s` by default. The `rt_bandwidth` structure is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/master/kernel/sched/sched.h) and looks:
+As `period` and `runtime` we pass result of the `global_rt_period` and `global_rt_runtime` functions. Which are `1s` second and `0.95s` by default. The `rt_bandwidth` structure is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/master/kernel/sched/sched.h) and looks:
 
 ```C
 struct rt_bandwidth {
@@ -465,7 +465,7 @@ Links
 * [high-resolution kernel timer](https://www.kernel.org/doc/Documentation/timers/hrtimers.txt)
 * [spinlock](http://en.wikipedia.org/wiki/Spinlock)
 * [Run queue](http://en.wikipedia.org/wiki/Run_queue)
-* [Linux kernem memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
+* [Linux kernel memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
 * [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29)
 * [virtual file system](http://en.wikipedia.org/wiki/Virtual_file_system)
 * [Linux kernel hotplug documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)

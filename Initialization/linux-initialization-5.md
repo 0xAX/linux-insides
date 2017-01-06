@@ -8,9 +8,9 @@ In the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initializat
 
 ```
 ----------------------------------------------------------------------------------------------
-|Vector|Mnemonic|Description         |Type |Error Code|Source                                |
+|Vector|Mnemonic|Description         |Type |Error Code|Source                   |
 ----------------------------------------------------------------------------------------------
-|3     | #BP    |Breakpoint          |Trap |NO        |INT 3                                 |
+|3     | #BP    |Breakpoint          |Trap |NO        |INT 3                    |
 ----------------------------------------------------------------------------------------------
 ```
 
@@ -29,7 +29,9 @@ We already saw implementation of the `set_intr_gate` in the previous part about 
 
 * number of the interrupt;
 * base address of the interrupt/exception handler;
-* third parameter is - `Interrupt Stack Table`. `IST` is a new mechanism in the `x86_64` and part of the [TSS](http://en.wikipedia.org/wiki/Task_state_segment). Every active thread in kernel mode has own kernel stack which is 16 kilobytes. While a thread in user space, kernel stack is empty except `thread_info` (read about it previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html)) at the bottom. In addition to per-thread stacks, there are a couple of specialized stacks associated with each CPU. All about these stack you can read in the linux kernel documentation - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks). `x86_64` provides feature which allows to switch to a new `special` stack for during any events as non-maskable interrupt and etc... And the name of this feature is - `Interrupt Stack Table`. There can be up to 7 `IST` entries per CPU and every entry points to the dedicated stack. In our case this is `DEBUG_STACK`.
+* third parameter is - `Interrupt Stack Table`. `IST` is a new mechanism in the `x86_64` and part of the [TSS](http://en.wikipedia.org/wiki/Task_state_segment). Every active thread in kernel mode has own kernel stack which is `16` kilobytes. While a thread in user space, this kernel stack is empty.
+
+In addition to per-thread stacks, there are a couple of specialized stacks associated with each CPU. All about these stack you can read in the linux kernel documentation - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks). `x86_64` provides feature which allows to switch to a new `special` stack for during any events as non-maskable interrupt and etc... And the name of this feature is - `Interrupt Stack Table`. There can be up to 7 `IST` entries per CPU and every entry points to the dedicated stack. In our case this is `DEBUG_STACK`.
 
 `set_intr_gate_ist` and `set_system_intr_gate_ist` work by the same principle as `set_intr_gate` with only one difference. Both of these functions checks
 interrupt number and call `_set_gate` inside:
@@ -39,14 +41,14 @@ BUG_ON((unsigned)n > 0xFF);
 _set_gate(n, GATE_INTERRUPT, addr, 0, ist, __KERNEL_CS);
 ```
 
-as `set_intr_gate` does this. But `set_intr_gate` calls `_set_gate` with [dpl](http://en.wikipedia.org/wiki/Privilege_level) - 0, and ist - 0, but `set_intr_gate_ist` and `set_system_intr_gate_ist` sets `ist` as `DEBUG_STACK` and `set_system_intr_gate_ist` sets `dpl` as `0x3` which is the lowest privilege. When an interrupt occurs and the hardware loads such a descriptor, then hardware automatically sets the new stack pointer based on the IST value, then invokes the interrupt handler. All of the special kernel stacks will be setted in the `cpu_init` function (we will see it later).
+as `set_intr_gate` does this. But `set_intr_gate` calls `_set_gate` with [dpl](http://en.wikipedia.org/wiki/Privilege_level) - 0, and ist - 0, but `set_intr_gate_ist` and `set_system_intr_gate_ist` sets `ist` as `DEBUG_STACK` and `set_system_intr_gate_ist` sets `dpl` as `0x3` which is the lowest privilege. When an interrupt occurs and the hardware loads such a descriptor, then hardware automatically sets the new stack pointer based on the IST value, then invokes the interrupt handler. All of the special kernel stacks will be set in the `cpu_init` function (we will see it later).
 
 As `#DB` and `#BP` gates written to the `idt_descr`, we reload `IDT` table with `load_idt` which just cals `ldtr` instruction. Now let's look on interrupt handlers and will try to understand how they works. Of course, I can't cover all interrupt handlers in this book and I do not see the point in this. It is very interesting to delve in the linux kernel source code, so we will see how `debug` handler implemented in this part, and understand how other interrupt handlers are implemented will be your task.
 
 #DB handler
 --------------------------------------------------------------------------------
 
-As you can read above, we passed address of the `#DB` handler as `&debug` in the `set_intr_gate_ist`. [lxr.free-electorns.com](http://lxr.free-electrons.com/ident) is a great resource for searching identifiers in the linux kernel source code, but unfortunately you will not find `debug` handler with it. All of you can find, it is `debug` definition in the [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/traps.h):
+As you can read above, we passed address of the `#DB` handler as `&debug` in the `set_intr_gate_ist`. [lxr.free-electrons.com](http://lxr.free-electrons.com/ident) is a great resource for searching identifiers in the linux kernel source code, but unfortunately you will not find `debug` handler with it. All of you can find, it is `debug` definition in the [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/traps.h):
 
 ```C
 asmlinkage void debug(void);
