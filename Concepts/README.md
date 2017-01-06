@@ -2,7 +2,7 @@
 
 This chapter describes various concepts which are used in the Linux kernel.
 
-* [Per-CPU variables](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
-* [CPU masks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
-* [The initcall mechanism](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/initcall.html)
-* [Notification Chains in Linux Kernel](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/notification_chains.html)
+* [Per-CPU variables](per-cpu.md)
+* [CPU masks](cpumask.md)
+* [The initcall mechanism](initcall.md)
+* [Notification Chains in Linux Kernel](notification_chains.md)
