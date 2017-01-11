@@ -241,7 +241,7 @@ do {                                                    \
 } while (0)
 ```
 
-As we can see, first of all it expands to the call of the `alloc_system_vector` function that checks the given vector number in the `user_vectors` bitmap (read previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-7.html) about it) and if it is not set in the `user_vectors` bitmap we set it. After this we test that the `first_system_vector` is greater than given interrupt vector number and if it is greater we assign it:
+As we can see, first of all it expands to the call of the `alloc_system_vector` function that checks the given vector number in the `used_vectors` bitmap (read previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-7.html) about it) and if it is not set in the `used_vectors` bitmap we set it. After this we test that the `first_system_vector` is greater than given interrupt vector number and if it is greater we assign it:
 
 ```C
 if (!test_bit(vector, used_vectors)) {
