@@ -28,7 +28,7 @@ where `NR_VECTORS` is count of the vector number and as you can remember from th
 #define NR_VECTORS                       256
 ```
 
-So, in the start of the `init_IRQ` function we fill the `vecto_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) array with the vector number of the `legacy` interrupts:
+So, in the start of the `init_IRQ` function we fill the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) array with the vector number of the `legacy` interrupts:
 
 ```C
 void __init init_IRQ(void)
