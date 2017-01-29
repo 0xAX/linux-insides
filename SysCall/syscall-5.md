@@ -1,4 +1,4 @@
-How does open system call works
+How does the `open` system call work
 --------------------------------------------------------------------------------
 
 Introduction
