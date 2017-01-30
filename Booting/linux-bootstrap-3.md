@@ -53,7 +53,7 @@ Earlier we saw definitions of different data types like `u16` etc. in the kernel
 |------|------|-------|-----|------|----|-----|-----|-----|
 | Size |  1   |   2   |  4  |   8  |  1 |  2  |  4  |  8  |
 
-If you the read source code of the kernel, you'll see these very often and so it will be good to remember them.
+If you read the source code of the kernel, you'll see these very often and so it will be good to remember them.
 
 Heap API
 --------------------------------------------------------------------------------
