@@ -234,7 +234,7 @@ X+08000  +------------------------+
 So, when the bootloader transfers control to the kernel, it starts at:
 
 ```
-0x1000 + X + sizeof(KernelBootSector) + 1
+X + sizeof(KernelBootSector) + 1
 ```
 
 where `X` is the address of the kernel boot sector being loaded. In my case, `X` is `0x10000`, as we can see in a memory dump:
