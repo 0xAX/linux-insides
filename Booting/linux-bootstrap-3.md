@@ -1,23 +1,24 @@
-Kernel booting process. Part 3.
+Процесс загрузки ядра. Часть 3.
 ================================================================================
 
-Video mode initialization and transition to protected mode
+Инициализация видеорежима и переход в защищённый режим
 --------------------------------------------------------------------------------
 
-This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call of the `set_video` routine from [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). In this part, we will see:
-- video mode initialization in the kernel setup code,
-- preparation before switching into protected mode,
-- transition to protected mode
+Это третья часть серии `Процесса загрузки ядра`. В предыдущей [части](linux-bootstrap-2.md#kernel-booting-process-part-2) мы остановились прямо перед вызовом функции `set_video` из [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). В этой части мы увидим:
 
-**NOTE** If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also there are a couple of [links](linux-bootstrap-2.md#links) which can help you.
+- Инициализацию видеорежима в коде настройки ядра,
+- подготовка перед переключением в защищённый режим,
+- переход в защищённый режим
 
-As I wrote above, we will start from the `set_video` function which is defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
+**ПРИМЕЧАНИЕ** Если вы ничего не знаете о защищённом режиме, вы можете найти некоторую информацию о нём в предыдущей [части](linux-bootstrap-2.md#protected-mode). Также есть несколько [ссылок](linux-bootstrap-2.md#links), которые могут помочь вам.
+
+Как я уже писал ранее, мы будем начинать с функции `set_video`, которая определена в [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315). Как мы можем видеть, она начинает работу с получения видеорежима из структуры `boot_params.hdr`:
 
 ```C
 u16 mode = boot_params.hdr.vid_mode;
 ```
 
-which we filled in the `copy_boot_params` function (you can read about it in the previous post). `vid_mode` is an obligatory field which is filled by the bootloader. You can find information about it in the kernel boot protocol:
+которую мы заполнили в функции `copy_boot_params` (вы можете прочитать об этом в предыдущем посте). `vid_mode`является обязательным полем, которое заполняется загрузчиком. Вы можете найти информацию об этом в протоколе загрузки ядра:
 
 ```
 Offset	Proto	Name		Meaning
@@ -25,7 +26,7 @@ Offset	Proto	Name		Meaning
 01FA/2	ALL	    vid_mode	Video mode control
 ```
 
-As we can read from the linux kernel boot protocol:
+Как мы можем прочесть из протокола загрузки ядра Linux:
 
 ```
 vga=<mode>
@@ -37,55 +38,55 @@ vga=<mode>
 	line is parsed.
 ```
 
-So we can add `vga` option to the grub or another bootloader configuration file and it will pass this option to the kernel command line. This option can have different values as mentioned in the description. For example, it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you will see a menu like this:
+Таким образом, мы можем добавить параметр `vga` в конфигурационный файл GRUB или любого другого загрузчика и он передаст его в командную строку ядра. Как говорится в описании, этот параметр может иметь разные значения. Например, это может быть целым числом `0xFFFD` или `ask`. Если передать `ask` в `vga`, вы увидите примерно такое меню:
 
 ![video mode setup menu](http://oi59.tinypic.com/ejcz81.jpg)
 
-which will ask to select a video mode. We will look at its implementation, but before diving into the implementation we have to look at some other things.
+которое попросит выбрать видеорежим. Мы посмотрим на его реализацию, но перед этим рассмотрим некоторые другие вещи.
 
-Kernel data types
+Типы данных ядра
 --------------------------------------------------------------------------------
 
-Earlier we saw definitions of different data types like `u16` etc. in the kernel setup code. Let's look at a couple of data types provided by the kernel:
+Ранее мы видели определения различных типов данных в коде настройки ядра, таких как `u16` и т.д. Давайте взглянем  на несколько типов данных, предоставляемых ядром:
 
 
-| Type | char | short | int | long | u8 | u16 | u32 | u64 |
-|------|------|-------|-----|------|----|-----|-----|-----|
-| Size |  1   |   2   |  4  |   8  |  1 |  2  |  4  |  8  |
+|  Тип   | char | short | int | long | u8 | u16 | u32 | u64 |
+|--------|------|-------|-----|------|----|-----|-----|-----|
+| Размер |  1   |   2   |  4  |   8  |  1 |  2  |  4  |  8  |
 
-If you the read source code of the kernel, you'll see these very often and so it will be good to remember them.
+Во время чтения исходного кода ядра вы будете часто встречать эти типы, так что было бы неплохо запомнить их.
 
-Heap API
+API кучи
 --------------------------------------------------------------------------------
 
-After we get `vid_mode` from `boot_params.hdr` in the `set_video` function, we can see the call to the `RESET_HEAP` function. `RESET_HEAP` is a macro which is defined in [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199). It is defined as:
+После того как мы получим `vid_mode` из `boot_params.hdr` в функции `set_video`, мы можем видеть вызов `RESET_HEAP`. `RESET_HEAP` представляет собой макрос, определённый в [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199):
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-If you have read the second part, you will remember that we initialized the heap with the [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) function. We have a couple of utility functions for heap which are defined in `boot.h`. They are:
+Если вы читали вторую часть, то помните, что мы инициализировали кучу с помощью функции [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116).  У нас есть несколько полезных функций для кучи, которые определены в `boot.h`:
 
 ```C
 #define RESET_HEAP()
 ```
 
-As we saw just above, it resets the heap by setting the `HEAP` variable equal to `_end`, where `_end` is just `extern char _end[];`
+Как мы видели чуть выше, он сбрасывает кучу, установив переменную `HEAP` в `_end`, где `_end` просто `extern char _end[];`
 
-Next is the `GET_HEAP` macro:
+Следующий макрос - `GET_HEAP`:
 
 ```C
 #define GET_HEAP(type, n) \
 	((type *)__get_heap(sizeof(type),__alignof__(type),(n)))
 ```
 
-for heap allocation. It calls the internal function `__get_heap` with 3 parameters:
+для выделения кучи. Он вызывает внутреннюю функцию `__get_heap` с тремя параметрами:
 
-* size of a type in bytes, which need be allocated
-* `__alignof__(type)` shows how variables of this type are aligned
-* `n` tells how many items to allocate
+* размер типа в байтах, который должен быть выделен
+* `__alignof__(type)` показывает, как переменные этого типа выровнены
+* `n` говорит о том, сколько элементов нужно выделить
 
-Implementation of `__get_heap` is:
+Реализация `__get_heap`:
 
 ```C
 static inline char *__get_heap(size_t s, size_t a, size_t n)
@@ -99,15 +100,15 @@ static inline char *__get_heap(size_t s, size_t a, size_t n)
 }
 ```
 
-and further we will see its usage, something like:
+и в дальнейшем мы увидим её использование, что-то вроде:
 
 ```C
 saved.data = GET_HEAP(u16, saved.x * saved.y);
 ```
 
-Let's try to understand how `__get_heap` works. We can see here that `HEAP` (which is equal to `_end` after `RESET_HEAP()`) is the address of aligned memory according to the `a` parameter. After this we save the memory address from `HEAP` to the `tmp` variable, move `HEAP` to the end of the allocated block and return `tmp` which is the start address of allocated memory.
+Давайте попробуем понять принцип работы `__get_heap`. Мы видим, что `HEAP` (который равен `_end` после `RESET_HEAP()`) является адресом выровненной памяти в соответсвии с параметром `a`. После этого мы сохраняем адрес памяти `HEAP` в переменную `tmp`, перемещаем `HEAP` в конец выделенного блока и возвращаем `tmp`, который является начальным адресом выделенной памяти.
 
-And the last function is:
+И последняя функция:
 
 ```C
 static inline bool heap_free(size_t n)
@@ -116,29 +117,29 @@ static inline bool heap_free(size_t n)
 }
 ```
 
-which subtracts value of the `HEAP` from the `heap_end` (we calculated it in the previous [part](linux-bootstrap-2.md)) and returns 1 if there is enough memory for `n`.
+которая вычитает значение `HEAP` из `heap_end` (мы вычисляли это в предыдущей [части](linux-bootstrap-2.md)) и возвращает 1, если имеется достаточно памяти для `n`.
 
-That's all. Now we have a simple API for heap and can setup video mode.
+На этом всё. Теперь у нас есть простой API для кучи и можем перейти к настройке видеорежима.
 
-Set up video mode
+Настройка видеорежима
 --------------------------------------------------------------------------------
 
-Now we can move directly to video mode initialization. We stopped at the `RESET_HEAP()` call in the `set_video` function. Next is the call to  `store_mode_params` which stores video mode parameters in the `boot_params.screen_info` structure which is defined in [include/uapi/linux/screen_info.h](https://github.com/0xAX/linux/blob/master/include/uapi/linux/screen_info.h).
+Теперь мы можем перейти непосредственно к инициализации видеорежима. Мы остановились на вызове `RESET_HEAP()` в функции `set_video`. Далее идёт вызов `store_mode_params` который хранит параметры видеорежима в структуре `boot_params.screen_info`, определённой в [include/uapi/linux/screen_info.h](https://github.com/0xAX/linux/blob/master/include/uapi/linux/screen_info.h).
 
-If we look at the `store_mode_params` function, we can see that it starts with the call to the `store_cursor_position` function. As you can understand from the function name, it gets information about cursor and stores it.
+Если мы посмотрим на функцию `store_mode_params`, то увидим что она начинается с вызова `store_cursor_position`.  Как вы можете понять из названия функции, она получает информацию о курсоре и сохраняет её.
 
-First of all `store_cursor_position` initializes two variables which have type `biosregs` with `AH = 0x3`, and calls `0x10` BIOS interruption. After the interruption is successfully executed, it returns row and column in the `DL` and `DH` registers. Row and column will be stored in the `orig_x` and `orig_y` fields from the `boot_params.screen_info` structure.
+В первую очередь `store_cursor_position` инициализирует две переменные, которые имеют тип `biosregs` с `AH = 0x3`, и вызывает BIOS прерывание `0x10`. После того, как прерывание успешно выполнено, она возвращает строку и столбец в регистрах `DL` и `DH`. Строка и столбец будут сохранены в полях `orig_x` и `orig_y` структуры `boot_params.screen_info`.
 
-After `store_cursor_position` is executed, the `store_video_mode` function will be called. It just gets the current video mode and stores it in `boot_params.screen_info.orig_video_mode`. 
+После выполнения `store_cursor_position`  вызывается функция `store_video_mode`. Она просто получает текущий видеорежим  и сохраняет его в `boot_params.screen_info.orig_video_mode`. 
 
-After this, it checks the current video mode and sets the `video_segment`. After the BIOS transfers control to the boot sector, the following addresses are for video memory:
+После этого, она проверяет текущий видеорежим и устанавливает `video_segment`. После того, как BIOS передаёт контроль в загрузочный сектор, для видеопамяти выделяются следующие адреса:
 
 ```
-0xB000:0x0000 	32 Kb 	Monochrome Text Video Memory
-0xB800:0x0000 	32 Kb 	Color Text Video Memory
+0xB000:0x0000 	32 Кб   Видеопамять для монохромного текста
+0xB800:0x0000 	32 Кб   Видеопамять для цветного текста
 ```
 
-So we set the `video_segment` variable to `0xB000` if the current video mode is MDA, HGC, or VGA in monochrome mode and to `0xB800` if the current video mode is in color mode. After setting up the address of the video segment, font size needs to be stored in `boot_params.screen_info.orig_video_points` with:
+Таким образом, мы устанавливаем переменную `video_segment` в `0xB000`, если текущий видеорежим MDA, HGC, или VGA в монохромном режиме и в `0xB800`, если текущий видеорежим цветной. После настройки адреса видеофрагмента, размер шрифта должен быть сохранён в `boot_params.screen_info.orig_video_points`:
 
 ```C
 set_fs(0);
@@ -146,16 +147,16 @@ font_size = rdfs16(0x485);
 boot_params.screen_info.orig_video_points = font_size;
 ```
 
-First of all we put 0 in the `FS` register with the `set_fs` function. We already saw functions like `set_fs` in the previous part. They are all defined in [boot.h](https://github.com/0xAX/linux/blob/master/arch/x86/boot/boot.h). Next we read the value which is located at address `0x485` (this memory location is used to get the font size) and save the font size in `boot_params.screen_info.orig_video_points`.
+В первую очередь мы устанавливаем регистр `FS` в 0 с помощью функции `set_fs`. В предыдущей части мы уже видели такие функции, как `set_fs`. Все они определены в [boot.h](https://github.com/0xAX/linux/blob/master/arch/x86/boot/boot.h). Далее мы читаем значение, которое находится по адресу `0x485` (эта область памяти используется для получения размера шрифта) и сохраняет размер шрифта `boot_params.screen_info.orig_video_points`.
 
 ```
  x = rdfs16(0x44a);
  y = (adapter == ADAPTER_CGA) ? 25 : rdfs8(0x484)+1;
 ```
 
-Next we get the amount of columns by address `0x44a` and rows by address `0x484` and store them in `boot_params.screen_info.orig_video_cols` and `boot_params.screen_info.orig_video_lines`. After this, execution of `store_mode_params` is finished.
+Далее мы получаем количество столбцов по адресу `0x44a` и строк по адресу `0x484` и сохраняем их в `boot_params.screen_info.orig_video_cols` и `boot_params.screen_info.orig_video_lines`. После этого выполнение `store_mode_params` завершается.
 
-Next we can see the `save_screen` function which just saves screen content to the heap. This function collects all data which we got in the previous functions like rows and columns amount etc. and stores it in the `saved_screen` structure, which is defined as:
+Далее мы видим функцию `save_screen`, которая просто сохраняет содержимое экрана в куче. Эта функция собирает все данные, которые мы получили в предыдущей функции, такие как количество строк и столбцов и т.д, и сохраняет их в структуре `saved_screen`, которая определена как:
 
 ```C
 static struct saved_screen {
@@ -165,24 +166,24 @@ static struct saved_screen {
 } saved;
 ```
 
-It then checks whether the heap has free space for it with:
+Затем она проверяет, есть ли свободное место в куче:
 
 ```C
 if (!heap_free(saved.x*saved.y*sizeof(u16)+512))
 		return;
 ```
 
-and allocates space in the heap if it is enough and stores `saved_screen` in it.
+и если места в куче достаточно, выделяет его и сохраняет в нём `saved_screen`.
 
-The next call is `probe_cards(0)` from [arch/x86/boot/video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L33). It goes over all video_cards and collects the number of modes provided by the cards. Here is the interesting moment, we can see the loop:
+Следующий вызов - `probe_cards(0)` из [arch/x86/boot/video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L33). Она проходит по всем video_cards и собирает количество режимов, предоставляемых картой. Здесь интересный момент, мы можем видеть цикл:
 
 ```C
 for (card = video_cards; card < video_cards_end; card++) {
-  /* collecting number of modes here */
+  /* Здесь собираем количество режимов */
 }
 ```
 
-but `video_cards` is not declared anywhere. Answer is simple: Every video mode presented in the x86 kernel setup code has definition like this:
+но `video_cards` не объявлена где угодно. Ответ прост: каждый видеорежим, представленный в x86-коде настройки ядра, определён следующим образом:
 
 ```C
 static __videocard video_vga = {
@@ -192,13 +193,13 @@ static __videocard video_vga = {
 };
 ```
 
-where `__videocard` is a macro:
+где `__videocard` - макрос:
 
 ```C
 #define __videocard struct card_info __attribute__((used,section(".videocards")))
 ```
 
-which means that `card_info` structure:
+который определяет структуру `card_info`:
 
 ```C
 struct card_info {
@@ -213,7 +214,7 @@ struct card_info {
 };
 ```
 
-is in the `.videocards` segment. Let's look in the [arch/x86/boot/setup.ld](https://github.com/0xAX/linux/blob/master/arch/x86/boot/setup.ld) linker script, where we can find:
+которая находится в сегменте `.videocards`. Давайте посмотрим в скрипт компоновщика [arch/x86/boot/setup.ld](https://github.com/0xAX/linux/blob/master/arch/x86/boot/setup.ld), в котором мы можем найти:
 
 ```
 	.videocards	: {
@@ -223,13 +224,13 @@ is in the `.videocards` segment. Let's look in the [arch/x86/boot/setup.ld](http
 	}
 ```
 
-It means that `video_cards` is just a memory address and all `card_info` structures are placed in this  segment. It means that all `card_info` structures are placed between `video_cards` and `video_cards_end`, so we can use it in a loop to go over all of it.  After `probe_cards` executes we have all structures like `static __videocard video_vga` with filled `nmodes` (number of video modes).
+Это значит, что `video_cards` это просто адрес в памяти и все структуры `card_info` размещаются в этом сегменте. Это также означает, что все структуры `card_info` размещаются между `video_cards` и `video_cards_end`, поэтому мы можем воспользоваться этим, чтобы пройтись по ним в цикле. После выполнения `probe_cards` у нас есть все структуры `static __videocard video_vga` с заполненными `nmodes` (число видеорежимов).
 
-After `probe_cards` execution is finished, we move to the main loop in the `set_video` function. There is an infinite loop which tries to set up video mode with the `set_mode` function or prints a menu if we passed `vid_mode=ask` to the kernel command line or video mode is undefined. 
+После завершения выполнения `probe_cards`, мы переходим в главный цикл функции `set_video`. Это бесконечный цикл, который пытается установить видеорежим с помощью функции `set_mode` и выводит меню, если установлен флаг `vid_mode=ask` командной строки ядра или видеорежим не определён. 
 
-The `set_mode` function is defined in [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) and gets only one parameter, `mode`, which is the number of video modes (we got it from the menu or in the start of `setup_video`, from the kernel setup header). 
+Функция `set_mode` определена в [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) и принимает только один параметр - `mode`, который определяет количество видеорежимов (мы получили его из меню или в начале `setup_video`, из заголовка настройки ядра). 
 
-The `set_mode` function checks the `mode` and calls the `raw_set_mode` function. The `raw_set_mode` calls the `set_mode` function for the selected card i.e. `card->set_mode(struct mode_info*)`. We can get access to this function from the `card_info` structure. Every video mode defines this structure with values filled depending upon the video mode (for example for `vga` it is the `video_vga.set_mode` function. See above example of `card_info` structure for `vga`). `video_vga.set_mode` is `vga_set_mode`, which checks the vga mode and calls the respective function:
+`set_mode` проверяет `mode` и вызывает функцию `raw_set_mode`. `raw_set_mode` вызывает `set_mode` для выбранной карты, т.е.  `card->set_mode(struct mode_info*)`. Мы можем получить доступ к этой функции из структуры `card_info`. Каждый видеорежим определяет эту структуру со значениями, заполненными в зависимости от режима видео (например, для `vga` это функция `video_vga.set_mode`. См. выше пример структуры `card_info` для `vga`). `video_vga.set_mode` является `vga_set_mode`, который проверяет vga-режим и вызывает соответствующую функцию:
 
 ```C
 static int vga_set_mode(struct mode_info *mode)
@@ -265,15 +266,15 @@ static int vga_set_mode(struct mode_info *mode)
 }
 ```
 
-Every function which sets up video mode just calls the `0x10` BIOS interrupt with a certain value in the `AH` register.
+Каждая функция, которая устанавливает видеорежим, просто вызывает BIOS прерывание `0x10` с определённым значением в регистре `AH`.
 
-After we have set video mode, we pass it to `boot_params.hdr.vid_mode`.
+После того, как мы установили видеорежим, мы передаём его в `boot_params.hdr.vid_mode`.
 
-Next `vesa_store_edid` is called. This function simply stores the [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) (**E**xtended **D**isplay **I**dentification **D**ata) information for kernel use. After this `store_mode_params` is called again. Lastly, if `do_restore` is set, the screen is restored to an earlier state.
+Далее вызывается `vesa_store_edid`. Эта функция сохраняет информацию о [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) (**E**xtended **D**isplay **I**dentification **D**ata) для использования ядром. После этого снова вызывается `store_mode_params`. И наконец, если установлен `do_restore`, экран восстанавливается в предыдущее состояние.
 
-After this we have set video mode and now we can switch to the protected mode.
+Теперь, когда видеорежим установлен, мы можем переключится в защищённый режим.
 
-Last preparation before transition into protected mode
+Последняя подготовка перед переходом в защищённый режим
 --------------------------------------------------------------------------------
 
 We can see the last function call - `go_to_protected_mode` - in [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As the comment says: `Do the last things and invoke protected mode`, so let's see these last things and switch into protected mode.
