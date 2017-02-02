@@ -19,6 +19,7 @@ On other languages
 
   * [Chinese](https://github.com/MintCN/linux-insides-zh)
   * [Spanish](https://github.com/leolas95/linux-insides)
+  * [Russian](https://github.com/proninyaroslav/linux-insides-ru)
 
 LICENSE
 -------------

@@ -28,7 +28,7 @@ where `NR_VECTORS` is count of the vector number and as you can remember from th
 #define NR_VECTORS                       256
 ```
 
-So, in the start of the `init_IRQ` function we fill the `vecto_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) array with the vector number of the `legacy` interrupts:
+So, in the start of the `init_IRQ` function we fill the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) array with the vector number of the `legacy` interrupts:
 
 ```C
 void __init init_IRQ(void)
@@ -241,7 +241,7 @@ do {                                                    \
 } while (0)
 ```
 
-As we can see, first of all it expands to the call of the `alloc_system_vector` function that checks the given vector number in the `user_vectors` bitmap (read previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-7.html) about it) and if it is not set in the `user_vectors` bitmap we set it. After this we test that the `first_system_vector` is greater than given interrupt vector number and if it is greater we assign it:
+As we can see, first of all it expands to the call of the `alloc_system_vector` function that checks the given vector number in the `used_vectors` bitmap (read previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-7.html) about it) and if it is not set in the `used_vectors` bitmap we set it. After this we test that the `first_system_vector` is greater than given interrupt vector number and if it is greater we assign it:
 
 ```C
 if (!test_bit(vector, used_vectors)) {
