@@ -12,6 +12,11 @@ Protected mode
 
 * [64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)
 
+Memory management in the Linux kernel
+--------------------------------------
+
+* [Notes on the linux kernel VM subsystem by @lorenzo-stoakes](https://github.com/lorenzo-stoakes/linux-vm-notes)
+
 Serial programming
 ------------------------
 

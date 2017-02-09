@@ -11,7 +11,7 @@ We already know what is a `system call`. This is special routine in the Linux ke
 Introduction to vsyscalls
 --------------------------------------------------------------------------------
 
-The `vsyscall` or `virtual system call` is the first and oldest mechinism in the Linux kernel that is designed to accelerate execution of certain system calls. The principle of work of the `vsyscall` concept is simple. The Linux kernel maps into user space a page that contains some variables and the implementation of some system calls. We can find information about this memory space in the Linux kernel [documentation](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
+The `vsyscall` or `virtual system call` is the first and oldest mechanism in the Linux kernel that is designed to accelerate execution of certain system calls. The principle of work of the `vsyscall` concept is simple. The Linux kernel maps into user space a page that contains some variables and the implementation of some system calls. We can find information about this memory space in the Linux kernel [documentation](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
 
 ```
 ffffffffff600000 - ffffffffffdfffff (=8 MB) vsyscalls
@@ -24,7 +24,7 @@ or:
 ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
 ```
 
-After this, these system calls will be executed in userspace and this means that there will not be [context switching](https://en.wikipedia.org/wiki/Context_switch). Mapping of the `vsyscall` page occurs in the `map_vsyscall` function that is defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file. This function is called during the Linux kernel intialization in the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file (we saw this function in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) of the Linux kernel initialization process chapter).
+After this, these system calls will be executed in userspace and this means that there will not be [context switching](https://en.wikipedia.org/wiki/Context_switch). Mapping of the `vsyscall` page occurs in the `map_vsyscall` function that is defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file. This function is called during the Linux kernel initialization in the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file (we saw this function in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) of the Linux kernel initialization process chapter).
 
 Note that implementation of the `map_vsyscall` function depends on the `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option:
 
@@ -55,7 +55,7 @@ As we can see, at the beginning of the `map_vsyscall` function we get the physic
 ffffffff81881000 D __vsyscall_page
 ```
 
-in the `.data..page_aligned, aw` [section](https://en.wikipedia.org/wiki/Memory_segmentation) and contains call of the three folowing system calls: 
+in the `.data..page_aligned, aw` [section](https://en.wikipedia.org/wiki/Memory_segmentation) and contains call of the three following system calls:
 
 * `gettimeofday`;
 * `time`;
@@ -105,7 +105,7 @@ enum fixed_addresses {
 ...
 ```
 
-It equal to the `511`. The second argument is the physical address of the the page that has to be mapped and the third argument is the flags of the page. Note that the flags of the `VSYSCALL_PAGE` depend on the `vsyscall_mode` variable. It will be `PAGE_KERNEL_VSYSCALL` if the `vsyscall_mode` variable is `NATIVE` and the `PAGE_KERNEL_VVAR` otherwise. Both macros (the `PAGE_KERNEL_VSYSCALL` and the `PAGE_KERNEL_VVAR`) will be expanded to the following flags:
+It equal to the `511`. The second argument is the physical address of the page that has to be mapped and the third argument is the flags of the page. Note that the flags of the `VSYSCALL_PAGE` depend on the `vsyscall_mode` variable. It will be `PAGE_KERNEL_VSYSCALL` if the `vsyscall_mode` variable is `NATIVE` and the `PAGE_KERNEL_VVAR` otherwise. Both macros (the `PAGE_KERNEL_VSYSCALL` and the `PAGE_KERNEL_VVAR`) will be expanded to the following flags:
 
 ```C
 #define __PAGE_KERNEL_VSYSCALL          (__PAGE_KERNEL_RX | _PAGE_USER)
@@ -168,7 +168,7 @@ __vsyscall_page:
 	ret
 ```
 
-And the start address of the `vsyscall` page is the `ffffffffff600000` everytime. So, the [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) knows the addresses of the all virutal system call handlers. You can find definition of these addresses in the `glibc` source code:
+And the start address of the `vsyscall` page is the `ffffffffff600000` every time. So, the [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) knows the addresses of the all virtual system call handlers. You can find definition of these addresses in the `glibc` source code:
 
 ```C
 #define VSYSCALL_ADDR_vgettimeofday   0xffffffffff600000
@@ -180,7 +180,7 @@ All virtual system call requests will fall into the `__vsyscall_page` + `VSYSCAL
 
 In the second case, if we pass `vsyscall=emulate` parameter to the kernel command line, an attempt to perform virtual system call handler will cause a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception. Of course, remember, the `vsyscall` page has `__PAGE_KERNEL_VVAR` access rights that forbid execution. The `do_page_fault` function is the `#PF` or page fault handler. It tries to understand the reason of the last page fault. And one of the reason can be situation when virtual system call called and `vsyscall` mode is `emulate`. In this case `vsyscall` will be handled by the `emulate_vsyscall` function that defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file.
 
-The `emulate_vsyscall` function gets the number of a virtual system call, checks it, prints error and sends [segementation fault](https://en.wikipedia.org/wiki/Segmentation_fault) single:
+The `emulate_vsyscall` function gets the number of a virtual system call, checks it, prints error and sends [segmentation fault](https://en.wikipedia.org/wiki/Segmentation_fault) simply:
 
 ```C
 ...
@@ -284,7 +284,7 @@ extern const struct vdso_image vdso_image_x32;
 #endif
 ```
 
-If our kernel is configured for the `x86` architecture or for the `x86_64` and compability mode, we will have ability to call a system call with the `int 0x80` interrupt, if compability mode is enabled, we will be able to call a system call with the native `syscall instruction` or `sysenter` instruction in other way:
+If our kernel is configured for the `x86` architecture or for the `x86_64` and compatibility mode, we will have ability to call a system call with the `int 0x80` interrupt, if compatibility mode is enabled, we will be able to call a system call with the native `syscall instruction` or `sysenter` instruction in other way:
 
 ```C
 #if defined CONFIG_X86_32 || defined CONFIG_COMPAT
@@ -395,7 +395,7 @@ Links
 * [BUILD_BUG_ON](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
 * [Page fault](https://en.wikipedia.org/wiki/Page_fault)
-* [segementation fault](https://en.wikipedia.org/wiki/Segmentation_fault)
+* [segmentation fault](https://en.wikipedia.org/wiki/Segmentation_fault)
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [stack pointer](https://en.wikipedia.org/wiki/Stack_register)
 * [uname](https://en.wikipedia.org/wiki/Uname)

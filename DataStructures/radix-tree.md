@@ -43,7 +43,7 @@ Lets talk about what a `radix tree` is. Radix tree is a `compressed trie` where 
 
 So in this example, we can see the `trie` with keys, `go` and `cat`. The compressed trie or `radix tree` differs from `trie` in that all intermediates nodes which have only one child are removed.
 
-Radix tree in linux kernel is the datastructure which maps values to integer keys. It is represented by the following structures from the file [include/linux/radix-tree.h](https://github.com/torvalds/linux/blob/master/include/linux/radix-tree.h):
+Radix tree in linux kernel is the data structure which maps values to integer keys. It is represented by the following structures from the file [include/linux/radix-tree.h](https://github.com/torvalds/linux/blob/master/include/linux/radix-tree.h):
 
 ```C
 struct radix_tree_root {
@@ -105,7 +105,7 @@ Now that we know about radix tree structure, it is time to look on its API.
 Linux kernel radix tree API
 ---------------------------------------------------------------------------------
 
-We start from the datastructure initialization. There are two ways to initialize a new radix tree. The first is to use `RADIX_TREE` macro:
+We start from the data structure initialization. There are two ways to initialize a new radix tree. The first is to use `RADIX_TREE` macro:
 
 ```C
 RADIX_TREE(name, gfp_mask);
@@ -144,7 +144,7 @@ do {                                 \
 } while (0)
 ```
 
-makes the same initialziation with default values as it does `RADIX_TREE_INIT` macro.
+makes the same initialization with default values as it does `RADIX_TREE_INIT` macro.
 
 The next are two functions for inserting and deleting records to/from a radix tree:
 

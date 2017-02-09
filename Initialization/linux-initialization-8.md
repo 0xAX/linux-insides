@@ -25,7 +25,7 @@ void __init native_smp_prepare_boot_cpu(void)
 }
 ```
 
-The `native_smp_prepare_boot_cpu` function gets the id of the current CPU (which is Bootstrap processor and its `id` is zero) with the `smp_processor_id` function. I will not explain how the `smp_processor_id` works, because we alread saw it in the [Kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) part. As we got processor `id` number we reload [Global Descriptor Table](http://en.wikipedia.org/wiki/Global_Descriptor_Table) for the given CPU with the `switch_to_new_gdt` function:
+The `native_smp_prepare_boot_cpu` function gets the id of the current CPU (which is Bootstrap processor and its `id` is zero) with the `smp_processor_id` function. I will not explain how the `smp_processor_id` works, because we already saw it in the [Kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) part. As we got processor `id` number we reload [Global Descriptor Table](http://en.wikipedia.org/wiki/Global_Descriptor_Table) for the given CPU with the `switch_to_new_gdt` function:
 
 ```C
 void switch_to_new_gdt(int cpu)
@@ -54,7 +54,7 @@ static inline struct desc_struct *get_cpu_gdt_table(unsigned int cpu)
 }
 ```
 
-The `get_cpu_gdt_table` uses `per_cpu` macro for getting `gdt_page` percpu variable for the given CPU number (bootstrap processor with `id` - 0 in our case). You may ask the following question: so, if we can access `gdt_page` percpu variable, where it was defined? Actually we alread saw it in this book. If you have read the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/master/arch/x86/kernel/head_64.S):
+The `get_cpu_gdt_table` uses `per_cpu` macro for getting `gdt_page` percpu variable for the given CPU number (bootstrap processor with `id` - 0 in our case). You may ask the following question: so, if we can access `gdt_page` percpu variable, where it was defined? Actually we already saw it in this book. If you have read the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/master/arch/x86/kernel/head_64.S):
 
 ```assembly
 early_gdt_descr:
@@ -103,7 +103,7 @@ cpumask_set_cpu(me, cpu_callout_mask);
 per_cpu(cpu_state, me) = CPU_ONLINE;
 ```
 
-So, what is `cpu_callout_mask` bitmap... As we initialized bootstrap processor (procesoor which is booted the first on `x86`) the other processors in a multiprocessor system are known as `secondary processors`. Linux kernel uses following two bitmasks:
+So, what is `cpu_callout_mask` bitmap... As we initialized bootstrap processor (processor which is booted the first on `x86`) the other processors in a multiprocessor system are known as `secondary processors`. Linux kernel uses following two bitmasks:
 
 * `cpu_callout_mask`
 * `cpu_callin_mask`
@@ -127,7 +127,7 @@ local_node 72452442
 other_node 0
 ```
 
-Every `node` is presented by the `struct pglist_data` in the linux kernel. Each node is devided into a number of special blocks which are called - `zones`. Every zone is presented by the `zone struct` in the linux kernel and has one of the type:
+Every `node` is presented by the `struct pglist_data` in the linux kernel. Each node is divided into a number of special blocks which are called - `zones`. Every zone is presented by the `zone struct` in the linux kernel and has one of the type:
 
 * `ZONE_DMA` - 0-16M;
 * `ZONE_DMA32` - used for 32 bit devices that can only do DMA areas below 4G;
@@ -164,7 +164,7 @@ As I wrote above all nodes are described with the `pglist_data` or `pg_data_t` s
 The rest of the stuff before scheduler initialization
 --------------------------------------------------------------------------------
 
-Before we will start to dive into linux kernel scheduler initialization process we must do a couple of things. The fisrt thing is the `page_alloc_init` function from the [mm/page_alloc.c](https://github.com/torvalds/linux/blob/master/mm/page_alloc.c). This function looks pretty easy:
+Before we will start to dive into linux kernel scheduler initialization process we must do a couple of things. The first thing is the `page_alloc_init` function from the [mm/page_alloc.c](https://github.com/torvalds/linux/blob/master/mm/page_alloc.c). This function looks pretty easy:
 
 ```C
 void __init page_alloc_init(void)
@@ -217,7 +217,7 @@ $ dmesg | grep hash
 ...
 ```
 
-That's all. The rest of the stuff before scheduler initialization is the following functions: `vfs_caches_init_early` does early initialization of the [virtual file system](http://en.wikipedia.org/wiki/Virtual_file_system) (more about it will be in the chapter which will describe virtual file system), `sort_main_extable` sorts the kernel's built-in exception table entries which are between `__start___ex_table` and `__stop___ex_table`, and `trap_init` initializies trap handlers (morea about last two function we will know in the separate chapter about interrupts).
+That's all. The rest of the stuff before scheduler initialization is the following functions: `vfs_caches_init_early` does early initialization of the [virtual file system](http://en.wikipedia.org/wiki/Virtual_file_system) (more about it will be in the chapter which will describe virtual file system), `sort_main_extable` sorts the kernel's built-in exception table entries which are between `__start___ex_table` and `__stop___ex_table`, and `trap_init` initializes trap handlers (more about last two function we will know in the separate chapter about interrupts).
 
 The last step before the scheduler initialization is initialization of the memory manager with the `mm_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). As we can see, the `mm_init` function initializes different parts of the linux kernel memory manager:
 
@@ -230,7 +230,7 @@ pgtable_init();
 vmalloc_init();
 ```
 
-The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initilizes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernem memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) chapter.
+The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernel memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) chapter.
 
 That's all. Now we can look on the `scheduler`.
 
@@ -253,7 +253,7 @@ First of all we can see two configuration options here:
 * `CONFIG_FAIR_GROUP_SCHED`
 * `CONFIG_RT_GROUP_SCHED`
 
-Both of this options provide two different planning models. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt), the current scheduler - `CFS` or `Completely Fair Scheduler` use a simple concept. It models process scheduling as if the system has an ideal multitasking processor where each process would receive `1/n` processor time, where `n` is the number of the runnable processes. The scheduler uses the special set of rules. These rules determine when and how to select a new process to run and they are called `scheduling policy`. The Completely Fair Scheduler supports following `normal` or `non-real-time` scheduling policies: `SCHED_NORMAL`, `SCHED_BATCH` and `SCHED_IDLE`. The `SCHED_NORMAL` is used for the most normal applications, the amount of cpu each process consumes is mostly determined by the [nice](http://en.wikipedia.org/wiki/Nice_%28Unix%29) value, the `SCHED_BATCH` used for the 100% non-interactive tasks and the `SCHED_IDLE` runs tasks only when the processor has no task to run besides this task. The `real-time` policies are also supported for the time-critial applications: `SCHED_FIFO` and `SCHED_RR`. If you've read something about the Linux kernel scheduler, you can know that it is modular. It means that it supports different algorithms to schedule different types of processes. Usually this modularity is called `scheduler classes`. These modules encapsulate scheduling policy details and are handled by the scheduler core without knowing too much about them. 
+Both of this options provide two different planning models. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt), the current scheduler - `CFS` or `Completely Fair Scheduler` use a simple concept. It models process scheduling as if the system has an ideal multitasking processor where each process would receive `1/n` processor time, where `n` is the number of the runnable processes. The scheduler uses the special set of rules. These rules determine when and how to select a new process to run and they are called `scheduling policy`. The Completely Fair Scheduler supports following `normal` or `non-real-time` scheduling policies: `SCHED_NORMAL`, `SCHED_BATCH` and `SCHED_IDLE`. The `SCHED_NORMAL` is used for the most normal applications, the amount of cpu each process consumes is mostly determined by the [nice](http://en.wikipedia.org/wiki/Nice_%28Unix%29) value, the `SCHED_BATCH` used for the 100% non-interactive tasks and the `SCHED_IDLE` runs tasks only when the processor has no task to run besides this task. The `real-time` policies are also supported for the time-critical applications: `SCHED_FIFO` and `SCHED_RR`. If you've read something about the Linux kernel scheduler, you can know that it is modular. It means that it supports different algorithms to schedule different types of processes. Usually this modularity is called `scheduler classes`. These modules encapsulate scheduling policy details and are handled by the scheduler core without knowing too much about them. 
 
 
 Now let's back to the our code and look on the two configuration options `CONFIG_FAIR_GROUP_SCHED` and `CONFIG_RT_GROUP_SCHED`. The scheduler operates on an individual task. These options allows to schedule group tasks (more about it you can read in the [CFS group scheduling](http://lwn.net/Articles/240474/)). We can see that we assign the `alloc_size` variables which represent size based on amount of the processors to allocate for the `sched_entity` and `cfs_rq` to the `2 * nr_cpu_ids * sizeof(void **)` expression with `kzalloc`:
@@ -310,7 +310,7 @@ init_dl_bandwidth(&def_dl_bandwidth,
                   global_rt_period(), global_rt_runtime());
 ```
 
-we initialize bandwidth management for the `SCHED_DEADLINE` real-time tasks. These functions initializes `rt_bandwidth` and `dl_bandwidth` structures which store information about maximum `deadline` bandwith of the system. For example, let's look on the implementation of the `init_rt_bandwidth` function:
+we initialize bandwidth management for the `SCHED_DEADLINE` real-time tasks. These functions initializes `rt_bandwidth` and `dl_bandwidth` structures which store information about maximum `deadline` bandwidth of the system. For example, let's look on the implementation of the `init_rt_bandwidth` function:
 
 ```C
 void init_rt_bandwidth(struct rt_bandwidth *rt_b, u64 period, u64 runtime)
@@ -332,7 +332,7 @@ It takes three parameters:
 * `period` - period over which real-time task bandwidth enforcement is measured in `us`;
 * `runtime` - part of the period that we allow tasks to run in `us`.
 
-As `period` and `runtime` we pass result of the `global_rt_period` and `global_rt_runtime` functions. Which are `1s` second and and `0.95s` by default. The `rt_bandwidth` structure is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/master/kernel/sched/sched.h) and looks:
+As `period` and `runtime` we pass result of the `global_rt_period` and `global_rt_runtime` functions. Which are `1s` second and `0.95s` by default. The `rt_bandwidth` structure is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/master/kernel/sched/sched.h) and looks:
 
 ```C
 struct rt_bandwidth {
@@ -356,7 +356,7 @@ So, in the `init_rt_bandwidth` we initialize `rt_bandwidth` period and runtime w
 #endif
 ```
 
-The real-time scheduler requires global resources to make scheduling decision. But unfortenatelly scalability bottlenecks appear as the number of CPUs increase. The concept of root domains was introduced for improving scalability. The linux kernel provides a special mechanism for assigning a set of CPUs and memory nodes to a set of tasks and it is called - `cpuset`. If a `cpuset` contains non-overlapping with other `cpuset` CPUs, it is `exclusive cpuset`. Each exclusive cpuset defines an isolated domain or `root domain` of CPUs partitioned from other cpusets or CPUs. A `root domain` is presented by the `struct root_domain` from the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/master/kernel/sched/sched.h) in the linux kernel and its main purpose is to narrow the scope of the global variables to per-domain variables and all real-time scheduling decisions are made only within the scope of a root domain. That's all about it, but we will see more details about it in the chapter about real-time scheduler.
+The real-time scheduler requires global resources to make scheduling decision. But unfortunately scalability bottlenecks appear as the number of CPUs increase. The concept of root domains was introduced for improving scalability. The linux kernel provides a special mechanism for assigning a set of CPUs and memory nodes to a set of tasks and it is called - `cpuset`. If a `cpuset` contains non-overlapping with other `cpuset` CPUs, it is `exclusive cpuset`. Each exclusive cpuset defines an isolated domain or `root domain` of CPUs partitioned from other cpusets or CPUs. A `root domain` is presented by the `struct root_domain` from the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/master/kernel/sched/sched.h) in the linux kernel and its main purpose is to narrow the scope of the global variables to per-domain variables and all real-time scheduling decisions are made only within the scope of a root domain. That's all about it, but we will see more details about it in the chapter about real-time scheduler.
 
 After `root domain` initialization, we make initialization of the bandwidth for the real-time tasks of the root task group as we did it above: 
 
@@ -367,7 +367,7 @@ After `root domain` initialization, we make initialization of the bandwidth for 
 #endif
 ```
 
-In the next step, depends on the `CONFIG_CGROUP_SCHED` kernel configuration option we initialze the `siblings` and `children` lists of the root task group. As we can read from the documentation, the `CONFIG_CGROUP_SCHED` is:
+In the next step, depends on the `CONFIG_CGROUP_SCHED` kernel configuration option we initialize the `siblings` and `children` lists of the root task group. As we can read from the documentation, the `CONFIG_CGROUP_SCHED` is:
 
 ```
 This option allows you to create arbitrary task groups using the "cgroup" pseudo
@@ -397,7 +397,7 @@ for_each_possible_cpu(i) {
     ...
 ```
 
-Each processor has its own locking and individual runqueue. All runnalble tasks are stored in an active array and indexed according to its priority. When a process consumes its time slice, it is moved to an expired array. All of these arras are stored in the special structure which names is `runqueue`. As there are no global lock and runqueue, we are going through the all possible CPUs and initialize runqueue for the every cpu. The `runqueue` is presented by the `rq` structure in the linux kernel which is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/master/kernel/sched/sched.h).
+Each processor has its own locking and individual runqueue. All runnable tasks are stored in an active array and indexed according to its priority. When a process consumes its time slice, it is moved to an expired array. All of these arras are stored in the special structure which names is `runqueue`. As there are no global lock and runqueue, we are going through the all possible CPUs and initialize runqueue for the every cpu. The `runqueue` is presented by the `rq` structure in the linux kernel which is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/master/kernel/sched/sched.h).
 
 ```C
 rq = cpu_rq(i);
@@ -411,7 +411,7 @@ init_dl_rq(&rq->dl);
 rq->rt.rt_runtime = def_rt_bandwidth.rt_runtime;
 ```
 
-Here we get the runque for the every CPU with the `cpu_rq` macto which returns `runqueues` percpu variable and start to initialize it with runqueu lock, number of running tasks, `calc_load` relative fields (`calc_load_active` and `calc_load_update`) which are used in the reckoning of a CPU load and initialization of the completely fair, real-time and deadline related fields in a runqueue. After this we initialize `cpu_load` array with zeros and set the last load update tick to the `jiffies` variable which determines the number of time ticks (cycles), since the system boot:
+Here we get the runqueue for the every CPU with the `cpu_rq` macro which returns `runqueues` percpu variable and start to initialize it with runqueue lock, number of running tasks, `calc_load` relative fields (`calc_load_active` and `calc_load_update`) which are used in the reckoning of a CPU load and initialization of the completely fair, real-time and deadline related fields in a runqueue. After this we initialize `cpu_load` array with zeros and set the last load update tick to the `jiffies` variable which determines the number of time ticks (cycles), since the system boot:
 
 ```C
 for (j = 0; j < CPU_LOAD_IDX_MAX; j++)
@@ -465,7 +465,7 @@ Links
 * [high-resolution kernel timer](https://www.kernel.org/doc/Documentation/timers/hrtimers.txt)
 * [spinlock](http://en.wikipedia.org/wiki/Spinlock)
 * [Run queue](http://en.wikipedia.org/wiki/Run_queue)
-* [Linux kernem memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
+* [Linux kernel memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
 * [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29)
 * [virtual file system](http://en.wikipedia.org/wiki/Virtual_file_system)
 * [Linux kernel hotplug documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)

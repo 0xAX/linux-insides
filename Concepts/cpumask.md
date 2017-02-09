@@ -4,7 +4,7 @@ CPU masks
 Introduction
 --------------------------------------------------------------------------------
 
-`Cpumasks` is a special way provided by the Linux kernel to store information about CPUs in the system. The relevant source code and header files which are contains API for `Cpumasks` manipulating:
+`Cpumasks` is a special way provided by the Linux kernel to store information about CPUs in the system. The relevant source code and header files which contains API for `Cpumasks` manipulation:
 
 * [include/linux/cpumask.h](https://github.com/torvalds/linux/blob/master/include/linux/cpumask.h)
 * [lib/cpumask.c](https://github.com/torvalds/linux/blob/master/lib/cpumask.c)
@@ -19,7 +19,17 @@ set_cpu_present(cpu, true);
 set_cpu_possible(cpu, true);
 ```
 
-`set_cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents a subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depend on the `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. The implementations of all of these functions are very similar. Every function checks the second parameter. If it is `true`, it calls `cpumask_set_cpu` otherwise it calls `cpumask_clear_cpu` .
+Before we will consiuder implementation of these functions, let's consider all of these masks.
+
+The `cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot or in other words mask of possible CPUs contains maximum number of CPUs which are possible in the system. It will be equal to value of the `NR_CPUS` which is which is set statically via the `CONFIG_NR_CPUS` kernel configuration option.
+
+The `cpu_present` mask represents which CPUs are currently plugged in.
+
+The `cpu_online` represents a subset of the `cpu_present` and indicates CPUs which are available for scheduling or in other words a bit from this mask tells to kernel is a processor may be utilized by the Linux kernel.
+
+The last mask is `cpu_active`. Bits of this mask tells to Linux kernel is a task may be moved to a certain processor.
+
+All of these masks depend on the `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. The implementations of all of these functions are very similar. Every function checks the second parameter. If it is `true`, it calls `cpumask_set_cpu` otherwise it calls `cpumask_clear_cpu` .
 
 There are two ways for a `cpumask` creation. First is to use `cpumask_t`. It is defined as:
 
@@ -27,7 +37,7 @@ There are two ways for a `cpumask` creation. First is to use `cpumask_t`. It is 
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 ```
 
-It wraps the `cpumask` structure which contains one bitmak `bits` field. The `DECLARE_BITMAP` macro gets two parameters:
+It wraps the `cpumask` structure which contains one bitmask `bits` field. The `DECLARE_BITMAP` macro gets two parameters:
 
 * bitmap name;
 * number of bits.
@@ -46,7 +56,7 @@ where `BITS_TO_LONGS`:
 #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 ```
 
-As we are focussing on the `x86_64` architecture, `unsigned long` is 8-bytes size and our array will contain only one element:
+As we are focusing on the `x86_64` architecture, `unsigned long` is 8-bytes size and our array will contain only one element:
 
 ```
 (((8) + (8) - 1) / (8)) = 1

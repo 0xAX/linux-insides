@@ -18,7 +18,7 @@ struct list_set {
 };
 ```
 
-Not that the `gc` filed has `timer_list` type. This structure defined in the [include/linux/timer.h](https://github.com/torvalds/linux/blob/master/include/linux/timer.h) header file and main point of this structure is to store `dynamic` timers in the Linux kernel. Actually, the Linux kernel provides two types of timers called dynamic timers and interval timers. First type of timers is used by the kernel, and the second can be used by user mode. The `timer_list` structure contains actual `dynanic` timers. The `list_set` contains `gc` timer in our example represents timer for garbage collection. This timer will be initialized in the `list_set_gc_init` function:
+Not that the `gc` filed has `timer_list` type. This structure defined in the [include/linux/timer.h](https://github.com/torvalds/linux/blob/master/include/linux/timer.h) header file and main point of this structure is to store `dynamic` timers in the Linux kernel. Actually, the Linux kernel provides two types of timers called dynamic timers and interval timers. First type of timers is used by the kernel, and the second can be used by user mode. The `timer_list` structure contains actual `dynamic` timers. The `list_set` contains `gc` timer in our example represents timer for garbage collection. This timer will be initialized in the `list_set_gc_init` function:
 
 ```C
 static void

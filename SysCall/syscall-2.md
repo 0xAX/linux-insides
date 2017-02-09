@@ -7,7 +7,7 @@ How does the Linux kernel handle a system call
 The previous [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-1.html) was the first part of the chapter that describes the [system call](https://en.wikipedia.org/wiki/System_call) concepts in the Linux kernel.
 In the previous part we learned what a system call is in the Linux kernel, and in operating systems in general. This was introduced from a user-space perspective, and part of the [write](http://man7.org/linux/man-pages/man2/write.2.html) system call implementation was discussed. In this part we continue our look at system calls, starting with some theory before moving onto the Linux kernel code.
 
-An user application does not make the system call directly from our applications. We did not write the `Hello world!` program like:
+A user application does not make the system call directly from our applications. We did not write the `Hello world!` program like:
 
 ```C
 int main(int argc, char **argv)
@@ -114,7 +114,7 @@ asmlinkage const sys_call_ptr_t sys_call_table[__NR_syscall_max+1] = {
 
 After this all elements that point to the non-implemented system calls will contain the address of the `sys_ni_syscall` function that just returns `-ENOSYS` as we saw above, and other elements will point to the `sys_syscall_name` functions.
 
-At this point, we have filled the system call table and the Linux kernel knows where each system call handler is. But the Linux kernel does not call a `sys_syscall_name` function immediately after it is instructed to handle a system call from a user space application. Remember the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about interrupts and interrupt handling. When the Linux kernel gets the control to handle an interrupt, it had to do some preparations like save user space registers, switch to a new stack and many more tasks before it will call an interrupt handler. There is the same situation with the system call handling. The preparation for handling a system call is the first thing, but before the Linux kernel will start these preparations, the entry point of a system call must be initailized and only the Linux kernel knows how to perform this preparation. In the next paragraph we will see the process of the initialization of the system call entry in the Linux kernel.
+At this point, we have filled the system call table and the Linux kernel knows where each system call handler is. But the Linux kernel does not call a `sys_syscall_name` function immediately after it is instructed to handle a system call from a user space application. Remember the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about interrupts and interrupt handling. When the Linux kernel gets the control to handle an interrupt, it had to do some preparations like save user space registers, switch to a new stack and many more tasks before it will call an interrupt handler. There is the same situation with the system call handling. The preparation for handling a system call is the first thing, but before the Linux kernel will start these preparations, the entry point of a system call must be initialized and only the Linux kernel knows how to perform this preparation. In the next paragraph we will see the process of the initialization of the system call entry in the Linux kernel.
 
 Initialization of the system call entry
 --------------------------------------------------------------------------------
@@ -135,16 +135,16 @@ wrmsrl(MSR_STAR,  ((u64)__USER32_CS)<<48  | ((u64)__KERNEL_CS)<<32);
 wrmsrl(MSR_LSTAR, entry_SYSCALL_64);
 ```
 
-The first model specific register - `MSR_STAR` contains `63:48` bits of the user code segment. These bits will be loaded to the `CS` and `SS` segment registers for the `sysret` instruction which provides functionality to return from a system call to user code with the related privilege. Also the `MSR_STAR` contains `47:32` bits from the kernel code that will be used as the base selector for `CS` and `SS` segment registers when user space applications execute a system call. In the second line of code we fill the `MSR_LSTAR` register with the `entry_SYSCALL_64` symbol that represents system call entry. The `entry_SYSCALL_64` is defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file and contains code related to the preparation peformed before a system call handler will be executed (I already wrote about these preparations, read above). We will not consider the `entry_SYSCALL_64` now, but will return to it later in this chapter.
+The first model specific register - `MSR_STAR` contains `63:48` bits of the user code segment. These bits will be loaded to the `CS` and `SS` segment registers for the `sysret` instruction which provides functionality to return from a system call to user code with the related privilege. Also the `MSR_STAR` contains `47:32` bits from the kernel code that will be used as the base selector for `CS` and `SS` segment registers when user space applications execute a system call. In the second line of code we fill the `MSR_LSTAR` register with the `entry_SYSCALL_64` symbol that represents system call entry. The `entry_SYSCALL_64` is defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file and contains code related to the preparation performed before a system call handler will be executed (I already wrote about these preparations, read above). We will not consider the `entry_SYSCALL_64` now, but will return to it later in this chapter.
 
 After we have set the entry point for system calls, we need to set the following model specific registers:
 
-* `MSR_CSTAR` - target `rip` for the compability mode callers;
+* `MSR_CSTAR` - target `rip` for the compatibility mode callers;
 * `MSR_IA32_SYSENTER_CS` - target `cs` for the `sysenter` instruction;
 * `MSR_IA32_SYSENTER_ESP` - target `esp` for the `sysenter` instruction;
 * `MSR_IA32_SYSENTER_EIP` - target `eip` for the `sysenter` instruction.
 
-The values of these model specific register depend on the `CONFIG_IA32_EMULATION` kernel configuration option. If this kernel configuration option is enabled, it allows legacy 32-bit programs to run under a 64-bit kernel. In the first case, if the `CONFIG_IA32_EMULATION` kernel configuration option is enabled, we fill these model specific registers with the entry point for the system calls the compability mode:
+The values of these model specific register depend on the `CONFIG_IA32_EMULATION` kernel configuration option. If this kernel configuration option is enabled, it allows legacy 32-bit programs to run under a 64-bit kernel. In the first case, if the `CONFIG_IA32_EMULATION` kernel configuration option is enabled, we fill these model specific registers with the entry point for the system calls the compatibility mode:
 
 ```C
 wrmsrl(MSR_CSTAR, entry_SYSCALL_compat);
@@ -191,7 +191,7 @@ wrmsrl(MSR_SYSCALL_MASK,
 	   X86_EFLAGS_IOPL|X86_EFLAGS_AC|X86_EFLAGS_NT);
 ```
 
-These flags will be cleared during syscall initialization. That's all, it is the end of the `syscall_init` function and it means that system call entry is ready to work. Now we can see what will occur when an user application executes the `syscall` instruction.
+These flags will be cleared during syscall initialization. That's all, it is the end of the `syscall_init` function and it means that system call entry is ready to work. Now we can see what will occur when a user application executes the `syscall` instruction.
 
 Preparation before system call handler will be called
 --------------------------------------------------------------------------------
@@ -293,7 +293,7 @@ where the `__X32_SYSCALL_BIT` is
 
 As we can see the `__SYSCALL_MASK` depends on the `CONFIG_X86_X32_ABI` kernel configuration option and represents the mask for the 32-bit [ABI](https://en.wikipedia.org/wiki/Application_binary_interface) in the 64-bit kernel.
 
-So we check the value of the `__SYSCALL_MASK` and if the `CONFIG_X86_X32_ABI` is disabled we compare the value of the `rax` register to the maximum syscall number (`__NR_syscall_max`), alternatively if the `CNOFIG_X86_X32_ABI` is enabled we mask the `eax` register with the `__X32_SYSCALL_BIT` and do the same comparison: 
+So we check the value of the `__SYSCALL_MASK` and if the `CONFIG_X86_X32_ABI` is disabled we compare the value of the `rax` register to the maximum syscall number (`__NR_syscall_max`), alternatively if the `CONFIG_X86_X32_ABI` is enabled we mask the `eax` register with the `__X32_SYSCALL_BIT` and do the same comparison: 
 
 ```assembly
 #if __SYSCALL_MASK == ~0
@@ -344,7 +344,7 @@ After this we can see the call of the `LOCKDEP_SYS_EXIT` macro from the [arch/x8
 LOCKDEP_SYS_EXIT
 ```
 
-The implementation of this macro depends on the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option that allows us to debug locks on exit from a system call. And again, we will not consider it in this chapter, but will return to it in a separate one. In the end of the `entry_SYSCALL_64` function we restore all general purpose registers besides `rxc` and `r11`, because the `rcx` register must contain the return address to the application that called system call and the `r11` register contains the old [flags register](https://en.wikipedia.org/wiki/FLAGS_register). After all general purpose registers are restored, we fill `rcx` with the return address, `r11` register with the flags and `rsp` with the old stack pointer:
+The implementation of this macro depends on the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option that allows us to debug locks on exit from a system call. And again, we will not consider it in this chapter, but will return to it in a separate one. In the end of the `entry_SYSCALL_64` function we restore all general purpose registers besides `rcx` and `r11`, because the `rcx` register must contain the return address to the application that called system call and the `r11` register contains the old [flags register](https://en.wikipedia.org/wiki/FLAGS_register). After all general purpose registers are restored, we fill `rcx` with the return address, `r11` register with the flags and `rsp` with the old stack pointer:
 
 ```assembly
 RESTORE_C_REGS_EXCEPT_RCX_R11
@@ -364,14 +364,14 @@ In the end we just call the `USERGS_SYSRET64` macro that expands to the call of 
 	sysretq;
 ```
 
-Now we know what occurs when an user application calls a system call. The full path of this process is as follows:
+Now we know what occurs when a user application calls a system call. The full path of this process is as follows:
 
-* User application contains code that fills general purposer register with the values (system call number and arguments of this system call);
+* User application contains code that fills general purpose register with the values (system call number and arguments of this system call);
 * Processor switches from the user mode to kernel mode and starts execution of the system call entry - `entry_SYSCALL_64`; 
 * `entry_SYSCALL_64` switches to the kernel stack and saves some general purpose registers, old stack and code segment, flags and etc... on the stack;
 * `entry_SYSCALL_64` checks the system call number in the `rax` register, searches a system call handler in the `sys_call_table` and calls it, if the number of a system call is correct;
 * If a system call is not correct, jump on exit from system call;
-* After a system call handler will finish its work, restore general purposer registers, old stack, flags and return address and exit from the `entry_SYSCALL_64` with the `sysretq` instruction. 
+* After a system call handler will finish its work, restore general purpose registers, old stack, flags and return address and exit from the `entry_SYSCALL_64` with the `sysretq` instruction. 
 
 That's all.
 

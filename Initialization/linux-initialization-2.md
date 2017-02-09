@@ -20,7 +20,7 @@ from the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/maste
 Some theory
 --------------------------------------------------------------------------------
 
-An interrupt is an event caused by software or hardware to the CPU. For example an user have pressed a key on keyboard. On interrupt, CPU stops the current task and transfer control to the special routine which is called - [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler). An interrupt handler handles and interrupt and transfer control back to the previously stopped task. We can split interrupts on three types:
+An interrupt is an event caused by software or hardware to the CPU. For example a user have pressed a key on keyboard. On interrupt, CPU stops the current task and transfer control to the special routine which is called - [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler). An interrupt handler handles and interrupt and transfer control back to the previously stopped task. We can split interrupts on three types:
 
 * Software interrupts - when a software signals CPU that it needs kernel attention. These interrupts are generally used for system calls;
 * Hardware interrupts - when a hardware event happens, for example button is pressed on a keyboard;
@@ -54,7 +54,7 @@ CPU uses vector number as an index in the `Interrupt Descriptor Table` (we will 
 |---------------------------------------------------------------------------------------------
 |7     | #NM    |Device Not Available|Fault|NO        |Floating point or [F]WAIT             |
 |---------------------------------------------------------------------------------------------
-|8     | #DF    |Double Fault        |Abort|YES       |Ant instrctions which can generate NMI|
+|8     | #DF    |Double Fault        |Abort|YES       |An instruction which can generate NMI |
 |---------------------------------------------------------------------------------------------
 |9     | ---    |Reserved            |Fault|NO        |                                      |
 |---------------------------------------------------------------------------------------------
@@ -273,7 +273,7 @@ early_idt_handlers:
 	.endr
 ```
 
-We can see here, interrupt handlers generation for the first `32` exceptions. We check here, if exception has an error code then we do nothing, if exception does not return error code, we push zero to the stack. We do it for that would stack was uniform. After that we push exception number on the stack and jump on the `early_idt_handler_array` which is generic interrupt handler for now. As we may see above, every nine bytes of the `early_idt_handler_arry` array consists from optional push of an error code, push of `vector number` and jump instruction. We can see it in the output of the `objdump` util:
+We can see here, interrupt handlers generation for the first `32` exceptions. We check here, if exception has an error code then we do nothing, if exception does not return error code, we push zero to the stack. We do it for that would stack was uniform. After that we push exception number on the stack and jump on the `early_idt_handler_array` which is generic interrupt handler for now. As we may see above, every nine bytes of the `early_idt_handler_array` array consists from optional push of an error code, push of `vector number` and jump instruction. We can see it in the output of the `objdump` util:
 
 ```
 $ objdump -D vmlinux

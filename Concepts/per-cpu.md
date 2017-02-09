@@ -1,7 +1,7 @@
 Per-CPU variables
 ================================================================================
 
-Per-CPU variables are one of the kernel features. You can understand what this feature means by reading its name. We can create a variable and each processor core will have its own copy of this variable. In this part, we take a closer look at this feature and try to understand how it is implemented and how it works.
+Per-CPU variables are one of the kernel features. You can understand the meaning of this feature by reading its name. We can create a variable and each processor core will have its own copy of this variable. In this part, we take a closer look at this feature and try to understand how it is implemented and how it works.
 
 The kernel provides an API for creating per-cpu variables - the `DEFINE_PER_CPU` macro:
 
@@ -18,7 +18,7 @@ Take a look at the `DECLARE_PER_CPU` definition. We see that it takes 2 paramete
 DEFINE_PER_CPU(int, per_cpu_n)
 ```
 
-We pass the type and the name of our variable. `DEFINE_PER_CPU` calls the `DEFINE_PER_CPU_SECTION` macro and passes the same two paramaters and empty string to it. Let's look at the definition of the `DEFINE_PER_CPU_SECTION`:
+We pass the type and the name of our variable. `DEFINE_PER_CPU` calls the `DEFINE_PER_CPU_SECTION` macro and passes the same two parameters and empty string to it. Let's look at the definition of the `DEFINE_PER_CPU_SECTION`:
 
 ```C
 #define DEFINE_PER_CPU_SECTION(type, name, sec)    \
@@ -94,7 +94,7 @@ enum pcpu_fc pcpu_chosen_fc __initdata = PCPU_FC_AUTO;
 
 If the `percpu_alloc` parameter is not given to the kernel command line, the `embed` allocator will be used which embeds the first percpu chunk into bootmem with the [memblock](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html). The last allocator is the first chunk `page` allocator which maps the first chunk with `PAGE_SIZE` pages.
 
-As I wrote about first of all, we make a check of the first chunk allocator type in the `setup_per_cpu_areas`. First of all we check that first chunk allocator is not page:
+As I wrote above, first of all we make a check of the first chunk allocator type in the `setup_per_cpu_areas`. We check that first chunk allocator is not page:
 
 ```C
 if (pcpu_chosen_fc != PCPU_FC_PAGE) {
@@ -113,7 +113,7 @@ rc = pcpu_embed_first_chunk(PERCPU_FIRST_CHUNK_RESERVE,
 					    pcpu_fc_alloc, pcpu_fc_free);
 ```
 
-As I wrote above, the `pcpu_embed_first_chunk` function embeds the first percpu chunk into bootmem. As you can see we pass a couple of parameters to the `pcup_embed_first_chunk`, they are
+As shown above, the `pcpu_embed_first_chunk` function embeds the first percpu chunk into bootmem then we pass a couple of parameters to the `pcup_embed_first_chunk`. They are as follows:
 
 * `PERCPU_FIRST_CHUNK_RESERVE` - the size of the reserved space for the static `percpu` variables;
 * `dyn_size` - minimum free size for dynamic allocation in bytes;
@@ -122,7 +122,7 @@ As I wrote above, the `pcpu_embed_first_chunk` function embeds the first percpu 
 * `pcpu_fc_alloc` - function to allocate `percpu` page;
 * `pcpu_fc_free` - function to release `percpu` page.
 
-All of these parameters we calculate before the call of the `pcpu_embed_first_chunk`:
+We calculate all of these parameters before the call of the `pcpu_embed_first_chunk`:
 
 ```C
 const size_t dyn_size = PERCPU_MODULE_RESERVE + PERCPU_DYNAMIC_RESERVE - PERCPU_FIRST_CHUNK_RESERVE;
@@ -152,7 +152,7 @@ Let's look at the `get_cpu_var` implementation:
 }))
 ```
 
-The Linux kernel is preemptible and accessing a per-cpu variable requires us to know which processor the kernel running on. So, current code must not be preempted and moved to the another CPU while accessing a per-cpu variable. That's why first of all we can see a call of the `preempt_disable` function. After this we can see a call of the `this_cpu_ptr` macro, which looks like:
+The Linux kernel is preemptible and accessing a per-cpu variable requires us to know which processor the kernel is running on. So, current code must not be preempted and moved to the another CPU while accessing a per-cpu variable. That's why, first of all we can see a call of the `preempt_disable` function then a call of the `this_cpu_ptr` macro, which looks like:
 
 ```C
 #define this_cpu_ptr(ptr) raw_cpu_ptr(ptr)
@@ -196,7 +196,7 @@ do {
 
 which makes the given `ptr` type of `const void __percpu *`,
 
-After this we can see the call of the `SHIFT_PERCPU_PTR` macro with two parameters. At first parameter we pass our ptr and second we pass the cpu number to the `per_cpu_offset` macro:
+After this we can see the call of the `SHIFT_PERCPU_PTR` macro with two parameters. As first parameter we pass our ptr and for second parameter we pass the cpu number to the `per_cpu_offset` macro:
 
 ```C
 #define per_cpu_offset(x) (__per_cpu_offset[x])

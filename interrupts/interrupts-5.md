@@ -93,7 +93,7 @@ As we can see the `DO_ERROR` macro takes 4 parameters:
 * String which describes an exception;
 * Exception handler entry point.
 
-This macro defined in the same souce code file and expands to the function with the `do_handler` name:
+This macro defined in the same source code file and expands to the function with the `do_handler` name:
 
 ```C
 #define DO_ERROR(trapnr, signr, str, name)                              \
@@ -292,7 +292,7 @@ Note that this exception runs on the `DOUBLEFAULT_STACK` [Interrupt Stack Table]
 #define DOUBLEFAULT_STACK 1
 ```
 
-The `double_fault` is handler for this exception and defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). The `double_fault` handler starts from the definition of two variables: string that describes excetpion and interrupted process, as other exception handlers:
+The `double_fault` is handler for this exception and defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). The `double_fault` handler starts from the definition of two variables: string that describes exception and interrupted process, as other exception handlers:
 
 ```C
 static const char str[] = "double fault";
@@ -311,13 +311,13 @@ regs->sp = (unsigned long)&normal_regs->orig_ax;
 return;
 ```
 
-In the second case we do almost the same that we did in the previous excetpion handlers. The first is the call of the `ist_enter` function that discards previous context, `user` in our case:
+In the second case we do almost the same that we did in the previous exception handlers. The first is the call of the `ist_enter` function that discards previous context, `user` in our case:
 
 ```C
 ist_enter(regs);
 ```
 
-And after this we fill the interrupted process with the vector number of the `Double fault` excetpion and error code as we did it in the previous handlers:
+And after this we fill the interrupted process with the vector number of the `Double fault` exception and error code as we did it in the previous handlers:
 
 ```C
 tsk->thread.error_code = error_code;
@@ -348,7 +348,7 @@ The next exception is the `#NM` or `Device not available`. The `Device not avail
 
 * The processor executed an [x87 FPU](https://en.wikipedia.org/wiki/X87) floating-point instruction while the EM flag in [control register](https://en.wikipedia.org/wiki/Control_register) `cr0` was set;
 * The processor executed a `wait` or `fwait` instruction while the `MP` and `TS` flags of register `cr0` were set;
-* The processor executed an [x87 FPU](https://en.wikipedia.org/wiki/X87), [MMX](https://en.wikipedia.org/wiki/MMX_%28instruction_set%29) or [SSE](https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) instruction while the `TS` falg in control register `cr0` was set and the `EM` flag is clear.
+* The processor executed an [x87 FPU](https://en.wikipedia.org/wiki/X87), [MMX](https://en.wikipedia.org/wiki/MMX_%28instruction_set%29) or [SSE](https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) instruction while the `TS` flag in control register `cr0` was set and the `EM` flag is clear.
 
 The handler of the `Device not available` exception is the `do_device_not_available` function and it defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c) source code file too. It starts and ends from the getting of the previous context, as other traps which we saw in the beginning of this part:
 

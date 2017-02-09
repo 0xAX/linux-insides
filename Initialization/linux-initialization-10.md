@@ -110,7 +110,7 @@ where default maximum number of threads is:
 #define MAX_THREADS     FUTEX_TID_MASK
 ```
 
-In the end of the `fork_init` function we initalize [signal](http://www.win.tue.nl/~aeb/linux/lk/lk-5.html) handler:
+In the end of the `fork_init` function we initialize [signal](http://www.win.tue.nl/~aeb/linux/lk/lk-5.html) handler:
 
 ```C
 init_task.signal->rlim[RLIMIT_NPROC].rlim_cur = max_threads/2;
@@ -176,9 +176,9 @@ Note, that we use `KMEM_CACHE` macro here instead of the `kmem_cache_create`. Th
                 (__flags), NULL)
 ```
 
-The `KMEM_CACHE` has one difference from `kmem_cache_create`. Take a look on `__alignof__` operator. The `KMEM_CACHE` macro aligns `SLAB` to the size of the given structure, but `kmem_cache_create` uses given value to align space. After this we can see the call of the `mmap_init` and `nsproxy_cache_init` functions. The first function initalizes virtual memory area `SLAB` and the second function initializes `SLAB` for namespaces.
+The `KMEM_CACHE` has one difference from `kmem_cache_create`. Take a look on `__alignof__` operator. The `KMEM_CACHE` macro aligns `SLAB` to the size of the given structure, but `kmem_cache_create` uses given value to align space. After this we can see the call of the `mmap_init` and `nsproxy_cache_init` functions. The first function initializes virtual memory area `SLAB` and the second function initializes `SLAB` for namespaces.
 
-The next function after the `proc_caches_init` is `buffer_init`. This function is defined in the [fs/buffer.c](https://github.com/torvalds/linux/blob/master/fs/buffer.c) source code file and allocate cache for the `buffer_head`. The `buffer_head` is a special structure which defined in the [include/linux/buffer_head.h](https://github.com/torvalds/linux/blob/master/include/linux/buffer_head.h) and used for managing buffers. In the start of the `bufer_init` function we allocate cache for the `struct buffer_head` structures with the call of the `kmem_cache_create` function as we did in the previous functions. And calcuate the maximum size of the buffers in memory with:
+The next function after the `proc_caches_init` is `buffer_init`. This function is defined in the [fs/buffer.c](https://github.com/torvalds/linux/blob/master/fs/buffer.c) source code file and allocate cache for the `buffer_head`. The `buffer_head` is a special structure which defined in the [include/linux/buffer_head.h](https://github.com/torvalds/linux/blob/master/include/linux/buffer_head.h) and used for managing buffers. In the start of the `buffer_init` function we allocate cache for the `struct buffer_head` structures with the call of the `kmem_cache_create` function as we did in the previous functions. And calculate the maximum size of the buffers in memory with:
 
 ```C
 nrpages = (nr_free_buffer_pages() * 10) / 100;
@@ -198,7 +198,7 @@ err = register_filesystem(&proc_fs_type);
                 return;
 ```
 
-As I wrote above we will not dive into details about [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) and different filesystems in this chapter, but will see it in the chapter about the `VFS`. After we've registered a new filesystem in our system, we call the `proc_self_init` function from the [fs/proc/self.c](https://github.com/torvalds/linux/blob/master/fs/proc/self.c) and this function allocates `inode` number for the `self` (`/proc/self` directory refers to the process accessing the `/proc` filesystem). The next step after the `proc_self_init` is `proc_setup_thread_self` which setups the `/proc/thread-self` directory which contains information about current thread. After this we create `/proc/self/mounts` symllink which will contains mount points with the call of the
+As I wrote above we will not dive into details about [VFS](http://en.wikipedia.org/wiki/Virtual_file_system) and different filesystems in this chapter, but will see it in the chapter about the `VFS`. After we've registered a new filesystem in our system, we call the `proc_self_init` function from the [fs/proc/self.c](https://github.com/torvalds/linux/blob/master/fs/proc/self.c) and this function allocates `inode` number for the `self` (`/proc/self` directory refers to the process accessing the `/proc` filesystem). The next step after the `proc_self_init` is `proc_setup_thread_self` which setups the `/proc/thread-self` directory which contains information about current thread. After this we create `/proc/self/mounts` symlink which will contains mount points with the call of the
 
 ```C
 proc_symlink("mounts", NULL, "self/mounts");
@@ -230,7 +230,7 @@ and a couple of directories depends on the different configuration options:
 
 In the end of the `proc_root_init` we call the `proc_sys_init` function which creates `/proc/sys` directory and initializes the [Sysctl](http://en.wikipedia.org/wiki/Sysctl).
 
-It is the end of `start_kernel` function. I did not describe all functions which are called in the `start_kernel`. I skipped them, because they are not important for the generic kernel initialization stuff and depend on only different kernel configurations. They are `taskstats_init_early` which exports per-task statistic to the user-space, `delayacct_init` - initializes per-task delay accounting, `key_init` and `security_init` initialize diferent security stuff, `check_bugs` - fix some architecture-dependent bugs, `ftrace_init` function executes initialization of the [ftrace](https://www.kernel.org/doc/Documentation/trace/ftrace.txt), `cgroup_init` makes initialization of the rest of the [cgroup](http://en.wikipedia.org/wiki/Cgroups) subsystem,etc. Many of these parts and subsystems will be described in the other chapters.
+It is the end of `start_kernel` function. I did not describe all functions which are called in the `start_kernel`. I skipped them, because they are not important for the generic kernel initialization stuff and depend on only different kernel configurations. They are `taskstats_init_early` which exports per-task statistic to the user-space, `delayacct_init` - initializes per-task delay accounting, `key_init` and `security_init` initialize different security stuff, `check_bugs` - fix some architecture-dependent bugs, `ftrace_init` function executes initialization of the [ftrace](https://www.kernel.org/doc/Documentation/trace/ftrace.txt), `cgroup_init` makes initialization of the rest of the [cgroup](http://en.wikipedia.org/wiki/Cgroups) subsystem,etc. Many of these parts and subsystems will be described in the other chapters.
 
 That's all. Finally we have passed through the long-long `start_kernel` function. But it is not the end of the linux kernel initialization process. We haven't run the first process yet. In the end of the `start_kernel` we can see the last call of the - `rest_init` function. Let's go ahead.
 
@@ -257,7 +257,7 @@ Here the `kernel_thread` function (defined in the [kernel/fork.c](https://github
 * Parameter for the `kernel_init` function;
 * Flags.
 
-We will not dive into details about `kernel_thread` implementation (we will see it in the chapter which describe scheduler, just need to say that `kernel_thread` invokes [clone](http://www.tutorialspoint.com/unix_system_calls/clone.htm)). Now we only need to know that we create new kernel thread with `kernel_thread` function, parent and child of the thread will use shared information about filesystem and it will start to execute `kernel_init` function. A kernel thread differs from an user thread that it runs in kernel mode. So with these two `kernel_thread` calls we create two new kernel threads with the `PID = 1` for `init` process and `PID = 2` for `kthreadd`. We already know what is `init` process. Let's look on the `kthreadd`. It is a special kernel thread which manages and helps different parts of the kernel to create another kernel thread. We can see it in the output of the `ps` util:
+We will not dive into details about `kernel_thread` implementation (we will see it in the chapter which describe scheduler, just need to say that `kernel_thread` invokes [clone](http://www.tutorialspoint.com/unix_system_calls/clone.htm)). Now we only need to know that we create new kernel thread with `kernel_thread` function, parent and child of the thread will use shared information about filesystem and it will start to execute `kernel_init` function. A kernel thread differs from a user thread that it runs in kernel mode. So with these two `kernel_thread` calls we create two new kernel threads with the `PID = 1` for `init` process and `PID = 2` for `kthreadd`. We already know what is `init` process. Let's look on the `kthreadd`. It is a special kernel thread which manages and helps different parts of the kernel to create another kernel thread. We can see it in the output of the `ps` util:
 
 ```C
 $ ps -ef | grep kthread
@@ -346,7 +346,7 @@ After this we can see the call of the following functions - `do_basic_setup`. Be
 Now we can finally start doing some real work..
 ```
 
-The `do_basic_setup` will reinitialize [cpuset](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to the active CPUs, initialize the `khelper` - which is a kernel thread which used for making calls out to userspace from within the kernel, initialize [tmpfs](http://en.wikipedia.org/wiki/Tmpfs), initialize `drivers` subsystem, enable the user-mode helper `workqueue`  and make post-early call of the `initcalls`. We can see openinng of the `dev/console` and dup twice file descriptors from `0` to `2` after the `do_basic_setup`:
+The `do_basic_setup` will reinitialize [cpuset](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to the active CPUs, initialize the `khelper` - which is a kernel thread which used for making calls out to userspace from within the kernel, initialize [tmpfs](http://en.wikipedia.org/wiki/Tmpfs), initialize `drivers` subsystem, enable the user-mode helper `workqueue`  and make post-early call of the `initcalls`. We can see opening of the `dev/console` and dup twice file descriptors from `0` to `2` after the `do_basic_setup`:
 
 
 ```C
