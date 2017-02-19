@@ -10,15 +10,15 @@
 - подготовка перед переключением в защищённый режим,
 - переход в защищённый режим
 
-**ПРИМЕЧАНИЕ** Если вы ничего не знаете о защищённом режиме, вы можете найти некоторую информацию о нём в предыдущей [части](linux-bootstrap-2.md#protected-mode). Также есть несколько [ссылок](linux-bootstrap-2.md#links), которые могут помочь вам.
+**ПРИМЕЧАНИЕ** Если вы ничего не знаете о защищённом режиме, вы можете найти некоторую информацию о нём в предыдущей [части](linux-bootstrap-2.md#protected-mode). Также есть несколько [ссылок](linux-bootstrap-2.md#links), которые могут вам помочь.
 
-Как я уже писал ранее, мы будем начинать с функции `set_video`, которая определена в [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315). Как мы можем видеть, она начинает работу с получения видеорежима из структуры `boot_params.hdr`:
+Как я уже писал ранее, мы начнём с функции `set_video`, которая определена в [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315). Как мы можем видеть, она начинает работу с получения видеорежима из структуры `boot_params.hdr`:
 
 ```C
 u16 mode = boot_params.hdr.vid_mode;
 ```
 
-которую мы заполнили в функции `copy_boot_params` (вы можете прочитать об этом в предыдущем посте). `vid_mode`является обязательным полем, которое заполняется загрузчиком. Вы можете найти информацию об этом в протоколе загрузки ядра:
+которую мы заполнили в функции `copy_boot_params` (вы можете прочитать об этом в предыдущем посте). `vid_mode` является обязательным полем, которое заполняется загрузчиком. Вы можете найти информацию об этом в протоколе загрузки ядра:
 
 ```
 Offset	Proto	Name		Meaning
@@ -59,7 +59,7 @@ vga=<mode>
 API кучи
 --------------------------------------------------------------------------------
 
-После того как мы получим `vid_mode` из `boot_params.hdr` в функции `set_video`, мы можем видеть вызов `RESET_HEAP`. `RESET_HEAP` представляет собой макрос, определённый в [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199):
+После того, как мы получим `vid_mode` из `boot_params.hdr` в функции `set_video`, мы можем видеть вызов `RESET_HEAP`. `RESET_HEAP` представляет собой макрос, определённый в [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199):
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
@@ -80,7 +80,7 @@ API кучи
 	((type *)__get_heap(sizeof(type),__alignof__(type),(n)))
 ```
 
-для выделения кучи. Он вызывает внутреннюю функцию `__get_heap` с тремя параметрами:
+предназначен для выделения кучи. Он вызывает внутреннюю функцию `__get_heap` с тремя параметрами:
 
 * размер типа в байтах, который должен быть выделен
 * `__alignof__(type)` показывает, как переменные этого типа выровнены
@@ -100,13 +100,13 @@ static inline char *__get_heap(size_t s, size_t a, size_t n)
 }
 ```
 
-и в дальнейшем мы увидим её использование, что-то вроде:
+В дальнейшем мы увидим её использование, что-то вроде:
 
 ```C
 saved.data = GET_HEAP(u16, saved.x * saved.y);
 ```
 
-Давайте попробуем понять принцип работы `__get_heap`. Мы видим, что `HEAP` (который равен `_end` после `RESET_HEAP()`) является адресом выровненной памяти в соответсвии с параметром `a`. После этого мы сохраняем адрес памяти `HEAP` в переменную `tmp`, перемещаем `HEAP` в конец выделенного блока и возвращаем `tmp`, который является начальным адресом выделенной памяти.
+Давайте попробуем понять принцип работы `__get_heap`. Мы видим, что `HEAP` (который равен `_end` после `RESET_HEAP()`) является адресом выровненной памяти в соответствии с параметром `a`. После этого мы сохраняем адрес памяти `HEAP` в переменную `tmp`, перемещаем `HEAP` в конец выделенного блока и возвращаем `tmp`, которая является начальным адресом выделенной памяти.
 
 И последняя функция:
 
@@ -124,22 +124,22 @@ static inline bool heap_free(size_t n)
 Настройка видеорежима
 --------------------------------------------------------------------------------
 
-Теперь мы можем перейти непосредственно к инициализации видеорежима. Мы остановились на вызове `RESET_HEAP()` в функции `set_video`. Далее идёт вызов `store_mode_params` который хранит параметры видеорежима в структуре `boot_params.screen_info`, определённой в [include/uapi/linux/screen_info.h](https://github.com/0xAX/linux/blob/master/include/uapi/linux/screen_info.h).
+Теперь мы можем перейти непосредственно к инициализации видеорежима. Мы остановились на вызове `RESET_HEAP()` в функции `set_video`. Далее идёт вызов `store_mode_params`, который хранит параметры видеорежима в структуре `boot_params.screen_info`, определённой в [include/uapi/linux/screen_info.h](https://github.com/0xAX/linux/blob/master/include/uapi/linux/screen_info.h).
 
-Если мы посмотрим на функцию `store_mode_params`, то увидим что она начинается с вызова `store_cursor_position`.  Как вы можете понять из названия функции, она получает информацию о курсоре и сохраняет её.
+Если мы посмотрим на функцию `store_mode_params`, то увидим, что она начинается с вызова `store_cursor_position`.  Как вы можете понять из названия функции, она получает информацию о курсоре и сохраняет её.
 
 В первую очередь `store_cursor_position` инициализирует две переменные, которые имеют тип `biosregs` с `AH = 0x3`, и вызывает BIOS прерывание `0x10`. После того, как прерывание успешно выполнено, она возвращает строку и столбец в регистрах `DL` и `DH`. Строка и столбец будут сохранены в полях `orig_x` и `orig_y` структуры `boot_params.screen_info`.
 
 После выполнения `store_cursor_position`  вызывается функция `store_video_mode`. Она просто получает текущий видеорежим  и сохраняет его в `boot_params.screen_info.orig_video_mode`. 
 
-После этого, она проверяет текущий видеорежим и устанавливает `video_segment`. После того, как BIOS передаёт контроль в загрузочный сектор, для видеопамяти выделяются следующие адреса:
+После этого она проверяет текущий видеорежим и устанавливает `video_segment`. После того, как BIOS передаёт контроль в загрузочный сектор, для видеопамяти выделяются следующие адреса:
 
 ```
 0xB000:0x0000 	32 Кб   Видеопамять для монохромного текста
 0xB800:0x0000 	32 Кб   Видеопамять для цветного текста
 ```
 
-Таким образом, мы устанавливаем переменную `video_segment` в `0xB000`, если текущий видеорежим MDA, HGC, или VGA в монохромном режиме и в `0xB800`, если текущий видеорежим цветной. После настройки адреса видеофрагмента, размер шрифта должен быть сохранён в `boot_params.screen_info.orig_video_points`:
+Таким образом, мы устанавливаем переменную `video_segment` в `0xB000`, если текущий видеорежим MDA, HGC, или VGA в монохромном режиме, и в `0xB800`, если текущий видеорежим цветной. После настройки адреса видеофрагмента, размер шрифта должен быть сохранён в `boot_params.screen_info.orig_video_points`:
 
 ```C
 set_fs(0);
@@ -154,9 +154,9 @@ boot_params.screen_info.orig_video_points = font_size;
  y = (adapter == ADAPTER_CGA) ? 25 : rdfs8(0x484)+1;
 ```
 
-Далее мы получаем количество столбцов по адресу `0x44a` и строк по адресу `0x484` и сохраняем их в `boot_params.screen_info.orig_video_cols` и `boot_params.screen_info.orig_video_lines`. После этого выполнение `store_mode_params` завершается.
+Далее мы получаем количество столбцов по адресу `0x44a`, и строк по адресу `0x484` и сохраняем их в `boot_params.screen_info.orig_video_cols` и `boot_params.screen_info.orig_video_lines`. После этого выполнение `store_mode_params` завершается.
 
-Далее мы видим функцию `save_screen`, которая просто сохраняет содержимое экрана в куче. Эта функция собирает все данные, которые мы получили в предыдущей функции, такие как количество строк и столбцов и т.д, и сохраняет их в структуре `saved_screen`, которая определена как:
+Далее мы видим функцию `save_screen`, которая просто сохраняет содержимое экрана в куче. Эта функция собирает все данные, которые мы получили в предыдущей функции, такие как количество строк и столбцов и т.д, и сохраняет их в структуре `saved_screen`:
 
 ```C
 static struct saved_screen {
@@ -175,7 +175,7 @@ if (!heap_free(saved.x*saved.y*sizeof(u16)+512))
 
 и если места в куче достаточно, выделяет его и сохраняет в нём `saved_screen`.
 
-Следующий вызов - `probe_cards(0)` из [arch/x86/boot/video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L33). Она проходит по всем video_cards и собирает количество режимов, предоставляемых картой. Здесь интересный момент, мы можем видеть цикл:
+Следующий вызов - `probe_cards(0)` из [arch/x86/boot/video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L33). Она проходит по всем video_cards и собирает количество режимов, предоставляемых картой. И вот здесь интересный момент. Мы можем видеть цикл:
 
 ```C
 for (card = video_cards; card < video_cards_end; card++) {
@@ -183,7 +183,7 @@ for (card = video_cards; card < video_cards_end; card++) {
 }
 ```
 
-но `video_cards` не объявлена где угодно. Ответ прост: каждый видеорежим, представленный в x86-коде настройки ядра, определён следующим образом:
+но `video_cards` нигде не объявлен. Ответ прост: каждый видеорежим, представленный в x86-коде настройки ядра, определён следующим образом:
 
 ```C
 static __videocard video_vga = {
@@ -224,13 +224,13 @@ struct card_info {
 	}
 ```
 
-Это значит, что `video_cards` это просто адрес в памяти и все структуры `card_info` размещаются в этом сегменте. Это также означает, что все структуры `card_info` размещаются между `video_cards` и `video_cards_end`, поэтому мы можем воспользоваться этим, чтобы пройтись по ним в цикле. После выполнения `probe_cards` у нас есть все структуры `static __videocard video_vga` с заполненными `nmodes` (число видеорежимов).
+Это значит, что `video_cards` - просто адрес в памяти и все структуры `card_info` размещаются в этом сегменте. Это также означает, что все структуры `card_info` размещаются между `video_cards` и `video_cards_end`, и мы можем воспользоваться этим, чтобы пройтись по ним в цикле. После выполнения `probe_cards` у нас есть все структуры `static __videocard video_vga` с заполненными `nmodes` (число видеорежимов).
 
-После завершения выполнения `probe_cards`, мы переходим в главный цикл функции `set_video`. Это бесконечный цикл, который пытается установить видеорежим с помощью функции `set_mode` и выводит меню, если установлен флаг `vid_mode=ask` командной строки ядра или видеорежим не определён. 
+После завершения выполнения `probe_cards`, мы переходим в главный цикл функции `set_video`. Это бесконечный цикл, который пытается установить видеорежим с помощью функции `set_mode` и выводит меню, если установлен флаг `vid_mode=ask` командной строки ядра или если видеорежим не определён. 
 
 Функция `set_mode` определена в [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) и принимает только один параметр - `mode`, который определяет количество видеорежимов (мы получили его из меню или в начале `setup_video`, из заголовка настройки ядра). 
 
-`set_mode` проверяет `mode` и вызывает функцию `raw_set_mode`. `raw_set_mode` вызывает `set_mode` для выбранной карты, т.е.  `card->set_mode(struct mode_info*)`. Мы можем получить доступ к этой функции из структуры `card_info`. Каждый видеорежим определяет эту структуру со значениями, заполненными в зависимости от режима видео (например, для `vga` это функция `video_vga.set_mode`. См. выше пример структуры `card_info` для `vga`). `video_vga.set_mode` является `vga_set_mode`, который проверяет vga-режим и вызывает соответствующую функцию:
+`set_mode` проверяет `mode` и вызывает функцию `raw_set_mode`. `raw_set_mode` вызывает `set_mode` для выбранной карты, т.е.  `card->set_mode(struct mode_info*)`. Мы можем получить доступ к этой функции из структуры `card_info`. Каждый видеорежим определяет эту структуру со значениями, заполненными в зависимости от режима видео (например, для `vga` это функция `video_vga.set_mode`. См. выше пример структуры `card_info` для `vga`). `video_vga.set_mode` является `vga_set_mode`, который проверяет VGA-режим и вызывает соответствующую функцию:
 
 ```C
 static int vga_set_mode(struct mode_info *mode)
@@ -277,25 +277,26 @@ static int vga_set_mode(struct mode_info *mode)
 Последняя подготовка перед переходом в защищённый режим
 --------------------------------------------------------------------------------
 
-We can see the last function call - `go_to_protected_mode` - in [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As the comment says: `Do the last things and invoke protected mode`, so let's see these last things and switch into protected mode.
+Мы можем видеть последний вызов функции - `go_to_protected_mode` - в [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). Как говорится в комментарии: `Do the last things and invoke protected mode`, так что давайте посмотрим на эти последние вещи и перейдём в защищённый режим.
 
-`go_to_protected_mode` is defined in [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104). It contains some functions which make the last preparations before we can jump into protected mode, so let's look at it and try to understand what they do and how it works.
+Функция `go_to_protected_mode` определена в [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104). Она содержит функции, которые совершают последние приготовления, прежде чем мы сможем перейти в защищённый режим, так что давайте посмотрим на них и попытаться понять, что они делают и как это работает.
 
-First is the call to the `realmode_switch_hook` function in `go_to_protected_mode`. This function invokes the real mode switch hook if it is present and disables [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Hooks are used if the bootloader runs in a hostile environment. You can read more about hooks in the [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**).
+Во-первых, это вызов функции `realmode_switch_hook` в `go_to_protected_mode`. Эта функция вызывает хук переключения режима реальных адресов, если он присутствует, и выключает [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Хуки используются, если загрузчик работает во "враждебной" среде. Вы можете прочитать больше о хуках в [протоколе загрузки](https://www.kernel.org/doc/Documentation/x86/boot.txt) (см. **ADVANCED BOOT LOADER HOOKS**).
 
-The `realmode_switch` hook presents a pointer to the 16-bit real mode far subroutine which disables non-maskable interrupts. After `realmode_switch` hook (it isn't present for me) is checked, disabling of Non-Maskable Interrupts(NMI) occurs:
+Хук `realmode_switch` представляет собой указатель на 16-битную удалённую подпрограмму режима реальных адресов, которая отключает немаскируемые прерывания. После проверки хука `realmode_switch`, происходит выключение Non-Maskable Interrupts (NMI):
 
 ```assembly
 asm volatile("cli");
-outb(0x80, 0x70);	/* Disable NMI */
+outb(0x80, 0x70);	/* Выключение NMI */
 io_delay();
 ```
 
-At first there is an inline assembly instruction with a `cli` instruction which clears the interrupt flag (`IF`). After this, external interrupts are disabled. The next line disables NMI (non-maskable interrupt).
+Первой вызывается ассемблерная инструкция `cli`, которая очищает флаг прерывания (`IF`). После этого внешние прерывания отключены. Следующая строка отключает NMI (немаскируемое прерывание).
 
-An interrupt is a signal to the CPU which is emitted by hardware or software. After getting the signal, the CPU suspends the current instruction sequence, saves its state and transfers control to the interrupt handler. After the interrupt handler has finished it's work, it transfers control to the interrupted instruction. Non-maskable interrupts (NMI) are interrupts which are always processed, independently of permission. It cannot be ignored and is typically used to signal for non-recoverable hardware errors. We will not dive into details of interrupts now, but will discuss it in the next posts.
+Прерывание является сигналом, который отправляется ЦПУ от аппаратного или программного обеспечения. 
+После получения сигнала, ЦПУ приостанавливает текущую последовательность команд, сохраняет своё состояние и передаёт управление обработчику прерываний. После того, как обработчик прерывания закончил свою работу, он передаёт управление прерванной инструкции. Немаскируемые прерывания (NMI) - это прерывания, которые обрабатываются всегда, независимо от запретов на другие прерывания. Их нельзя игнорировать, и, как правило, они используются для подачи сигнала о невосстанавливаемых аппаратных ошибок. Сейчас мы не будем погружаться в детали прерываний, но обсудим это в следующих постах.
 
-Let's get back to the code. We can see that second line is writing `0x80` (disabled bit) byte to `0x70` (CMOS Address register). After that, a call to the `io_delay` function occurs. `io_delay` causes a small delay and looks like:
+Давайте вернёмся к коду. Мы видим, что вторая строка пишет байт `0x80` (отключённый бит) в `0x70` (регистр CMOS Address). После этого происходит вызов функции `io_delay`. `io_delay` вызывает небольшую задержку и выглядит следующим образом:
 
 ```C
 static inline void io_delay(void)
@@ -305,9 +306,9 @@ static inline void io_delay(void)
 }
 ```
 
-To output any byte to the port `0x80` should delay exactly 1 microsecond. So we can write any value (value from `AL` register in our case) to the `0x80` port. After this delay `realmode_switch_hook` function has finished execution and we can move to the next function.
+Для вывода любого байта в порт `0x80` необходима задержка в 1 мкс. Таким образом, мы можем записать любое значение (в нашем случае значение из регистра `AL`) в порт `0x80`. После задержки, функция `realmode_switch_hook` завершает выполнение и мы можем перейти к следующей функции.
 
-The next function is `enable_a20`, which enables [A20 line](http://en.wikipedia.org/wiki/A20_line). This function is defined in [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/a20.c) and it tries to enable the A20 gate with different methods. The first is the `a20_test_short` function which checks if A20 is already enabled or not with the `a20_test` function:
+Следующая функция - `enable_a20` - включает [линию A20](http://en.wikipedia.org/wiki/A20_line). Она определена в [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/a20.c) и совершает попытку включения шлюза адресной линии A20 различными методами. Первым из них является функция `a20_test_short`, которая проверят, является ли A20 включённой или нет с помощью функции `a20_test`:
 
 ```C
 static int a20_test(int loops)
@@ -333,11 +334,11 @@ static int a20_test(int loops)
 }
 ```
 
-First of all we put `0x0000` in the `FS` register and `0xffff` in the `GS` register. Next we read the value in address `A20_TEST_ADDR` (it is `0x200`) and put this value into the `saved` variable and `ctr`.
+В первую очередь мы устанавливаем регистр `FS` в `0x0000` и регистр `GS` в `0xffff`. Далее мы читаем значение по адресу `A20_TEST_ADDR` (`0x200`) и сохраняем его в переменную `saved` и `ctr`.
 
-Next we write an updated `ctr` value into `fs:gs` with the `wrfs32` function, then delay for 1ms, and then read the value from the `GS` register by address `A20_TEST_ADDR+0x10`, if it's not zero we already have enabled the A20 line. If A20 is disabled, we try to enable it with a different method which you can find in the `a20.c`. For example with call of `0x15` BIOS interrupt with `AH=0x2041` etc.
+Далее мы записываем обновлённое значение `ctr` в `fs:gs` с помощью функции `wrfs32`, совершаем задержку в 1 мс, а затем читаем значение из регистра `GS` по адресу `A20_TEST_ADDR+0x10`. Если это не ноль, то линия A20 уже включена. Если линия A20 отключена, мы пытаемся включить её с помощью других методов, которые вы можете найти в `a20.c`. Например, с помощью вызова BIOS прерывания `0x15` с `AH=0x2041` и т.д.
 
-If the `enabled_a20` function finished with fail, print an error message and call function `die`. You can remember it from the first source code file where we started - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
+Если функция `enabled_a20` завершается неудачей, выводится сообщение об ошибке и вызывается функция `die`. Вы можете вспомнить её из первого файла исходного кода, где мы начали - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
 
 ```assembly
 die:
@@ -346,26 +347,30 @@ die:
 	.size	die, .-die
 ```
 
-After the A20 gate is successfully enabled, the `reset_coprocessor` function is called:
+После того, как шлюз линии A20 успешно включён, вызывается функция `reset_coprocessor`:
+
  ```C
 outb(0, 0xf0);
 outb(0, 0xf1);
 ```
-This function clears the Math Coprocessor by writing `0` to `0xf0` and then resets it by writing `0` to `0xf1`.
 
-After this, the `mask_all_interrupts` function is called:
+Она очищает математический сопроцессор путём записи `0` в `0xf0`, а затем сбрасывает его при помощи записи `0` в `0xf1`.
+
+После этого вызывается функция `mask_all_interrupts`:
+
 ```C
-outb(0xff, 0xa1);       /* Mask all interrupts on the secondary PIC */
-outb(0xfb, 0x21);       /* Mask all but cascade on the primary PIC */
+outb(0xff, 0xa1);       /* Маскирует все прерывания на вторичном PIC */
+outb(0xfb, 0x21);       /* Маскирует все, кроме каскада на первичном PIC */
 ```
-This masks all interrupts on the secondary PIC (Programmable Interrupt Controller) and primary PIC except for IRQ2 on the primary PIC.
 
-And after all of these preparations, we can see the actual transition into protected mode.
+Она маскирует все прерывания на вторичном PIC (программируемый контроллер прерываний) и первичном PIC, за исключением IRQ2 на первичном PIC.
 
-Set up Interrupt Descriptor Table
+И теперь, после всех приготовлений, мы можем увидеть фактический переход в защищённый режим.
+
+Настройка таблицы векторов прерываний
 --------------------------------------------------------------------------------
 
-Now we set up the Interrupt Descriptor table (IDT). `setup_idt`:
+Теперь мы настраиваем таблицу векторов прерываний (IDT). Функция `setup_idt`:
 
 ```C
 static void setup_idt(void)
@@ -375,7 +380,8 @@ static void setup_idt(void)
 }
 ```
 
-which sets up the Interrupt Descriptor Table (describes interrupt handlers and etc.). For now the IDT is not installed (we will see it later), but now we just the load IDT with the `lidtl` instruction. `null_idt` contains address and size of IDT, but now they are just zero. `null_idt` is a `gdt_ptr` structure, it as defined as:
+настраивает таблицу векторов прерываний (описывает обработчики прерываний и т.д). В настоящее время IDT не установлена (мы увидим это позже), сейчас мы просто загрузили IDT инструкцией `lidtl`. `null_idt` содержит адрес и размер IDT, но сейчас они равны нулю. `null_idt` является структурой `gdt_ptr` и определена следующим образом:
+
 ```C
 struct gdt_ptr {
 	u16 len;
@@ -383,12 +389,12 @@ struct gdt_ptr {
 } __attribute__((packed));
 ```
 
-where we can see the 16-bit length(`len`) of the IDT and the 32-bit pointer to it (More details about the IDT and interruptions will be seen in the next posts). ` __attribute__((packed))` means that the size of `gdt_ptr` is the minimum required size. So the size of the `gdt_ptr` will be 6 bytes here or 48 bits. (Next we will load the pointer to the `gdt_ptr` to the `GDTR` register and you might remember from the previous post that it is 48-bits in size).
+где мы можем видеть 16-битную длину (`len`) IDT и 32-битный указатель на неё (более подробно о IDT и прерываниях вы увидите в следующих постах). ` __attribute__((packed))` означает, что размер `gdt_ptr` является минимальным требуемым размером. Таким образом, размер `gdt_ptr` должен быть равен 6 байтам или 48 битам. (Далее мы будем загружать указатель на `gdt_ptr` в регистр `GDTR` и вы, возможно, помните из предыдущего поста, что это 48-битный регистр).
 
-Set up Global Descriptor Table
+Настройка глобальной таблицы дескрипторов
 --------------------------------------------------------------------------------
 
-Next is the setup of the Global Descriptor Table (GDT). We can see the `setup_gdt` function which sets up GDT (you can read about it in the [Kernel booting process. Part 2.](linux-bootstrap-2.md#protected-mode)). There is a definition of the `boot_gdt` array in this function, which contains the definition of the three segments:
+Далее идёт настройка глобальной таблицы дескрипторов (GDT). Мы можем видеть функцию `setup_gdt`, которая настраивает GDT (вы можете прочитать про это в посте [Процесс загрузки ядра. Часть 2.](linux-bootstrap-2.md#protected-mode)). В этой функции определён массив `boot_gdt`, который содержит определение трёх сегментов:
 
 ```C
 	static const u64 boot_gdt[] __attribute__((aligned(16))) = {
@@ -398,7 +404,8 @@ Next is the setup of the Global Descriptor Table (GDT). We can see the `setup_gd
 	};
 ```
 
-For code, data and TSS (Task State Segment). We will not use the task state segment for now, it was added there to make Intel VT happy as we can see in the comment line (if you're interested you can find commit which describes it - [here](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31)). Let's look at `boot_gdt`. First of all note that it has the `__attribute__((aligned(16)))` attribute. It means that this structure will be aligned by 16 bytes. Let's look at a simple example:
+для получения кода, данных и TSS (Task State Segment, сегмент состояния задачи). В данный момент мы не будем использовать сегмент состояния задачи. Как мы можем видеть в строке комментария, он был добавлен специально для Intel VT ([здесь](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31) вы можете найти коммит, который описывает его). Давайте посмотри на `boot_gdt`. Прежде всего отметим, что она имеет атрибут `__attribute__((aligned(16)))`. Это означает, что структура будет выровнена по 16 байтам. Давайте посмотри на простой пример:
+
 ```C
 #include <stdio.h>
 
@@ -422,7 +429,7 @@ int main(void)
 }
 ```
 
-Technically a structure which contains one `int` field must be 4 bytes, but here `aligned` structure will be 16 bytes:
+Технически, структура, которая содержит одно поле типа `int`, должна иметь размер 4 байта, но так как это `aligned` структура, она будет иметь размер 16 байт:
 
 ```
 $ gcc test.c -o test && test
@@ -430,83 +437,83 @@ Not aligned - 4
 Aligned - 16
 ```
 
-`GDT_ENTRY_BOOT_CS` has index - 2 here, `GDT_ENTRY_BOOT_DS` is `GDT_ENTRY_BOOT_CS + 1` and etc. It starts from 2, because first is a mandatory null descriptor (index - 0) and the second is not used (index - 1).
+Здесь `GDT_ENTRY_BOOT_CS` имеет индекс - 2, `GDT_ENTRY_BOOT_DS` является `GDT_ENTRY_BOOT_CS + 1` и т.д. Он начинается с 2, поскольку первый является обязательным нулевым дескриптором (индекс - 0), а второй не используется (индекс - 1).
 
-`GDT_ENTRY` is a macro which takes flags, base and limit and builds GDT entry. For example let's look at the code segment entry. `GDT_ENTRY` takes following values:
+`GDT_ENTRY` - это макрос, который принимает флаги, базовый адрес, предел и создаёт запись в GDT. Для примера посмотрим на записи сегмента кода. `GDT_ENTRY` принимает следующие значения:
 
-* base  - 0
-* limit - 0xfffff
-* flags - 0xc09b
+* базовый адрес  - 0
+* предел - 0xfffff
+* флаги - 0xc09b
 
-What does this mean? The segment's base address is 0, and the limit (size of segment) is - `0xffff` (1 MB). Let's look at the flags. It is `0xc09b` and it will be:
+Что это значит? Базовый адрес сегмента равен 0, а предел (размер сегмента) равен `0xffff` (1 Мб). Давайте посмотрим на флаги. В двоичном виде значение `0xc09b` будет выглядеть следующим образом:
 
 ```
 1100 0000 1001 1011
 ```
 
-in binary. Let's try to understand what every bit means. We will go through all bits from left to right:
+Попробуем понять, что означает каждый бит. Мы пройдёмся по всем битам слева направо
 
-* 1    - (G) granularity bit
-* 1    - (D) if 0 16-bit segment; 1 = 32-bit segment
-* 0    - (L) executed in 64 bit mode if 1
-* 0    - (AVL) available for use by system software
-* 0000 - 4 bit length 19:16 bits in the descriptor
-* 1    - (P) segment presence in memory
-* 00   - (DPL) - privilege level, 0 is the highest privilege
-* 1    - (S) code or data segment, not a system segment
-* 101  - segment type execute/read/
-* 1    - accessed bit
+* 1    - (G) бит гранулярности
+* 1    - (D) если равен 0 - 16-битный сегмент; 1 - 32-битный сегмент
+* 0    - (L) если 1 - выполняется в 64-битном режиме
+* 0    - (AVL) доступен для использования системным ПО
+* 0000 - 4 бита предела в 19:16 бит в дескрипторе
+* 1    - (P) присутствие сегмента в памяти
+* 00   - (DPL) - уровень привилегий, 0 является высшей привилегией
+* 1    - (S) сегмент кода или данных, не системный сегмент
+* 101  - тип сегмента и виды доступа к нему (чтение, выполнение)
+* 1    - бит обращения
 
-You can read more about every bit in the previous [post](linux-bootstrap-2.md) or in the [Intel® 64 and IA-32 Architectures Software Developer's Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html).
+Вы можете прочитать больше о каждом бите в предыдущем [посте](linux-bootstrap-2.md) или в [документации для разработчиков ПО на архитектуре Intel® 64 и IA-32](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html).
 
-After this we get the length of the GDT with:
+После этого мы получаем длину GDT:
 
 ```C
 gdt.len = sizeof(boot_gdt)-1;
 ```
 
-We get the size of `boot_gdt` and subtract 1 (the last valid address in the GDT).
+Здесь мы получаем размер `boot_gdt` и вычитаем 1 (последний действительный адрес в GDT).
 
-Next we get a pointer to the GDT with:
+Далее получаем указатель на GDT:
 
 ```C
 gdt.ptr = (u32)&boot_gdt + (ds() << 4);
 ```
 
-Here we just get the address of `boot_gdt` and add it to the address of the data segment left-shifted by 4 bits (remember we're in the real mode now).
+Здесь мы просто получаем адрес `boot_gdt` и добавляем его к адресу сегмента данных, сдвинутого влево на 4 бита (не забывайте, что сейчас мы находимся в режиме реальных адресов).
 
-Lastly we execute the `lgdtl` instruction to load the GDT into the GDTR register:
+И наконец, мы выполняем инструкцию `lgdtl` для загрузки GDT в регистр GDTR:
 
 ```C
 asm volatile("lgdtl %0" : : "m" (gdt));
 ```
 
-Actual transition into protected mode
+Фактический переход в защищённый режим
 --------------------------------------------------------------------------------
 
-This is the end of the `go_to_protected_mode` function. We loaded IDT, GDT, disable interruptions and now can switch the CPU into protected mode. The last step is calling the `protected_mode_jump` function with two parameters:
+Это конец функции `go_to_protected_mode`. Мы загрузили IDT, GDT, отключили прерывания и теперь можем переключить ЦПУ в защищённый режим. Последний шаг - вызов функции `protected_mode_jump` с двумя параметрами:
 
 ```C
 protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
 ```
 
-which is defined in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26). It takes two parameters:
+которая определена в [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26). Она получает два параметра:
 
-* address of protected mode entry point
-* address of `boot_params`
+* адрес точки входа в защищённый режим
+* адрес `boot_params`
 
-Let's look inside `protected_mode_jump`. As I wrote above, you can find it in `arch/x86/boot/pmjump.S`. The first parameter will be in the `eax` register and second is in `edx`.
+Давайте заглянем внутрь `protected_mode_jump`. Как я уже писал выше, вы можете найти его в `arch/x86/boot/pmjump.S`. Первый параметр находится в регистре `eax`, второй в `edx`.
 
-First of all we put the address of `boot_params` in the `esi` register and the address of code segment register `cs` (0x1000) in `bx`. After this we shift `bx` by 4 bits and add the address of label `2` to it (we will have the physical address of label `2` in the `bx` after this) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
+В первую очередь мы помещаем адрес `boot_params` в регистр `esi` и адрес регистра сегмента кода `cs` (0x1000) в `bx`. Далее мы сдвигаем `bx` на 4 бита и добавляем к нему адрес метки `2` (после этого мы будем иметь физический адрес метки `2` в `bx`) и переходим к метке `1`. Далее мы помещаем сегмент данных и сегмент состояния задачи в регистры `cs` и `di`:
 
 ```assembly
 movw	$__BOOT_DS, %cx
 movw	$__BOOT_TSS, %di
 ```
 
-As you can read above `GDT_ENTRY_BOOT_CS` has index 2 and every GDT entry is 8 byte, so `CS` will be `2 * 8 = 16`, `__BOOT_DS` is 24 etc.
+Как вы можете прочесть выше, `GDT_ENTRY_BOOT_CS` имеет индекс 2 и каждая запись GDT имеет размер 8 байт, поэтому `CS` будет `2 * 8 = 16`, `__BOOT_DS` равен 24 и т.д.
 
-Next we set the `PE` (Protection Enable) bit in the `CR0` control register:
+Далее мы устанавливаем бит `PE` (Protection Enable) в регистре управления `CR0`:
 
 ```assembly
 movl	%cr0, %edx
@@ -514,7 +521,7 @@ orb	$X86_CR0_PE, %dl
 movl	%edx, %cr0
 ```
 
-and make a long jump to protected mode:
+и совершаем длинный переход в защищённый режим:
 
 ```assembly
 	.byte	0x66, 0xea
@@ -522,20 +529,21 @@ and make a long jump to protected mode:
 	.word	__BOOT_CS
 ```
 
-where
-* `0x66` is the operand-size prefix which allows us to mix 16-bit and 32-bit code,
-* `0xea` - is the jump opcode,
-* `in_pm32` is the segment offset
-* `__BOOT_CS` is the code segment.
+где
 
-After this we are finally in the protected mode:
+* `0x66` - префикс размера операнда, который позволяет смешивать как 16-битный, так и 32-битный код,
+* `0xea` - опкод инструкции перехода,
+* `in_pm32` - смещение сегмента
+* `__BOOT_CS` - сегмент кода.
+
+После этого мы наконец-то в защищённом режиме:
 
 ```assembly
 .code32
 .section ".text32","ax"
 ```
 
-Let's look at the first steps in protected mode. First of all we set up the data segment with:
+Давайте посмотрим на первые шаги в защищённом режиме. Прежде всего мы устанавливаем сегмент данных следующим образом:
 
 ```assembly
 movl	%ecx, %ds
@@ -545,7 +553,7 @@ movl	%ecx, %gs
 movl	%ecx, %ss
 ```
 
-If you paid attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. Now we fill it with all segment registers besides `cs` (`cs` is already `__BOOT_CS`). Next we zero out all general purpose registers besides `eax` with:
+Если вы обратили внимание, то можете вспомнить, что мы сохраняли `$__BOOT_DS` в регистре `cx`. Теперь мы заполнили все сегментные регистры, кроме `cs` (`cs` уже `__BOOT_CS`). Далее мы обнуляем все регистры общего назначения, кроме `eax`:
 
 ```assembly
 xorl	%ecx, %ecx
@@ -555,34 +563,34 @@ xorl	%ebp, %ebp
 xorl	%edi, %edi
 ```
 
-And jump to the 32-bit entry point in the end:
+И в конце переходим к 32-битной точке входа:
 
 ```
 jmpl	*%eax
 ```
 
-Remember that `eax` contains the address of the 32-bit entry (we passed it as first parameter into `protected_mode_jump`).
+Как вы помните, `eax` содержит адрес 32-битной записи (мы передали его как первый параметр в `protected_mode_jump`).
 
-That's all. We're in the protected mode and stop at it's entry point. We will see what happens next in the next part.
+На этом всё. Теперь мы находимся в защищённом режиме и останавливаемся на этой точке входа. Что произойдёт дальше, мы увидим в следующей части.
 
-Conclusion
+Заключение
 --------------------------------------------------------------------------------
 
-This is the end of the third part about linux kernel insides. In next part, we will see first steps in the protected mode and transition into the [long mode](http://en.wikipedia.org/wiki/Long_mode).
+Это конец второй части о внутренностях ядра Linux. В следующей части мы увидим настройки режима видео и остальные подготовки перед переходом в защищённый режим и непосредственно переход в него.
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+Если у вас есть вопросы или предложения, пишите мне в твиттер [0xAX](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes, please send me a PR with corrections at [linux-insides](https://github.com/0xAX/linux-internals).**
+**Пожалуйста, имейте в виду, что английский - не мой родной язык, и я очень извиняюсь за возможные неудобства. Если вы найдёте какие-нибудь ошибки, пожалуйста, пришлите pull request в [linux-insides](https://github.com/0xAX/linux-internals).**
 
-Links
+Ссылки
 --------------------------------------------------------------------------------
 
 * [VGA](http://en.wikipedia.org/wiki/Video_Graphics_Array)
 * [VESA BIOS Extensions](http://en.wikipedia.org/wiki/VESA_BIOS_Extensions)
-* [Data structure alignment](http://en.wikipedia.org/wiki/Data_structure_alignment)
-* [Non-maskable interrupt](http://en.wikipedia.org/wiki/Non-maskable_interrupt)
-* [A20](http://en.wikipedia.org/wiki/A20_line)
-* [GCC designated inits](https://gcc.gnu.org/onlinedocs/gcc-4.1.2/gcc/Designated-Inits.html)
-* [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
-* [Previous part](linux-bootstrap-2.md)
+* [Выравнивание данных](http://en.wikipedia.org/wiki/Data_structure_alignment)
+* [Немаскируемое прерывание](http://en.wikipedia.org/wiki/Non-maskable_interrupt)
+* [Линия A20](http://en.wikipedia.org/wiki/A20_line)
+* [GCC designated inits (назначенные инициализаторы)](https://gcc.gnu.org/onlinedocs/gcc-4.1.2/gcc/Designated-Inits.html)
+* [Атрибуты типов GCC](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
+* [Предыдущий пост](linux-bootstrap-2.md)
 
