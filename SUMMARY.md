@@ -3,7 +3,7 @@
 * [Процесс загрузки ядра](Booting/README.md)
     * [От загрузчика к ядру](Booting/linux-bootstrap-1.md)
     * [Первые шаги в коде настройки ядра](Booting/linux-bootstrap-2.md)
-    * [Video mode initialization and transition to protected mode](Booting/linux-bootstrap-3.md)
+    * [Инициализация видеорежима и переход в защищённый режим](Booting/linux-bootstrap-3.md)
     * [Transition to 64-bit mode](Booting/linux-bootstrap-4.md)
     * [Kernel decompression](Booting/linux-bootstrap-5.md)
 * [Initialization](Initialization/README.md)
