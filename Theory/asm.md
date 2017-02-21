@@ -7,7 +7,7 @@ Introduction
 While reading source code in the [Linux kernel](https://github.com/torvalds/linux), I often see statements like this:
 
 ```C
-__asm__("andq %%rsp,%0; ":"=r" (ti) : "0" (CURRENT_MASK));
+__asm__("andl %%esp,%0; ":"=r" (ti) : "0" (CURRENT_MASK));
 ```
 
 Yes, this is [inline assembly](https://en.wikipedia.org/wiki/Inline_assembler) or in other words assembler code which is integrated in a high level programming language. In this case the high level programming language is [C](https://en.wikipedia.org/wiki/C_%28programming_language%29). Yes, the `C` programming language is not very high-level, but still.
@@ -15,7 +15,7 @@ Yes, this is [inline assembly](https://en.wikipedia.org/wiki/Inline_assembler) o
 If you are familiar with the [assembly](https://en.wikipedia.org/wiki/Assembly_language) programming language, you may notice that `inline assembly` is not very different from normal assembler. Moreover, the special form of inline assembly which is called `basic form` is exactly the same. For example:
 
 ```C
-__asm__("movq %rax, %rsp");
+__asm__("movl %eax, %esp");
 ```
 
 or
@@ -32,8 +32,8 @@ The same code (of course without `__asm__` prefix) you might see in plain assemb
 The basic form consists of only two things: the `__asm__` keyword and the string with valid assembler instructions. For example it may look something like this:
 
 ```C
-__asm__("movq    $3, %rax\t\n"
-        "movq    %rsi, %rdi");
+__asm__("movl    $3, %eax\t\n"
+        "movl    %esi, %edi");
 ```
 
 The `asm` keyword may be used in place of `__asm__`, however `__asm__` is portable whereas the `asm` keyword is a `GNU` [extension](https://gcc.gnu.org/onlinedocs/gcc/C-Extensions.html). In further examples I will only use the `__asm__` variant.
@@ -42,7 +42,9 @@ If you know assembly programming language this looks pretty familiar. The main p
 
 I've decided to write this part to consolidate my knowledge related to the inline assembly, as inline assembly statements are quite common in the Linux kernel and we may see them in [linux-insides](https://0xax.gitbooks.io/linux-insides/content/) parts sometimes. I thought that it would be useful if we have a special part which contains information on more important aspects of the inline assembly. Of course you may find comprehensive information about inline assembly in the official [documentation](https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html#Using-Assembly-Language-with-C), but I like to put everything in one place.
 
-** Note: This part will not provide guide for assembly programming. It is not intended to teach you to write programs with assembler or to know what one or another assembler instruction means. Just a little memo for extended asm. **
+**Note:** 
+ - This part will not provide guide for assembly programming. It is not intended to teach you to write programs with assembler or to know what one or another assembler instruction means. Just a little memo for extended asm.
+ - Codes in this document are targeted at 32-bit machine specifically. But, in 64-bit machine, things would be similar
 
 Introduction to extended inline assembly
 --------------------------------------------------------------------------------
@@ -159,7 +161,7 @@ As mentioned above, the "clobbered" part should contain a comma-separated list o
 Consider the example from before, but we will add an additional, simple assembler instruction:
 
 ```C
-__asm__("movq $100, %%rdx\t\n"
+__asm__("movl $100, %%edx\t\n"
         "addl %1,%2" : "=r" (sum) : "r" (a), "0" (b));
 ```
 
@@ -169,15 +171,15 @@ If we look at the assembly output
 0000000000400400 <main>:
   400400:       ba 05 00 00 00          mov    $0x5,%edx
   400405:       b8 0a 00 00 00          mov    $0xa,%eax
-  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%rdx
+  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%edx
   400411:       01 d0                   add    %edx,%eax
 ```
 
 we see that the `%edx` register is overwritten with `0x64` or `100` and the result will be `115` instead of `15`. Now if we add the `%rdx` register to the list of "clobbered" register
 
 ```C
-__asm__("movq $100, %%rdx\t\n"
-        "addl %1,%2" : "=r" (sum) : "r" (a), "0" (b) : "%rdx");
+__asm__("movl $100, %%edx\t\n"
+        "addl %1,%2" : "=r" (sum) : "r" (a), "0" (b) : "%edx");
 ```
 
 and look at the assembler output again
@@ -186,7 +188,7 @@ and look at the assembler output again
 0000000000400400 <main>:
   400400:       b9 05 00 00 00          mov    $0x5,%ecx
   400405:       b8 0a 00 00 00          mov    $0xa,%eax
-  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%rdx
+  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%edx
   400411:       01 c8                   add    %ecx,%eax
 ```
 
@@ -198,7 +200,7 @@ the `%ecx` register will be used for `sum` calculation, preserving the intended 
 The first - `cc` indicates that an assembler code modifies [flags](https://en.wikipedia.org/wiki/FLAGS_register) register. This is typically used if the assembly within contains arithmetic or logic instructions.
 
 ```C
-__asm__("incq %0" ::""(variable): "cc");
+__asm__("incl %0" ::""(variable): "cc");
 ```
 
 The second `memory` specifier tells the compiler that the given inline assembly statement executes read/write operations on memory not specified by operands in the output list. This prevents the compiler from keeping memory values loaded and cached in registers. Let's take a look at the following example:
@@ -229,13 +231,13 @@ The result is `5` here, but why? We incremented `a[0]` and subtracted b, so the 
 
 ```assembly
 00000000004004f6 <main>:
-  4004f6:       c7 44 24 f0 0a 00 00    movl   $0xa,-0x10(%rsp)
+  4004f6:       c7 44 24 f0 0a 00 00    movl   $0xa,-0x10(%esp)
   4004fd:       00 
-  4004fe:       c7 44 24 f4 14 00 00    movl   $0x14,-0xc(%rsp)
+  4004fe:       c7 44 24 f4 14 00 00    movl   $0x14,-0xc(%esp)
   400505:       00 
-  400506:       c7 44 24 f8 1e 00 00    movl   $0x1e,-0x8(%rsp)
+  400506:       c7 44 24 f8 1e 00 00    movl   $0x1e,-0x8(%esp)
   40050d:       00 
-  40050e:       ff 44 24 f0             incl   -0x10(%rsp)
+  40050e:       ff 44 24 f0             incl   -0x10(%esp)
   400512:       b8 05 00 00 00          mov    $0x5,%eax
 ```
 
@@ -259,22 +261,22 @@ Now the result is correct. If we look at the assembly output again
 
 ```assembly
 00000000004004f6 <main>:
-  4004f6:       c7 44 24 f0 0a 00 00    movl   $0xa,-0x10(%rsp)
+  4004f6:       c7 44 24 f0 0a 00 00    movl   $0xa,-0x10(%esp)
   4004fd:       00 
-  4004fe:       c7 44 24 f4 14 00 00    movl   $0x14,-0xc(%rsp)
+  4004fe:       c7 44 24 f4 14 00 00    movl   $0x14,-0xc(%esp)
   400505:       00 
-  400506:       c7 44 24 f8 1e 00 00    movl   $0x1e,-0x8(%rsp)
+  400506:       c7 44 24 f8 1e 00 00    movl   $0x1e,-0x8(%esp)
   40050d:       00 
-  40050e:       ff 44 24 f0             incl   -0x10(%rsp)
-  400512:       8b 44 24 f0             mov    -0x10(%rsp),%eax
+  40050e:       ff 44 24 f0             incl   -0x10(%esp)
+  400512:       8b 44 24 f0             mov    -0x10(%esp),%eax
   400516:       83 e8 05                sub    $0x5,%eax
-  400519:       c3                      retq
+  400519:       c3                      retl
 ```
 
 we will see one difference here which is in the following piece code:
 
 ```assembly
-  400512:       8b 44 24 f0             mov    -0x10(%rsp),%eax
+  400512:       8b 44 24 f0             mov    -0x10(%esp),%eax
   400516:       83 e8 05                sub    $0x5,%eax
 ```
 
@@ -313,7 +315,7 @@ unsigned long test_asm(int nr)
 {
         unsigned long a = 0;
 
-        __asm__("movq %1, %0" : "=r"(a) : "I"(0xffffffffffff));
+        __asm__("movl %1, %0" : "=r"(a) : "I"(0xffffffffffff));
         return a;
 }
 ```
@@ -324,7 +326,7 @@ you will get an error
 $ gcc -O3 test.c -o test
 test.c: In function ‘test_asm’:
 test.c:7:9: warning: asm operand 1 probably doesn’t match constraints
-         __asm__("movq %1, %0" : "=r"(a) : "I"(0xffffffffffff));
+         __asm__("movl %1, %0" : "=r"(a) : "I"(0xffffffffffff));
          ^
 test.c:7:9: error: impossible constraint in ‘asm’
 ```
@@ -336,7 +338,7 @@ unsigned long test_asm(int nr)
 {
         unsigned long a = 0;
 
-        __asm__("movq %1, %0" : "=r"(a) : "i"(0xffffffffffff));
+        __asm__("movl %1, %0" : "=r"(a) : "i"(0xffffffffffff));
         return a;
 }
 ```
@@ -359,7 +361,7 @@ int main(void)
         static unsigned long arr[3] = {0, 1, 2};
         static unsigned long element;
         
-        __asm__ volatile("movq 16+%1, %0" : "=r"(element) : "o"(arr));
+        __asm__ volatile("movl 16+%1, %0" : "=r"(element) : "o"(arr));
         printf("%lu\n", element);
         return 0;
 }
@@ -392,7 +394,7 @@ will use a memory operand.
 
 ```assembly
 0000000000400400 <main>:
-  400400:       8b 05 26 0c 20 00       mov    0x200c26(%rip),%eax        # 60102c <a>
+  400400:       8b 05 26 0c 20 00       mov    0x200c26(%eip),%eax        # 60102c <a>
 ```
 
 That's about all of the commonly used constraints in inline assembly statements. You can find more in the official [documentation](https://gcc.gnu.org/onlinedocs/gcc/Simple-Constraints.html#Simple-Constraints).
@@ -400,7 +402,7 @@ That's about all of the commonly used constraints in inline assembly statements.
 Architecture specific constraints
 --------------------------------------------------------------------------------
 
-Before we finish, let's look at the set of special constraints. These constrains are architecture specific and as this book is specific to the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, we will look at constraints related to it. First of all the set of `a` ... `d` and also `S` and `D` constraints represent [generic purpose](https://en.wikipedia.org/wiki/Processor_register) registers. In this case the `a` constraint corresponds to `%al`, `%ax`, `%eax` or `%rax` register depending on instruction size. The `S` and `D` constraints are `%si` and `%di` registers respectively. For example let's take our previous example. We can see in its assembly output that value of the `a` variable is stored in the `%eax` register. Now let's look at the assembly output of the same assembly, but with other constraint: 
+Before we finish, let's look at the set of special constraints. These constrains are architecture specific and as this book is specific to the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, we will look at constraints related to it. First of all the set of `a` ... `d` and also `S` and `D` constraints represent [generic purpose](https://en.wikipedia.org/wiki/Processor_register) registers. In this case the `a` constraint corresponds to `%al`, `%ax`, `%eax` register depending on instruction size. The `S` and `D` constraints are `%si` and `%di` registers respectively. For example let's take our previous example. We can see in its assembly output that value of the `a` variable is stored in the `%eax` register. Now let's look at the assembly output of the same assembly, but with other constraint: 
 
 ```C
 #include <stdio.h>
@@ -419,7 +421,7 @@ Now we see that value of the `a` variable will be stored in the `%edx` register:
 
 ```assembly
 0000000000400400 <main>:
-  400400:       8b 15 26 0c 20 00       mov    0x200c26(%rip),%edx        # 60102c <a>
+  400400:       8b 15 26 0c 20 00       mov    0x200c26(%eip),%edx        # 60102c <a>
 ```
 
 The `f` and `t` constraints represent any floating point stack register - `%st` and the top of the floating point stack respectively. The `u` constraint represents the second value from the top of the floating point stack.
