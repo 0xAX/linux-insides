@@ -19,7 +19,7 @@ set_cpu_present(cpu, true);
 set_cpu_possible(cpu, true);
 ```
 
-Before we will consiuder implementation of these functions, let's consider all of these masks.
+Before we will consider implementation of these functions, let's consider all of these masks.
 
 The `cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot or in other words mask of possible CPUs contains maximum number of CPUs which are possible in the system. It will be equal to value of the `NR_CPUS` which is which is set statically via the `CONFIG_NR_CPUS` kernel configuration option.
 
