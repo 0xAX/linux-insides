@@ -45,15 +45,7 @@ char *command_line;
 char *after_dashes;
 ```
 
-The first represents a pointer to the kernel command line and the second will contain the result of the `parse_args` function which parses an input string with parameters in the form `name=value`, looking for specific keywords and invoking the right handlers. We will not go into the details related with these two variables at this time, but will see it in the next parts. In the next step we can see a call to the:
-
-```C
-lockdep_init();
-```
-
-function. `lockdep_init` initializes [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). Its implementation is pretty simple, it just initializes two [list_head](https://github.com/0xAX/linux-insides/blob/master/DataStructures/dlist.md) hashes and sets the `lockdep_initialized` global variable to `1`. Lock validator detects circular lock dependencies and is called when any [spinlock](http://en.wikipedia.org/wiki/Spinlock) or [mutex](http://en.wikipedia.org/wiki/Mutual_exclusion) is acquired.
-
-The next function is `set_task_stack_end_magic` which takes address of the `init_task` and sets `STACK_END_MAGIC` (`0x57AC6E9D`) as canary for it. `init_task` represents the initial task structure:
+The first represents a pointer to the kernel command line and the second will contain the result of the `parse_args` function which parses an input string with parameters in the form `name=value`, looking for specific keywords and invoking the right handlers. We will not go into the details related with these two variables at this time, but will see it in the next parts. In the next step we can see a call to the `set_task_stack_end_magic` function. This function takes address of the `init_task` and sets `STACK_END_MAGIC` (`0x57AC6E9D`) as canary for it. `init_task` represents the initial task structure:
 
 ```C
 struct task_struct init_task = INIT_TASK(init_task);
