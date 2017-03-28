@@ -107,7 +107,7 @@ To react on interrupt CPU uses special structure - Interrupt Descriptor Table or
 |       Offset 31..16              |   P   |  P  | 0 |Type |0 0 0 | 0 | 0 | IST |
 |                                  |       |  L  |   |     |      |   |   |     |
  --------------------------------------------------------------------------------
-31                                   15 16                                      0
+31                                   16 15                                      0
  --------------------------------------------------------------------------------
 |                                      |                                        |
 |          Segment Selector            |                 Offset 15..0           |
