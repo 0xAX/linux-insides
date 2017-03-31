@@ -4,7 +4,11 @@ Kernel initialization. Part 8.
 Scheduler initialization
 ================================================================================
 
-This is the eighth [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/index.html) of the Linux kernel initialization process and we stopped on the `setup_nr_cpu_ids` function in the [previous](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-7.md) part. The main point of the current part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) is the `setup_per_cpu_areas` function. This function setups areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function. This function does some preparations for the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing):
+This is the eighth [part](README.md) of the Linux kernel initialization process chapter and we stopped on the `setup_nr_cpu_ids` function in the [previous part](linux-initialization-7.md).
+
+The main point of this part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) is the `setup_per_cpu_areas` function. This function setups memory areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](Concepts/per-cpu.md). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function.
+
+This function does some preparations for [symmetric multiprocessing](http://en.wikipedia.org/wiki/Symmetric_multiprocessing). Since this function is architecture specific, it is located in the [arch/x86/include/asm/smp.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/smp.h#L78) Linux kernel header file. Let's look at the definition of this function:
 
 ```C
 static inline void smp_prepare_boot_cpu(void)
@@ -13,7 +17,31 @@ static inline void smp_prepare_boot_cpu(void)
 }
 ```
 
-where the `smp_prepare_boot_cpu` expands to the call of the `native_smp_prepare_boot_cpu` function (more about `smp_ops` will be in the special parts about `SMP`):
+We may see here that it just calls the `smp_prepare_boot_cpu` callback of the `smp_ops` structure. If we look at the definition of instance of this structure from the [arch/x86/kernel/smp.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/smp.c) source code file, we will see that the `smp_prepare_boot_cpu` expands to the call of the `native_smp_prepare_boot_cpu` function:
+
+```C
+static inline void smp_prepare_boot_cpu(void)
+{
+         smp_ops.smp_prepare_boot_cpu();
+}
+```
+
+We may see here that it just calls the `smp_prepare_boot_cpu` callback of the `smp_ops` structure. If we look at the definition of instance of this structure from the [arch/x86/kernel/smp.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/smp.c) source code file, we will see that the `smp_prepare_boot_cpu` expands to the call of the `native_smp_prepare_boot_cpu` function:
+
+```C
+struct smp_ops smp_ops = {
+    ...
+    ...
+    ...
+    smp_prepare_boot_cpu = native_smp_prepare_boot_cpu,
+    ...
+    ...
+    ...
+}
+EXPORT_SYMBOL_GPL(smp_ops);
+```
+
+The `native_smp_prepare_boot_cpu` function looks:
 
 ```C
 void __init native_smp_prepare_boot_cpu(void)
@@ -25,7 +53,11 @@ void __init native_smp_prepare_boot_cpu(void)
 }
 ```
 
+<<<<<<< HEAD
 The `native_smp_prepare_boot_cpu` function gets the id of the current CPU (which is Bootstrap processor and its `id` is zero) with the `smp_processor_id` function. I will not explain how the `smp_processor_id` works, because we already saw it in the [Kernel entry point](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-4.html) part. As we got processor `id` number we reload [Global Descriptor Table](http://en.wikipedia.org/wiki/Global_Descriptor_Table) for the given CPU with the `switch_to_new_gdt` function:
+=======
+and executes following things: first of all it gets the `id` of the current CPU (which is Bootstrap processor and its `id` is zero for this moment) with the `smp_processor_id` function. I will not explain how the `smp_processor_id` works, because we already saw it in the [Kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) part. After we've got processor `id` number we reload [Global Descriptor Table](http://en.wikipedia.org/wiki/Global_Descriptor_Table) for the given CPU with the `switch_to_new_gdt` function:
+>>>>>>> 2d64a01... update linux-initialization-8.md part
 
 ```C
 void switch_to_new_gdt(int cpu)
@@ -39,7 +71,11 @@ void switch_to_new_gdt(int cpu)
 }
 ```
 
+<<<<<<< HEAD
 The `gdt_descr` variable represents pointer to the `GDT` descriptor here (we already saw `desc_ptr` in the [Early interrupt and exception handling](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-2.html)). We get the address and the size of the `GDT` descriptor where `GDT_SIZE` is `256` or:
+=======
+The `gdt_descr` variable represents pointer to the `GDT` descriptor here (we already saw defnition of a `desc_ptr` structure in the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) part). We get the address and the size of the `GDT` descriptor for the `CPU` with the given `id`. The `GDT_SIZE` is `256` or:
+>>>>>>> 2d64a01... update linux-initialization-8.md part
 
 ```C
 #define GDT_SIZE (GDT_ENTRIES * 8)
@@ -54,7 +90,13 @@ static inline struct desc_struct *get_cpu_gdt_table(unsigned int cpu)
 }
 ```
 
+<<<<<<< HEAD
 The `get_cpu_gdt_table` uses `per_cpu` macro for getting `gdt_page` percpu variable for the given CPU number (bootstrap processor with `id` - 0 in our case). You may ask the following question: so, if we can access `gdt_page` percpu variable, where it was defined? Actually we already saw it in this book. If you have read the first [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-1.html) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/master/arch/x86/kernel/head_64.S):
+=======
+The `get_cpu_gdt_table` uses `per_cpu` macro for getting value of a `gdt_page` percpu variable for the given CPU number (bootstrap processor with `id` - 0 in our case).
+
+You may ask the following question: so, if we can access `gdt_page` percpu variable, where it was defined? Actually we already saw it in this book. If you have read the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/master/arch/x86/kernel/head_64.S):
+>>>>>>> 2d64a01... update linux-initialization-8.md part
 
 ```assembly
 early_gdt_descr:
@@ -169,14 +211,18 @@ Before we will start to dive into linux kernel scheduler initialization process 
 ```C
 void __init page_alloc_init(void)
 {
-        hotcpu_notifier(page_alloc_cpu_notify, 0);
+    int ret;
+ 
+    ret = cpuhp_setup_state_nocalls(CPUHP_PAGE_ALLOC_DEAD,
+                                    "mm/page_alloc:dead", NULL,
+                                    page_alloc_cpu_dead);
+    WARN_ON(ret < 0);
 }
 ```
 
-and initializes handler for the `CPU` [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt). Of course the `hotcpu_notifier` depends on the 
-`CONFIG_HOTPLUG_CPU` configuration option and if this option is set, it just calls `cpu_notifier` macro which expands to the call of the `register_cpu_notifier` which adds hotplug cpu handler (`page_alloc_cpu_notify` in our case).
+It setups setup the `startup` and `teardown` callbacks (second and third parameters) for the `CPUHP_PAGE_ALLOC_DEAD` cpu [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) state. Of course the implementation of this function depends on the `CONFIG_HOTPLUG_CPU` kernel configuration option and if this option is set, such callbacks will be set for all cpu(s) in the system depends on their `hotplug` states. [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) mechanism is a big theme and it will not be described in this book.
 
-After this we can see the kernel command line in the initialization output:
+After this function we can see the kernel command line in the initialization output:
 
 ![kernel command line](http://oi58.tinypic.com/2m7vz10.jpg)
 
@@ -237,7 +283,39 @@ That's all. Now we can look on the `scheduler`.
 Scheduler initialization
 --------------------------------------------------------------------------------
 
-And now we come to the main purpose of this part - initialization of the task scheduler. I want to say again as I already did it many times, you will not see the full explanation of the scheduler here, there will be special chapter about this. Ok, next point is the `sched_init` function from the [kernel/sched/core.c](https://github.com/torvalds/linux/blob/master/kernel/sched/core.c) and as we can understand from the function's name, it initializes scheduler. Let's start to dive into this function and try to understand how the scheduler is initialized. At the start of the `sched_init` function we can see the following code:
+And now we come to the main purpose of this part - initialization of the task scheduler. I want to say again as I already did it many times, you will not see the full explanation of the scheduler here, there will be special separate chapter about this. Here will be described first initial scheduler mechanisms which are initialized first of all. So let's start.
+
+Our current point is the `sched_init` function from the [kernel/sched/core.c](https://github.com/torvalds/linux/blob/master/kernel/sched/core.c) kernel source code file and as we can understand from the function's name, it initializes scheduler. Let's start to dive into this function and try to understand how the scheduler is initialized. At the start of the `sched_init` function we can see the following call:
+
+```C
+sched_clock_init();
+```
+
+The `sched_clock_init` is pretty easy function and as we may see it just sets `sched_clock_init` varaible:
+
+```C
+void sched_clock_init(void)
+{
+	sched_clock_running = 1;
+}
+```
+
+that will be used later. At the next step is initialization of the array of `waitqueues`:
+
+```C
+for (i = 0; i < WAIT_TABLE_SIZE; i++)
+	init_waitqueue_head(bit_wait_table + i);
+```
+
+where `bit_wait_table` is defined as:
+
+```C
+#define WAIT_TABLE_BITS 8
+#define WAIT_TABLE_SIZE (1 << WAIT_TABLE_BITS)
+static wait_queue_head_t bit_wait_table[WAIT_TABLE_SIZE] __cacheline_aligned;
+```
+
+The `bit_wait_table` is array of wait queues that will be used for wait/wake up of processes depends on the value of a designated bit. The next step after initialization of `waitqueues` array is calculating size of memory to allocate for the `root_task_group`. As we may see this size depends on two following kernel configuration options:
 
 ```C
 #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -248,12 +326,10 @@ And now we come to the main purpose of this part - initialization of the task sc
 #endif
 ```
 
-First of all we can see two configuration options here:
-
 * `CONFIG_FAIR_GROUP_SCHED`
 * `CONFIG_RT_GROUP_SCHED`
 
-Both of this options provide two different planning models. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt), the current scheduler - `CFS` or `Completely Fair Scheduler` use a simple concept. It models process scheduling as if the system has an ideal multitasking processor where each process would receive `1/n` processor time, where `n` is the number of the runnable processes. The scheduler uses the special set of rules. These rules determine when and how to select a new process to run and they are called `scheduling policy`. The Completely Fair Scheduler supports following `normal` or `non-real-time` scheduling policies: `SCHED_NORMAL`, `SCHED_BATCH` and `SCHED_IDLE`. The `SCHED_NORMAL` is used for the most normal applications, the amount of cpu each process consumes is mostly determined by the [nice](http://en.wikipedia.org/wiki/Nice_%28Unix%29) value, the `SCHED_BATCH` used for the 100% non-interactive tasks and the `SCHED_IDLE` runs tasks only when the processor has no task to run besides this task. The `real-time` policies are also supported for the time-critical applications: `SCHED_FIFO` and `SCHED_RR`. If you've read something about the Linux kernel scheduler, you can know that it is modular. It means that it supports different algorithms to schedule different types of processes. Usually this modularity is called `scheduler classes`. These modules encapsulate scheduling policy details and are handled by the scheduler core without knowing too much about them. 
+Both of these options provide two different planning models. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt), the current scheduler - `CFS` or `Completely Fair Scheduler` use a simple concept. It models process scheduling as if the system has an ideal multitasking processor where each process would receive `1/n` processor time, where `n` is the number of the runnable processes. The scheduler uses the special set of rules. These rules determine when and how to select a new process to run and they are called `scheduling policy`. The Completely Fair Scheduler supports following `normal` or `non-real-time` scheduling policies: `SCHED_NORMAL`, `SCHED_BATCH` and `SCHED_IDLE`. The `SCHED_NORMAL` is used for the most normal applications, the amount of cpu each process consumes is mostly determined by the [nice](http://en.wikipedia.org/wiki/Nice_%28Unix%29) value, the `SCHED_BATCH` used for the 100% non-interactive tasks and the `SCHED_IDLE` runs tasks only when the processor has no task to run besides this task. The `real-time` policies are also supported for the time-critical applications: `SCHED_FIFO` and `SCHED_RR`. If you've read something about the Linux kernel scheduler, you can know that it is modular. It means that it supports different algorithms to schedule different types of processes. Usually this modularity is called `scheduler classes`. These modules encapsulate scheduling policy details and are handled by the scheduler core without knowing too much about them. 
 
 
 Now let's back to the our code and look on the two configuration options `CONFIG_FAIR_GROUP_SCHED` and `CONFIG_RT_GROUP_SCHED`. The scheduler operates on an individual task. These options allows to schedule group tasks (more about it you can read in the [CFS group scheduling](http://lwn.net/Articles/240474/)). We can see that we assign the `alloc_size` variables which represent size based on amount of the processors to allocate for the `sched_entity` and `cfs_rq` to the `2 * nr_cpu_ids * sizeof(void **)` expression with `kzalloc`:
