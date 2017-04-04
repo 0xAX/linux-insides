@@ -123,7 +123,7 @@ Ok, everything looks pretty good up to now. You may already know that there is s
 
 > The exec() family of functions replaces the current process image with a new process image.
 
-If you have read fourth [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) of the chapter which describes [system calls](https://en.wikipedia.org/wiki/System_call), you may know that for example [execve](http://linux.die.net/man/2/execve) system call is defined in the [files/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c#L1859) source code file and looks like:
+If you have read fourth [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) of the chapter which describes [system calls](https://en.wikipedia.org/wiki/System_call), you may know that for example [execve](http://linux.die.net/man/2/execve) system call is defined in the [files/exec.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/fs/exec.c#L1888) source code file and looks like:
 
 ```C
 SYSCALL_DEFINE3(execve,
@@ -135,7 +135,7 @@ SYSCALL_DEFINE3(execve,
 }
 ```
 
-It takes executable file name, set of command line arguments and set of enviroment variables. As you may guess, everything is done by the `do_execve` function. I will not describe implementation of the `do_execve` function in details because you can read about this in [here](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/process_64.c#L231) source code file.
+It takes executable file name, set of command line arguments and set of enviroment variables. As you may guess, everything is done by the `do_execve` function. I will not describe implementation of the `do_execve` function in details because you can read about this in [here](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/arch/x86/kernel/process_64.c#L239) source code file.
 
 The `start_thread` function sets new value to [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation) and program execution address. From this point, new process is ready to start. Once the [context switch](https://en.wikipedia.org/wiki/Context_switch) will be done, control will be returned to the userspace with new values of registers and new executable will be started to execute.
 
@@ -266,7 +266,7 @@ As described in the [ELF](http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf) spe
 
 So we need to put address of termination function to the `r9` register as it will be passed `__libc_start_main` in future as sixth argument. Note that the address of the termination function initially is located in the `rdx` register. Other registers besides `rdx` and `rsp` contain unspecified values. Actually main point of the `_start` function is to call `__libc_start_main`. So the next action is to prepare for this function.
 
-The signature of the `__libc_start_main` function is located in the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD) source code file. Let's look on it:
+The signature of the `__libc_start_main` function is located in the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=9a56dcbbaeb7ef85c495b4df9ab1d0b13454c043;hb=HEAD#l107) source code file. Let's look on it:
 
 ```C
 STATIC int LIBC_START_MAIN (int (*main) (int, char **, char **),
