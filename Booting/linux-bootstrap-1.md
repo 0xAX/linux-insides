@@ -65,7 +65,7 @@ CS base     0xffff0000
 '0xfffffff0'
 ```
 
-Мы получили `0xfffffff0`, т.е. 4 Гб (16 байт). По этому адресу располагается так называемый [вектор прерываний](http://en.wikipedia.org/wiki/Reset_vector). Это область памяти, в которой ЦПУ ожидает найти первую инструкцию для выполнения после сброса. Она содержит инструкцию [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`), которая обычно указывает на точку входа в BIOS. Например, если мы взглянем на исходный код [coreboot](http://www.coreboot.org/), то увидим следующее:
+Мы получили `0xfffffff0`, т.е. 16 байт ниже 4 Гб. По этому адресу располагается так называемый [вектор прерываний](http://en.wikipedia.org/wiki/Reset_vector). Это область памяти, в которой ЦПУ ожидает найти первую инструкцию для выполнения после сброса. Она содержит инструкцию [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`), которая обычно указывает на точку входа в BIOS. Например, если мы взглянем на исходный код [coreboot](http://www.coreboot.org/), то увидим следующее:
 
 ```assembly
     .section ".reset"
@@ -379,7 +379,7 @@ _start:
 
 Давайте рассмотрим все три сценария:
 
-* `ss` имеет верный адрес (0x10000). В этом случае мы переходим к метке [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
+* `ss` имеет верный адрес (0x10000). В этом случае мы переходим на метку [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
 
 ```assembly
 2:  andw    $~3, %dx

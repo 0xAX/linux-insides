@@ -5,7 +5,7 @@
     * [Первые шаги в коде настройки ядра](Booting/linux-bootstrap-2.md)
     * [Инициализация видеорежима и переход в защищённый режим](Booting/linux-bootstrap-3.md)
     * [Переход в 64-битный режим](Booting/linux-bootstrap-4.md)
-    * [Kernel decompression](Booting/linux-bootstrap-5.md)
+    * [Декомпрессия ядра](Booting/linux-bootstrap-5.md)
 * [Initialization](Initialization/README.md)
     * [First steps in the kernel](Initialization/linux-initialization-1.md)
     * [Early interrupts handler](Initialization/linux-initialization-2.md)

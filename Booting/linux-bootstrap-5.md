@@ -1,15 +1,15 @@
-Kernel booting process. Part 5.
+Процесс загрузки ядра. Часть 5.
 ================================================================================
 
-Kernel decompression
+Декомпрессия ядра
 --------------------------------------------------------------------------------
 
-This is the fifth part of the `Kernel booting process` series. We saw transition to the 64-bit mode in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#transition-to-the-long-mode) and we will continue from this point in this part. We will see the last steps before we jump to the kernel code as preparation for kernel decompression, relocation and directly kernel decompression. So... let's start to dive in the kernel code again.
+Это пятая часть серии `Процесса загрузки ядра`. Мы видели переход в 64-битный режим в предыдущей [части](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#transition-to-the-long-mode) и в этой части мы продолжим с этого момента. Прежде чем мы перейдём к коду ядра, мы увидим последние шаги: подготовка к декомпрессии ядра, перемещение и, непосредственно, декомпрессия ядра. Итак... давайте снова погрузимся в код ядра.
 
-Preparation before kernel decompression
+Подготовка к декомпрессии ядра
 --------------------------------------------------------------------------------
 
-We stopped right before the jump on the 64-bit entry point - `startup_64` which is located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) source code file. We already saw the jump to the `startup_64` in the `startup_32`:
+Мы остановились прямо перед переходом к 64-битной точке входа - `startup_64`, расположенной в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S). В предыдущей части мы уже видели переход к `startup_64` в `startup_32`:
 
 ```assembly
 	pushl	$__KERNEL_CS
@@ -24,7 +24,7 @@ We stopped right before the jump on the 64-bit entry point - `startup_64` which 
 	lret
 ```
 
-in the previous part, `startup_64` starts to work. Since we loaded the new Global Descriptor Table and there was CPU transition in other mode (64-bit mode in our case), we can see the setup of the data segments:
+`startup_64` начинает свою работу. Так как мы загрузили новую глобальную таблицу дескрипторов, и был переход ЦПУ в другой режим (в нашем случае в 64-битный режим), мы можем видеть настройку сегментов данных в начале `startup_64`:
 
 ```assembly
 	.code64
@@ -38,9 +38,9 @@ ENTRY(startup_64)
 	movl	%eax, %gs
 ```
 
-in the beginning of the `startup_64`. All segment registers besides `cs` now point to the `ds` which is `0x18` (if you don't understand why it is `0x18`, read the previous part).
+Все сегментные регистры, кроме `cs`, теперь указывают на `ds`, равный `0x18` (если вы не понимаете, почему `0x18`, прочтите предыдущую часть).
 
-The next step is computation of difference between where the kernel was compiled and where it was loaded:
+Следующий шаг - вычисление разницы между тем, где было скомпилировано ядро, и где оно было загружено:
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
@@ -58,9 +58,9 @@ The next step is computation of difference between where the kernel was compiled
 	leaq	z_extract_offset(%rbp), %rbx
 ```
 
-`rbp` contains the decompressed kernel start address and after this code executes `rbx` register will contain address to relocate the kernel code for decompression. We already saw code like this in the `startup_32` ( you can read about it in the previous part - [Calculate relocation address](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#calculate-relocation-address)), but we need to do this calculation again because the bootloader can use 64-bit boot protocol and `startup_32` just will not be executed in this case.
+`rbp` содержит начальный адрес распакованного ядра и после выполнения этого кода регистр `rbx` будет содержать адрес релокации ядра для декомпрессии. Такой код мы уже видели в `startup_32` (вы можете прочитать об этом в предыдущей части - [Расчёт адреса релокации](https://github.com/proninyaroslav/linux-insides-ru/blob/master/Booting/linux-bootstrap-4.md#Расчёт-адреса-релокации)), но нам снова нужно вычислить его, поскольку загрузчик может использовать 64-битный протокол загрузки и в этом случае `startup_32` просто не будет выполнен.
 
-In the next step we can see setup of the stack pointer and resetting of the flags register:
+На следующем шаге мы видим установку указателя стека и сброс регистра флагов:
 
 ```assembly
 	leaq	boot_stack_end(%rbx), %rsp
@@ -69,7 +69,7 @@ In the next step we can see setup of the stack pointer and resetting of the flag
 	popfq
 ```
 
-As you can see above, the `rbx` register contains the start address of the kernel decompressor code and we just put this address with `boot_stack_end` offset to the `rsp` register which represents pointer to the top of the stack. After this step, the stack will be correct. You can find definition of the `boot_stack_end` in the end of [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
+Как вы можете видеть выше, регистр `rbx` содержит начальный адрес кода декомпрессора ядра, и мы помещаем этот адрес со смещением `boot_stack_end` в регистр `rsp`, который представляет указатель на вершину стека. После этого шага стек будет корректным. Вы можете найти определение `boot_stack_end` в конце [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 	.bss
@@ -81,9 +81,9 @@ boot_stack:
 boot_stack_end:
 ```
 
-It located in the end of the `.bss` section, right before the `.pgtable`. If you will look into [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) linker script, you will find  Definition of the `.bss` and `.pgtable` there.
+Он расположен в конце секции `.bss`, прямо перед таблицей `.pgtable`. Если вы посмотрите сценарий компоновщика [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S), вы найдёте определения `.bss` и `.pgtable`.
 
-As we set the stack, now we can copy the compressed kernel to the address that we got above, when we calculated the relocation address of the decompressed kernel. Before details, let's look at this assembly code:
+После того как стек был настроен, мы можем скопировать сжатое ядро по адресу, который мы получили выше после вычисления адреса перемещения распакованного ядра. Прежде чем перейти к деталям, давайте посмотрим на этот ассемблерный код:
 
 ```assembly
 	pushq	%rsi
@@ -97,9 +97,9 @@ As we set the stack, now we can copy the compressed kernel to the address that w
 	popq	%rsi
 ```
 
-First of all we push `rsi` to the stack. We need preserve the value of `rsi`, because this register now stores a pointer to the `boot_params` which is real mode structure that contains booting related data (you must remember this structure, we filled it in the start of kernel setup). In the end of this code we'll restore the pointer to the `boot_params` into `rsi` again. 
+Прежде всего, мы помещаем `rsi` в стек. Нам нужно сохранить значение `rsi`, потому что теперь этот регистр хранит указатель на `boot_params`, которая является структурой режима реальных адресов, содержащая связанные с загрузкой данные (вы должны помнить эту структуру, мы заполняли её в начале кода настройки ядра). В конце этого кода мы снова восстановим указатель на `boot_params` в `rsi`. 
 
-The next two `leaq` instructions calculates effective addresses of the `rip` and `rbx` with `_bss - 8` offset and put it to the `rsi` and `rdi`. Why do we calculate these addresses? Actually the compressed kernel image is located between this copying code (from `startup_32` to the current code) and the decompression code. You can verify this by looking at the linker script - [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S):
+Следующие две инструкции `leaq` вычисляют  эффективные адреса `rip` и `rbx` со смещением `_bss - 8` и помещают их в `rsi` и `rdi`. Зачем мы вычисляем эти адреса? На самом деле сжатый образ ядра находится между этим кодом копирования (от `startup_32` до текущего кода) и кодом декомпрессии. Вы можете проверить это, посмотрев сценарий компоновщика - [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S):
 
 ```
 	. = 0;
@@ -119,7 +119,7 @@ The next two `leaq` instructions calculates effective addresses of the `rip` and
 	}
 ```
 
-Note that `.head.text` section contains `startup_32`. You may remember it from the previous part:
+Обратите внимание, что секция `.head.text` содержит `startup_32`. Вы можете помнить это из предыдущей части:
 
 ```assembly
 	__HEAD
@@ -130,7 +130,7 @@ ENTRY(startup_32)
 ...
 ```
 
-The `.text` section contains decompression code:
+Секция `.text` содержит код декомпрессии:
 
 ```assembly
 	.text
@@ -139,26 +139,26 @@ relocated:
 ...
 ...
 /*
- * Do the decompression, and jump to the new kernel..
+ * Делает декомпрессию и переходит на новое ядро.
  */
 ...
 ```
 
-And `.rodata..compressed` contains the compressed kernel image. So `rsi` will contain the absolute address of `_bss - 8`, and `rdi` will contain the relocation relative address of `_bss - 8`. As we store these addresses in registers, we put the address of `_bss` in the `rcx` register. As you can see in the `vmlinux.lds.S` linker script, it's located at the end of all sections with the setup/kernel code. Now we can start to copy data from `rsi` to `rdi`, `8` bytes at the time, with the `movsq` instruction. 
+`.rodata..compressed` содержит сжатый образ ядра. Таким образом, `rsi` будет содержать абсолютный адрес `_bss - 8`, а `rdi` будет содержать относительный адрес релокации `_bss - 8`. Когда мы сохраняем эти адреса в регистрах, мы помещаем адрес `_bss` в регистр `rcx`. Как вы можете видеть в скрипте компоновщика `vmlinux.lds.S`, он находится в конце всех секций с кодом настройки/ядра. Теперь мы можем начать копирование данных из `rsi` в `rdi` по `8` байт с помощью инструкции `movsq`. 
 
-Note that there is an `std` instruction before data copying: it sets the `DF` flag, which means that `rsi` and `rdi` will be decremented. In other words, we will copy the bytes backwards. At the end, we clear the `DF` flag with the `cld` instruction, and restore `boot_params` structure to `rsi`.
+Обратите внимание на инструкцию `std` перед копированием данных: она устанавливает флаг `DF`, означающий, что `rsi` и `rdi` будут уменьшаться. Другими словами, мы будем копировать байты задом наперёд. В конце мы очищаем флаг `DF` с помощью инструкции `cld` и восстанавливаем структуру `boot_params` в `rsi`.
 
-Now we have the address of the `.text` section address after relocation, and we can jump to it:
+После релокации мы имеем адрес секции `.text` и совершаем переход по нему:
 
 ```assembly
 	leaq	relocated(%rbx), %rax
 	jmp	*%rax
 ```
 
-Last preparation before kernel decompression
+Последняя подготовка перед декомпрессией ядра
 --------------------------------------------------------------------------------
 
-In the previous paragraph we saw that the `.text` section starts with the `relocated` label. The first thing it does is clearing the `bss` section with:
+В предыдущем абзаце мы видели, что секция `.text` начинается с метки `relocated`. Первое, что она делает - очищает секцию `bss`:
 
 ```assembly
 	xorl	%eax, %eax
@@ -169,9 +169,9 @@ In the previous paragraph we saw that the `.text` section starts with the `reloc
 	rep	stosq
 ```
 
-We need to initialize the `.bss` section, because we'll soon jump to [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code. Here we just clear `eax`, put the address of `_bss` in `rdi` and `_ebss` in `rcx`, and fill it with zeros with the `rep stosq` instruction.
+Нам нужно инициализировать секцию `.bss`, потому что скоро мы перейдём к коду на [C](https://en.wikipedia.org/wiki/C_%28programming_language%29). Здесь мы просто очищаем `eax`, помещаем адрес `_bss` в `rdi` и `_ebss` в `rcx`, и заполняем его нулями с помощью инструкции `rep stosq`.
 
-At the end, we can see the call to the `decompress_kernel` function:
+В конце мы видим вызов функции `decompress_kernel`:
 
 ```assembly
 	pushq	%rsi
@@ -188,48 +188,48 @@ At the end, we can see the call to the `decompress_kernel` function:
 	popq	%rsi
 ```
 
-Again we set `rdi` to a pointer to the `boot_params` structure and call `decompress_kernel` from [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) with seven arguments:
+Мы снова устанавливаем `rdi` в указатель на структуру `boot_params` и вызываем `decompress_kernel` из [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) с семью аргументами:
 
-* `rmode` - pointer to the [boot_params](https://github.com/torvalds/linux/blob/master//arch/x86/include/uapi/asm/bootparam.h#L114) structure which is filled by bootloader or during early kernel initialization;
-* `heap` - pointer to the `boot_heap` which represents start address of the early boot heap;
-* `input_data` - pointer to the start of the compressed kernel or in other words pointer to the `arch/x86/boot/compressed/vmlinux.bin.bz2`;
-* `input_len` - size of the compressed kernel;
-* `output` - start address of the future decompressed kernel;
-* `output_len` - size of decompressed kernel;
-* `run_size` - amount of space needed to run the kernel including `.bss` and `.brk` sections.
+* `rmode` - указатель на структуру [boot_params](https://github.com/torvalds/linux/blob/master//arch/x86/include/uapi/asm/bootparam.h#L114), которая заполнена загрузчиком или во время ранней инициализации ядра;
+* `heap` - указатель на `boot_heap`, представляющий собой начальный адрес ранней загрузочной кучи;
+* `input_data` - указатель на начало сжатого ядра или, другими словами, указатель на `arch/x86/boot/compressed/vmlinux.bin.bz2`;
+* `input_len` - размер сжатого ядра;
+* `output` - начальный адрес будущего распакованного ядра;
+* `output_len` - размер распакованного ядра;
+* `run_size` - объём пространства, необходимый для запуска ядра, включая секции `.bss` и `.brk`.
 
-All arguments will be passed through the registers according to [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf). We've finished all preparation and can now look at the kernel decompression.
+Все аргументы буду передаваться через регистры согласно [двоичному интерфейсу приложений System V (ABI)](http://www.x86-64.org/documentation/abi.pdf). Мы закончили подготовку и переходим к декомпрессии ядра.
 
-Kernel decompression
+Декомпрессия ядра
 --------------------------------------------------------------------------------
 
-As we saw in previous paragraph, the `decompress_kernel` function is defined in the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) source code file and takes seven arguments. This function starts with the video/console initialization that we already saw in the previous parts. We need to do this again because we don't know if we started in [real mode](https://en.wikipedia.org/wiki/Real_mode) or a bootloader was used, or whether the bootloader used the 32 or 64-bit boot protocol.
+Как мы видели в предыдущем абзаце, функция `decompress_kernel` определена [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) и содержит семь аргументов. Эта функция начинается с инициализации видео/консоли, которую мы уже видели в предыдущих частях. Нам нужно сделать это ещё раз, потому что мы не знаем, находились ли мы в [режиме реальных адресов](https://en.wikipedia.org/wiki/Real_mode), использовался ли загрузчик, или загрузчик использовал 32 или 64-битный протокол загрузки.
 
-After the first initialization steps, we store pointers to the start of the free memory and to the end of it:
+После первых шагов инициализации мы сохраняем указатели на начало и конец свободной памяти:
 
 ```C
 free_mem_ptr     = heap;
 free_mem_end_ptr = heap + BOOT_HEAP_SIZE;
 ```
 
-where the `heap` is the second parameter of the `decompress_kernel` function which we got in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
+где `heap` является вторым параметром функции `decompress_kernel`, который мы получили в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 leaq	boot_heap(%rip), %rsi
 ```
 
-As you saw above, the `boot_heap` is defined as:
+Как вы видели выше, `boot_heap` определён как:
 
 ```assembly
 boot_heap:
 	.fill BOOT_HEAP_SIZE, 1, 0
 ```
 
-where the `BOOT_HEAP_SIZE` is macro which expands to `0x8000` (`0x400000` in a case of `bzip2` kernel) and represents the size of the heap.
+где `BOOT_HEAP_SIZE` - это макрос, который раскрывается в `0x8000` (`0x400000` в случае `bzip2` ядра) и представляет собой размер кучи.
 
-After heap pointers initialization, the next step is the call of the `choose_random_location` function from [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c#L425) source code file. As we can guess from the function name, it chooses the memory location where the kernel image will be decompressed. It may look weird that we need to find or even `choose` location where to decompress the compressed kernel image, but the Linux kernel supports [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) which allows decompression of the kernel into a random address, for security reasons. Let's open the [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c#L425) source code file and look at `choose_random_location`.
+После инициализации указателей кучи, следующий шаг - вызов функции `choose_random_location` из [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c#L425). Как можно догадаться из названия функции, она выбирает ячейку памяти, в которой будет разархивирован образ ядра. Может показаться странным, что нам нужно найти или даже `выбрать` место для декомпрессии сжатого образа ядра, но ядро Linux поддерживает [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization), что позволяет загрузить распакованное ядро по случайному адресу из соображений безопасности. Давайте откроем файл [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c#L425) и посмотри на `choose_random_location`.
 
-First, `choose_random_location` tries to find the `kaslr` option in the Linux kernel command line if `CONFIG_HIBERNATION` is set, and `nokaslr` otherwise:
+Во-первых, если `CONFIG_HIBERNATION` установлена, `choose_random_location` пытается найти опцию `kaslr`, в противном случае опцию `nokaslr`:
 
 ```C
 #ifdef CONFIG_HIBERNATION
@@ -245,37 +245,36 @@ First, `choose_random_location` tries to find the `kaslr` option in the Linux ke
 #endif
 ```
 
-If the `CONFIG_HIBERNATION` kernel configuration option is enabled during kernel configuration and there is no `kaslr` option in the Linux kernel command line, it prints `KASLR disabled by default...` and jumps to the `out` label:
+Если опция конфигурации ядра `CONFIG_HIBERNATION` включена во время конфигурации ядра и в командной строке отсутствует опция `kaslr`, выводится надпись `KASLR disabled by default...` и совершается переход на метку `out`:
 
 ```C
 out:
 	return (unsigned char *)choice;
 ```
 
-which just returns the `output` parameter which we passed to the `choose_random_location`, unchanged. If the `CONFIG_HIBERNATION` kernel configuration option is disabled and the `nokaslr` option is in the kernel command line, we jump to `out` again.
+где мы просто возвращаем параметр `output`, который мы передали в `choose_random_location`, без изменений. Если опция `CONFIG_HIBERNATION` выключена и опция `nokaslr` присутствует, мы снова переходим на метку `out`.
 
-For now, let's assume the kernel was configured with randomization enabled and try to understand what `kASLR` is. We can find information about it in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt):
+На время предположим, что ядро сконфигурировано с включённой рандомизацией и попытаемся понять, что такое `kASLR`. Мы можем найти информацию об этом в [документации](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt):
 
 ```
 kaslr/nokaslr [X86]
 
-Enable/disable kernel and module base offset ASLR
-(Address Space Layout Randomization) if built into
-the kernel. When CONFIG_HIBERNATION is selected,
-kASLR is disabled by default. When kASLR is enabled,
-hibernation will be disabled.
+Включение/выключение базового смещения ASLR ядра и модуля
+(рандомизация размещения адресного пространства), если оно встроено в ядро. 
+Если выбран CONFIG_HIBERNATION, kASLR отключён по умолчанию. 
+Если kASLR включён, спящий режим будет выключен.
 ```
 
-It means that we can pass the `kaslr` option to the kernel's command line and get a random address for the decompressed kernel (you can read more about ASLR [here](https://en.wikipedia.org/wiki/Address_space_layout_randomization)). So, our current goal is to find random address where we can `safely` to decompress the Linux kernel. I repeat: `safely`. What does it mean in this context? You may remember that besides the code of decompressor and directly the kernel image, there are some unsafe places in memory. For example, the [initrd](https://en.wikipedia.org/wiki/Initrd) image is in memory too, and we must not overlap it with the decompressed kernel.
+Это означает, что мы можем передать опцию `kaslr` в командную строку ядра и получить случайный адрес для распаковки ядра (вы можете прочитать больше о ASLR [здесь](https://en.wikipedia.org/wiki/Address_space_layout_randomization)). Итак, наша текущая цель - найти случайный адрес, где мы сможем `безопасно` распаковать ядро Linux. Повторюсь: `безопасно`. Что это означает в данном контексте? Вы можете помнить, что помимо кода декомпрессора и непосредственно образа ядра в памяти есть несколько небезопасных мест. Например, образ [initrd](https://en.wikipedia.org/wiki/Initrd) также находится в памяти, и мы не должны перекрывать его распакованным ядро.
 
-The next function will help us to find a safe place where we can decompress kernel. This function is `mem_avoid_init`. It defined in the same source code [file](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c), and takes four arguments that we already saw in the `decompress_kernel` function:
+Следующая функция поможет нам найти безопасное место, где мы можем распаковать ядро. Это функция `mem_avoid_init`. Она определена в том же [файле](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c) исходного кода и принимает 4 аргумента, которые мы видели в функции `decompress_kernel`:
 
-* `input_data` - pointer to the start of the compressed kernel, or in other words, the pointer to `arch/x86/boot/compressed/vmlinux.bin.bz2`;
-* `input_len` - the size of the compressed kernel;
-* `output` - the start address of the future decompressed kernel;
-* `output_len` - the size of decompressed kernel.
+* `input_data` - указатель на начало сжатого ядра, или, другими словами, указатель на `arch/x86/boot/compressed/vmlinux.bin.bz2`;
+* `input_len` - размер сжатого ядра;
+* `output` - начальный адрес будущего распакованного ядра;
+* `output_len` - размер распакованного ядра.
 
-The main point of this function is to fill array of the `mem_vector` structures:
+Основной точкой этой функции является заполнение массива структур `mem_vector`:
 
 ```C
 #define MEM_AVOID_MAX 5
@@ -283,7 +282,7 @@ The main point of this function is to fill array of the `mem_vector` structures:
 static struct mem_vector mem_avoid[MEM_AVOID_MAX];
 ```
 
-where the `mem_vector` structure contains information about unsafe memory regions:
+где структура `mem_vector` содержит информацию о небезопасных областях памяти:
 
 ```C
 struct mem_vector {
@@ -292,7 +291,7 @@ struct mem_vector {
 };
 ```
 
-The implementation of the `mem_avoid_init` is pretty simple. Let's look on the part of this function:
+Реализация `mem_avoid_init` довольна проста. Давайте посмотрим на часть этой функции:
 
 ```C
 	...
@@ -309,7 +308,7 @@ The implementation of the `mem_avoid_init` is pretty simple. Let's look on the p
 	...
 ```
 
-Here we can see calculation of the [initrd](http://en.wikipedia.org/wiki/Initrd) start address and size. The `ext_ramdisk_image` is the high `32-bits` of the `ramdisk_image` field from the setup header, and `ext_ramdisk_size` is the high 32-bits of the `ramdisk_size` field from the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt):
+Здесь мы видим расчёт начального адреса и размера [initrd](http://en.wikipedia.org/wiki/Initrd). `ext_ramdisk_image` - старшие `32 бита` поля `ramdisk_image` из заголовка настройки, и `ext_ramdisk_size` - старшие 32 бита поля `ramdisk_size` из [протокола загрузки](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt):
 
 ```
 Offset	Proto	Name		Meaning
@@ -317,12 +316,12 @@ Offset	Proto	Name		Meaning
 ...
 ...
 ...
-0218/4	2.00+	ramdisk_image	initrd load address (set by boot loader)
-021C/4	2.00+	ramdisk_size	initrd size (set by boot loader)
+0218/4	2.00+	ramdisk_image	адрес загрузки initrd (установлен загрузчиком)
+021C/4	2.00+	ramdisk_size	размер initrd (установлен загрузчиком)
 ...
 ```
 
-And `ext_ramdisk_image` and `ext_ramdisk_size` can be found in the [Documentation/x86/zero-page.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/zero-page.txt):
+`ext_ramdisk_image` и `ext_ramdisk_size` могут быть найдены в [Documentation/x86/zero-page.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/zero-page.txt):
 
 ```
 Offset	Proto	Name		Meaning
@@ -330,20 +329,20 @@ Offset	Proto	Name		Meaning
 ...
 ...
 ...
-0C0/004	ALL	ext_ramdisk_image ramdisk_image high 32bits
-0C4/004	ALL	ext_ramdisk_size  ramdisk_size high 32bits
+0C0/004	ALL	ext_ramdisk_image старшие 32 бита ramdisk_image
+0C4/004	ALL	ext_ramdisk_size  старшие 32 бита ramdisk_size
 ...
 ```
 
-So we're taking `ext_ramdisk_image` and `ext_ramdisk_size`, shifting them left on `32` (now they will contain low 32-bits in the high 32-bit bits) and getting start address of the `initrd` and size of it. After this we store these values in the `mem_avoid` array.
+Итак, мы берём `ext_ramdisk_image` и `ext_ramdisk_size`, сдвигаем их влево на `32` (теперь они будут содержать младшие 32 бита в старших битах) и получаем начальный адрес и размер `initrd`. После этого мы сохраняем эти значения в массиве `mem_avoid`.
 
-The next step after we've collected all unsafe memory regions in the `mem_avoid` array will be searching for a random address that does not overlap with the unsafe regions, using the `find_random_addr` function. First of all we can see the alignment of the output address in the `find_random_addr` function:
+Следующим шагом после того, как мы собрали все небезопасные области памяти в массиве `mem_avoid`, будет поиск случайного адреса, который не пересекается с небезопасными областями, используя функцию `find_random_addr`. Прежде всего, мы можем видеть выравнивание выходного адреса в функции `find_random_addr`:
 
 ```C
 minimum = ALIGN(minimum, CONFIG_PHYSICAL_ALIGN);
 ```
 
-You can remember `CONFIG_PHYSICAL_ALIGN` configuration option from the previous part. This option provides the value to which kernel should be aligned and it is `0x200000` by default. Once we have the aligned output address, we go through the memory regions which we got with the help of the BIOS [e820](https://en.wikipedia.org/wiki/E820) service and collect regions suitable for the decompressed kernel image:
+Вы можете помнить опцию конфигурации `CONFIG_PHYSICAL_ALIGN` из предыдущей части. Эта опция предоставляет значение, по которому ядро должно быть выровнено, и по умолчанию оно составляет `0x200000`. После получения выровненного выходного адреса, мы просматриваем области памяти, которые мы получили с помощью BIOS-сервиса [e820](https://en.wikipedia.org/wiki/E820) и собираем подходящие для распакованного образа ядра:
 
 ```C
 for (i = 0; i < real_mode->e820_entries; i++) {
@@ -351,7 +350,7 @@ for (i = 0; i < real_mode->e820_entries; i++) {
 }
 ```
 
-Recall that we collected `e820_entries` in the second part of the [Kernel booting process part 2](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-2.md#memory-detection). The `process_e820_entry` function does some checks that an `e820` memory region is not `non-RAM`, that the start address of the memory region is not bigger than maximum allowed `aslr` offset, and that the memory region is above the minimum load location:
+Напомним, что мы собрали `e820_entries` во [второй части](https://github.com/proninyaroslav/linux-insides-ru/blob/master/Booting/linux-bootstrap-2.md#Обнаружение-памяти). Функция `process_e820_entry` совершает некоторые проверки что область памяти `e820` не является `non-RAM`, что начальный адрес области памяти не больше максимального допустимого смещения `aslr` offset, и что область памяти находится выше минимальной локации загрузки:
 
 ```C
 struct mem_vector region, img;
@@ -366,14 +365,14 @@ if (entry->addr + entry->size < minimum)
 	return;
 ```
 
-After this, we store an `e820` memory region start address and the size in the `mem_vector` structure (we saw definition of this structure above):
+После этого мы сохраняем начальный адрес и размер области памяти `e820` в структуре `mem_vector` (мы видели определение этой структуры выше):
 
 ```C
 region.start = entry->addr;
 region.size = entry->size;
 ```
 
-As we store these values, we align the `region.start` as we did it in the `find_random_addr` function and check that we didn't get an address that is outside the original memory region:
+Во время сохранения значений мы также выравниваем `region.start`, как это делали в функции `find_random_addr` и проверяем, что мы не получили адрес, который находится за пределами области оригинальной памяти:
 
 ```C
 region.start = ALIGN(region.start, CONFIG_PHYSICAL_ALIGN);
@@ -382,7 +381,7 @@ if (region.start > entry->addr + entry->size)
 	return;
 ```
 
-In the next step, we reduce the size of the memory region to not include rejected regions at the start, and ensure that the last address in the memory region is smaller than `CONFIG_RANDOMIZE_BASE_MAX_OFFSET`, so that the end of the kernel image will be less than the maximum `aslr` offset:
+На следующем этапе мы уменьшаем размер области памяти, чтобы не включать отклонённые области в начале, и гарантируем, что последний адрес в области памяти меньше, чем `CONFIG_RANDOMIZE_BASE_MAX_OFFSET`, поэтому конец образа ядра будет меньше чем максимальное смещение `aslr`:
 
 ```C
 region.size -= region.start - entry->addr;
@@ -391,7 +390,7 @@ if (region.start + region.size > CONFIG_RANDOMIZE_BASE_MAX_OFFSET)
 		region.size = CONFIG_RANDOMIZE_BASE_MAX_OFFSET - region.start;
 ```
 
-Finally, we go through all unsafe memory regions and check that the region does not overlap unsafe areas, such as kernel command line, initrd, etc...:
+И наконец, мы просматриваем все небезопасные области памяти и проверяем, что область не перекрывает небезопасные области, такие как командная строка ядра, initrd и т.д:
 
 ```C
 for (img.start = region.start, img.size = image_size ;
@@ -403,13 +402,13 @@ for (img.start = region.start, img.size = image_size ;
 	}
 ```
 
-If the memory region does not overlap unsafe regions we call the `slots_append` function with the start address of the region. `slots_append` function just collects start addresses of memory regions to the `slots` array:
+Если область памяти не перекрывает небезопасные области, мы вызываем функцию `slots_append` с начальным адресом области. Функция `slots_append` просто собирает начальные адреса областей памяти в массив `slots`:
 
 ```C
 slots[slot_max++] = addr;
 ```
 
-which is defined as:
+который определён как:
 
 ```C
 static unsigned long slots[CONFIG_RANDOMIZE_BASE_MAX_OFFSET /
@@ -417,7 +416,7 @@ static unsigned long slots[CONFIG_RANDOMIZE_BASE_MAX_OFFSET /
 static unsigned long slot_max;
 ```
 
-After `process_e820_entry` is done, we will have an array of addresses that are safe for the decompressed kernel. Then we call `slots_fetch_random` function to get a random item from this array:
+После завершения `process_e820_entry` у нас будет массив адресов, безопасных для распакованного ядра. Затем мы вызываем функцию `slots_fetch_random` для того, чтобы получить случайный адрес из этого массива:
 
 ```C
 if (slot_max == 0)
@@ -426,17 +425,17 @@ if (slot_max == 0)
 return slots[get_random_long() % slot_max];
 ```
 
-where `get_random_long` function checks different CPU flags as `X86_FEATURE_RDRAND` or `X86_FEATURE_TSC` and chooses a method for getting random number (it can be the RDRAND instruction, the time stamp counter, the programmable interval timer, etc...). After retrieving the random address, execution of the `choose_random_location` is finished.
+где функция `get_random_long` проверяет различные флаги ЦПУ, такие как `X86_FEATURE_RDRAND` или `X86_FEATURE_TSC`, и выбирает метод для получения случайного числа (это может быть инструкция RDRAND, счётчик временных меток, программируемый интервальный таймер и т.д.). После извлечения случайного адреса, `choose_random_location` завершает свою работу.
 
-Now let's back to [misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c#L404). After getting the address for the kernel image, there need to be some checks to be sure that the retrieved random address is correctly aligned and address is not wrong. 
+Теперь вернёмся к [misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c#L404). После получения адреса для образа ядра мы должны были совершить некоторые проверки, чтобы убедиться, что полученный случайный адрес правильно выровнен и что адрес является корректным.
 
-After all these checks we will see the familiar message:
+После этого мы увидим знакомое сообщение:
 
 ```
 Decompressing Linux... 
 ```
 
-and call the `__decompress` function which will decompress the kernel. The `__decompress` function depends on what decompression algorithm was chosen during kernel compilation:
+и вызываем функцию `__decompress`, которая будет распаковывать ядро. Функция `__decompress` зависит от того, какой алгоритм декомпрессии был выбран во время компиляции:
 
 ```C
 #ifdef CONFIG_KERNEL_GZIP
@@ -464,7 +463,7 @@ and call the `__decompress` function which will decompress the kernel. The `__de
 #endif
 ```
 
-After kernel is decompressed, the last two functions are `parse_elf` and `handle_relocations`. The main point of these functions is to move the uncompressed kernel image to the correct memory place. The fact is that the decompression will decompress [in-place](https://en.wikipedia.org/wiki/In-place_algorithm), and we still need to move kernel to the correct address. As we already know, the kernel image is an [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) executable, so the main goal of the `parse_elf` function is to move loadable segments to the correct address. We can see loadable segments in the output of the `readelf` program:
+После того как ядро распаковано, остаются две последние функции - `parse_elf` и `handle_relocations`. Основное назначение этих функций - переместить распакованный образ ядра в правильное место памяти. Дело в том, что декомпрессор распаковывает [на месте](https://en.wikipedia.org/wiki/In-place_algorithm), и нам всё равно нужно переместить ядро на правильный адрес. Как мы уже знаем, образ ядра является исполняемым файлом [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format), поэтому главной целью функции `parse_elf` является перемещение загружаемых сегментов на правильный адрес. Мы можем видеть загружаемые сегменты в выводе программы `readelf`:
 
 ```
 readelf -l vmlinux
@@ -486,7 +485,7 @@ Program Headers:
                  0x0000000000138000 0x000000000029b000  RWE    200000
 ```
 
-The goal of the `parse_elf` function is to load these segments to the `output` address we got from the `choose_random_location` function. This function starts with checking the [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) signature:
+Цель функции `parse_elf` - загрузить эти сегменты по адресу `output`, который мы получили с помощью функции `choose_random_location`. Эта функция начинается с проверки сигнатуры [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format):
 
 ```C
 Elf64_Ehdr ehdr;
@@ -503,7 +502,7 @@ if (ehdr.e_ident[EI_MAG0] != ELFMAG0 ||
 }
 ```
 
-and if it's not valid, it prints an error message and halts. If we got a valid `ELF` file, we go through all program headers from the given `ELF` file and copy all loadable segments with correct address to the output buffer:
+и если файл некорректный, функция выводит сообщение об ошибке и останавливается. Если же `ELF` файл корректный, мы просматриваем все заголовки из указанного `ELF` файла и копируем все загружаемые сегменты с правильным адресом в выходной буфер:
 
 ```C
 	for (i = 0; i < ehdr.e_phnum; i++) {
@@ -526,35 +525,33 @@ and if it's not valid, it prints an error message and halts. If we got a valid `
 	}
 ```
 
-That's all. From now on, all loadable segments are in the correct place. The last `handle_relocations` function adjusts addresses in the kernel image, and is called only if the `kASLR` was enabled during kernel configuration.
+С этого момента все загружаемые сегменты находятся в правильном месте. Последняя функция - `handle_relocations` - корректирует адреса в образе ядра и вызывается только в том случае, если `kASLR` был включён во время конфигурации ядра.
 
-After the kernel is relocated, we return back from the `decompress_kernel` to [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S). The address of the kernel will be in the `rax` register and we jump to it:
+После перемещения ядра мы возвращаемся из `decompress_kernel` обратно в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S). Адрес ядра находится в регистре `rax` и мы переходим по нему:
 
 ```assembly
 jmp	*%rax
 ```
 
-That's all. Now we are in the kernel!
+На этом всё. Теперь мы в ядре!
 
-Conclusion
+Заключение
 --------------------------------------------------------------------------------
 
-This is the end of the fifth and the last part about linux kernel booting process. We will not see posts about kernel booting anymore (maybe updates to this and previous posts), but there will be many posts about other kernel internals. 
+Это конец пятой и последней части процесса загрузки ядра Linux. Мы больше не увидим статей о загрузке ядра (возможны обновления этой и предыдущих статей), но будет много статей о других внутренних компонентах ядра. 
 
-Next chapter will be about kernel initialization and we will see the first steps in the Linux kernel initialization code.
+Следующая глава посвящена инициализации ядра, и мы увидим первые шаги в коде инициализации ядра Linux.
 
-If you have any questions or suggestions write me a comment or ping me in [twitter](https://twitter.com/0xAX).
+**Пожалуйста, имейте в виду, что английский - не мой родной язык, и я очень извиняюсь за возможные неудобства. Если вы найдёте какие-либо ошибки или неточности в переводе, пожалуйста, пришлите pull request в [linux-insides-ru](https://github.com/proninyaroslav/linux-insides-ru).**
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
-
-Links
+Ссылки
 --------------------------------------------------------------------------------
 
-* [address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
+* [Рандомизация размещения адресного пространства](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
 * [initrd](http://en.wikipedia.org/wiki/Initrd)
 * [long mode](http://en.wikipedia.org/wiki/Long_mode)
 * [bzip2](http://www.bzip.org/)
-* [RDdRand instruction](http://en.wikipedia.org/wiki/RdRand)
-* [Time Stamp Counter](http://en.wikipedia.org/wiki/Time_Stamp_Counter)
-* [Programmable Interval Timers](http://en.wikipedia.org/wiki/Intel_8253)
-* [Previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md)
+* [Инструкция RDdRand](http://en.wikipedia.org/wiki/RdRand)
+* [Счётчик временных меток](http://en.wikipedia.org/wiki/Time_Stamp_Counter)
+* [Программируемый интервальный таймер](http://en.wikipedia.org/wiki/Intel_8253)
+* [Предыдущий пост](linux-bootstrap-4.md)
