@@ -265,7 +265,7 @@ This means that in our case the timer interrupt frequency is `250 HZ` or occurs 
 
 The last field that we can see in the definition of the `clocksource_jiffies` structure is the - `max_cycles` that holds the maximum cycle value that can safely be multiplied without potentially causing an overflow.
 
-	Ok, we just saw definition of the `clocksource_jiffies` structure, also we know a little about `jiffies` and `clocksource`, now it is time to get back to the implementation of the our function. In the beginning of this part we have stopped on the call of the:
+Ok, we just saw definition of the `clocksource_jiffies` structure, also we know a little about `jiffies` and `clocksource`, now it is time to get back to the implementation of the our function. In the beginning of this part we have stopped on the call of the:
 
 ```C
 register_refined_jiffies(CLOCK_TICK_RATE);
