@@ -162,7 +162,7 @@ Note, that the `tick_device` structure contains two fields. The first field - `e
 The second field of the `tick_device` structure represents mode of the `tick_device`. As we already know, the mode can be one of the:
 
 ```C
-num tick_device_mode {
+enum tick_device_mode {
         TICKDEV_MODE_PERIODIC,
         TICKDEV_MODE_ONESHOT,
 };
