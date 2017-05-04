@@ -102,3 +102,4 @@
 * [Matthew Fernandez](https://github.com/Smattr)
 * [Yoshihiro YUNOMAE](https://github.com/yunomae)
 * [paulch](https://github.com/paulch)
+* [Nathan Dautenhahn](https://github.com/ndauten)
