@@ -103,3 +103,4 @@ Thank you to all contributors:
 * [Yoshihiro YUNOMAE](https://github.com/yunomae)
 * [paulch](https://github.com/paulch)
 * [Nathan Dautenhahn](https://github.com/ndauten)
+* [Sachin Patil](https://github.com/psachin)
