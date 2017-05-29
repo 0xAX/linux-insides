@@ -45,10 +45,6 @@ Important data structures
 
 * [task_struct definition](http://lxr.free-electrons.com/source/include/linux/sched.h#L1274)
 
-Other architectures
-------------------------
-
-* [PowerPC and Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
 
 Useful links
 ------------------------
