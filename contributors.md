@@ -104,3 +104,4 @@
 * [paulch](https://github.com/paulch)
 * [Nathan Dautenhahn](https://github.com/ndauten)
 * [Sachin Patil](https://github.com/psachin)
+* [Stéphan Gorget](https://github.com/phantez)
