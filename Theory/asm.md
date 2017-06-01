@@ -159,7 +159,7 @@ As mentioned above, the "clobbered" part should contain a comma-separated list o
 Consider the example from before, but we will add an additional, simple assembler instruction:
 
 ```C
-__asm__("movq $100, %%rdx\t\n"
+__asm__("movq $100, %%edx\t\n"
         "addl %1,%2" : "=r" (sum) : "r" (a), "0" (b));
 ```
 
@@ -169,15 +169,15 @@ If we look at the assembly output
 0000000000400400 <main>:
   400400:       ba 05 00 00 00          mov    $0x5,%edx
   400405:       b8 0a 00 00 00          mov    $0xa,%eax
-  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%rdx
+  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%edx
   400411:       01 d0                   add    %edx,%eax
 ```
 
-we see that the `%edx` register is overwritten with `0x64` or `100` and the result will be `115` instead of `15`. Now if we add the `%rdx` register to the list of "clobbered" register
+we see that the `%edx` register is overwritten with `0x64` or `100` and the result will be `115` instead of `15`. Now if we add the `%edx` register to the list of "clobbered" register
 
 ```C
-__asm__("movq $100, %%rdx\t\n"
-        "addl %1,%2" : "=r" (sum) : "r" (a), "0" (b) : "%rdx");
+__asm__("movq $100, %%edx\t\n"
+        "addl %1,%2" : "=r" (sum) : "r" (a), "0" (b) : "%edx");
 ```
 
 and look at the assembler output again
@@ -186,7 +186,7 @@ and look at the assembler output again
 0000000000400400 <main>:
   400400:       b9 05 00 00 00          mov    $0x5,%ecx
   400405:       b8 0a 00 00 00          mov    $0xa,%eax
-  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%rdx
+  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%edx
   400411:       01 c8                   add    %ecx,%eax
 ```
 
