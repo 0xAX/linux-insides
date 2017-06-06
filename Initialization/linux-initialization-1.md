@@ -302,17 +302,17 @@ The result will be in the `edx:eax`. General view of the `EFER` is following:
 
 ```
 63                                                                              32
- --------------------------------------------------------------------------------
-|                                                                               |
-|                                Reserved MBZ                                   |
-|                                                                               |
- --------------------------------------------------------------------------------
+┌───────────────────────────────────────────────────────────────────────────────┐
+│                                                                               │
+│                                Reserved MBZ                                   │
+│                                                                               │
+└───────────────────────────────────────────────────────────────────────────────┘
 31                            16  15      14      13   12  11   10  9  8 7  1   0
- --------------------------------------------------------------------------------
-|                              | T |       |       |    |   |   |   |   |   |   |
-| Reserved MBZ                 | C | FFXSR | LMSLE |SVME|NXE|LMA|MBZ|LME|RAZ|SCE|
-|                              | E |       |       |    |   |   |   |   |   |   |
- --------------------------------------------------------------------------------
+┌──────────────────────────────┬───┬───────┬───────┬────┬───┬───┬───┬───┬───┬───┐
+│                              │ T │       │       │    │   │   │   │   │   │   │
+│ Reserved MBZ                 │ C │ FFXSR | LMSLE │SVME│NXE│LMA│MBZ│LME│RAZ│SCE│
+│                              │ E │       │       │    │   │   │   │   │   │   │
+└──────────────────────────────┴───┴───────┴───────┴────┴───┴───┴───┴───┴───┴───┘
 ```
 
 We will not see all fields in details here, but we will learn about this and other `MSRs` in a special part about it. As we read `EFER` to the `edx:eax`, we check `_EFER_SCE` or zero bit which is `System Call Extensions` with `btsl` instruction and set it to one. By the setting `SCE` bit we enable `SYSCALL` and `SYSRET` instructions. In the next step we check 20th bit in the `edi`, remember that this register stores result of the `cpuid` (see above). If `20` bit is set (`NX` bit) we just write `EFER_SCE` to the model specific register.
