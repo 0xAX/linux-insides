@@ -18,7 +18,7 @@ If you are familiar with the [assembly](https://en.wikipedia.org/wiki/Assembly_l
 __asm__("movq %rax, %rsp");
 ```
 
-or
+or:
 
 ```C
 __asm__("hlt");
@@ -92,12 +92,12 @@ Consider the following simple example:
 
 int main(void)
 {
-        int a = 5;
-        int b = 10;
-        int sum = 0;
+        unsigned long a = 5;
+        unsigned long b = 10;
+        unsigned long sum = 0;
 
-        __asm__("addl %1,%2" : "=r" (sum) : "r" (a), "0" (b));
-        printf("a + b = %d\n", sum);
+        __asm__("addq %1,%2" : "=r" (sum) : "r" (a), "0" (b));
+        printf("a + b = %lu\n", sum);
         return 0;
 }
 ```
@@ -113,13 +113,13 @@ a + b = 15
 Ok, great. It works. Now let's look at this example in detail. Here we see a simple `C` program which calculates the sum of two variables placing the result into the `sum` variable and in the end we print the result. This example consists of three parts. The first is the assembly statement with the [add](http://x86.renejeschke.de/html/file_module_x86_id_5.html) instruction. It adds the value of the source operand together with the value of the destination operand and stores the result in the destination operand. In our case:
 
 ```assembly
-addl %1, %2
+addq %1, %2
 ```
 
 will be expanded to the:
 
 ```assembly
-addl a, b
+addq a, b
 ```
 
 Variables and expressions which are listed in the `OutputOperands` and `InputOperands` may be matched in the `AssemblerTemplate`. An input/output operand is designated as `%N` where the `N` is the number of operand from left to right beginning from `zero`. The second part of the our assembly statement is located after the first `:` symbol and contains the definition of the output value:
@@ -140,16 +140,26 @@ Now let's go back to the `r` qualifier. As I mentioned above, a qualifier denote
 "r" (a), "0" (b)
 ```
 
-These are input operands - variables `a` and `b`. We already know what the `r` qualifier does. Now we can have a look at the constraint for the variable `b`. The `0` or any other digit from `1` to `9` is called "matching constraint". With this a single operand can be used for multiple roles. The value of the constraint is the source operand index. In our case `0` will match `sum`. If we look at assembly output of our program
+These are input operands - variables `a` and `b`. We already know what the `r` qualifier does. Now we can have a look at the constraint for the variable `b`. The `0` or any other digit from `1` to `9` is called "matching constraint". With this a single operand can be used for multiple roles. The value of the constraint is the source operand index. In our case `0` will match `sum`. If we look at assembly output of our program:
 
 ```C
 0000000000400400 <main>:
-  400401:       ba 05 00 00 00          mov    $0x5,%edx
-  400406:       b8 0a 00 00 00          mov    $0xa,%eax
-  40040b:       01 d0                   add    %edx,%eax
+  ...
+  ...
+  ...
+  4004fe:       48 c7 45 f8 05 00 00    movq   $0x5,-0x8(%rbp)
+  400506:       48 c7 45 f0 0a 00 00    movq   $0xa,-0x10(%rbp)
+
+  400516:       48 8b 55 f8             mov    -0x8(%rbp),%rdx
+  40051a:       48 8b 45 f0             mov    -0x10(%rbp),%rax
+  40051e:       48 01 d0                add    %rdx,%rax
 ```
 
-we see that only two general purpose registers are used: `%edx` and `%eax`. This way the `%eax` register is used for storing the value of `b` as well as storing the result of the calculation. We have looked at input and output parameters of an inline assembly statement. Before we move on to other constraints supported by `gcc`, there is one remaining part of the inline assembly statement we have not discussed yet - `clobbers`.
+First of all our values `5` and `10` will be put at the stack and then these values will be moved to the two general purpose registers: `%rdx` and `%rax`.
+
+This way the `%rax` register is used for storing the value of the `b` as well as storing the result of the calculation. **NOTE** that I've used `gcc 6.3.1` version, so the resulted code of your compiler may differ. 
+
+We have looked at input and output parameters of an inline assembly statement. Before we move on to other constraints supported by `gcc`, there is one remaining part of the inline assembly statement we have not discussed yet - `clobbers`.
 
 Clobbers
 --------------------------------------------------------------------------------
@@ -160,42 +170,53 @@ Consider the example from before, but we will add an additional, simple assemble
 
 ```C
 __asm__("movq $100, %%rdx\t\n"
-        "addl %1,%2" : "=r" (sum) : "r" (a), "0" (b));
+        "addq %1,%2" : "=r" (sum) : "r" (a), "0" (b));
 ```
 
-If we look at the assembly output
+If we look at the assembly output:
 
 ```C
 0000000000400400 <main>:
-  400400:       ba 05 00 00 00          mov    $0x5,%edx
-  400405:       b8 0a 00 00 00          mov    $0xa,%eax
-  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%rdx
-  400411:       01 d0                   add    %edx,%eax
+  ...
+  ...
+  ...
+  4004fe:       48 c7 45 f8 05 00 00    movq   $0x5,-0x8(%rbp)
+  400506:       48 c7 45 f0 0a 00 00    movq   $0xa,-0x10(%rbp)
+
+  400516:       48 8b 55 f8             mov    -0x8(%rbp),%rdx
+  40051a:       48 8b 45 f0             mov    -0x10(%rbp),%rax
+
+  40051e:       48 c7 c2 64 00 00 00    mov    $0x64,%rdx
+  400525:       48 01 d0                add    %rdx,%rax
 ```
 
-we see that the `%edx` register is overwritten with `0x64` or `100` and the result will be `115` instead of `15`. Now if we add the `%rdx` register to the list of "clobbered" register
+we will see that the `%rdx` register is overwritten with `0x64` or `100` and the result will be `115` instead of `15`. Now if we add the `%rdx` register to the list of `clobbered` registers:
 
 ```C
 __asm__("movq $100, %%rdx\t\n"
-        "addl %1,%2" : "=r" (sum) : "r" (a), "0" (b) : "%rdx");
+        "addq %1,%2" : "=r" (sum) : "r" (a), "0" (b) : "%rdx");
 ```
 
-and look at the assembler output again
+and look at the assembler output again:
 
 ```C
 0000000000400400 <main>:
-  400400:       b9 05 00 00 00          mov    $0x5,%ecx
-  400405:       b8 0a 00 00 00          mov    $0xa,%eax
-  40040a:       48 c7 c2 64 00 00 00    mov    $0x64,%rdx
-  400411:       01 c8                   add    %ecx,%eax
+  4004fe:       48 c7 45 f8 05 00 00    movq   $0x5,-0x8(%rbp)
+  400506:       48 c7 45 f0 0a 00 00    movq   $0xa,-0x10(%rbp)
+
+  400516:       48 8b 4d f8             mov    -0x8(%rbp),%rcx
+  40051a:       48 8b 45 f0             mov    -0x10(%rbp),%rax
+
+  40051e:       48 c7 c2 64 00 00 00    mov    $0x64,%rdx
+  400525:       48 01 c8                add    %rcx,%rax
 ```
 
-the `%ecx` register will be used for `sum` calculation, preserving the intended semantics of the program. Besides general purpose registers, we may pass two special specifiers. They are:
+the `%rcx` register will be used for `sum` calculation, preserving the intended semantics of the program. Besides general purpose registers, we may pass two special specifiers. They are:
 
 * `cc`;
 * `memory`.
 
-The first - `cc` indicates that an assembler code modifies [flags](https://en.wikipedia.org/wiki/FLAGS_register) register. This is typically used if the assembly within contains arithmetic or logic instructions.
+The first - `cc` indicates that an assembler code modifies [flags](https://en.wikipedia.org/wiki/FLAGS_register) register. This is typically used if the assembly within contains arithmetic or logic instructions:
 
 ```C
 __asm__("incq %0" ::""(variable): "cc");
@@ -208,82 +229,91 @@ The second `memory` specifier tells the compiler that the given inline assembly 
 
 int main(void)
 {
-        int a[3] = {10,20,30};
-        int b = 5;
+        unsigned long a[3] = {10000000000, 0, 1};
+        unsigned long b = 5;
         
-        __asm__ volatile("incl %0" :: "m" (a[0]));
-        printf("a[0] - b = %d\n", a[0] - b);
+        __asm__ volatile("incq %0" :: "m" (a[0]));
+
+        printf("a[0] - b = %lu\n", a[0] - b);
         return 0;
 }
 ```
 
-This example may be artificial, but it illustrates the main idea. Here we have an array of integers and one integer variable. The example is pretty simple, we take the first element of `a` and increment its value. After this we subtract the value of `b` from the  first element of `a`. In the end we print the result. If we compile and run this simple example the result may surprise you.
+This example may be artificial, but it illustrates the main idea. Here we have an array of integers and one integer variable. The example is pretty simple, we take the first element of `a` and increment its value. After this we subtract the value of `b` from the  first element of `a`. In the end we print the result. If we compile and run this simple example the result may surprise you:
 
 ```
 ~$ gcc -O3  test.c -o test
 ~$ ./test
-a[0] - b = 5
+a[0] - b = 9999999995
 ```
 
-The result is `5` here, but why? We incremented `a[0]` and subtracted b, so the result should be `6` here. If we have a look at the assembler output for this example
+The result is `a[0] - b = 9999999995` here, but why? We incremented `a[0]` and subtracted `b`, so the result should be `a[0] - b = 9999999996` here.
+
+If we have a look at the assembler output for this example:
 
 ```assembly
 00000000004004f6 <main>:
-  4004f6:       c7 44 24 f0 0a 00 00    movl   $0xa,-0x10(%rsp)
-  4004fd:       00 
-  4004fe:       c7 44 24 f4 14 00 00    movl   $0x14,-0xc(%rsp)
-  400505:       00 
-  400506:       c7 44 24 f8 1e 00 00    movl   $0x1e,-0x8(%rsp)
-  40050d:       00 
-  40050e:       ff 44 24 f0             incl   -0x10(%rsp)
-  400512:       b8 05 00 00 00          mov    $0x5,%eax
+  4004b4:       48 b8 00 e4 0b 54 02    movabs $0x2540be400,%rax
+  4004be:       48 89 04 24             mov    %rax,(%rsp)
+  ...
+  ...
+  ...
+  40050e:       ff 44 24 f0             incq   (%rsp)
+
+  4004d8:       48 be fb e3 0b 54 02    movabs $0x2540be3fb,%rsi
 ```
 
-we see that the first element of the `a` contains the value `0xa` (`10`). The last two lines of code are the actual calculations. We see our increment instruction with `incl` but then just a move of `5` to the `%eax` register. This looks strange. The problem is we have passed the `-O3` flag to `gcc`, so the compiler did some constant folding and propagation to determine the result of `a[0] - 5` at compile time and reduced it to a `mov` with a constant `5` at runtime.
+we will see that the first element of the `a` contains the value `0x2540be400` (`10000000000`). The last two lines of code are the actual calculations.
 
-Let's now add `memory` to the clobbers list
+We see our increment instruction with `incq` but then just a move of `0x2540be3fb` (`9999999995`) to the `%rsi` register. This looks strange.
+
+The problem is we have passed the `-O3` flag to `gcc`, so the compiler did some constant folding and propagation to determine the result of `a[0] - 5` at compile time and reduced it to a `movabs` with a constant `0x2540be3fb` or `9999999995` in runtime.
+
+Let's now add `memory` to the clobbers list:
 
 ```C
-__asm__ volatile("incl %0" :: "m" (a[0]) : "memory");
+__asm__ volatile("incq %0" :: "m" (a[0]) : "memory");
 ```
 
-and the new result of running this is
+and the new result of running this is:
 
 ```
 ~$ gcc -O3  test.c -o test
 ~$ ./test
-a[0] - b = 6
+a[0] - b = 9999999996
 ```
 
-Now the result is correct. If we look at the assembly output again
+Now the result is correct. If we look at the assembly output again:
 
 ```assembly
 00000000004004f6 <main>:
-  4004f6:       c7 44 24 f0 0a 00 00    movl   $0xa,-0x10(%rsp)
-  4004fd:       00 
-  4004fe:       c7 44 24 f4 14 00 00    movl   $0x14,-0xc(%rsp)
-  400505:       00 
-  400506:       c7 44 24 f8 1e 00 00    movl   $0x1e,-0x8(%rsp)
-  40050d:       00 
-  40050e:       ff 44 24 f0             incl   -0x10(%rsp)
-  400512:       8b 44 24 f0             mov    -0x10(%rsp),%eax
-  400516:       83 e8 05                sub    $0x5,%eax
-  400519:       c3                      retq
+  400404:       48 b8 00 e4 0b 54 02    movabs $0x2540be400,%rax
+  40040b:       00 00 00 
+  40040e:       48 89 04 24             mov    %rax,(%rsp)
+  400412:       48 c7 44 24 08 00 00    movq   $0x0,0x8(%rsp)
+  400419:       00 00 
+  40041b:       48 c7 44 24 10 01 00    movq   $0x1,0x10(%rsp)
+  400422:       00 00 
+  400424:       48 ff 04 24             incq   (%rsp)
+  400428:       48 8b 04 24             mov    (%rsp),%rax
+  400431:       48 8d 70 fb             lea    -0x5(%rax),%rsi
 ```
 
-we will see one difference here which is in the following piece code:
+we will see one difference here which is in the last two lines:
 
 ```assembly
-  400512:       8b 44 24 f0             mov    -0x10(%rsp),%eax
-  400516:       83 e8 05                sub    $0x5,%eax
+  400428:       48 8b 04 24             mov    (%rsp),%rax
+  400431:       48 8d 70 fb             lea    -0x5(%rax),%rsi
 ```
 
-Instead of constant folding, `GCC` now preserves calculations in the assembly and places the value of `a[0]` in the `%eax` register afterwards. In the end it just subtracts the constant value of `b`. Besides the `memory` specifier, we also see a new constraint here - `m`. This constraint tells the compiler to use the address of `a[0]`, instead of its value. So, now we are finished with `clobbers` and we may continue by looking at other constraints supported by `GCC` besides `r` and `m` which we have already seen.
+Instead of constant folding, `GCC` now preserves calculations in the assembly and places the value of `a[0]` in the `%rax` register afterwards. In the end it just subtracts the constant value of `b` from the `%rax` register and puts result to the `%rsi`.
+
+Besides the `memory` specifier, we also see a new constraint here - `m`. This constraint tells the compiler to use the address of `a[0]`, instead of its value. So, now we are finished with `clobbers` and we may continue by looking at other constraints supported by `GCC` besides `r` and `m` which we have already seen.
 
 Constraints
 ---------------------------------------------------------------------------------
 
-Now that we are finished with all three parts of an inline assembly statement, let's return to constraints. We already saw some constraints in the previous parts, like `r` which represents a `register` operand, `m` which represents a memory operand and `0-9` which represent an reused, indexed operand. Besides these `GCC` provides support for other constraints. For example the `i` constraint represents an `immediate` integer operand with know value.
+Now that we are finished with all three parts of an inline assembly statement, let's return to constraints. We already saw some constraints in the previous parts, like `r` which represents a `register` operand, `m` which represents a memory operand and `0-9` which represent an reused, indexed operand. Besides these `GCC` provides support for other constraints. For example the `i` constraint represents an `immediate` integer operand with know value:
 
 ```C
 #include <stdio.h>
@@ -306,7 +336,7 @@ The result is:
 a = 100
 ```
 
-Or for example `I` which represents an immediate 32-bit integer. The difference between `i` and `I` is that `i` is general, whereas `I` is strictly specified to 32-bit integer data. For example if you try to compile the following
+Or for example `I` which represents an immediate 32-bit integer. The difference between `i` and `I` is that `i` is general, whereas `I` is strictly specified to 32-bit integer data. For example if you try to compile the following code:
 
 ```C
 unsigned long test_asm(int nr)
@@ -318,7 +348,7 @@ unsigned long test_asm(int nr)
 }
 ```
 
-you will get an error
+you will get an error:
 
 ```
 $ gcc -O3 test.c -o test
@@ -329,7 +359,7 @@ test.c:7:9: warning: asm operand 1 probably doesn’t match constraints
 test.c:7:9: error: impossible constraint in ‘asm’
 ```
 
-when at the same time
+when at the same time:
 
 ```C
 unsigned long test_asm(int nr)
@@ -341,7 +371,7 @@ unsigned long test_asm(int nr)
 }
 ```
 
-works perfectly.
+works perfectly:
 
 ```
 ~$ gcc -O3 test.c -o test
@@ -378,21 +408,21 @@ All of these constraints may be combined (so long as they do not conflict). In t
 ```C
 #include <stdio.h>
 
-int a = 1;
+unsigned long a = 1;
 
 int main(void)
 {
-        int b;
-        __asm__ ("movl %1,%0" : "=r"(b) : "r"(a));
+        unsigned long b;
+        __asm__ ("movq %1,%0" : "=r"(b) : "r"(a));
         return b;
 }
 ```
 
-will use a memory operand.
+will use a memory operand:
 
 ```assembly
 0000000000400400 <main>:
-  400400:       8b 05 26 0c 20 00       mov    0x200c26(%rip),%eax        # 60102c <a>
+  4004aa:       48 8b 05 6f 0b 20 00    mov    0x200b6f(%rip),%rax        # 601020 <a>
 ```
 
 That's about all of the commonly used constraints in inline assembly statements. You can find more in the official [documentation](https://gcc.gnu.org/onlinedocs/gcc/Simple-Constraints.html#Simple-Constraints).
@@ -410,16 +440,16 @@ int a = 1;
 int main(void)
 {
         int b;
-        __asm__ ("movl %1,%0" : "=r"(b) : "d"(a));
+        __asm__ ("movq %1,%0" : "=r"(b) : "d"(a));
         return b;
 }
 ```
 
-Now we see that value of the `a` variable will be stored in the `%edx` register:
+Now we see that value of the `a` variable will be stored in the `%rax` register:
 
 ```assembly
 0000000000400400 <main>:
-  400400:       8b 15 26 0c 20 00       mov    0x200c26(%rip),%edx        # 60102c <a>
+  4004aa:       48 8b 05 6f 0b 20 00    mov    0x200b6f(%rip),%rax        # 601020 <a>
 ```
 
 The `f` and `t` constraints represent any floating point stack register - `%st` and the top of the floating point stack respectively. The `u` constraint represents the second value from the top of the floating point stack.
