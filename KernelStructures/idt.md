@@ -39,7 +39,7 @@ enum {
 	X86_TRAP_GP,		/* 13, General Protection Fault */
 	X86_TRAP_PF,		/* 14, Page Fault */
 	X86_TRAP_SPURIOUS,	/* 15, Spurious Interrupt */
-	X86_TRAP_MF,		/* 16, x87 Floating-Point Exception */
+	X86_TRAP_MF,		/* 16, x86 Floating-Point Exception */
 	X86_TRAP_AC,		/* 17, Alignment Check */
 	X86_TRAP_MC,		/* 18, Machine Check */
 	X86_TRAP_XF,		/* 19, SIMD Floating-Point Exception */
