@@ -277,7 +277,7 @@ $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86
 
 From now we can run the Linux kernel in the virtual machine and this means that we can begin to change and test the kernel.
 
-Consider using [ivandaviov/minimal](https://github.com/ivandavidov/minimal) to automate the process of generating initrd.
+Consider using [ivandaviov/minimal](https://github.com/ivandavidov/minimal) or [Buildroot](https://buildroot.org/) to automate the process of generating initrd.
 
 Getting started with the Linux Kernel Development
 ---------------------------------------------------------------------------------
