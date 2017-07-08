@@ -33,7 +33,7 @@ int main(int argc, char *argv) {
 }
 ```
 
-In this case, the open is the function from standard library, but not system call. The standard library will call related system call for us. The `open` call will return a [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) which is just an unique number within our process which is associated with the opened file. Now as we opened a file and got file descriptor as result of `open` call, we may start to interact with this file. We can write into, read from it and etc. List of opened file by a process is available via [proc](https://en.wikipedia.org/wiki/Procfs) filesystem: 
+In this case, the open is the function from standard library, but not system call. The standard library will call related system call for us. The `open` call will return a [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) which is just a unique number within our process which is associated with the opened file. Now as we opened a file and got file descriptor as result of `open` call, we may start to interact with this file. We can write into, read from it and etc. List of opened file by a process is available via [proc](https://en.wikipedia.org/wiki/Procfs) filesystem: 
 
 ```
 $ sudo ls /proc/1/fd/

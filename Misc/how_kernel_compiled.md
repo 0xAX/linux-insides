@@ -183,7 +183,7 @@ Here we can see definition of these variables and the value of `KBUILD_BUILTIN` 
 include scripts/Kbuild.include
 ```
 
-The [Kbuild](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/kbuild.txt) or `Kernel Build System` is the special infrastructure to manage the build of the kernel and its modules. The `kbuild` files has the same syntax that makefiles do. The [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/master/scripts/Kbuild.include) file provides some generic definitions for the `kbuild` system. As we included this `kbuild` files we can see definition of the variables that are related to the different tools that will be used during kernel and modules compilation (like linker, compilers, utils from the [binutils](http://www.gnu.org/software/binutils/), etc...):
+The [Kbuild](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/kbuild.txt) or `Kernel Build System` is a special infrastructure to manage building the kernel and its modules. `kbuild` files have the same syntax as makefiles. The [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/master/scripts/Kbuild.include) file provides some generic definitions for the `kbuild` system. After including this `kbuild` file (back in [makefile](https://github.com/torvalds/linux/blob/master/Makefile)) we can see the definitions of the variables that are related to the different tools used during kernel and module compilation (like linker, compilers, utils from the [binutils](http://www.gnu.org/software/binutils/), etc...):
 
 ```Makefile
 AS		= $(CROSS_COMPILE)as
@@ -201,7 +201,7 @@ AWK		= awk
 ...
 ```
 
-We then define two other variables: `USERINCLUDE` and `LINUXINCLUDE`. They contain the paths of the directories with headersc z (public for users in the first case and for kernel in the second case):
+We then define two other variables: `USERINCLUDE` and `LINUXINCLUDE`, which specify paths to header file directories (public for users in the first case and for kernel in the second case):
 
 ```Makefile
 USERINCLUDE    := \
@@ -226,7 +226,7 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -std=gnu89
 ```
 
-It is the not last compiler flags, they can be updated by the other makefiles (for example kbuilds from `arch/`). After all of these, all variables will be exported to be available in the other makefiles. The following two the `RCS_FIND_IGNORE` and the `RCS_TAR_IGNORE` variables will contain files that will be ignored in the version control system:
+These are not the final compilation flags, as they can be updated in other makefiles (for example kbuilds from `arch/`). After all of these, all variables will be exported to be available in the other makefiles. The `RCS_FIND_IGNORE` and the `RCS_TAR_IGNORE` variables contain files that will be ignored in the version control system:
 
 ```Makefile
 export RCS_FIND_IGNORE := \( -name SCCS -o -name BitKeeper -o -name .svn -o    \
@@ -236,7 +236,7 @@ export RCS_TAR_IGNORE := --exclude SCCS --exclude BitKeeper --exclude .svn \
 			 --exclude CVS --exclude .pc --exclude .hg --exclude .git
 ```
 
-That's all. We have finished with the all preparations, next point is the building of `vmlinux`.
+With that, we have finished all preparations. The next step is building the `vmlinux` target.
 
 Directly to the kernel build
 --------------------------------------------------------------------------------

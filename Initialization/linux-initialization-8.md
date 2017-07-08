@@ -364,7 +364,7 @@ ptr = (unsigned long)kzalloc(alloc_size, GFP_NOWAIT);
 
 As I already mentioned, the Linux group scheduling mechanism allows to specify a hierarcy. The root of such hierarcies is the `root_runqueuetask_group` task group structure. This structure contains many fields, but we are interested in `se`, `rt_se`, `cfs_rq` and `rt_rq` for this moment:
 
-The first two are instances of `sched_entity` structure. It is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) kernel header filed and used by the scheduler as an unit of scheduling.
+The first two are instances of `sched_entity` structure. It is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) kernel header filed and used by the scheduler as a unit of scheduling.
 
 ```C
 struct task_group {
