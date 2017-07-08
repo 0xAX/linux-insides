@@ -45,11 +45,6 @@ GCC и GAS
 
 * [Определение task_struct](http://lxr.free-electrons.com/source/include/linux/sched.h#L1274)
 
-Прочие архитектуры
-------------------------
-
-* [PowerPC и Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
-
 Управление памятью
 ------------------------
 
