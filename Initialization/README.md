@@ -1,16 +1,16 @@
-# Kernel initialization process
+# Процесс инициализации ядра
 
-You will find here a couple of posts which describe the full cycle of kernel initialization from its first step after the kernel has been decompressed to the start of the first process run by the kernel itself.
+Здесь вы увидите несколько статей, которые описывают полный цикл инициализации ядра с первого шага после того, как ядро распаковано и до запуска ядром первого процесса.
 
-*Note* That there will not be a description of the all kernel initialization steps. Here will be only generic kernel part, without interrupts handling, ACPI, and many other parts. All parts which I have missed, will be described in other chapters.
+*Примечание:* данные статьи не будут описанием всех шагов инициализации ядра. Здесь будет описана только общая часть ядра, без обработки прерываний, ACPI и многих других частей. Все части, которые я пропустил, будут описаны в других главах.
 
-* [First steps after kernel decompression](linux-initialization-1.md) - describes first steps in the kernel.
-* [Early interrupt and exception handling](linux-initialization-2.md) - describes early interrupts initialization and early page fault handler.
-* [Last preparations before the kernel entry point](linux-initialization-3.md) - describes the last preparations before the call of the `start_kernel`.
-* [Kernel entry point](linux-initialization-4.md) - describes first steps in the kernel generic code.
-* [Continue of architecture-specific initializations](linux-initialization-5.md) - describes architecture-specific initialization.
-* [Architecture-specific initializations, again...](linux-initialization-6.md) - describes continue of the architecture-specific initialization process.
-* [The End of the architecture-specific initializations, almost...](linux-initialization-7.md) - describes the end of the `setup_arch` related stuff.
-* [Scheduler initialization](inux-initialization-8.md) - describes preparation before scheduler initialization and initialization of it.
-* [RCU initialization](linux-initialization-9.md) - describes the initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update).
-* [End of the initialization](linux-initialization-10.md) - the last part about linux kernel initialization.
+* [Первые шаги после декомпрессии ядра](linux-initialization-1.md) - описывает первые шаги в ядре.
+* [Ранняя обработка прерываний и исключений](linux-initialization-2.md) - описывает раннюю инициализацию прерываний и ранний обработчик ошибки страницы.
+* [Последние приготовления перед точкой входа в ядро](linux-initialization-3.md) - описывает последние приготовления перед вызовом `start_kernel`.
+* [Точка входа в ядро](linux-initialization-4.md) - описывает первые шаги в общем коде ядра.
+* [Продолжение архитектурно-зависимой инициализации](linux-initialization-5.md) - описывает архитектурно-заивисимую инициализацию.
+* [Архитектурно-зависимая инициализация, снова...](linux-initialization-6.md) - описывает продолжение процесса архитектурно-зависимой инициализации.
+* [Конец архитектурно-зависимой инициализации, почти...](linux-initialization-7.md) - описывает конец `setup_arch`.
+* [Инициализация планировщика](inux-initialization-8.md) - описывает подготовку перед инициализацией и саму инициализацию планировщика.
+* [Инициализация RCU](linux-initialization-9.md) - описывает инициализацию [RCU](http://en.wikipedia.org/wiki/Read-copy-update).
+* [Конец инициализации](linux-initialization-10.md) - последняя часть об инициализации ядра Linux.
