@@ -1,4 +1,4 @@
-# Kernel Boot Process
+# Booting process of the Linux Kernel
 
 This chapter describes the linux kernel boot process. Here you will see a
 couple of posts which describes the full cycle of the kernel loading process:
