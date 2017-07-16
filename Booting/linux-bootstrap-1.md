@@ -335,7 +335,7 @@ gs = fs = es = ds = ss = 0x1000
 cs = 0x1020
 ```
 
-In my case, the kernel is loaded at `0x10000`.
+In my case, the kernel is loaded at `0x10000` address.
 
 After the jump to `start_of_setup`, the kernel needs to do the following:
 
@@ -365,7 +365,7 @@ _start:
     .byte start_of_setup-1f
 ```
 
-jump, which is at a `512` byte offset from [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L46). It also needs to align `cs` from `0x10200` to `0x10000`, as well as all other segment registers. After that, we set up the stack:
+jump, which is at a `512` byte offset from [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L46). It also needs to align `cs` from `0x1020` to `0x1000`, as well as all other segment registers. After that, we set up the stack:
 
 ```assembly
     pushw   %ds
@@ -389,13 +389,13 @@ Almost all of the setup code is in preparation for the C language environment in
 
 This can lead to 3 different scenarios:
 
-* `ss` has valid value `0x10000` (as do all other segment registers beside `cs`)
+* `ss` has valid value `0x1000` (as do all other segment registers beside `cs`)
 * `ss` is invalid and `CAN_USE_HEAP` flag is set     (see below)
 * `ss` is invalid and `CAN_USE_HEAP` flag is not set (see below)
 
 Let's look at all three of these scenarios in turn:
 
-* `ss` has a correct address (`0x10000`). In this case, we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L584):
+* `ss` has a correct address (`0x1000`). In this case, we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L584):
 
 ```assembly
 2:  andw    $~3, %dx
@@ -406,7 +406,7 @@ Let's look at all three of these scenarios in turn:
     sti
 ```
 
-Here we can see the alignment of `dx` (contains `sp` given by bootloader) to `4` bytes and a check for whether or not it is zero. If it is zero, we put `0xfffc` (4 byte aligned address before the maximum segment size of 64 KB) in `dx`. If it is not zero, we continue to use `sp`, given by the bootloader (0xf7f4 in my case). After this, we put the `ax` value into `ss`, which stores the correct segment address of `0x10000` and sets up a correct `sp`. We now have a correct stack:
+Here we can see the alignment of `dx` (contains `sp` given by bootloader) to `4` bytes and a check for whether or not it is zero. If it is zero, we put `0xfffc` (4 byte aligned address before the maximum segment size of 64 KB) in `dx`. If it is not zero, we continue to use `sp`, given by the bootloader (0xf7f4 in my case). After this, we put the `ax` value into `ss`, which stores the correct segment address of `0x1000` and sets up a correct `sp`. We now have a correct stack:
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
