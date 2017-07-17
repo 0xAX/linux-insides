@@ -331,8 +331,8 @@ state.cs = segment + 0x20;
 This means that segment registers will have the following values after kernel setup starts:
 
 ```
-gs = fs = es = ds = ss = 0x1000
-cs = 0x1020
+gs = fs = es = ds = ss = 0x10000
+cs = 0x10200
 ```
 
 In my case, the kernel is loaded at `0x10000` address.
@@ -357,7 +357,7 @@ First of all, the kernel ensures that `ds` and `es` segment registers point to t
     cld
 ```
 
-As I wrote earlier, `grub2` loads kernel setup code at address `0x10000` by default and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
+As I wrote earlier, `grub2` loads kernel setup code at address `0x10000` by default and `cs` at `0x10200` because execution doesn't start from the start of file, but from:
 
 ```assembly
 _start:
@@ -365,7 +365,7 @@ _start:
     .byte start_of_setup-1f
 ```
 
-jump, which is at a `512` byte offset from [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L46). It also needs to align `cs` from `0x1020` to `0x1000`, as well as all other segment registers. After that, we set up the stack:
+jump, which is at a `512` byte offset from [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L46). It also needs to align `cs` from `0x10200` to `0x10000`, as well as all other segment registers. After that, we set up the stack:
 
 ```assembly
     pushw   %ds
