@@ -260,7 +260,7 @@ Here the `kernel_thread` function (defined in the [kernel/fork.c](https://github
 We will not dive into details about `kernel_thread` implementation (we will see it in the chapter which describe scheduler, just need to say that `kernel_thread` invokes [clone](http://www.tutorialspoint.com/unix_system_calls/clone.htm)). Now we only need to know that we create new kernel thread with `kernel_thread` function, parent and child of the thread will use shared information about filesystem and it will start to execute `kernel_init` function. A kernel thread differs from a user thread that it runs in kernel mode. So with these two `kernel_thread` calls we create two new kernel threads with the `PID = 1` for `init` process and `PID = 2` for `kthreadd`. We already know what is `init` process. Let's look on the `kthreadd`. It is a special kernel thread which manages and helps different parts of the kernel to create another kernel thread. We can see it in the output of the `ps` util:
 
 ```C
-$ ps -ef | grep kthread
+$ ps -ef | grep kthreadd
 root         2     0  0 Jan11 ?        00:00:00 [kthreadd]
 ```
 
