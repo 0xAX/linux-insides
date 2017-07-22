@@ -322,7 +322,7 @@ The `real-time` policies are also supported for the time-critical applications: 
 
 Now let's get back to the our code and look on the two configuration options: `CONFIG_FAIR_GROUP_SCHED` and `CONFIG_RT_GROUP_SCHED`. The least unit which scheduler operates is an individual task or thread. But a process is not only one type of entities of which the scheduller may operate. Both of these options provides support for group scheduling. The first one option provides support for group scheduling with `completely fair scheduler` policies and the second with `real-time` policies respectively.
 
-In simple words, group scheduling is a feature that allows us to schedule a set of tasks as if a single task. For example, if you create a group with two tasks on the group, then this group is just like one normal task, from the kernel perspective. After a group is scheduled, the scheduler will pick a task from this group and it will be scheduled inside the group. So, such mechanism allows us to build hierarcies and manage their resources. Although a minimal unit of scheduling is a process, the Linux kernel scheduler does not use `task_struct` structure under the hood. There is special `sched_entity` strcture that is used by the Linux kernel scheduler as scheduling unit.
+In simple words, group scheduling is a feature that allows us to schedule a set of tasks as if a single task. For example, if you create a group with two tasks on the group, then this group is just like one normal task, from the kernel perspective. After a group is scheduled, the scheduler will pick a task from this group and it will be scheduled inside the group. So, such mechanism allows us to build hierarchies and manage their resources. Although a minimal unit of scheduling is a process, the Linux kernel scheduler does not use `task_struct` structure under the hood. There is special `sched_entity` strcture that is used by the Linux kernel scheduler as scheduling unit.
 
 So, the current goal is to calculate a space to allocate for a `sched_entity(ies)` of the root task group and we do it two times with:
 
@@ -362,7 +362,7 @@ ptr = (unsigned long)kzalloc(alloc_size, GFP_NOWAIT);
 #endif
 ```
 
-As I already mentioned, the Linux group scheduling mechanism allows to specify a hierarcy. The root of such hierarcies is the `root_runqueuetask_group` task group structure. This structure contains many fields, but we are interested in `se`, `rt_se`, `cfs_rq` and `rt_rq` for this moment:
+As I already mentioned, the Linux group scheduling mechanism allows to specify a hierarchy. The root of such hierarchies is the `root_runqueuetask_group` task group structure. This structure contains many fields, but we are interested in `se`, `rt_se`, `cfs_rq` and `rt_rq` for this moment:
 
 The first two are instances of `sched_entity` structure. It is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) kernel header filed and used by the scheduler as an unit of scheduling.
 
