@@ -77,7 +77,7 @@ Here we can see `prlimit64`, but not the `prlimit`. The fact is that we see unde
 
 Now let's look at list of available resources:
 
-| Resouce           | Description
+| Resource          | Description
 |-------------------|------------------------------------------------------------------------------------------|
 | RLIMIT_CPU        | CPU time limit given in seconds                                                          |
 | RLIMIT_FSIZE      | the maximum size of files that a process may create                                      |
@@ -86,7 +86,7 @@ Now let's look at list of available resources:
 | RLIMIT_CORE       | the maximum size of a [core](http://man7.org/linux/man-pages/man5/core.5.html) file.     |
 | RLIMIT_RSS        | the number of bytes that can be allocated for a process in RAM                           |
 | RLIMIT_NPROC      | the maximum number of processes that can be created by a user                            |
-| RLIMIT_NOFILE     | the maximum number of a file descriptor that can be opened by by a process               |
+| RLIMIT_NOFILE     | the maximum number of a file descriptor that can be opened by a process                  |
 | RLIMIT_MEMLOCK    | the maximum number of bytes of memory that may be locked into RAM by [mlock](http://man7.org/linux/man-pages/man2/mlock.2.html).|
 | RLIMIT_AS         | the maximum size of virtual memory in bytes.                                             |
 | RLIMIT_LOCKS      | the maximum number [flock](https://linux.die.net/man/1/flock) and locking related [fcntl](http://man7.org/linux/man-pages/man2/fcntl.2.html) calls|
@@ -96,7 +96,7 @@ Now let's look at list of available resources:
 | RLIMIT_RTPRIO     | maximum real-time priority value                                                         |
 | RLIMIT_RTTIME     | maximum number of microseconds that a process may be scheduled under real-time scheduling policy without making blocking system call|
 
-If you're looking into source code of an open source projects, you will note that reading or updating of a resource limit is quite widely used operation and.
+If you're looking into source code of open source projects, you will note that reading or updating of a resource limit is quite widely used operation.
 
 For example: [systemd](https://github.com/systemd/systemd/blob/master/src/core/main.c)
 
@@ -172,7 +172,7 @@ if (new_rlim) {
 }
 ```
 
-check that the given `soft` limit does not exceeds `hard` limit and in a case when the given resource is the maximum number of a file descriptors that hard limit is not greater than `sysctl_nr_open` value. The value of the `sysctl_nr_open` can be found via [procfs](https://en.wikipedia.org/wiki/Procfs):
+check that the given `soft` limit does not exceed `hard` limit and in a case when the given resource is the maximum number of a file descriptors that hard limit is not greater than `sysctl_nr_open` value. The value of the `sysctl_nr_open` can be found via [procfs](https://en.wikipedia.org/wiki/Procfs):
 
 ```
 ~$ cat /proc/sys/fs/nr_open 
