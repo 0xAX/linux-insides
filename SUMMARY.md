@@ -34,6 +34,7 @@
     * [vsyscall and vDSO](SysCall/syscall-3.md)
     * [How the Linux kernel runs a program](SysCall/syscall-4.md)
     * [Implementation of the open system call](SysCall/syscall-5.md)
+    * [Limits on resources in Linux](SysCall/syscall-6.md)
 * [Timers and time management](Timers/README.md)
     * [Introduction](Timers/timers-1.md)
     * [Clocksource framework](Timers/timers-2.md)
