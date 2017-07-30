@@ -44,7 +44,7 @@ There are two types of limits:
   * `soft`
   * `hard`
 
-The first provides actual limit for a resource of a process. The second is a ceiling value of a `soft` limit and can be set only by superuser. So, `soft` limit can't exceed related `hard` limit never.
+The first provides actual limit for a resource of a process. The second is a ceiling value of a `soft` limit and can be set only by superuser. So, `soft` limit can never exceed related `hard` limit.
 
 Both these values are combined in the `rlimit` structure:
 
