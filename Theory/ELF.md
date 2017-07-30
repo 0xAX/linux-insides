@@ -47,7 +47,7 @@ typedef struct elf64_hdr {
 } Elf64_Ehdr;
 ```
 
-This structure defined in the [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L220)
+This structure defined in the [elf.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/elf.h#L220)
 
 **Sections**
 
@@ -81,7 +81,7 @@ typedef struct elf64_shdr {
 } Elf64_Shdr;
 ```
 
-[elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L312)
+[elf.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/elf.h#L312)
 
 **Program header table**
 
@@ -102,7 +102,7 @@ typedef struct elf64_phdr {
 
 in the linux kernel source code.
 
-`elf64_phdr` defined in the same [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L254).
+`elf64_phdr` defined in the same [elf.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/elf.h#L254).
 
 The ELF object file also contains other fields/structures which you can find in the [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf). Now let's a look at the `vmlinux` ELF object.
 
@@ -137,7 +137,7 @@ ELF Header:
 
 Here we can see that `vmlinux` is a 64-bit executable file.
 
-We can read from the [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt#L21):
+We can read from the [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/x86_64/mm.txt#L21):
 
 ```
 ffffffff80000000 - ffffffffa0000000 (=512 MB)  kernel text mapping, from phys 0
@@ -154,7 +154,7 @@ $ readelf -s vmlinux | grep ffffffff81000000
 
 Note that the address of the `startup_64` routine is not `ffffffff80000000`, but `ffffffff81000000` and now I'll explain why.
 
-We can see following definition in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
+We can see following definition in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vmlinux.lds.S):
 
 ```
     . = __START_KERNEL;

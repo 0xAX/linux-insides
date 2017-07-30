@@ -6,12 +6,12 @@ Bit arrays and bit operations in the Linux kernel
 
 Besides different [linked](https://en.wikipedia.org/wiki/Linked_data_structure) and [tree](https://en.wikipedia.org/wiki/Tree_%28data_structure%29) based data structures, the Linux kernel provides [API](https://en.wikipedia.org/wiki/Application_programming_interface) for [bit arrays](https://en.wikipedia.org/wiki/Bit_array) or `bitmap`. Bit arrays are heavily used in the Linux kernel and following source code files contain common `API` for work with such structures:
 
-* [lib/bitmap.c](https://github.com/torvalds/linux/blob/master/lib/bitmap.c)
-* [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h)
+* [lib/bitmap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/bitmap.c)
+* [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/bitmap.h)
 
 Besides these two files, there is also architecture-specific header file which provides optimized bit operations for certain architecture. We consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, so in our case it will be: 
 
-* [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h)
+* [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h)
 
 header file. As I just wrote above, the `bitmap` is heavily used in the Linux kernel. For example a `bit array` is used to store set of online/offline processors for systems which support [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) cpu (more about this you can read in the [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) part), a `bit array` stores set of allocated [irqs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) during initialization of the Linux kernel and etc.
 
@@ -26,7 +26,7 @@ Before we will look on `API` for bitmaps manipulation, we must know how to decla
 unsigned long my_bitmap[8]
 ```
 
-The second way is to use the `DECLARE_BITMAP` macro which is defined in the [include/linux/types.h](https://github.com/torvalds/linux/blob/master/include/linux/types.h) header file:
+The second way is to use the `DECLARE_BITMAP` macro which is defined in the [include/linux/types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h) header file:
 
 ```C
 #define DECLARE_BITMAP(name,bits) \
@@ -64,18 +64,18 @@ After we are able to declare a bit array, we can start to use it.
 Architecture-specific bit operations
 ================================================================================
 
-We already saw above a couple of source code and header files which provide [API](https://en.wikipedia.org/wiki/Application_programming_interface) for manipulation of bit arrays. The most important and widely used API of bit arrays is architecture-specific and located as we already know in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file.
+We already saw above a couple of source code and header files which provide [API](https://en.wikipedia.org/wiki/Application_programming_interface) for manipulation of bit arrays. The most important and widely used API of bit arrays is architecture-specific and located as we already know in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h) header file.
 
 First of all let's look at the two most important functions:
 
 * `set_bit`;
 * `clear_bit`.
 
-I think that there is no need to explain what these function do. This is already must be clear from their name. Let's look on their implementation. If you will look into the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file, you will note that each of these functions represented by two variants: [atomic](https://en.wikipedia.org/wiki/Linearizability) and not. Before we will start to dive into implementations of these functions, first of all we must to know a little about `atomic` operations.
+I think that there is no need to explain what these function do. This is already must be clear from their name. Let's look on their implementation. If you will look into the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h) header file, you will note that each of these functions represented by two variants: [atomic](https://en.wikipedia.org/wiki/Linearizability) and not. Before we will start to dive into implementations of these functions, first of all we must to know a little about `atomic` operations.
 
 In simple words atomic operations guarantees that two or more operations will not be performed on the same data concurrently. The `x86` architecture provides a set of atomic instructions, for example [xchg](http://x86.renejeschke.de/html/file_module_x86_id_328.html) instruction, [cmpxchg](http://x86.renejeschke.de/html/file_module_x86_id_41.html) instruction and etc. Besides atomic instructions, some of non-atomic instructions can be made atomic with the help of the [lock](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction. It is enough to know about atomic operations for now, so we can begin to consider implementation of `set_bit` and `clear_bit` functions.
 
-First of all, let's start to consider `non-atomic` variants of this function. Names of non-atomic `set_bit` and `clear_bit` starts from double underscore. As we already know, all of these functions are defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file and the first function is `__set_bit`:
+First of all, let's start to consider `non-atomic` variants of this function. Names of non-atomic `set_bit` and `clear_bit` starts from double underscore. As we already know, all of these functions are defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h) header file and the first function is `__set_bit`:
 
 ```C
 static inline void __set_bit(long nr, volatile unsigned long *addr)
@@ -122,13 +122,13 @@ set_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-First of all note that this function takes the same set of parameters that `__set_bit`, but additionally marked with the `__always_inline` attribute. The `__always_inline` is macro which defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) and just expands to the `always_inline` attribute:
+First of all note that this function takes the same set of parameters that `__set_bit`, but additionally marked with the `__always_inline` attribute. The `__always_inline` is macro which defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/compiler-gcc.h) and just expands to the `always_inline` attribute:
 
 ```C
 #define __always_inline inline __attribute__((always_inline))
 ```
 
-which means that this function will be always inlined to reduce size of the Linux kernel image. Now let's try to understand implementation of the `set_bit` function. First of all we check a given number of bit at the beginning of the `set_bit` function. The `IS_IMMEDIATE` macro defined in the same [header](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) file and expands to the call of the builtin [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) function:
+which means that this function will be always inlined to reduce size of the Linux kernel image. Now let's try to understand implementation of the `set_bit` function. First of all we check a given number of bit at the beginning of the `set_bit` function. The `IS_IMMEDIATE` macro defined in the same [header](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h) file and expands to the call of the builtin [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) function:
 
 ```C
 #define IS_IMMEDIATE(nr)		(__builtin_constant_p(nr))
@@ -171,7 +171,7 @@ the `ninth` bit will be set.
 
 Note that all of these operations are marked with `LOCK_PREFIX` which is expands to the [lock](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction which guarantees atomicity of this operation.
 
-As we already know, besides the `set_bit` and `__set_bit` operations, the Linux kernel provides two inverse functions to clear bit in atomic and non-atomic context. They are `clear_bit` and `__clear_bit`. Both of these functions are defined in the same [header file](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) and takes the same set of arguments. But not only arguments are similar. Generally these functions are very similar on the `set_bit` and `__set_bit`. Let's look on the implementation of the non-atomic `__clear_bit` function:
+As we already know, besides the `set_bit` and `__set_bit` operations, the Linux kernel provides two inverse functions to clear bit in atomic and non-atomic context. They are `clear_bit` and `__clear_bit`. Both of these functions are defined in the same [header file](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h) and takes the same set of arguments. But not only arguments are similar. Generally these functions are very similar on the `set_bit` and `__set_bit`. Let's look on the implementation of the non-atomic `__clear_bit` function:
 
 ```C
 static inline void __clear_bit(long nr, volatile unsigned long *addr)
@@ -204,7 +204,7 @@ and as we can see it is very similar on `set_bit` and just contains two differen
 
 That's all. Now we can set and clear bit in any bit array and and we can go to other operations on bitmasks.
 
-Most widely used operations on a bit arrays are set and clear bit in a bit array in the Linux kernel. But besides this operations it is useful to do additional operations on a bit array. Yet another widely used operation in the Linux kernel - is to know is a given bit set or not in a bit array. We can achieve this with the help of the `test_bit` macro. This macro is defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file and expands to the call of the `constant_test_bit` or `variable_test_bit` depends on bit number:
+Most widely used operations on a bit arrays are set and clear bit in a bit array in the Linux kernel. But besides this operations it is useful to do additional operations on a bit array. Yet another widely used operation in the Linux kernel - is to know is a given bit set or not in a bit array. We can achieve this with the help of the `test_bit` macro. This macro is defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h) header file and expands to the call of the `constant_test_bit` or `variable_test_bit` depends on bit number:
 
 ```C
 #define test_bit(nr, addr)			\
@@ -290,7 +290,7 @@ For this moment we know the most important architecture-specific operations with
 Common bit operations
 ================================================================================
 
-Besides the architecture-specific API from the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file, the Linux kernel provides common API for manipulation of bit arrays. As we know from the beginning of this part, we can find it in the  [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) header file and additionally in the * [lib/bitmap.c](https://github.com/torvalds/linux/blob/master/lib/bitmap.c)  source code file. But before these source code files let's look into the [include/linux/bitops.h](https://github.com/torvalds/linux/blob/master/include/linux/bitops.h) header file which provides a set of useful macro. Let's look on some of they.
+Besides the architecture-specific API from the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h) header file, the Linux kernel provides common API for manipulation of bit arrays. As we know from the beginning of this part, we can find it in the  [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/bitmap.h) header file and additionally in the * [lib/bitmap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/bitmap.c)  source code file. But before these source code files let's look into the [include/linux/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/bitops.h) header file which provides a set of useful macro. Let's look on some of they.
 
 First of all let's look at following four macros:
 
@@ -310,9 +310,9 @@ All of these macros provide iterator over certain set of bits in a bit array. Th
 
 As we may see it takes three arguments and expands to the loop from first set bit which is returned as result of the `find_first_bit` function and to the last bit number while it is less than given size.
 
-Besides these four macros, the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) provides API for rotation of `64-bit` or `32-bit` values and etc.
+Besides these four macros, the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h) provides API for rotation of `64-bit` or `32-bit` values and etc.
 
-The next [header](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) file which provides API for manipulation with a bit arrays. For example it provides two functions:
+The next [header](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/bitmap.h) file which provides API for manipulation with a bit arrays. For example it provides two functions:
 
 * `bitmap_zero`;
 * `bitmap_fill`.
@@ -331,7 +331,7 @@ static inline void bitmap_zero(unsigned long *dst, unsigned int nbits)
 }
 ```
 
-First of all we can see the check for `nbits`. The `small_const_nbits` is macro which defined in the same header [file](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) and looks:
+First of all we can see the check for `nbits`. The `small_const_nbits` is macro which defined in the same header [file](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/bitmap.h) and looks:
 
 ```C
 #define small_const_nbits(nbits) \
@@ -354,7 +354,7 @@ static inline void bitmap_fill(unsigned long *dst, unsigned int nbits)
 }
 ```
 
-Besides the `bitmap_fill` and `bitmap_zero` functions, the [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) header file provides `bitmap_copy` which is similar on the `bitmap_zero`, but just uses [memcpy](http://man7.org/linux/man-pages/man3/memcpy.3.html) instead of [memset](http://man7.org/linux/man-pages/man3/memset.3.html). Also it provides bitwise operations for bit array like `bitmap_and`, `bitmap_or`, `bitamp_xor` and etc. We will not consider implementation of these functions because it is easy to understand implementations of these functions if you understood all from this part. Anyway if you are interested how did these function implemented, you may open [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) header file and start to research.
+Besides the `bitmap_fill` and `bitmap_zero` functions, the [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/bitmap.h) header file provides `bitmap_copy` which is similar on the `bitmap_zero`, but just uses [memcpy](http://man7.org/linux/man-pages/man3/memcpy.3.html) instead of [memset](http://man7.org/linux/man-pages/man3/memset.3.html). Also it provides bitwise operations for bit array like `bitmap_and`, `bitmap_or`, `bitamp_xor` and etc. We will not consider implementation of these functions because it is easy to understand implementations of these functions if you understood all from this part. Anyway if you are interested how did these function implemented, you may open [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/bitmap.h) header file and start to research.
 
 That's all.
 

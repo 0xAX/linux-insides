@@ -51,7 +51,7 @@ Definition of the open system call
 
 If you have read the [fourth part](https://github.com/0xAX/linux-insides/blob/master/SysCall/syscall-4.md) of the [linux-insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book, you should know that system calls are defined with the help of `SYSCALL_DEFINE` macro. So, the `open` system call is not exception.
 
-Definition of the `open` system call is located in the [fs/open.c](https://github.com/torvalds/linux/blob/master/fs/open.c) source code file and looks pretty small for the first view:
+Definition of the `open` system call is located in the [fs/open.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) source code file and looks pretty small for the first view:
 
 ```C
 SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
@@ -63,7 +63,7 @@ SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
 }
 ```
 
-As you may guess, the `do_sys_open` function from the [same](https://github.com/torvalds/linux/blob/master/fs/open.c) source code file does the main job. But before this function will be called, let's consider the `if` clause from which the implementation of the `open` system call starts:
+As you may guess, the `do_sys_open` function from the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) source code file does the main job. But before this function will be called, let's consider the `if` clause from which the implementation of the `open` system call starts:
 
 ```C
 if (force_o_largefile())
@@ -96,7 +96,7 @@ and
 >    in length. When compiling with _FILE_OFFSET_BITS == 64 this type 
 >    is available under the name off_t.
 
-So it is not hard to guess that the `off_t`, `off64_t` and `O_LARGEFILE` are about a file size. In the case of the Linux kernel, the `O_LARGEFILE` is used  to disallow opening large files on 32bit systems if the caller didn't specify `O_LARGEFILE` flag during opening of a file. On 64bit systems we force on this flag in open system call. And the `force_o_largefile` macro from the [include/linux/fcntl.h](https://github.com/torvalds/linux/blob/master/include/linux/fcntl.h#L7) linux kernel header file confirms this:
+So it is not hard to guess that the `off_t`, `off64_t` and `O_LARGEFILE` are about a file size. In the case of the Linux kernel, the `O_LARGEFILE` is used  to disallow opening large files on 32bit systems if the caller didn't specify `O_LARGEFILE` flag during opening of a file. On 64bit systems we force on this flag in open system call. And the `force_o_largefile` macro from the [include/linux/fcntl.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/fcntl.h#L7) linux kernel header file confirms this:
 
 ```C
 #ifndef force_o_largefile
@@ -104,11 +104,11 @@ So it is not hard to guess that the `off_t`, `off64_t` and `O_LARGEFILE` are abo
 #endif
 ```
 
-This macro may be architecture-specific as for example for [IA-64](https://en.wikipedia.org/wiki/IA-64) architecture, but in our case the [x86_64](https://en.wikipedia.org/wiki/X86-64) does not provide definition of the `force_o_largefile` and it will be used from [include/linux/fcntl.h](https://github.com/torvalds/linux/blob/master/include/linux/fcntl.h#L7).
+This macro may be architecture-specific as for example for [IA-64](https://en.wikipedia.org/wiki/IA-64) architecture, but in our case the [x86_64](https://en.wikipedia.org/wiki/X86-64) does not provide definition of the `force_o_largefile` and it will be used from [include/linux/fcntl.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/fcntl.h#L7).
 
 So, as we may see the `force_o_largefile` is just a macro which expands to the `true` value in our case of [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. As we are considering 64-bit architecture, the `force_o_largefile` will be expanded to `true` and the `O_LARGEFILE` flag will be added to the set of flags which were passed to the `open` system call.
 
-Now as we considered meaning of the `O_LARGEFILE` flag and `force_o_largefile` macro, we can proceed to the consideration of the implementation of the `do_sys_open` function. As I wrote above, this function is defined in the [same](https://github.com/torvalds/linux/blob/master/fs/open.c) source code file and looks: 
+Now as we considered meaning of the `O_LARGEFILE` flag and `force_o_largefile` macro, we can proceed to the consideration of the implementation of the `do_sys_open` function. As I wrote above, this function is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) source code file and looks: 
 
 ```C
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
@@ -147,7 +147,7 @@ open(2) flags
 
 As you know the `open` system call takes set of `flags` as second argument that control opening a file and `mode` as third argument that specifies permission the permissions of a file if it is created. The `do_sys_open` function starts from the call of the `build_open_flags` function which does some checks that set of the given flags is valid and handles different conditions of flags and mode.
 
-Let's look at the implementation of the `build_open_flags`. This function is defined in the [same](https://github.com/torvalds/linux/blob/master/fs/open.c) kernel file and takes three arguments:
+Let's look at the implementation of the `build_open_flags`. This function is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) kernel file and takes three arguments:
 
 * flags - flags that control opening of a file;
 * mode - permissions for newly created file;
@@ -164,7 +164,7 @@ struct open_flags {
 };
 ```
 
-which is defined in the [fs/internal.h](https://github.com/torvalds/linux/blob/master/fs/internal.h#L99) header file and as we may see it holds information about flags and access mode for internal kernel purposes. As you already may guess the main goal of the `build_open_flags` function is to fill an instance of this structure.
+which is defined in the [fs/internal.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/internal.h#L99) header file and as we may see it holds information about flags and access mode for internal kernel purposes. As you already may guess the main goal of the `build_open_flags` function is to fill an instance of this structure.
 
 Implementation of the `build_open_flags` function starts from the definition of local variables and one of them is:
 
@@ -172,7 +172,7 @@ Implementation of the `build_open_flags` function starts from the definition of 
 int acc_mode = ACC_MODE(flags);
 ```
 
-This local variable represents access mode and its initial value will be equal to the value of expanded `ACC_MODE` macro. This macro is defined in the [include/linux/fs.h](https://github.com/torvalds/linux/blob/master/include/linux/fs.h) and looks pretty interesting:
+This local variable represents access mode and its initial value will be equal to the value of expanded `ACC_MODE` macro. This macro is defined in the [include/linux/fs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/fs.h) and looks pretty interesting:
 
 ```C
 #define ACC_MODE(x) ("\004\002\006\006"[(x)&O_ACCMODE])
@@ -309,7 +309,7 @@ if (IS_ERR(tmp))
 	return PTR_ERR(tmp);
 ```
 
-The `getname` function is defined in the [fs/namei.c](https://github.com/torvalds/linux/blob/master/fs/namei.c) source code file and looks:
+The `getname` function is defined in the [fs/namei.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/namei.c) source code file and looks:
 
 ```C
 struct filename *
@@ -319,7 +319,7 @@ getname(const char __user * filename)
 }
 ```
 
-So, it just calls the `getname_flags` function and returns its result. The main goal of the `getname_flags` function is to copy a file path given from userland to kernel space. The `filename` structure is defined in the [include/linux/fs.h](https://github.com/torvalds/linux/blob/master/include/linux/fs.h) linux kernel header file and contains following fields:
+So, it just calls the `getname_flags` function and returns its result. The main goal of the `getname_flags` function is to copy a file path given from userland to kernel space. The `filename` structure is defined in the [include/linux/fs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/fs.h) linux kernel header file and contains following fields:
 
 * name - pointer to a file path in kernel space;
 * uptr - original pointer from userland;
@@ -351,7 +351,7 @@ if (IS_ERR(f)) {
 
 The main goal of this function is to resolve given path name into `file` structure which represents an opened file of a process. If something going wrong and execution of the `do_filp_open` function will be failed, we should free new file descriptor with the `put_unused_fd` or in other way the `file` structure returned by the `do_filp_open` will be stored in the file descriptor table of the current process.
 
-Now let's take a short look at the implementation of the `do_filp_open` function. This function is defined in the [fs/namei.c](https://github.com/torvalds/linux/blob/master/fs/namei.c) linux kernel source code file and starts from initialization of the `nameidata` structure. This structure will provide a link to a file [inode](https://en.wikipedia.org/wiki/Inode). Actually this is one of the main point of the `do_filp_open` function to acquire an `inode` by the filename given to `open` system call. After the `nameidata` structure will be initialized, the `path_openat` function will be called:
+Now let's take a short look at the implementation of the `do_filp_open` function. This function is defined in the [fs/namei.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/namei.c) linux kernel source code file and starts from initialization of the `nameidata` structure. This structure will provide a link to a file [inode](https://en.wikipedia.org/wiki/Inode). Actually this is one of the main point of the `do_filp_open` function to acquire an `inode` by the filename given to `open` system call. After the `nameidata` structure will be initialized, the `path_openat` function will be called:
 
 ```C
 filp = path_openat(&nd, op, flags | LOOKUP_RCU);
@@ -368,9 +368,9 @@ The `path_openat` function starts from the call of the `get_empty_flip()` functi
 
 In this case the `path_init` function will be called. This function performs some preporatory work before actual path lookup. This includes search of start position of path traversal and its metadata like `inode` of the path, `dentry inode` and etc. This can be `root` directory - `/` or current directory as in our case, because we use `AT_CWD` as starting point (see call of the `do_sys_open` at the beginning of the post).
 
-The next step after the `path_init` is the [loop](https://github.com/torvalds/linux/blob/master/fs/namei.c#L3457) which executes the `link_path_walk` and `do_last`. The first function executes name resolution or in other words this function starts process of walking along a given path. It handles everything step by step except the last component of a file path. This handling includes checking of a permissions and getting a file component. As a file component is gotten, it is passed to `walk_component` that updates current directory entry from the `dcache` or asks underlying filesystem. This repeats before all path's components will not be handled in such way. After the `link_path_walk` will be executed, the `do_last` function will populate a `file` structure based on the result of the `link_path_walk`. As we reached last component of the given file path the `vfs_open` function from the `do_last` will be called.
+The next step after the `path_init` is the [loop](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/namei.c#L3457) which executes the `link_path_walk` and `do_last`. The first function executes name resolution or in other words this function starts process of walking along a given path. It handles everything step by step except the last component of a file path. This handling includes checking of a permissions and getting a file component. As a file component is gotten, it is passed to `walk_component` that updates current directory entry from the `dcache` or asks underlying filesystem. This repeats before all path's components will not be handled in such way. After the `link_path_walk` will be executed, the `do_last` function will populate a `file` structure based on the result of the `link_path_walk`. As we reached last component of the given file path the `vfs_open` function from the `do_last` will be called.
 
-This function is defined in the [fs/open.c](https://github.com/torvalds/linux/blob/master/fs/open.c) linux kernel source code file and the main goal of this function is to call an `open` operation of underlying filesystem.
+This function is defined in the [fs/open.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) linux kernel source code file and the main goal of this function is to call an `open` operation of underlying filesystem.
 
 That's all for now. We didn't consider **full** implementation of the `open` system call. We skip some parts like handling case when we want to open a file from other filesystem with different mount point, resolving symlinks and etc., but it should be not so hard to follow this stuff. This stuff does not included in **generic** implementation of open system call and depends on underlying filesystem. If you are interested in, you may lookup the `file_operations.open` callback function for a certain [filesystem](https://github.com/torvalds/linux/tree/master/fs).
 
