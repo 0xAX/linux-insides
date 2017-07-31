@@ -4,9 +4,9 @@ Interrupts and Interrupt Handling. Part 8.
 Non-early initialization of the IRQs
 --------------------------------------------------------------------------------
 
-This is the eighth part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-7.html) we started to dive into the external hardware [interrupts](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). We looked on the implementation of the `early_irq_init` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c) source code file and saw the initialization of the `irq_desc` structure in this function. Remind that `irq_desc` structure (defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/master/include/linux/irqdesc.h#L46) is the foundation of interrupt management code in the Linux kernel and represents an interrupt descriptor. In this part we will continue to dive into the initialization stuff which is related to the external hardware interrupts.
+This is the eighth part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-7.html) we started to dive into the external hardware [interrupts](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). We looked on the implementation of the `early_irq_init` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c) source code file and saw the initialization of the `irq_desc` structure in this function. Remind that `irq_desc` structure (defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqdesc.h#L46) is the foundation of interrupt management code in the Linux kernel and represents an interrupt descriptor. In this part we will continue to dive into the initialization stuff which is related to the external hardware interrupts.
 
-Right after the call of the `early_irq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) we can see the call of the `init_IRQ` function. This function is architecture-specific and defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/kernel/irqinit.c). The `init_IRQ` function makes initialization of the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable that defined in the same [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/kernel/irqinit.c) source code file:
+Right after the call of the `early_irq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) we can see the call of the `init_IRQ` function. This function is architecture-specific and defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c). The `init_IRQ` function makes initialization of the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable that defined in the same [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c) source code file:
 
 ```C
 ...
@@ -16,7 +16,7 @@ DEFINE_PER_CPU(vector_irq_t, vector_irq) = {
 ...
 ```
 
-and represents `percpu` array of the interrupt vector numbers. The `vector_irq_t` defined in the [arch/x86/include/asm/hw_irq.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/hw_irq.h) and expands to the:
+and represents `percpu` array of the interrupt vector numbers. The `vector_irq_t` defined in the [arch/x86/include/asm/hw_irq.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/hw_irq.h) and expands to the:
 
 ```C
 typedef int vector_irq_t[NR_VECTORS];
@@ -43,7 +43,7 @@ void __init init_IRQ(void)
 }
 ```
 
-This `vector_irq` will be used during the first steps of an external hardware interrupt handling in the `do_IRQ` function from the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c):
+This `vector_irq` will be used during the first steps of an external hardware interrupt handling in the `do_IRQ` function from the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irq.c):
 
 ```C
 __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
@@ -66,7 +66,7 @@ __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
 }
 ```
 
-Why is `legacy` here? Actually all interrupts are handled by the modern [IO-APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs) controller. But these interrupts (from `0x30` to `0x3f`) by legacy interrupt-controllers like [Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller). If these interrupts are handled by the `I/O APIC` then this vector space will be freed and re-used. Let's look on this code closer. First of all the `nr_legacy_irqs` defined in the [arch/x86/include/asm/i8259.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/i8259.h) and just returns the `nr_legacy_irqs` field from the `legacy_pic` structure:
+Why is `legacy` here? Actually all interrupts are handled by the modern [IO-APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs) controller. But these interrupts (from `0x30` to `0x3f`) by legacy interrupt-controllers like [Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller). If these interrupts are handled by the `I/O APIC` then this vector space will be freed and re-used. Let's look on this code closer. First of all the `nr_legacy_irqs` defined in the [arch/x86/include/asm/i8259.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/i8259.h) and just returns the `nr_legacy_irqs` field from the `legacy_pic` structure:
 
 ```C
 static inline int nr_legacy_irqs(void)
@@ -91,13 +91,13 @@ struct legacy_pic {
 };
 ```
 
-Actual default maximum number of the legacy interrupts represented by the `NR_IRQ_LEGACY` macro from the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irq_vectors.h):
+Actual default maximum number of the legacy interrupts represented by the `NR_IRQ_LEGACY` macro from the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/irq_vectors.h):
 
 ```C
 #define NR_IRQS_LEGACY                    16
 ```
 
-In the loop we are accessing the `vecto_irq` per-cpu array with the `per_cpu` macro by the `IRQ0_VECTOR + i` index and write the legacy vector number there. The `IRQ0_VECTOR` macro defined in the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irq_vectors.h) header file and expands to the `0x30`:
+In the loop we are accessing the `vecto_irq` per-cpu array with the `per_cpu` macro by the `IRQ0_VECTOR + i` index and write the legacy vector number there. The `IRQ0_VECTOR` macro defined in the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/irq_vectors.h) header file and expands to the `0x30`:
 
 ```C
 #define FIRST_EXTERNAL_VECTOR           0x20
@@ -113,7 +113,7 @@ In the end of the `init_IRQ` function we can see the call of the following funct
 x86_init.irqs.intr_init();
 ```
 
-from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c) source code file. If you have read [chapter](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) about the Linux kernel initialization process, you can remember the `x86_init` structure. This structure contains a couple of files which are points to the function related to the platform setup (`x86_64` in our case), for example `resources` - related with the memory resources, `mpparse` - related with the parsing of the [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification) table and etc.). As we can see the `x86_init` also contains the `irqs` field which contains three following fields:
+from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c) source code file. If you have read [chapter](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) about the Linux kernel initialization process, you can remember the `x86_init` structure. This structure contains a couple of files which are points to the function related to the platform setup (`x86_64` in our case), for example `resources` - related with the memory resources, `mpparse` - related with the parsing of the [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification) table and etc.). As we can see the `x86_init` also contains the `irqs` field which contains three following fields:
 
 ```C
 struct x86_init_ops x86_init __initdata 
@@ -132,13 +132,13 @@ struct x86_init_ops x86_init __initdata
 }
 ```
 
-Now, we are interesting in the `native_init_IRQ`. As we can note, the name of the `native_init_IRQ` function contains the `native_` prefix which means that this function is architecture-specific. It defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/kernel/irqinit.c) and executes general initialization of the [Local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#Integrated_local_APICs) and initialization of the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) irqs. Let's look on the implementation of the `native_init_IRQ` function and will try to understand what occurs there. The `native_init_IRQ` function starts from the execution of the following function:
+Now, we are interesting in the `native_init_IRQ`. As we can note, the name of the `native_init_IRQ` function contains the `native_` prefix which means that this function is architecture-specific. It defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c) and executes general initialization of the [Local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#Integrated_local_APICs) and initialization of the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) irqs. Let's look on the implementation of the `native_init_IRQ` function and will try to understand what occurs there. The `native_init_IRQ` function starts from the execution of the following function:
 
 ```C
 x86_init.irqs.pre_vector_init();
 ```
 
-As we can see above, the `pre_vector_init` points to the `init_ISA_irqs` function that defined in the same [source code](https://github.com/torvalds/linux/blob/master/kernel/irqinit.c) file and as we can understand from the function's name, it makes initialization of the `ISA` related interrupts. The `init_ISA_irqs` function starts from the definition of the `chip` variable which has a `irq_chip` type:
+As we can see above, the `pre_vector_init` points to the `init_ISA_irqs` function that defined in the same [source code](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c) file and as we can understand from the function's name, it makes initialization of the `ISA` related interrupts. The `init_ISA_irqs` function starts from the definition of the `chip` variable which has a `irq_chip` type:
 
 ```C
 void __init init_ISA_irqs(void)
@@ -149,7 +149,7 @@ void __init init_ISA_irqs(void)
 	...
 ```
 
-The `irq_chip` structure defined in the [include/linux/irq.h](https://github.com/torvalds/linux/blob/master/include/linux/irq.h) header file and represents hardware interrupt chip descriptor. It contains:
+The `irq_chip` structure defined in the [include/linux/irq.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irq.h) header file and represents hardware interrupt chip descriptor. It contains:
 
 * `name` - name of a device. Used in the `/proc/interrupts`:
 
@@ -171,7 +171,7 @@ look on the last column;
 
 fields. Note that the `irq_data` structure represents set of the per irq chip data passed down to chip functions. It contains `mask` - precomputed bitmask for accessing the chip registers, `irq` - interrupt number, `hwirq` - hardware interrupt number, local to the interrupt domain chip low level interrupt hardware access and etc.
 
-After this depends on the `CONFIG_X86_64` and `CONFIG_X86_LOCAL_APIC` kernel configuration option call the `init_bsp_APIC` function from the [arch/x86/kernel/apic/apic.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/apic/apic.c):
+After this depends on the `CONFIG_X86_64` and `CONFIG_X86_LOCAL_APIC` kernel configuration option call the `init_bsp_APIC` function from the [arch/x86/kernel/apic/apic.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/apic/apic.c):
 
 ```C
 #if defined(CONFIG_X86_64) || defined(CONFIG_X86_LOCAL_APIC)
@@ -209,7 +209,7 @@ for (i = 0; i < nr_legacy_irqs(); i++)
     irq_set_chip_and_handler(i, chip, handle_level_irq);
 ```
 
-Where can we find `init` function? The `legacy_pic` defined in the [arch/x86/kernel/i8259.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/i8259.c) and it is:
+Where can we find `init` function? The `legacy_pic` defined in the [arch/x86/kernel/i8259.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/i8259.c) and it is:
 
 ```C
 struct legacy_pic *legacy_pic = &default_legacy_pic;
@@ -231,7 +231,7 @@ struct legacy_pic default_legacy_pic = {
 
 The `init_8259A` function defined in the same source code file and executes initialization of the [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259) ``Programmable Interrupt Controller` (more about it will be in the separate chapter about `Programmable Interrupt Controllers` and `APIC`).
 
-Now we can return to the `native_init_IRQ` function, after the `init_ISA_irqs` function finished its work. The next step is the call of the `apic_intr_init` function that allocates special interrupt gates which are used by the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) architecture for the [Inter-processor interrupt](https://en.wikipedia.org/wiki/Inter-processor_interrupt). The `alloc_intr_gate` macro from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h) used for the interrupt descriptor allocation:
+Now we can return to the `native_init_IRQ` function, after the `init_ISA_irqs` function finished its work. The next step is the call of the `apic_intr_init` function that allocates special interrupt gates which are used by the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) architecture for the [Inter-processor interrupt](https://en.wikipedia.org/wiki/Inter-processor_interrupt). The `alloc_intr_gate` macro from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h) used for the interrupt descriptor allocation:
 
 ```C
 #define alloc_intr_gate(n, addr)                        \
@@ -253,7 +253,7 @@ if (!test_bit(vector, used_vectors)) {
 }
 ```
 
-We already saw the `set_bit` macro, now let's look on the `test_bit` and the `first_system_vector`. The first `test_bit` macro defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/bitops.h) and looks like this:
+We already saw the `set_bit` macro, now let's look on the `test_bit` and the `first_system_vector`. The first `test_bit` macro defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/bitops.h) and looks like this:
 
 ```C
 #define test_bit(nr, addr)                      \
@@ -392,7 +392,7 @@ for_each_clear_bit_from(i, used_vectors, NR_VECTORS)
 #endif
 ```
 
-Where the `spurious_interrupt` function represent interrupt handler for the `spurious` interrupt. Here the `used_vectors` is the `unsigned long` that contains already initialized interrupt gates. We already filled first `32` interrupt vectors in the `trap_init` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file:
+Where the `spurious_interrupt` function represent interrupt handler for the `spurious` interrupt. Here the `used_vectors` is the `unsigned long` that contains already initialized interrupt gates. We already filled first `32` interrupt vectors in the `trap_init` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code file:
 
 ```C
 for (i = 0; i < FIRST_EXTERNAL_VECTOR; i++)
@@ -408,13 +408,13 @@ if (!acpi_ioapic && !of_ioapic && nr_legacy_irqs())
 	setup_irq(2, &irq2);
 ```
 
-First of all let's deal with the condition. The `acpi_ioapic` variable represents existence of [I/O APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs). It defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/acpi/boot.c). This variable set in the `acpi_set_irq_model_ioapic` function that called during the processing `Multiple APIC Description Table`. This occurs during initialization of the architecture-specific stuff in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) (more about it we will know in the other chapter about [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)). Note that the value of the `acpi_ioapic` variable depends on the `CONFIG_ACPI` and `CONFIG_X86_LOCAL_APIC` Linux kernel configuration options. If these options did not set, this variable will be just zero:
+First of all let's deal with the condition. The `acpi_ioapic` variable represents existence of [I/O APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs). It defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/acpi/boot.c). This variable set in the `acpi_set_irq_model_ioapic` function that called during the processing `Multiple APIC Description Table`. This occurs during initialization of the architecture-specific stuff in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) (more about it we will know in the other chapter about [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)). Note that the value of the `acpi_ioapic` variable depends on the `CONFIG_ACPI` and `CONFIG_X86_LOCAL_APIC` Linux kernel configuration options. If these options did not set, this variable will be just zero:
 
 ```C
 #define acpi_ioapic 0
 ```
 
-The second condition - `!of_ioapic && nr_legacy_irqs()` checks that we do not use [Open Firmware](https://en.wikipedia.org/wiki/Open_Firmware) `I/O APIC` and legacy interrupt controller. We already know about the `nr_legacy_irqs`. The second is `of_ioapic` variable defined in the [arch/x86/kernel/devicetree.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/devicetree.c) and initialized in the `dtb_ioapic_setup` function that build information about `APICs` in the [devicetree](https://en.wikipedia.org/wiki/Device_tree). Note that `of_ioapic` variable depends on the `CONFIG_OF` Linux kernel configuration option. If this option is not set, the value of the `of_ioapic` will be zero too:
+The second condition - `!of_ioapic && nr_legacy_irqs()` checks that we do not use [Open Firmware](https://en.wikipedia.org/wiki/Open_Firmware) `I/O APIC` and legacy interrupt controller. We already know about the `nr_legacy_irqs`. The second is `of_ioapic` variable defined in the [arch/x86/kernel/devicetree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/devicetree.c) and initialized in the `dtb_ioapic_setup` function that build information about `APICs` in the [devicetree](https://en.wikipedia.org/wiki/Device_tree). Note that `of_ioapic` variable depends on the `CONFIG_OF` Linux kernel configuration option. If this option is not set, the value of the `of_ioapic` will be zero too:
 
 ```C
 #ifdef CONFIG_OF
@@ -436,7 +436,7 @@ If the condition will return non-zero value we call the:
 setup_irq(2, &irq2);
 ```
 
-function. First of all about the `irq2`. The `irq2` is the `irqaction` structure that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) source code file and represents `IRQ 2` line that is used to query devices connected cascade:
+function. First of all about the `irq2`. The `irq2` is the `irqaction` structure that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irqinit.c) source code file and represents `IRQ 2` line that is used to query devices connected cascade:
 
 ```C
 static struct irqaction irq2 = {
@@ -465,7 +465,7 @@ Some time ago interrupt controller consisted of two chips and one was connected 
 * `IRQ 6`  - drive controller;
 * `IRQ 7`  - `LPT1`.
 
-The `setup_irq` function defined in the [kernel/irq/manage.c](https://github.com/torvalds/linux/blob/master/kernel/irq/manage.c) and takes two parameters:
+The `setup_irq` function defined in the [kernel/irq/manage.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/manage.c) and takes two parameters:
 
 * vector number of an interrupt;
 * `irqaction` structure related with an interrupt.

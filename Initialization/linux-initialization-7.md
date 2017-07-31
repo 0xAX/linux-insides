@@ -4,7 +4,7 @@ Kernel initialization. Part 7.
 The End of the architecture-specific initialization, almost...
 ================================================================================
 
-This is the seventh part of the Linux Kernel initialization process which covers insides of the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L861). As you can know from the previous [parts](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html), the `setup_arch` function does some architecture-specific (in our case it is [x86_64](http://en.wikipedia.org/wiki/X86-64)) initialization stuff like reserving memory for kernel code/data/bss, early scanning of the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface), early dump of the [PCI](http://en.wikipedia.org/wiki/PCI) device and many many more. If you have read the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/%20linux-initialization-6.html), you can remember that we've finished it at the `setup_real_mode` function. In the next step, as we set limit of the [memblock](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html) to the all mapped pages, we can see the call of the `setup_log_buf` function from the [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/master/kernel/printk/printk.c).
+This is the seventh part of the Linux Kernel initialization process which covers insides of the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861). As you can know from the previous [parts](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html), the `setup_arch` function does some architecture-specific (in our case it is [x86_64](http://en.wikipedia.org/wiki/X86-64)) initialization stuff like reserving memory for kernel code/data/bss, early scanning of the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface), early dump of the [PCI](http://en.wikipedia.org/wiki/PCI) device and many many more. If you have read the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/%20linux-initialization-6.html), you can remember that we've finished it at the `setup_real_mode` function. In the next step, as we set limit of the [memblock](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html) to the all mapped pages, we can see the call of the `setup_log_buf` function from the [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c).
 
 The `setup_log_buf` function setups kernel cyclic buffer and its length depends on the `CONFIG_LOG_BUF_SHIFT` configuration option. As we can read from the documentation of the `CONFIG_LOG_BUF_SHIFT` it can be between `12` and `21`. In the insides, buffer defined as array of chars:
 
@@ -66,9 +66,9 @@ In the end of the `reserve_initrd` function, we free memblock memory which occup
 memblock_free(ramdisk_image, ramdisk_end - ramdisk_image);
 ```
 
-After we relocated `initrd` ramdisk image, the next function is `vsmp_init` from the [arch/x86/kernel/vsmp_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vsmp_64.c). This function initializes support of the `ScaleMP vSMP`. As I already wrote in the previous parts, this chapter will not cover non-related `x86_64` initialization parts (for example as the current or `ACPI`, etc.). So we will skip implementation of this for now and will back to it in the part which cover techniques of parallel computing.
+After we relocated `initrd` ramdisk image, the next function is `vsmp_init` from the [arch/x86/kernel/vsmp_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vsmp_64.c). This function initializes support of the `ScaleMP vSMP`. As I already wrote in the previous parts, this chapter will not cover non-related `x86_64` initialization parts (for example as the current or `ACPI`, etc.). So we will skip implementation of this for now and will back to it in the part which cover techniques of parallel computing.
 
-The next function is `io_delay_init` from the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/io_delay.c). This function allows to override default I/O delay `0x80` port. We already saw I/O delay in the [Last preparation before transition into protected mode](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html), now let's look on the `io_delay_init` implementation:
+The next function is `io_delay_init` from the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c). This function allows to override default I/O delay `0x80` port. We already saw I/O delay in the [Last preparation before transition into protected mode](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html), now let's look on the `io_delay_init` implementation:
 
 ```C
 void __init io_delay_init(void)
@@ -78,7 +78,7 @@ void __init io_delay_init(void)
 }
 ```
 
-This function check `io_delay_override` variable and overrides I/O delay port if `io_delay_override` is set. We can set `io_delay_override` variably by passing `io_delay` option to the kernel command line. As we can read from the [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt), `io_delay` option is:
+This function check `io_delay_override` variable and overrides I/O delay port if `io_delay_override` is set. We can set `io_delay_override` variably by passing `io_delay` option to the kernel command line. As we can read from the [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt), `io_delay` option is:
 
 ```
 io_delay=	[X86] I/O delay method
@@ -92,13 +92,13 @@ io_delay=	[X86] I/O delay method
         No delay
 ```
 
-We can see `io_delay` command line parameter setup with the `early_param` macro in the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/io_delay.c)
+We can see `io_delay` command line parameter setup with the `early_param` macro in the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c)
 
 ```C
 early_param("io_delay", io_delay_param);
 ```
 
-More about `early_param` you can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/%20linux-initialization-6.html). So the `io_delay_param` function which setups `io_delay_override` variable will be called in the [do_early_param](https://github.com/torvalds/linux/blob/master/init/main.c#L413) function. `io_delay_param` function gets the argument of the `io_delay` kernel command line parameter and sets `io_delay_type` depends on it:
+More about `early_param` you can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/%20linux-initialization-6.html). So the `io_delay_param` function which setups `io_delay_override` variable will be called in the [do_early_param](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L413) function. `io_delay_param` function gets the argument of the `io_delay` kernel command line parameter and sets `io_delay_type` depends on it:
 
 ```C
 static int __init io_delay_param(char *s)
@@ -127,7 +127,7 @@ The next functions are `acpi_boot_table_init`, `early_acpi_boot_init` and `initm
 Allocate area for DMA
 --------------------------------------------------------------------------------
 
-In the next step we need to allocate area for the [Direct memory access](http://en.wikipedia.org/wiki/Direct_memory_access) with the `dma_contiguous_reserve` function which is defined in the [drivers/base/dma-contiguous.c](https://github.com/torvalds/linux/blob/master/drivers/base/dma-contiguous.c). `DMA` is a special mode when devices communicate with memory without CPU. Note that we pass one parameter - `max_pfn_mapped << PAGE_SHIFT`, to the `dma_contiguous_reserve` function and as you can understand from this expression, this is limit of the reserved memory. Let's look on the implementation of this function. It starts from the definition of the following variables:
+In the next step we need to allocate area for the [Direct memory access](http://en.wikipedia.org/wiki/Direct_memory_access) with the `dma_contiguous_reserve` function which is defined in the [drivers/base/dma-contiguous.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/base/dma-contiguous.c). `DMA` is a special mode when devices communicate with memory without CPU. Note that we pass one parameter - `max_pfn_mapped << PAGE_SHIFT`, to the `dma_contiguous_reserve` function and as you can understand from this expression, this is limit of the reserved memory. Let's look on the implementation of this function. It starts from the definition of the following variables:
 
 ```C
 phys_addr_t selected_size = 0;
@@ -189,7 +189,7 @@ The next step is the call of the function - `x86_init.paging.pagetable_init`. If
 #define native_pagetable_init        paging_init
 ```
 
-which expands as you can see to the call of the `paging_init` function from the [arch/x86/mm/init_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/init_64.c). The `paging_init` function initializes sparse memory and zone sizes. First of all what's zones and what is it `Sparsemem`. The `Sparsemem` is a special foundation in the linux kernel memory manager which used to split memory area into different memory banks in the [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) systems. Let's look on the implementation of the `paginig_init` function:
+which expands as you can see to the call of the `paging_init` function from the [arch/x86/mm/init_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/init_64.c). The `paging_init` function initializes sparse memory and zone sizes. First of all what's zones and what is it `Sparsemem`. The `Sparsemem` is a special foundation in the linux kernel memory manager which used to split memory area into different memory banks in the [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) systems. Let's look on the implementation of the `paginig_init` function:
 
 ```C
 void __init paging_init(void)
@@ -205,7 +205,7 @@ void __init paging_init(void)
 }
 ```
 
-As you can see there is call of the `sparse_memory_present_with_active_regions` function which records a memory area for every `NUMA` node to the array of the `mem_section` structure which contains a pointer to the structure of the array of `struct page`. The next `sparse_init` function allocates non-linear `mem_section` and `mem_map`. In the next step we clear state of the movable memory nodes and initialize sizes of zones. Every `NUMA` node is divided into a number of pieces which are called - `zones`. So, `zone_sizes_init` function from the [arch/x86/mm/init.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/init.c) initializes size of zones.
+As you can see there is call of the `sparse_memory_present_with_active_regions` function which records a memory area for every `NUMA` node to the array of the `mem_section` structure which contains a pointer to the structure of the array of `struct page`. The next `sparse_init` function allocates non-linear `mem_section` and `mem_map`. In the next step we clear state of the movable memory nodes and initialize sizes of zones. Every `NUMA` node is divided into a number of pieces which are called - `zones`. So, `zone_sizes_init` function from the [arch/x86/mm/init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/init.c) initializes size of zones.
 
 Again, this part and next parts do not cover this theme in full details. There will be special part about `NUMA`.
 
@@ -222,7 +222,7 @@ if (boot_cpu_data.cpuid_level >= 0) {
 }
 ```
 
-The next function which you can see is `map_vsyscal` from the [arch/x86/kernel/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vsyscall_64.c). This function maps memory space for [vsyscalls](https://lwn.net/Articles/446528/) and depends on `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option. Actually `vsyscall` is a special segment which provides fast access to the certain system calls like `getcpu`, etc. Let's look on implementation of this function:
+The next function which you can see is `map_vsyscal` from the [arch/x86/kernel/vsyscall_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vsyscall_64.c). This function maps memory space for [vsyscalls](https://lwn.net/Articles/446528/) and depends on `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option. Actually `vsyscall` is a special segment which provides fast access to the certain system calls like `getcpu`, etc. Let's look on implementation of this function:
 
 ```C
 void __init map_vsyscall(void)
@@ -241,7 +241,7 @@ void __init map_vsyscall(void)
 }
 ```
 
-In the beginning of the `map_vsyscall` we can see definition of two variables. The first is extern variable `__vsyscall_page`. As a extern variable, it defined somewhere in other source code file. Actually we can see definition of the `__vsyscall_page` in the [arch/x86/kernel/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vsyscall_emu_64.S). The `__vsyscall_page` symbol points to the aligned calls of the `vsyscalls` as `gettimeofday`, etc.:
+In the beginning of the `map_vsyscall` we can see definition of two variables. The first is extern variable `__vsyscall_page`. As a extern variable, it defined somewhere in other source code file. Actually we can see definition of the `__vsyscall_page` in the [arch/x86/kernel/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vsyscall_emu_64.S). The `__vsyscall_page` symbol points to the aligned calls of the `vsyscalls` as `gettimeofday`, etc.:
 
 ```assembly
 	.globl __vsyscall_page
@@ -308,7 +308,7 @@ if (smp_found_config)
 	get_smp_config();
 ```
 
-The `get_smp_config` expands to the `x86_init.mpparse.default_get_smp_config` function which is defined in the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/mpparse.c). This function defines a pointer to the multiprocessor floating pointer structure - `mpf_intel` (you can read about it in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/%20linux-initialization-6.html)) and does some checks:
+The `get_smp_config` expands to the `x86_init.mpparse.default_get_smp_config` function which is defined in the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/mpparse.c). This function defines a pointer to the multiprocessor floating pointer structure - `mpf_intel` (you can read about it in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/%20linux-initialization-6.html)) and does some checks:
 
 ```C
 struct mpf_intel *mpf = mpf_found;
@@ -334,7 +334,7 @@ That's all, and now we can back to the `start_kernel` from the `setup_arch`.
 Back to the main.c
 ================================================================================
 
-As I wrote above, we have finished with the `setup_arch` function and now we can back to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). As you may remember or saw yourself, `start_kernel` function as big as the `setup_arch`. So the couple of the next part will be dedicated to learning of this function. So, let's continue with it. After the `setup_arch` we can see the call of the `mm_init_cpumask` function. This function sets the [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) pointer to the memory descriptor `cpumask`. We can look on its implementation:
+As I wrote above, we have finished with the `setup_arch` function and now we can back to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). As you may remember or saw yourself, `start_kernel` function as big as the `setup_arch`. So the couple of the next part will be dedicated to learning of this function. So, let's continue with it. After the `setup_arch` we can see the call of the `mm_init_cpumask` function. This function sets the [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) pointer to the memory descriptor `cpumask`. We can look on its implementation:
 
 ```C
 static inline void mm_init_cpumask(struct mm_struct *mm)
@@ -346,7 +346,7 @@ static inline void mm_init_cpumask(struct mm_struct *mm)
 }
 ```
 
-As you can see in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c), we pass memory descriptor of the init process to the `mm_init_cpumask` and depends on `CONFIG_CPUMASK_OFFSTACK` configuration option we clear [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) switch `cpumask`.
+As you can see in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c), we pass memory descriptor of the init process to the `mm_init_cpumask` and depends on `CONFIG_CPUMASK_OFFSTACK` configuration option we clear [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) switch `cpumask`.
 
 In the next step we can see the call of the following function:
 
@@ -471,7 +471,7 @@ Links
 * [x86_64](http://en.wikipedia.org/wiki/X86-64)
 * [initrd](http://en.wikipedia.org/wiki/Initrd)
 * [Kernel panic](http://en.wikipedia.org/wiki/Kernel_panic)
-* [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
+* [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt)
 * [ACPI](http://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)
 * [Direct memory access](http://en.wikipedia.org/wiki/Direct_memory_access)
 * [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access)

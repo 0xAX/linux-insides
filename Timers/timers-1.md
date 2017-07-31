@@ -13,9 +13,9 @@ Let's start.
 Initialization of non-standard PC hardware clock
 --------------------------------------------------------------------------------
 
-After the Linux kernel was decompressed (more about this you can read in the [Kernel decompression](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) part) the architecture non-specific code starts to work in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. After initialization of the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), initialization of [cgroups](https://en.wikipedia.org/wiki/Cgroups) and setting [canary](https://en.wikipedia.org/wiki/Buffer_overflow_protection) value we can see the call of the `setup_arch` function.
+After the Linux kernel was decompressed (more about this you can read in the [Kernel decompression](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) part) the architecture non-specific code starts to work in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. After initialization of the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), initialization of [cgroups](https://en.wikipedia.org/wiki/Cgroups) and setting [canary](https://en.wikipedia.org/wiki/Buffer_overflow_protection) value we can see the call of the `setup_arch` function.
 
-As you may remember, this function (defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L842)) prepares/initializes architecture-specific stuff (for example it reserves a place for [bss](https://en.wikipedia.org/wiki/.bss) section, reserves a place for [initrd](https://en.wikipedia.org/wiki/Initrd), parses kernel command line, and many, many other things). Besides this, we can find some time management related functions there.
+As you may remember, this function (defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L842)) prepares/initializes architecture-specific stuff (for example it reserves a place for [bss](https://en.wikipedia.org/wiki/.bss) section, reserves a place for [initrd](https://en.wikipedia.org/wiki/Initrd), parses kernel command line, and many, many other things). Besides this, we can find some time management related functions there.
 
 The first is:
 
@@ -23,7 +23,7 @@ The first is:
 x86_init.timers.wallclock_init();
 ```
 
-We already saw `x86_init` structure in the chapter that describes initialization of the Linux kernel. This structure contains pointers to the default setup functions for the different platforms like [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms), [Intel CE4100](http://www.wpgholdings.com/epaper/US/newsRelease_20091215/255874.pdf), etc. The `x86_init` structure is defined in the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c#L36), and as you can see it determines standard PC hardware by default.
+We already saw `x86_init` structure in the chapter that describes initialization of the Linux kernel. This structure contains pointers to the default setup functions for the different platforms like [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms), [Intel CE4100](http://www.wpgholdings.com/epaper/US/newsRelease_20091215/255874.pdf), etc. The `x86_init` structure is defined in the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c#L36), and as you can see it determines standard PC hardware by default.
 
 As we can see, the `x86_init` structure has the `x86_init_ops` type that provides a set of functions for platform specific setup like reserving standard resources, platform specific memory setup, initialization of interrupt handlers, etc. This structure looks like:
 
@@ -69,7 +69,7 @@ Where the `x86_init_noop` is just a function that does nothing:
 void __cpuinit x86_init_noop(void) { }
 ```
 
-for the standard PC hardware. Actually, the `wallclock_init` function is used in the [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms) platform. Initialization of the `x86_init.timers.wallclock_init` is located in the [arch/x86/platform/intel-mid/intel-mid.c](https://github.com/torvalds/linux/blob/master/arch/x86/platform/intel-mid/intel-mid.c) source code file in the `x86_intel_mid_early_setup` function:
+for the standard PC hardware. Actually, the `wallclock_init` function is used in the [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms) platform. Initialization of the `x86_init.timers.wallclock_init` is located in the [arch/x86/platform/intel-mid/intel-mid.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/platform/intel-mid/intel-mid.c) source code file in the `x86_intel_mid_early_setup` function:
 
 ```C
 void __init x86_intel_mid_early_setup(void)
@@ -84,7 +84,7 @@ void __init x86_intel_mid_early_setup(void)
 }
 ```
 
-Implementation of the `intel_mid_rtc_init` function is in the [arch/x86/platform/intel-mid/intel_mid_vrtc.c](https://github.com/torvalds/linux/blob/master/arch/x86/platform/intel-mid/intel_mid_vrtc.c) source code file and looks pretty simple. First of all, this function parses [Simple Firmware Interface](https://en.wikipedia.org/wiki/Simple_Firmware_Interface) M-Real-Time-Clock table for getting such devices to the `sfi_mrtc_array` array and initialization of the `set_time` and `get_time` functions:
+Implementation of the `intel_mid_rtc_init` function is in the [arch/x86/platform/intel-mid/intel_mid_vrtc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/platform/intel-mid/intel_mid_vrtc.c) source code file and looks pretty simple. First of all, this function parses [Simple Firmware Interface](https://en.wikipedia.org/wiki/Simple_Firmware_Interface) M-Real-Time-Clock table for getting such devices to the `sfi_mrtc_array` array and initialization of the `set_time` and `get_time` functions:
 
 ```C
 void __init intel_mid_rtc_init(void)
@@ -110,7 +110,7 @@ That's all, after this a device based on `Intel MID` will be able to get time fr
 Acquainted with jiffies
 --------------------------------------------------------------------------------
 
-If we return to the `setup_arch` function (which is located, as you remember, in the  [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L842) source code file), we see the next call of the time management related function:
+If we return to the `setup_arch` function (which is located, as you remember, in the  [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L842) source code file), we see the next call of the time management related function:
 
 ```C
 register_refined_jiffies(CLOCK_TICK_RATE);
@@ -134,7 +134,7 @@ during initialization process. This global variable will be increased each time 
 extern u64 jiffies_64;
 ```
 
-Actually, only one of these variables is in use in the Linux kernel, and it depends on the processor type. For the [x86_64](https://en.wikipedia.org/wiki/X86-64) it will be `u64` use and for the [x86](https://en.wikipedia.org/wiki/X86) it's `unsigned long`. We see this looking at the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) linker script:
+Actually, only one of these variables is in use in the Linux kernel, and it depends on the processor type. For the [x86_64](https://en.wikipedia.org/wiki/X86-64) it will be `u64` use and for the [x86](https://en.wikipedia.org/wiki/X86) it's `unsigned long`. We see this looking at the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vmlinux.lds.S) linker script:
 
 ```
 #ifdef CONFIG_X86_32
@@ -162,7 +162,7 @@ In the case of `x86_32` the `jiffies` will be the lower `32` bits of the `jiffie
 63                     31                             0
 ```
 
-Now we know a little theory about `jiffies` and can return to our function. There is no architecture-specific implementation for our function - the `register_refined_jiffies`. This function is located in the generic kernel code - [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file. Main point of the `register_refined_jiffies` is registration of the jiffy `clocksource`. Before we look on the implementation of the `register_refined_jiffies` function, we must know what `clocksource` is. As we can read in the comments:
+Now we know a little theory about `jiffies` and can return to our function. There is no architecture-specific implementation for our function - the `register_refined_jiffies`. This function is located in the generic kernel code - [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file. Main point of the `register_refined_jiffies` is registration of the jiffy `clocksource`. Before we look on the implementation of the `register_refined_jiffies` function, we must know what `clocksource` is. As we can read in the comments:
 
 ```
 The `clocksource` is hardware abstraction for a free-running counter.
@@ -172,9 +172,9 @@ I'm not sure about you, but that description didn't give a good understanding ab
 
 For example `x86` has on-chip a 64-bit counter that is called [Time Stamp  Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) and its frequency can be equal to processor frequency. Or for example the [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer), that consists of a `64-bit` counter of at least `10 MHz` frequency. Two different timers and they are both for `x86`. If we will add timers from other architectures, this only makes this problem more complex. The Linux kernel provides the `clocksource` concept to solve the problem.
 
-The clocksource concept is represented by the `clocksource` structure in the Linux kernel. This structure is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header file and contains a couple of fields that describe a time counter. For example, it contains - `name` field which is the name of a counter, `flags` field that describes different properties of a counter, pointers to the `suspend` and `resume` functions, and many more.
+The clocksource concept is represented by the `clocksource` structure in the Linux kernel. This structure is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) header file and contains a couple of fields that describe a time counter. For example, it contains - `name` field which is the name of a counter, `flags` field that describes different properties of a counter, pointers to the `suspend` and `resume` functions, and many more.
 
-Let's look at the `clocksource` structure for jiffies that is defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file:
+Let's look at the `clocksource` structure for jiffies that is defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file:
 
 ```C
 static struct clocksource clocksource_jiffies = {
@@ -251,7 +251,7 @@ by default, and the `shift` is
 #endif
 ```
 
-The `jiffies` clock source uses the `NSEC_PER_JIFFY` multiplier conversion to specify the nanosecond over cycle ratio. Note that values of the  `JIFFIES_SHIFT` and `NSEC_PER_JIFFY` depend on `HZ` value. The `HZ` represents the frequency of the system timer. This macro defined in the [include/asm-generic/param.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/param.h) and depends on the `CONFIG_HZ` kernel configuration option. The value of `HZ` differs for each supported architecture, but for `x86` it's defined like:
+The `jiffies` clock source uses the `NSEC_PER_JIFFY` multiplier conversion to specify the nanosecond over cycle ratio. Note that values of the  `JIFFIES_SHIFT` and `NSEC_PER_JIFFY` depend on `HZ` value. The `HZ` represents the frequency of the system timer. This macro defined in the [include/asm-generic/param.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/param.h) and depends on the `CONFIG_HZ` kernel configuration option. The value of `HZ` differs for each supported architecture, but for `x86` it's defined like:
 
 ```C
 #define HZ		CONFIG_HZ
@@ -271,9 +271,9 @@ Ok, we just saw definition of the `clocksource_jiffies` structure, also we know 
 register_refined_jiffies(CLOCK_TICK_RATE);
 ```
 
-function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L842) source code file.
+function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L842) source code file.
 
-As I already wrote, the main purpose of the `register_refined_jiffies` function is to register `refined_jiffies` clocksource. We already saw the `clocksource_jiffies` structure represents standard `jiffies` clock source. Now, if you look in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file, you will find yet another clock source definition:
+As I already wrote, the main purpose of the `register_refined_jiffies` function is to register `refined_jiffies` clocksource. We already saw the `clocksource_jiffies` structure represents standard `jiffies` clock source. Now, if you look in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file, you will find yet another clock source definition:
 
 ```C
 struct clocksource refined_jiffies;
@@ -305,7 +305,7 @@ In the next step we need to calculate number of cycles per one tick:
 cycles_per_tick = (cycles_per_second + HZ/2)/HZ;
 ```
 
-Note that we have used `NSEC_PER_SEC` macro as the base of the standard `jiffies` multiplier. Here we are using the `cycles_per_second` which is the first parameter of the `register_refined_jiffies` function. We've passed the `CLOCK_TICK_RATE` macro to the `register_refined_jiffies` function. This macro is defined in the [arch/x86/include/asm/timex.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/timex.h) header file and expands to the:
+Note that we have used `NSEC_PER_SEC` macro as the base of the standard `jiffies` multiplier. Here we are using the `cycles_per_second` which is the first parameter of the `register_refined_jiffies` function. We've passed the `CLOCK_TICK_RATE` macro to the `register_refined_jiffies` function. This macro is defined in the [arch/x86/include/asm/timex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/timex.h) header file and expands to the:
 
 ```C
 #define CLOCK_TICK_RATE         PIT_TICK_RATE
@@ -337,7 +337,7 @@ do_div(nsec_per_tick, (u32)shift_hz);
 refined_jiffies.mult = ((u32)nsec_per_tick) << JIFFIES_SHIFT;
 ```
 
-In the end of the `register_refined_jiffies` function we register new clock source with the `__clocksource_register` function that is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header file and return:
+In the end of the `register_refined_jiffies` function we register new clock source with the `__clocksource_register` function that is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) header file and return:
 
 ```C
 __clocksource_register(&refined_jiffies);
@@ -354,7 +354,7 @@ We just saw initialization of two `jiffies` based clock sources in the previous 
 * standard `jiffies` based clock source;
 * refined  `jiffies` based clock source;
 
-Don't worry if you don't understand the calculations here. They look frightening at first. Soon, step by step we will learn these things. So, we just saw initialization of `jiffies` based clock sources and also we know that the Linux kernel has the global variable `jiffies` that holds the number of ticks that have occurred since the kernel started to work. Now, let's look how to use it. To use `jiffies` we just can use the `jiffies` global variable by its name or with the call of the `get_jiffies_64` function. This function defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/master/kernel/time/jiffies.c) source code file and just returns full `64-bit` value of the `jiffies`:
+Don't worry if you don't understand the calculations here. They look frightening at first. Soon, step by step we will learn these things. So, we just saw initialization of `jiffies` based clock sources and also we know that the Linux kernel has the global variable `jiffies` that holds the number of ticks that have occurred since the kernel started to work. Now, let's look how to use it. To use `jiffies` we just can use the `jiffies` global variable by its name or with the call of the `get_jiffies_64` function. This function defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file and just returns full `64-bit` value of the `jiffies`:
 
 ```C
 u64 get_jiffies_64(void)

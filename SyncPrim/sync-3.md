@@ -29,7 +29,7 @@ In the first case, value of `semaphore` may be only `1` or `0`. In the second ca
 Semaphore API
 --------------------------------------------------------------------------------
 
-So, we know a little about `semaphores` from theoretical side, let's look on its implementation in the Linux kernel. All `semaphore` [API](https://en.wikipedia.org/wiki/Application_programming_interface) is located in the [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) header file.
+So, we know a little about `semaphores` from theoretical side, let's look on its implementation in the Linux kernel. All `semaphore` [API](https://en.wikipedia.org/wiki/Application_programming_interface) is located in the [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/semaphore.h) header file.
 
 We may see that the `semaphore` mechanism is represented by the following structure:
 
@@ -70,7 +70,7 @@ as we may see, the `DEFINE_SEMAPHORE` macro provides ability to initialize only 
 }
 ```
 
-The `__SEMAPHORE_INITIALIZER` macro takes the name of the future `semaphore` structure and does initialization of the fields of this structure. First of all we initialize a `spinlock` of the given `semaphore` with the `__RAW_SPIN_LOCK_UNLOCKED` macro. As you may remember from the [previous](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) parts, the `__RAW_SPIN_LOCK_UNLOCKED` is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file and expands to the `__ARCH_SPIN_LOCK_UNLOCKED` macro which just expands to zero or unlocked state:
+The `__SEMAPHORE_INITIALIZER` macro takes the name of the future `semaphore` structure and does initialization of the fields of this structure. First of all we initialize a `spinlock` of the given `semaphore` with the `__RAW_SPIN_LOCK_UNLOCKED` macro. As you may remember from the [previous](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) parts, the `__RAW_SPIN_LOCK_UNLOCKED` is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file and expands to the `__ARCH_SPIN_LOCK_UNLOCKED` macro which just expands to zero or unlocked state:
 
 ```C
 #define __ARCH_SPIN_LOCK_UNLOCKED       { { 0 } }
@@ -78,7 +78,7 @@ The `__SEMAPHORE_INITIALIZER` macro takes the name of the future `semaphore` str
 
 The last two fields of the `semaphore` structure `count` and `wait_list` are initialized with the given value which represents count of available resources and empty [list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html).
 
-The second way to initialize a `semaphore` structure is to pass the `semaphore` and number of available resources to the `sema_init` function which is defined in the [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) header file:
+The second way to initialize a `semaphore` structure is to pass the `semaphore` and number of available resources to the `sema_init` function which is defined in the [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/semaphore.h) header file:
 
 ```C
 static inline void sema_init(struct semaphore *sem, int val)
@@ -108,7 +108,7 @@ The `down_killable` function does the same as the `down_interruptible` function,
 
 The `down_trylock` function is similar on the `spin_trylock` function. This function tries to acquire a lock and exit if this operation was unsuccessful. In this case the process which wants to acquire a lock, will not wait. The last `down_timeout` function tries to acquire a lock. It will be interrupted in a waiting state when the given timeout will be expired. Additionally, you may notice that the timeout is in [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html)
 
-We just saw definitions of the `semaphore` [API](https://en.wikipedia.org/wiki/Application_programming_interface). We will start from the `down` function. This function is defined in the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file. Let's look on the implementation function:
+We just saw definitions of the `semaphore` [API](https://en.wikipedia.org/wiki/Application_programming_interface). We will start from the `down` function. This function is defined in the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file. Let's look on the implementation function:
 
 ```C
 void down(struct semaphore *sem)
@@ -125,11 +125,11 @@ void down(struct semaphore *sem)
 EXPORT_SYMBOL(down);
 ```
 
-We may see the definition of the `flags` variable at the beginning of the `down` function. This variable will be passed to the `raw_spin_lock_irqsave` and `raw_spin_lock_irqrestore` macros which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock.h) header file and protect a counter of the given `semaphore` here. Actually both of these macro do the same that `spin_lock` and `spin_unlock` macros, but additionally they save/restore current value of interrupt flags and disables [interrupts](https://en.wikipedia.org/wiki/Interrupt).
+We may see the definition of the `flags` variable at the beginning of the `down` function. This variable will be passed to the `raw_spin_lock_irqsave` and `raw_spin_lock_irqrestore` macros which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock.h) header file and protect a counter of the given `semaphore` here. Actually both of these macro do the same that `spin_lock` and `spin_unlock` macros, but additionally they save/restore current value of interrupt flags and disables [interrupts](https://en.wikipedia.org/wiki/Interrupt).
 
 As you already may guess, the main work is done between the `raw_spin_lock_irqsave` and `raw_spin_unlock_irqrestore` macros in the `down` function. We compare the value of the `semaphore` counter with zero and if it is bigger than zero, we may decrement this counter. This means that we already acquired the lock. In other way counter is zero. This means that all available resources already finished and we need to wait to acquire this lock. As we may see, the `__down` function will be called in this case.
 
-The `__down` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file and its implementation looks:
+The `__down` function is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file and its implementation looks:
 
 ```C
 static noinline void __sched __down(struct semaphore *sem)
@@ -171,14 +171,14 @@ static noinline int __sched __down_timeout(struct semaphore *sem, long timeout)
 }
 ```
 
-Now let's look at the implementation of the `__down_common` function. This function is defined in the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file too and starts from the definition of the two following local variables:
+Now let's look at the implementation of the `__down_common` function. This function is defined in the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file too and starts from the definition of the two following local variables:
 
 ```C
 struct task_struct *task = current;
 struct semaphore_waiter waiter;
 ```
 
-The first represents current task for the local processor which wants to acquire a lock. The `current` is a macro which is defined in the [arch/x86/include/asm/current.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/current.h) header file:
+The first represents current task for the local processor which wants to acquire a lock. The `current` is a macro which is defined in the [arch/x86/include/asm/current.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/current.h) header file:
 
 ```C
 #define current get_current()
@@ -234,7 +234,7 @@ for (;;) {
 }
 ```
 
-In the previous piece of code we set `waiter.up` to `false`. So, a task will spin in this loop while `up` will not be set to `true`. This loop starts from the check that the current task is in the `pending` state or in other words flags of this task contains `TASK_INTERRUPTIBLE` or `TASK_WAKEKILL` flag. As I already wrote above a task may be interrupted by [signal](https://en.wikipedia.org/wiki/Unix_signal) during wait of ability to acquire a lock. The `signal_pending_state` function is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) source code file and looks:
+In the previous piece of code we set `waiter.up` to `false`. So, a task will spin in this loop while `up` will not be set to `true`. This loop starts from the check that the current task is in the `pending` state or in other words flags of this task contains `TASK_INTERRUPTIBLE` or `TASK_WAKEKILL` flag. As I already wrote above a task may be interrupted by [signal](https://en.wikipedia.org/wiki/Unix_signal) during wait of ability to acquire a lock. The `signal_pending_state` function is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/sched.h) source code file and looks:
 
 ```C
 static inline int signal_pending_state(long state, struct task_struct *p)
@@ -285,11 +285,11 @@ timeout = schedule_timeout(timeout);
 raw_spin_lock_irq(&sem->lock);
 ```
 
-which is defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file. The `schedule_timeout` function makes the current task sleep until the given timeout.
+which is defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/timer.c) source code file. The `schedule_timeout` function makes the current task sleep until the given timeout.
 
 That is all about the `__down_common` function. A task which wants to acquire a lock which is already acquired by another task will be spun in the infinite loop while it will not be interrupted by a signal, the given timeout will not be expired or the task which holds a lock will not release it. Now let's look at the implementation of the `up` function.
 
-The `up` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file as `down` function. As we already know, the main purpose of this function is to release a lock. This function looks:
+The `up` function is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file as `down` function. As we already know, the main purpose of this function is to release a lock. This function looks:
 
 ```C
 void up(struct semaphore *sem)
@@ -319,7 +319,7 @@ static noinline void __sched __up(struct semaphore *sem)
 }
 ```
 
-Here we takes the first task from the list of waiters, delete it from the list, set its `waiter-up` to true. From this point the infinite loop from the `__down_common` function will be stopped. The `wake_up_process` function will be called in the end of the `__up` function. As you remember we called the `schedule_timeout` function in the infinite loop from the `__down_common` this function. The `schedule_timeout` function makes the current task sleep until the given timeout will not be expired. So, as our process may sleep right now, we need to wake it up. That's why we call the `wake_up_process` function from the [kernel/sched/core.c](https://github.com/torvalds/linux/blob/master/kernel/sched/core.c) source code file.
+Here we takes the first task from the list of waiters, delete it from the list, set its `waiter-up` to true. From this point the infinite loop from the `__down_common` function will be stopped. The `wake_up_process` function will be called in the end of the `__up` function. As you remember we called the `schedule_timeout` function in the infinite loop from the `__down_common` this function. The `schedule_timeout` function makes the current task sleep until the given timeout will not be expired. So, as our process may sleep right now, we need to wake it up. That's why we call the `wake_up_process` function from the [kernel/sched/core.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/core.c) source code file.
 
 That's all.
 

@@ -58,7 +58,7 @@ enum {
 }
 ```
 
-When the `early_trap_pf_init` will be called, the `set_intr_gate` will be expanded to the call of the `_set_gate` which will fill the `IDT` with the handler for the page fault. Now let's look on the implementation of the `page_fault` handler. The `page_fault` handler defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S) assembly source code file as all exceptions handlers. Let's look on it:
+When the `early_trap_pf_init` will be called, the `set_intr_gate` will be expanded to the call of the `_set_gate` which will fill the `IDT` with the handler for the page fault. Now let's look on the implementation of the `page_fault` handler. The `page_fault` handler defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S) assembly source code file as all exceptions handlers. Let's look on it:
 
 ```assembly
 trace_idtentry page_fault do_page_fault has_error_code=1
@@ -81,7 +81,7 @@ idtentry \sym \do_sym has_error_code=\has_error_code
 
 We will not dive into exceptions [Tracing](https://en.wikipedia.org/wiki/Tracing_%28software%29) now. If `CONFIG_TRACING` is not set, we can see that `trace_idtentry` macro just expands to the normal `idtentry`. We already saw implementation of the `idtentry` macro in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html), so let's start from the `page_fault` exception handler.
 
-As we can see in the `idtentry` definition, the handler of the `page_fault` is `do_page_fault` function which defined in the [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/fault.c) and as all exceptions handlers it takes two arguments:
+As we can see in the `idtentry` definition, the handler of the `page_fault` is `do_page_fault` function which defined in the [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/fault.c) and as all exceptions handlers it takes two arguments:
 
 * `regs` - `pt_regs` structure that holds state of an interrupted process;
 * `error_code` - error code of the page fault exception.
@@ -99,7 +99,7 @@ do_page_fault(struct pt_regs *regs, unsigned long error_code)
 }
 ```
 
-This register contains a linear address which caused `page fault`. In the next step we make a call of the `exception_enter` function from the [include/linux/context_tracking.h](https://github.com/torvalds/linux/blob/master/include/context_tracking.h). The `exception_enter` and `exception_exit` are functions from context tracking subsystem in the Linux kernel used by the [RCU](https://en.wikipedia.org/wiki/Read-copy-update) to remove its dependency on the timer tick while a processor runs in userspace. Almost in the every exception handler we will see similar code:
+This register contains a linear address which caused `page fault`. In the next step we make a call of the `exception_enter` function from the [include/linux/context_tracking.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/context_tracking.h). The `exception_enter` and `exception_exit` are functions from context tracking subsystem in the Linux kernel used by the [RCU](https://en.wikipedia.org/wiki/Read-copy-update) to remove its dependency on the timer tick while a processor runs in userspace. Almost in the every exception handler we will see similar code:
 
 ```C
 enum ctx_state prev_state;
@@ -110,7 +110,7 @@ prev_state = exception_enter();
 exception_exit(prev_state);
 ```
 
-The `exception_enter` function checks that `context tracking` is enabled with the `context_tracking_is_enabled` and if it is in enabled state, we get previous context with the `this_cpu_read` (more about `this_cpu_*` operations you can read in the [Documentation](https://github.com/torvalds/linux/blob/master/Documentation/this_cpu_ops.txt)). After this it calls `context_tracking_user_exit` function which informs the context tracking that the processor is exiting userspace mode and entering the kernel:
+The `exception_enter` function checks that `context tracking` is enabled with the `context_tracking_is_enabled` and if it is in enabled state, we get previous context with the `this_cpu_read` (more about `this_cpu_*` operations you can read in the [Documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/this_cpu_ops.txt)). After this it calls `context_tracking_user_exit` function which informs the context tracking that the processor is exiting userspace mode and entering the kernel:
 
 ```C
 static inline enum ctx_state exception_enter(void)
@@ -142,7 +142,7 @@ And in the end we return previous context. Between the `exception_enter` and `ex
 __do_page_fault(regs, error_code, address);
 ```
 
-The `__do_page_fault` is defined in the same source code file as `do_page_fault` - [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/fault.c). In the beginning of the `__do_page_fault` we check state of the [kmemcheck](https://www.kernel.org/doc/Documentation/kmemcheck.txt) checker. The `kmemcheck` detects warns about some uses of uninitialized memory. We need to check it because page fault can be caused by kmemcheck:
+The `__do_page_fault` is defined in the same source code file as `do_page_fault` - [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/fault.c). In the beginning of the `__do_page_fault` we check state of the [kmemcheck](https://www.kernel.org/doc/Documentation/kmemcheck.txt) checker. The `kmemcheck` detects warns about some uses of uninitialized memory. We need to check it because page fault can be caused by kmemcheck:
 
 ```C
 if (kmemcheck_active(regs))
@@ -202,7 +202,7 @@ Here we can see `proc_root_readdir` function which will be called when the Linux
 Back to start_kernel
 --------------------------------------------------------------------------------
 
-There are many different function calls after the `early_trap_pf_init` in the `setup_arch` function from different kernel subsystems, but there are no one interrupts and exceptions handling related. So, we have to go back where we came from - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L492). The first things after the `setup_arch` is the `trap_init` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). This function makes initialization of the remaining exceptions handlers (remember that we already setup 3 handlers for the `#DB` - debug exception, `#BP` - breakpoint exception and `#PF` - page fault exception). The `trap_init` function starts from the check of the [Extended Industry Standard Architecture](https://en.wikipedia.org/wiki/Extended_Industry_Standard_Architecture):
+There are many different function calls after the `early_trap_pf_init` in the `setup_arch` function from different kernel subsystems, but there are no one interrupts and exceptions handling related. So, we have to go back where we came from - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L492). The first things after the `setup_arch` is the `trap_init` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). This function makes initialization of the remaining exceptions handlers (remember that we already setup 3 handlers for the `#DB` - debug exception, `#BP` - breakpoint exception and `#PF` - page fault exception). The `trap_init` function starts from the check of the [Extended Industry Standard Architecture](https://en.wikipedia.org/wiki/Extended_Industry_Standard_Architecture):
 
 ```C
 #ifdef CONFIG_EISA
@@ -329,7 +329,7 @@ __set_fixmap(FIX_RO_IDT, __pa_symbol(idt_table), PAGE_KERNEL_RO);
 idt_descr.address = fix_to_virt(FIX_RO_IDT);
 ```
 
-and write its address to the `idt_descr.address` (more about fix-mapped addresses you can read in the second part of the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html) chapter). After this we can see the call of the `cpu_init` function that defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c). This function makes initialization of the all `per-cpu` state. In the beginning of the `cpu_init` we do the following things: First of all we wait while current cpu is initialized and than we call the `cr4_init_shadow` function which stores shadow copy of the `cr4` control register for the current cpu and load CPU microcode if need with the following function calls:
+and write its address to the `idt_descr.address` (more about fix-mapped addresses you can read in the second part of the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html) chapter). After this we can see the call of the `cpu_init` function that defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function makes initialization of the all `per-cpu` state. In the beginning of the `cpu_init` we do the following things: First of all we wait while current cpu is initialized and than we call the `cr4_init_shadow` function which stores shadow copy of the `cr4` control register for the current cpu and load CPU microcode if need with the following function calls:
 
 ```C
 wait_for_master_cpu(cpu);
@@ -381,7 +381,7 @@ set_tss_desc(cpu, t);
 load_TR_desc();
 ```
 
-where `set_tss_desc` macro from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h) writes given  descriptor to the `Global Descriptor Table` of the given processor:
+where `set_tss_desc` macro from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h) writes given  descriptor to the `Global Descriptor Table` of the given processor:
 
 ```C
 #define set_tss_desc(cpu, addr) __set_tss_desc(cpu, GDT_ENTRY_TSS, addr)
@@ -442,7 +442,7 @@ Links
 * [Tracing](https://en.wikipedia.org/wiki/Tracing_%28software%29)
 * [cr2](https://en.wikipedia.org/wiki/Control_register)
 * [RCU](https://en.wikipedia.org/wiki/Read-copy-update)
-* [this_cpu_* operations](https://github.com/torvalds/linux/blob/master/Documentation/this_cpu_ops.txt)
+* [this_cpu_* operations](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/this_cpu_ops.txt)
 * [kmemcheck](https://www.kernel.org/doc/Documentation/kmemcheck.txt)
 * [prefetchw](http://www.felixcloutier.com/x86/PREFETCHW.html)
 * [3DNow](https://en.wikipedia.org/?title=3DNow!)

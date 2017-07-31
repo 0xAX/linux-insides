@@ -6,7 +6,7 @@ Introduction to the `clockevents` framework
 
 This is fifth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. As you might noted from the title of this part, the `clockevents` framework will be discussed. We already saw one framework in the [second](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-2.html) part of this chapter. It was `clocksource` framework. Both of these frameworks represent timekeeping abstractions in the Linux kernel.
 
-At first let's refresh your memory and try to remember what is it `clocksource` framework and and what its purpose. The main goal of the `clocksource` framework is to provide `timeline`. As described in the [documentation](https://github.com/0xAX/linux/blob/master/Documentation/timers/timekeeping.txt):
+At first let's refresh your memory and try to remember what is it `clocksource` framework and and what its purpose. The main goal of the `clocksource` framework is to provide `timeline`. As described in the [documentation](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/Documentation/timers/timekeeping.txt):
 
 > For example issuing the command 'date' on a Linux system will eventually read the clock source to determine exactly what time it is.
 
@@ -14,7 +14,7 @@ The Linux kernel supports many different clock sources. You can find some of the
 
 Each clock source provides monotonic atomic counter. As I already wrote, the Linux kernel supports a huge set of different clock source and each clock source has own parameters like [frequency](https://en.wikipedia.org/wiki/Frequency). The main goal of the `clocksource` framework is to provide [API](https://en.wikipedia.org/wiki/Application_programming_interface) to select best available clock source in the system i.e. a clock source with the highest frequency. Additional goal of the `clocksource` framework is to represent an atomic counter provided by a clock source in human units. In this time, nanoseconds are the favorite choice for the time value units of the given clock source in the Linux kernel.
 
-The `clocksource` framework represented by the `clocksource` structure which is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h) header code file which contains `name` of a clock source, rating of certain clock source in the system (a clock source with the higher frequency has the biggest rating in the system), `list` of all registered clock source in the system, `enable` and `disable` fields to enable and disable a clock source, pointer to the `read` function which must return an atomic counter of a clock source and etc.
+The `clocksource` framework represented by the `clocksource` structure which is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) header code file which contains `name` of a clock source, rating of certain clock source in the system (a clock source with the higher frequency has the biggest rating in the system), `list` of all registered clock source in the system, `enable` and `disable` fields to enable and disable a clock source, pointer to the `read` function which must return an atomic counter of a clock source and etc.
 
 Additionally the `clocksource` structure provides two fields: `mult` and `shift` which are needed for translation of an atomic counter which is provided by a certain clock source to the human units, i.e. [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond). Translation occurs via following formula:
 
@@ -37,7 +37,7 @@ int clocksource_unregister(struct clocksource *cs)
 
 and etc.
 
-Additionally to the `clocksource` framework, the Linux kernel provides `clockevents` framework. As described in the [documentation](https://github.com/0xAX/linux/blob/master/Documentation/timers/timekeeping.txt):
+Additionally to the `clocksource` framework, the Linux kernel provides `clockevents` framework. As described in the [documentation](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/Documentation/timers/timekeeping.txt):
 
 > Clock events are the conceptual reverse of clock sources
 
@@ -48,7 +48,7 @@ Now we know a little about the `clockevents` framework in the Linux kernel, and 
 API of `clockevents` framework
 -------------------------------------------------------------------------------
 
-The main structure which described a clock event device is `clock_event_device` structure. This structure is defined in the [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/master/include/linux/clockchips.h) header file and contains a huge set of fields. as well as the `clocksource` structure it has `name` fields which contains human readable name of a clock event device, for example [local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) timer:
+The main structure which described a clock event device is `clock_event_device` structure. This structure is defined in the [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clockchips.h) header file and contains a huge set of fields. as well as the `clocksource` structure it has `name` fields which contains human readable name of a clock event device, for example [local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) timer:
 
 ```C
 static struct clock_event_device lapic_clockevent = {
@@ -85,7 +85,7 @@ void clockevents_register_device(struct clock_event_device *dev)
 }
 ```
 
-This function defined in the [kernel/time/clockevents.c](https://github.com/torvalds/linux/blob/master/kernel/time/clockevents.c) source code file and as we may see, the `clockevents_register_device` function takes only one parameter:
+This function defined in the [kernel/time/clockevents.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/clockevents.c) source code file and as we may see, the `clockevents_register_device` function takes only one parameter:
 
 * address of a `clock_event_device` structure which represents a clock event device.
 
@@ -138,7 +138,7 @@ After we finished with the initialization of the `at91sam926x` periodic timer, w
 clockevents_register_device(&data->clkevt);
 ```
 
-Now we can consider implementation of the `clockevent_register_device` function. As I already wrote above, this function is defined in the [kernel/time/clockevents.c](https://github.com/torvalds/linux/blob/master/kernel/time/clockevents.c) source code file and starts from the initialization of the initial event device state:
+Now we can consider implementation of the `clockevent_register_device` function. As I already wrote above, this function is defined in the [kernel/time/clockevents.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/clockevents.c) source code file and starts from the initialization of the initial event device state:
 
 ```C
 clockevent_set_state(dev, CLOCK_EVT_STATE_DETACHED);
@@ -213,7 +213,7 @@ First of all we add the given clock event device to the list of clock event devi
 static LIST_HEAD(clockevent_devices);
 ```
 
-At the next step we call the `tick_check_new_device` function which is defined in the [kernel/time/tick-common.c](https://github.com/torvalds/linux/blob/master/kernel/time/tick-common.c) source code file and checks do the new registered clock event device should be used or not. The `tick_check_new_device` function checks the given `clock_event_device` gets the current registered tick device which is represented by the `tick_device` structure and compares their ratings and features. Actually `CLOCK_EVT_STATE_ONESHOT` is preferred:
+At the next step we call the `tick_check_new_device` function which is defined in the [kernel/time/tick-common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/tick-common.c) source code file and checks do the new registered clock event device should be used or not. The `tick_check_new_device` function checks the given `clock_event_device` gets the current registered tick device which is represented by the `tick_device` structure and compares their ratings and features. Actually `CLOCK_EVT_STATE_ONESHOT` is preferred:
 
 ```C
 static bool tick_check_preferred(struct clock_event_device *curdev,
@@ -378,7 +378,7 @@ That's all. From this moment we have registered new clock event device. So the u
 
 We saw implementation only of the `clockevents_register_device` function. But generally, the clock event layer [API](https://en.wikipedia.org/wiki/Application_programming_interface) is small. Besides the `API` for clock event device registration, the `clockevents` framework provides functions to schedule the next event interrupt, clock event device notification service and support for suspend and resume for clock event devices.
 
-If you want to know more about `clockevents` API you can start to research following source code and header files: [kernel/time/tick-common.c](https://github.com/torvalds/linux/blob/master/kernel/time/tick-common.c), [kernel/time/clockevents.c](https://github.com/torvalds/linux/blob/master/kernel/time/clockevents.c) and [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/master/include/linux/clockchips.h).
+If you want to know more about `clockevents` API you can start to research following source code and header files: [kernel/time/tick-common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/tick-common.c), [kernel/time/clockevents.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/clockevents.c) and [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clockchips.h).
 
 That's all.
 
@@ -394,7 +394,7 @@ If you have questions or suggestions, feel free to ping me in twitter [0xAX](htt
 Links
 -------------------------------------------------------------------------------
 
-* [timekeeping documentation](https://github.com/0xAX/linux/blob/master/Documentation/timers/timekeeping.txt)
+* [timekeeping documentation](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/Documentation/timers/timekeeping.txt)
 * [Intel 8253](https://en.wikipedia.org/wiki/Intel_8253)
 * [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer)
 * [ACPI pdf](http://uefi.org/sites/default/files/resources/ACPI_5.pdf)

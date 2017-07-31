@@ -224,7 +224,7 @@ Early initialization of `cgroups` starts from the call of the:
 cgroup_init_early();
 ```
 
-function in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) during early initialization of the Linux kernel. This function is defined in the [kernel/cgroup.c](https://github.com/torvalds/linux/blob/master/kernel/cgroup.c) source code file and starts from the definition of two following local variables:
+function in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) during early initialization of the Linux kernel. This function is defined in the [kernel/cgroup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/cgroup.c) source code file and starts from the definition of two following local variables:
 
 ```C
 int __init cgroup_init_early(void)
@@ -256,7 +256,7 @@ which represents mount options of `cgroupfs`. For example we may create named cg
 $ mount -t cgroup -oname=my_cgrp,none /mnt/cgroups
 ```
 
-The second variable - `ss` has type - `cgroup_subsys` structure which is defined in the [include/linux/cgroup-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/cgroup-defs.h) header file and as you may guess from the name of the type, it represents a `cgroup` subsystem. This structure contains various fields and callback functions like:
+The second variable - `ss` has type - `cgroup_subsys` structure which is defined in the [include/linux/cgroup-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/cgroup-defs.h) header file and as you may guess from the name of the type, it represents a `cgroup` subsystem. This structure contains various fields and callback functions like:
 
 ```C
 struct cgroup_subsys {
@@ -292,7 +292,7 @@ Here we may see call of the `init_cgroup_root` function which will execute initi
 struct cgroup_root cgrp_dfl_root;
 ```
 
-Its `cgrp` field represented by the `cgroup` structure which represents a `cgroup` as you already may guess and defined in the [include/linux/cgroup-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/cgroup-defs.h) header file. We already know that a process which is represented by the `task_struct` in the Linux kernel. The `task_struct` does not contain direct link to a `cgroup` where this task is attached. But it may be reached via `ccs_set` field of the `task_struct`. This `ccs_set` structure holds pointer to the array of subsystem states:
+Its `cgrp` field represented by the `cgroup` structure which represents a `cgroup` as you already may guess and defined in the [include/linux/cgroup-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/cgroup-defs.h) header file. We already know that a process which is represented by the `task_struct` in the Linux kernel. The `task_struct` does not contain direct link to a `cgroup` where this task is attached. But it may be reached via `ccs_set` field of the `task_struct`. This `ccs_set` structure holds pointer to the array of subsystem states:
 
 ```C
 struct css_set {
@@ -376,7 +376,7 @@ for_each_subsys(ss, i) {
 }
 ```
 
-The `for_each_subsys` here is a macro which is defined in the [kernel/cgroup.c](https://github.com/torvalds/linux/blob/master/kernel/cgroup.c) source code file and just expands to the `for` loop over `cgroup_subsys` array. Definition of this array may be found in the same source code file and it looks in a little unusual way:
+The `for_each_subsys` here is a macro which is defined in the [kernel/cgroup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/cgroup.c) source code file and just expands to the `for` loop over `cgroup_subsys` array. Definition of this array may be found in the same source code file and it looks in a little unusual way:
 
 ```C
 #define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys,
@@ -386,7 +386,7 @@ The `for_each_subsys` here is a macro which is defined in the [kernel/cgroup.c](
 #undef SUBSYS
 ```
 
-It is defined as `SUBSYS` macro which takes one argument (name of a subsystem) and defines `cgroup_subsys` array of cgroup subsystems. Additionally we may see that the array is initialized with content of the [linux/cgroup_subsys.h](https://github.com/torvalds/linux/blob/master/include/linux/cgroup_subsys.h) header file. If we will look inside of this header file we will see again set of the `SUBSYS` macros with the given subsystems names:
+It is defined as `SUBSYS` macro which takes one argument (name of a subsystem) and defines `cgroup_subsys` array of cgroup subsystems. Additionally we may see that the array is initialized with content of the [linux/cgroup_subsys.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/cgroup_subsys.h) header file. If we will look inside of this header file we will see again set of the `SUBSYS` macros with the given subsystems names:
 
 ```C
 #if IS_ENABLED(CONFIG_CPUSETS)
@@ -401,7 +401,7 @@ SUBSYS(cpu)
 ...
 ```
 
-This works because of `#undef` statement after first definition of the `SUBSYS` macro. Look at the `&_x ## _cgrp_subsys` expression. The `##` operator concatenates right and left expression in a `C` macro. So as we passed `cpuset`, `cpu` and etc., to the `SUBSYS` macro, somewhere `cpuset_cgrp_subsys`, `cp_cgrp_subsys` should be defined. And that's true. If you will look in the [kernel/cpuset.c](https://github.com/torvalds/linux/blob/master/kernel/cpuset.c) source code file, you will see this definition:
+This works because of `#undef` statement after first definition of the `SUBSYS` macro. Look at the `&_x ## _cgrp_subsys` expression. The `##` operator concatenates right and left expression in a `C` macro. So as we passed `cpuset`, `cpu` and etc., to the `SUBSYS` macro, somewhere `cpuset_cgrp_subsys`, `cp_cgrp_subsys` should be defined. And that's true. If you will look in the [kernel/cpuset.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/cpuset.c) source code file, you will see this definition:
 
 ```C
 struct cgroup_subsys cpuset_cgrp_subsys = {

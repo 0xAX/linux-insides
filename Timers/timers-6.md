@@ -44,7 +44,7 @@ model name	: Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz
 
 And although Intel manual says that the frequency of the `Time Stamp Counter`, while constant, is not necessarily the maximum qualified frequency of the processor, or the frequency given in the brand string, anyway we may see that it will be much more than frequency of the `ACPI PM` timer or `High Precision Event Timer`. And we can see that the clock source with the best rating or highest frequency is current in the system.
 
-You can note that besides these three clock source, we don't see yet another two familiar us clock sources in the output of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. These clock sources are `jiffy` and `refined_jiffies`. We don't see them because this filed maps only high resolution clock sources or in other words clock sources with the [CLOCK_SOURCE_VALID_FOR_HRES](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h#L113) flag.
+You can note that besides these three clock source, we don't see yet another two familiar us clock sources in the output of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. These clock sources are `jiffy` and `refined_jiffies`. We don't see them because this filed maps only high resolution clock sources or in other words clock sources with the [CLOCK_SOURCE_VALID_FOR_HRES](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h#L113) flag.
 
 As I already wrote above, we will consider all of these three clock sources in this part. We will consider it in order of their initialization or:
 
@@ -71,14 +71,14 @@ The first clock source is the [High Precision Event Timer](https://en.wikipedia.
 High Precision Event Timer
 --------------------------------------------------------------------------------
 
-The implementation of the `High Precision Event Timer` for the [x86](https://en.wikipedia.org/wiki/X86) architecture is located in the [arch/x86/kernel/hpet.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/hpet.c) source code file. Its initialization starts from the call of the `hpet_enable` function. This function is called during Linux kernel initialization. If we will look into `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file, we will see that after the all architecture-specific stuff initialized, early console is disabled and time management subsystem already ready, call of the following function:
+The implementation of the `High Precision Event Timer` for the [x86](https://en.wikipedia.org/wiki/X86) architecture is located in the [arch/x86/kernel/hpet.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/hpet.c) source code file. Its initialization starts from the call of the `hpet_enable` function. This function is called during Linux kernel initialization. If we will look into `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file, we will see that after the all architecture-specific stuff initialized, early console is disabled and time management subsystem already ready, call of the following function:
 
 ```C
 if (late_time_init)
 	late_time_init();
 ```
 
-which does initialization of the late architecture specific timers after early jiffy counter already initialized. The definition of the `late_time_init` function for the `x86` architecture is located in the [arch/x86/kernel/time.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/time.c) source code file. It looks pretty easy:
+which does initialization of the late architecture specific timers after early jiffy counter already initialized. The definition of the `late_time_init` function for the `x86` architecture is located in the [arch/x86/kernel/time.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/time.c) source code file. It looks pretty easy:
 
 ```C
 static __init void x86_late_time_init(void)
@@ -88,7 +88,7 @@ static __init void x86_late_time_init(void)
 }
 ```
 
-As we may see, it does initialization of the `x86` related timer and initialization of the `Time Stamp Counter`. The seconds we will see in the next paragraph, but now let's consider the call of the `x86_init.timers.timer_init` function. The `timer_init` points to the `hpet_time_init` function from the same source code file. We can verify this by looking on the definition of the `x86_init` structure from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c):
+As we may see, it does initialization of the `x86` related timer and initialization of the `Time Stamp Counter`. The seconds we will see in the next paragraph, but now let's consider the call of the `x86_init.timers.timer_init` function. The `timer_init` points to the `hpet_time_init` function from the same source code file. We can verify this by looking on the definition of the `x86_init` structure from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c):
 
 ```C
 struct x86_init_ops x86_init __initdata = {
@@ -187,7 +187,7 @@ static struct clocksource clocksource_hpet = {
 };
 ```
 
-After the `clocksource_hpet` is registered, we can return to the `hpet_time_init()` function from the [arch/x86/kernel/time.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/time.c) source code file. We can remember that the last step is the call of the:
+After the `clocksource_hpet` is registered, we can return to the `hpet_time_init()` function from the [arch/x86/kernel/time.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/time.c) source code file. We can remember that the last step is the call of the:
 
 ```C
 setup_default_timer_irq();
@@ -208,7 +208,7 @@ function which just reads and returns atomic counter from the `Main Counter Regi
 ACPI PM timer
 --------------------------------------------------------------------------------
 
-The seconds clock source is [ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf). Implementation of this clock source is located in the [drivers/clocksource/acpi_pm.c](https://github.com/torvalds/linux/blob/master/drivers/clocksource_acpi_pm.c) source code file and starts from the call of the `init_acpi_pm_clocksource` function during `fs` [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html).
+The seconds clock source is [ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf). Implementation of this clock source is located in the [drivers/clocksource/acpi_pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/clocksource_acpi_pm.c) source code file and starts from the call of the `init_acpi_pm_clocksource` function during `fs` [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html).
 
 If we will look at implementation of the `init_acpi_pm_clocksource` function, we will see that it starts from the check of the value of `pmtmr_ioport` variable:
 
@@ -225,7 +225,7 @@ static int __init init_acpi_pm_clocksource(void)
     ...
 ```
 
-This `pmtmr_ioport` variable contains extended address of the `Power Management Timer Control Register Block`. It gets its value in the `acpi_parse_fadt` function which is defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/acpi/boot.c) source code file. This function parses `FADT` or `Fixed ACPI Description Table` [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) table and tries to get the values of the `X_PM_TMR_BLK` field which contains extended address of the `Power Management Timer Control Register Block`, represented in `Generic Address Structure` format:
+This `pmtmr_ioport` variable contains extended address of the `Power Management Timer Control Register Block`. It gets its value in the `acpi_parse_fadt` function which is defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/acpi/boot.c) source code file. This function parses `FADT` or `Fixed ACPI Description Table` [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) table and tries to get the values of the `X_PM_TMR_BLK` field which contains extended address of the `Power Management Timer Control Register Block`, represented in `Generic Address Structure` format:
 
 ```C
 static int __init acpi_parse_fadt(struct acpi_table_header *table)
@@ -298,7 +298,7 @@ That's all. Now we move to the last clock source in this part - `Time Stamp Coun
 Time Stamp Counter
 --------------------------------------------------------------------------------
 
-The third and last clock source in this part is - [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) clock source and its implementation is located in the [arch/x86/kernel/tsc.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/tsc.c) source code file. We already saw the `x86_late_time_init` function in this part and initialization of the [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) starts from this place. This function calls the `tsc_init()` function from the [arch/x86/kernel/tsc.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/tsc.c) source code file.
+The third and last clock source in this part is - [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) clock source and its implementation is located in the [arch/x86/kernel/tsc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/tsc.c) source code file. We already saw the `x86_late_time_init` function in this part and initialization of the [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) starts from this place. This function calls the `tsc_init()` function from the [arch/x86/kernel/tsc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/tsc.c) source code file.
 
 At the beginning of the `tsc_init` function we can see check, which checks that a processor has support of the `Time Stamp Counter`:
 

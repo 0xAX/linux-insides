@@ -127,7 +127,7 @@ menu of the Linux kernel configuration:
 
 ![kernel configuration menu](http://oi63.tinypic.com/2pzbog7.jpg)
 
-We may not only enable support of the `kmemcheck` mechanism in the Linux kernel, but it also provides some configuration options for us. We will see all of these options in the next paragraph of this part. Last note before we will consider how does the `kmemcheck` check memory. Now this mechanism is implemented only for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. You can be sure if you will look in the [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) `x86` related kernel configuration file, you will see following lines:
+We may not only enable support of the `kmemcheck` mechanism in the Linux kernel, but it also provides some configuration options for us. We will see all of these options in the next paragraph of this part. Last note before we will consider how does the `kmemcheck` check memory. Now this mechanism is implemented only for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. You can be sure if you will look in the [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Kconfig) `x86` related kernel configuration file, you will see following lines:
 
 ```
 config X86
@@ -155,7 +155,7 @@ We just considered the `kmemcheck` mechanism from theoretical side. Now let's co
 Implementation of the `kmemcheck` mechanism in the Linux kernel
 --------------------------------------------------------------------------------
 
-So, now we know what is it `kmemcheck` and what it does in the Linux kernel. Time to see at its implementation in the Linux kernel. Implementation of the `kmemcheck` is splitted in two parts. The first is generic part is located in the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/master/mm/kmemcheck.c) source code file and the second [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture-specific part is located in the [arch/x86/mm/kmemcheck](https://github.com/torvalds/linux/tree/master/arch/x86/mm/kmemcheck) directory.
+So, now we know what is it `kmemcheck` and what it does in the Linux kernel. Time to see at its implementation in the Linux kernel. Implementation of the `kmemcheck` is splitted in two parts. The first is generic part is located in the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/kmemcheck.c) source code file and the second [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture-specific part is located in the [arch/x86/mm/kmemcheck](https://github.com/torvalds/linux/tree/master/arch/x86/mm/kmemcheck) directory.
 
 Let's start from the initialization of this mechanism. We already know that to enable the `kmemcheck` mechanism in the Linux kernel, we must enable the `CONFIG_KMEMCHECK` kernel configuration option. But besides this, we need to pass one of following parameters:
 
@@ -167,7 +167,7 @@ to the Linux kernel command line. The first two are clear, but the last needs a 
 
 ![kernel configuration menu](http://oi66.tinypic.com/y2eeh.jpg)
 
-We know from the seventh [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-7.html) of the chapter which describes initialization of the Linux kernel that the kernel command line is parsed during initialization of the Linux kernel in `do_initcall_level`, `do_early_param` functions. Actually the `kmemcheck` subsystem consists from two stages. The first stage is early. If we will look at the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/master/mm/kmemcheck.c) source code file, we will see the `param_kmemcheck` function which is will be called during early command line parsing:
+We know from the seventh [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-7.html) of the chapter which describes initialization of the Linux kernel that the kernel command line is parsed during initialization of the Linux kernel in `do_initcall_level`, `do_early_param` functions. Actually the `kmemcheck` subsystem consists from two stages. The first stage is early. If we will look at the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/kmemcheck.c) source code file, we will see the `param_kmemcheck` function which is will be called during early command line parsing:
 
 ```C
 static int __init param_kmemcheck(char *str)
@@ -223,7 +223,7 @@ So when the somebody will call:
 struct my_struct *my_struct = kmalloc(sizeof(struct my_struct), GFP_KERNEL);
 ```
 
-through a series of different function calls the `kmem_getpages` function will be called. This function is defined in the [mm/slab.c](https://github.com/torvalds/linux/blob/master/mm/slab.c) source code file and main goal of this function tries to allocate [pages](https://en.wikipedia.org/wiki/Paging) with the given flags. In the end of this function we can see following code:
+through a series of different function calls the `kmem_getpages` function will be called. This function is defined in the [mm/slab.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/slab.c) source code file and main goal of this function tries to allocate [pages](https://en.wikipedia.org/wiki/Paging) with the given flags. In the end of this function we can see following code:
 
 ```C
 if (kmemcheck_enabled && !(cachep->flags & SLAB_NOTRACK)) {
@@ -236,7 +236,7 @@ if (kmemcheck_enabled && !(cachep->flags & SLAB_NOTRACK)) {
 }
 ```
 
-So, here we check that the if `kmemcheck` is enabled and the `SLAB_NOTRACK` bit is not set in flags we set `non-present` bit for the just allocated page. The `SLAB_NOTRACK` bit tell us to not track uninitialized memory. Additionally we check if a cache object has constructor (details will be considered in next parts) we mark allocated page as uninitilized or unallocated in other way. The `kmemcheck_alloc_shadow` function is defined in the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/master/mm/kmemcheck.c) source code file and does following things:
+So, here we check that the if `kmemcheck` is enabled and the `SLAB_NOTRACK` bit is not set in flags we set `non-present` bit for the just allocated page. The `SLAB_NOTRACK` bit tell us to not track uninitialized memory. Additionally we check if a cache object has constructor (details will be considered in next parts) we mark allocated page as uninitilized or unallocated in other way. The `kmemcheck_alloc_shadow` function is defined in the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/kmemcheck.c) source code file and does following things:
 
 ```C
 void kmemcheck_alloc_shadow(struct page *page, int order, gfp_t flags, int node)
@@ -278,7 +278,7 @@ void kmemcheck_hide_pages(struct page *p, unsigned int n)
 
 Here we go through all pages and and tries to get `page table entry` for each page. If this operation was successful, we unset present bit and set hidden bit in each page. In the end we flush [translation lookaside buffer](https://en.wikipedia.org/wiki/Translation_lookaside_buffer), because some pages was changed. From this point allocated pages are tracked by the `kmemcheck`. Now, as `present` bit is unset, the [page fault](https://en.wikipedia.org/wiki/Page_fault) execution will be occured right after the `kmalloc` will return pointer to allocated space and a code will try to access this memory.
 
-As you may remember from the [second part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) of the Linux kernel initialization chapter, the `page fault` handler is located in the [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/fault.c) source code file and represented by the `do_page_fault` function. We can see following check from the beginning of the `do_page_fault` function:
+As you may remember from the [second part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) of the Linux kernel initialization chapter, the `page fault` handler is located in the [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/fault.c) source code file and represented by the `do_page_fault` function. We can see following check from the beginning of the `do_page_fault` function:
 
 ```C
 static noinline void
@@ -343,7 +343,7 @@ The `kmemcheck` mechanism declares special [tasklet](https://0xax.gitbooks.io/li
 static DECLARE_TASKLET(kmemcheck_tasklet, &do_wakeup, 0);
 ```
 
-which runs the `do_wakeup` function from the [arch/x86/mm/kmemcheck/error.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/kmemcheck/error.c) source code file when it will be scheduled to run.
+which runs the `do_wakeup` function from the [arch/x86/mm/kmemcheck/error.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/kmemcheck/error.c) source code file when it will be scheduled to run.
 
 The `do_wakeup` function will call the `kmemcheck_error_recall` function which will print errors collected by `kmemcheck`. As we already saw the:
 

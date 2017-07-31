@@ -192,13 +192,13 @@ At the start of execution, the BIOS is not in RAM, but in ROM.
 Bootloader
 --------------------------------------------------------------------------------
 
-There are a number of bootloaders that can boot Linux, such as [GRUB 2](https://www.gnu.org/software/grub/) and [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which specifies the requirements for a bootloader to implement Linux support. This example will describe GRUB 2.
+There are a number of bootloaders that can boot Linux, such as [GRUB 2](https://www.gnu.org/software/grub/) and [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt) which specifies the requirements for a bootloader to implement Linux support. This example will describe GRUB 2.
 
 Continuing from before, now that the `BIOS` has chosen a boot device and transferred control to the boot sector code, execution starts from [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD). This code is very simple, due to the limited amount of space available, and contains a pointer which is used to jump to the location of GRUB 2's core image. The core image begins with [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD), which is usually stored immediately after the first sector in the unused space before the first partition. The above code loads the rest of the core image, which contains GRUB 2's kernel and drivers for handling filesystems, into memory. After loading the rest of the core image, it executes [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c) function.
 
 The `grub_main` function initializes the console, gets the base address for modules, sets the root device, loads/parses the grub configuration file, loads modules, etc. At the end of execution, `grub_main` function moves grub to normal mode. The `grub_normal_execute` function (from the `grub-core/normal/main.c` source code file) completes the final preparations and shows a menu to select an operating system. When we select one of the grub menu entries, the `grub_menu_execute_entry` function runs, executing the grub `boot` command and booting the selected operating system.
 
-As we can read in the kernel boot protocol, the bootloader must read and fill some fields of the kernel setup header, which starts at the `0x01f1` offset from the kernel setup code. You may look at the boot [linker script](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L16) to make sure in this offset. The kernel header [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) starts from:
+As we can read in the kernel boot protocol, the bootloader must read and fill some fields of the kernel setup header, which starts at the `0x01f1` offset from the kernel setup code. You may look at the boot [linker script](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/setup.ld#L16) to make sure in this offset. The kernel header [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S) starts from:
 
 ```assembly
     .globl hdr
@@ -212,7 +212,7 @@ hdr:
     boot_flag:   .word 0xAA55
 ```
 
-The bootloader must fill this and the rest of the headers (which are only marked as being type `write` in the Linux boot protocol, such as in [this example](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) with values which it has either received from the command line or calculated during boot. (We will not go over full descriptions and explanations for all fields of the kernel setup header now but instead when the discuss how kernel uses them; you can find a description of all fields in the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).)
+The bootloader must fill this and the rest of the headers (which are only marked as being type `write` in the Linux boot protocol, such as in [this example](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt#L354)) with values which it has either received from the command line or calculated during boot. (We will not go over full descriptions and explanations for all fields of the kernel setup header now but instead when the discuss how kernel uses them; you can find a description of all fields in the [boot protocol](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt#L156).)
 
 As we can see in the kernel boot protocol, the memory map will be the following after loading the kernel:
 
@@ -256,7 +256,7 @@ The bootloader has now loaded the Linux kernel into memory, filled the header fi
 Start of Kernel Setup
 --------------------------------------------------------------------------------
 
-Finally, we are in the kernel! Technically, the kernel hasn't run yet; first, the kernel setup part must configure some stuff like decompressor, memory management related things and etc. After all of such things, kernel setup part will decompress actual kernel and jump on it. Execution of setup part starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L292). It is a little strange at first sight, as there are several instructions before it.
+Finally, we are in the kernel! Technically, the kernel hasn't run yet; first, the kernel setup part must configure some stuff like decompressor, memory management related things and etc. After all of such things, kernel setup part will decompress actual kernel and jump on it. Execution of setup part starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S) at [_start](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292). It is a little strange at first sight, as there are several instructions before it.
 
 A long time ago, the Linux kernel used to have its own bootloader. Now, however, if you run, for example,
 
@@ -318,7 +318,7 @@ _start:
     //
 ```
 
-Here we can see a `jmp` instruction opcode (`0xeb`) that jumps to the `start_of_setup-1f` point. In `Nf` notation, `2f` refers to the following local `2:` label; in our case, it is label `1` that is present right after the jump, and it contains the rest of the setup [header](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156). Right after the setup header, we see the `.entrytext` section, which starts at the `start_of_setup` label.
+Here we can see a `jmp` instruction opcode (`0xeb`) that jumps to the `start_of_setup-1f` point. In `Nf` notation, `2f` refers to the following local `2:` label; in our case, it is label `1` that is present right after the jump, and it contains the rest of the setup [header](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt#L156). Right after the setup header, we see the `.entrytext` section, which starts at the `start_of_setup` label.
 
 This is the first code that actually runs (aside from the previous jump instructions, of course). After the kernel setup part received control from the bootloader, the first `jmp` instruction is located at the `0x200` offset from the start of the kernel real mode, i.e., after the first 512 bytes. This we can both read in the Linux kernel boot protocol and see in the grub2 source code:
 
@@ -342,7 +342,7 @@ After the jump to `start_of_setup`, the kernel needs to do the following:
 * Make sure that all segment register values are equal
 * Set up a correct stack, if needed
 * Set up [bss](https://en.wikipedia.org/wiki/.bss)
-* Jump to the C code in [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)
+* Jump to the C code in [main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c)
 
 Let's look at the implementation.
 
@@ -365,7 +365,7 @@ _start:
     .byte start_of_setup-1f
 ```
 
-jump, which is at a `512` byte offset from [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L46). It also needs to align `cs` from `0x10200` to `0x10000`, as well as all other segment registers. After that, we set up the stack:
+jump, which is at a `512` byte offset from [4d 5a](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L46). It also needs to align `cs` from `0x10200` to `0x10000`, as well as all other segment registers. After that, we set up the stack:
 
 ```assembly
     pushw   %ds
@@ -373,12 +373,12 @@ jump, which is at a `512` byte offset from [4d 5a](https://github.com/torvalds/l
     lretw
 ```
 
-which pushes the value of `ds` to the stack with the address of the [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) label and executes the `lretw` instruction. When the `lretw` instruction is called, it loads the address of label `6` into the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter) register and loads `cs` with the value of `ds`. Afterward, `ds` and `cs` will have the same values.
+which pushes the value of `ds` to the stack with the address of the [6](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L494) label and executes the `lretw` instruction. When the `lretw` instruction is called, it loads the address of label `6` into the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter) register and loads `cs` with the value of `ds`. Afterward, `ds` and `cs` will have the same values.
 
 Stack Setup
 --------------------------------------------------------------------------------
 
-Almost all of the setup code is in preparation for the C language environment in real mode. The next [step](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L569) is checking the `ss` register value and making a correct stack if `ss` is wrong:
+Almost all of the setup code is in preparation for the C language environment in real mode. The next [step](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L569) is checking the `ss` register value and making a correct stack if `ss` is wrong:
 
 ```assembly
     movw    %ss, %dx
@@ -395,7 +395,7 @@ This can lead to 3 different scenarios:
 
 Let's look at all three of these scenarios in turn:
 
-* `ss` has a correct address (`0x1000`). In this case, we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L584):
+* `ss` has a correct address (`0x1000`). In this case, we go to label [2](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L584):
 
 ```assembly
 2:  andw    $~3, %dx
@@ -410,7 +410,7 @@ Here we can see the alignment of `dx` (contains `sp` given by bootloader) to `4`
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
-* In the second scenario, (`ss` != `ds`). First, we put the value of [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) (the address of the end of the setup code) into `dx` and check the `loadflags` header field using the `testb` instruction to see whether we can use the heap. [loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
+* In the second scenario, (`ss` != `ds`). First, we put the value of [_end](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/setup.ld#L52) (the address of the end of the setup code) into `dx` and check the `loadflags` header field using the `testb` instruction to see whether we can use the heap. [loadflags](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
 
 ```C
 #define LOADED_HIGH     (1<<0)
@@ -450,7 +450,7 @@ The last two steps that need to happen before we can jump to the main C code are
     jne     setup_bad
 ```
 
-This simply compares the [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) with the magic number `0x5a5aaa55`. If they are not equal, a fatal error is reported.
+This simply compares the [setup_sig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/setup.ld#L39) with the magic number `0x5a5aaa55`. If they are not equal, a fatal error is reported.
 
 If the magic number matches, knowing we have a set of correct segment registers and a stack, we only need to set up the BSS section before jumping into the C code.
 
@@ -465,7 +465,7 @@ The BSS section is used to store statically allocated, uninitialized data. Linux
     rep; stosl
 ```
 
-First, the [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) address is moved into `di`. Next, the `_end + 3` address (+3 - aligns to 4 bytes) is moved into `cx`. The `eax` register is cleared (using a `xor` instruction), and the bss section size (`cx`-`di`) is calculated and put into `cx`. Then, `cx` is divided by four (the size of a 'word'), and the `stosl` instruction is used repeatedly, storing the value of `eax` (zero) into the address pointed to by `di`, automatically increasing `di` by four, repeating until `cx` reaches zero). The net effect of this code is that zeros are written through all words in memory from `__bss_start` to `_end`:
+First, the [__bss_start](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/setup.ld#L47) address is moved into `di`. Next, the `_end + 3` address (+3 - aligns to 4 bytes) is moved into `cx`. The `eax` register is cleared (using a `xor` instruction), and the bss section size (`cx`-`di`) is calculated and put into `cx`. Then, `cx` is divided by four (the size of a 'word'), and the `stosl` instruction is used repeatedly, storing the value of `eax` (zero) into the address pointed to by `di`, automatically increasing `di` by four, repeating until `cx` reaches zero). The net effect of this code is that zeros are written through all words in memory from `__bss_start` to `_end`:
 
 ![bss](http://oi59.tinypic.com/29m2eyr.jpg)
 
@@ -478,7 +478,7 @@ That's all - we have the stack and BSS, so we can jump to the `main()` C functio
     calll main
 ```
 
-The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). You can read about what this does in the next part.
+The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c). You can read about what this does in the next part.
 
 Conclusion
 --------------------------------------------------------------------------------
