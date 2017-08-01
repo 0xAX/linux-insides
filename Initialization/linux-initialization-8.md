@@ -58,7 +58,7 @@ void switch_to_new_gdt(int cpu)
 }
 ```
 
-The `gdt_descr` variable represents pointer to the `GDT` descriptor here (we already saw defnition of a `desc_ptr` structure in the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) part). We get the address and the size of the `GDT` descriptor for the `CPU` with the given `id`. The `GDT_SIZE` is `256` or:
+The `gdt_descr` variable represents pointer to the `GDT` descriptor here (we already saw definition of a `desc_ptr` structure in the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) part). We get the address and the size of the `GDT` descriptor for the `CPU` with the given `id`. The `GDT_SIZE` is `256` or:
 
 ```C
 #define GDT_SIZE (GDT_ENTRIES * 8)
@@ -270,7 +270,7 @@ Our current point is the `sched_init` function from the [kernel/sched/core.c](ht
 sched_clock_init();
 ```
 
-The `sched_clock_init` is pretty easy function and as we may see it just sets `sched_clock_init` varaible:
+The `sched_clock_init` is pretty easy function and as we may see it just sets `sched_clock_init` variable:
 
 ```C
 void sched_clock_init(void)
@@ -320,9 +320,9 @@ The `SCHED_NORMAL` is used for the most normal applications, the amount of cpu e
 
 The `real-time` policies are also supported for the time-critical applications: `SCHED_FIFO` and `SCHED_RR`. If you've read something about the Linux kernel scheduler, you can know that it is modular. It means that it supports different algorithms to schedule different types of processes. Usually this modularity is called `scheduler classes`. These modules encapsulate scheduling policy details and are handled by the scheduler core without knowing too much about them. 
 
-Now let's get back to the our code and look on the two configuration options: `CONFIG_FAIR_GROUP_SCHED` and `CONFIG_RT_GROUP_SCHED`. The least unit which scheduler operates is an individual task or thread. But a process is not only one type of entities of which the scheduller may operate. Both of these options provides support for group scheduling. The first one option provides support for group scheduling with `completely fair scheduler` policies and the second with `real-time` policies respectively.
+Now let's get back to the our code and look on the two configuration options: `CONFIG_FAIR_GROUP_SCHED` and `CONFIG_RT_GROUP_SCHED`. The least unit which scheduler operates is an individual task or thread. But a process is not only one type of entities of which the scheduler may operate. Both of these options provides support for group scheduling. The first one option provides support for group scheduling with `completely fair scheduler` policies and the second with `real-time` policies respectively.
 
-In simple words, group scheduling is a feature that allows us to schedule a set of tasks as if a single task. For example, if you create a group with two tasks on the group, then this group is just like one normal task, from the kernel perspective. After a group is scheduled, the scheduler will pick a task from this group and it will be scheduled inside the group. So, such mechanism allows us to build hierarchies and manage their resources. Although a minimal unit of scheduling is a process, the Linux kernel scheduler does not use `task_struct` structure under the hood. There is special `sched_entity` strcture that is used by the Linux kernel scheduler as scheduling unit.
+In simple words, group scheduling is a feature that allows us to schedule a set of tasks as if a single task. For example, if you create a group with two tasks on the group, then this group is just like one normal task, from the kernel perspective. After a group is scheduled, the scheduler will pick a task from this group and it will be scheduled inside the group. So, such mechanism allows us to build hierarchies and manage their resources. Although a minimal unit of scheduling is a process, the Linux kernel scheduler does not use `task_struct` structure under the hood. There is special `sched_entity` structure that is used by the Linux kernel scheduler as scheduling unit.
 
 So, the current goal is to calculate a space to allocate for a `sched_entity(ies)` of the root task group and we do it two times with:
 
@@ -335,7 +335,7 @@ So, the current goal is to calculate a space to allocate for a `sched_entity(ies
 #endif
 ```
 
-The first is for case when scheduling of task groups is enabled with `completely fair` scheduler and the second is for the same purpose by in a case of `real-time` scheduler. So here we calculate size which is equal to size of a pointer multipled on amount of CPUs in the system and multipled to `2`. We need to multiply this on `2` as we will need to allocate a space for two things:
+The first is for case when scheduling of task groups is enabled with `completely fair` scheduler and the second is for the same purpose by in a case of `real-time` scheduler. So here we calculate size which is equal to size of a pointer multiplied on amount of CPUs in the system and multiplied to `2`. We need to multiply this on `2` as we will need to allocate a space for two things:
 
 * scheduler entity structure;
 * `runqueue`.
