@@ -239,7 +239,7 @@ __mutex_lock_slowpath(atomic_t *lock_count)
 }
 ```
 
-and call the `__mutex_lock_common` function with the obtained `mutex`. The `__mutex_lock_common` function starts from [preemtion](https://en.wikipedia.org/wiki/Preemption_%28computing%29) disabling until rescheduling:
+and call the `__mutex_lock_common` function with the obtained `mutex`. The `__mutex_lock_common` function starts from [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) disabling until rescheduling:
 
 ```C
 preempt_disable();
@@ -279,7 +279,7 @@ while (true) {
 }
 ```
 
-and try to acquire a lock. First of all we try to take current owner and if the owner exists (it may not exists in a case when a process already released a mutex) and we wait for it in the `mutex_spin_on_owner` function before the owner will release a lock. If new task with higher priority have appeared during wait of the lock owner, we break the loop and go to sleep. In other case, the process already may release a lock, so we try to acquire a lock with the `mutex_try_to_acquired`. If this operation finished successfully, we set new owner for the given mutex, removes ourself from the `MCS` wait queue and exit from the `mutex_optimistic_spin` function. At this state a lock will be acquired by a process and we enable [preemtion](https://en.wikipedia.org/wiki/Preemption_%28computing%29) and exit from the `__mutex_lock_common` function:
+and try to acquire a lock. First of all we try to take current owner and if the owner exists (it may not exists in a case when a process already released a mutex) and we wait for it in the `mutex_spin_on_owner` function before the owner will release a lock. If new task with higher priority have appeared during wait of the lock owner, we break the loop and go to sleep. In other case, the process already may release a lock, so we try to acquire a lock with the `mutex_try_to_acquired`. If this operation finished successfully, we set new owner for the given mutex, removes ourself from the `MCS` wait queue and exit from the `mutex_optimistic_spin` function. At this state a lock will be acquired by a process and we enable [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) and exit from the `__mutex_lock_common` function:
 
 ```C
 if (mutex_optimistic_spin(lock, ww_ctx, use_ww_ctx)) {
@@ -435,6 +435,6 @@ Links
 * [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
 * [Lock instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [JNS instruction](http://unixwiz.net/techtips/x86-jumps.html)
-* [preemtion](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
+* [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [Unix signals](https://en.wikipedia.org/wiki/Unix_signal)
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-3.html)

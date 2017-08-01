@@ -135,11 +135,11 @@ SYSCALL_DEFINE3(execve,
 }
 ```
 
-It takes executable file name, set of command line arguments and set of enviroment variables. As you may guess, everything is done by the `do_execve` function. I will not describe implementation of the `do_execve` function in details because you can read about this in [here](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/arch/x86/kernel/process_64.c#L239) source code file.
+It takes executable file name, set of command line arguments and set of environment variables. As you may guess, everything is done by the `do_execve` function. I will not describe implementation of the `do_execve` function in details because you can read about this in [here](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/arch/x86/kernel/process_64.c#L239) source code file.
 
 The `start_thread` function sets new value to [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation) and program execution address. From this point, new process is ready to start. Once the [context switch](https://en.wikipedia.org/wiki/Context_switch) will be done, control will be returned to the userspace with new values of registers and new executable will be started to execute.
 
-That's all from the kernel side. The Linux kernel prepares binary image for execution and its execution starts right after context switch and returns controll to userspace when it is finished. But it does not answer on questions like where is from `_start` come and others. Let's try to answer on these questions in the next paragraph.
+That's all from the kernel side. The Linux kernel prepares binary image for execution and its execution starts right after context switch and returns control to userspace when it is finished. But it does not answer on questions like where is from `_start` come and others. Let's try to answer on these questions in the next paragraph.
 
 How does program start in userspace
 --------------------------------------------------------------------------------
@@ -150,7 +150,7 @@ In the previous paragraph we saw how an executable file is prepared to run by th
 $ gcc -Wall program.c -o sum
 ```
 
-You may guess that `_start` comes from [stanard libray](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass `-v` option to gcc which will enable `verbose mode`, you will see following long output. Full output is not interesting for us, let's look at the following steps: 
+You may guess that `_start` comes from [standard library](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass `-v` option to gcc which will enable `verbose mode`, you will see following long output. Full output is not interesting for us, let's look at the following steps: 
 
 First of all, our program should be compiled with `gcc`:
 
@@ -329,7 +329,7 @@ mov $__libc_csu_init, %RCX_LP
 mov $main, %RDI_LP
 ```
 
-After stack aligning we push address of the stack, move addresses of contstructor and destructor to the `r8` and `rcx` registers and address of the `main` symbol to the `rdi`. From this moment we can call the `__libc_start_main` function from the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD).
+After stack aligning we push address of the stack, move addresses of constructor and destructor to the `r8` and `rcx` registers and address of the `main` symbol to the `rdi`. From this moment we can call the `__libc_start_main` function from the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD).
 
 Before we look at the `__libc_start_main` function, let's add the `/lib64/crt1.o` and try to compile our program again:
 

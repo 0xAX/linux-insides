@@ -249,7 +249,7 @@ And set the pointer to the top of new program's stack that we set in the `bprm_m
 bprm->exec = bprm->p;
 ```
 
-The top of the stack will contain the program filename and we store this fileneme to the `exec` field of the `linux_bprm` structure.
+The top of the stack will contain the program filename and we store this filename to the `exec` field of the `linux_bprm` structure.
 
 Now we have filled `linux_bprm` structure, we call the `exec_binprm` function:
 

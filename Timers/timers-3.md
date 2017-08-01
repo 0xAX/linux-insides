@@ -316,7 +316,7 @@ if (bc_local)
 
 which actually represents interrupt handler of the local timer of a processor. After this a processor will wake up. That is all about `tick broadcast` framework in the Linux kernel. We have missed some aspects of this framework, for example reprogramming of a `clock event` device and broadcast with the oneshot timer and etc. But the Linux kernel is very big, it is not real to cover all aspects of it. I think it will be interesting to dive into with yourself.
 
-If you remember, we have started this part with the call of the `tick_init` function. We just consider the `tick_broadcast_init` function and releated theory, but the `tick_init` function contains another call of a function and this function is - `tick_nohz_init`. Let's look on the implementation of this function.
+If you remember, we have started this part with the call of the `tick_init` function. We just consider the `tick_broadcast_init` function and related theory, but the `tick_init` function contains another call of a function and this function is - `tick_nohz_init`. Let's look on the implementation of this function.
 
 Initialization of dyntick related data structures
 --------------------------------------------------------------------------------
@@ -409,7 +409,7 @@ for_each_cpu(cpu, tick_nohz_full_mask)
 
 The `context_tracking_cpu_set` function defined in the [kernel/context_tracking.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/context_tracking.c) source code file and main point of this function is to set the `context_tracking.active` [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable to `true`. When the `active` field will be set to `true` for the certain processor, all [context switches](https://en.wikipedia.org/wiki/Context_switch) will be ignored by the Linux kernel context tracking subsystem for this processor.
 
-That's all. This is the end of the `tick_nohz_init` function. After this `NO_HZ` related data structures will be initialzed. We didn't see API of the `NO_HZ` mode, but will see it soon.
+That's all. This is the end of the `tick_nohz_init` function. After this `NO_HZ` related data structures will be initialized. We didn't see API of the `NO_HZ` mode, but will see it soon.
 
 Conclusion
 --------------------------------------------------------------------------------
