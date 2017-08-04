@@ -260,7 +260,7 @@ and reserves memory region for the given base address and size. `memblock_reserv
 First touch of the linux kernel memory manager framework
 --------------------------------------------------------------------------------
 
-In the previous paragraph we stopped at the call of the `memblock_reserve` function and as i sad before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function just calls:
+In the previous paragraph we stopped at the call of the `memblock_reserve` function and as i said before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function just calls:
 
 ```C
 memblock_reserve_region(base, size, MAX_NUMNODES, 0);
