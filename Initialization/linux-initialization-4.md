@@ -218,13 +218,13 @@ this_cpu_write(irq_stack_union.stack_canary, canary); // read below about this_c
 Again, we will not dive into details here, we will cover it in the part about [IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). As canary is set, we disable local and early boot IRQs and register the bootstrap CPU in the CPU maps. We disable local IRQs (interrupts for current CPU) with the `local_irq_disable` macro which expands to the call of the `arch_local_irq_disable` function from [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/percpu-defs.h):
 
 ```C
-static inline notrace void arch_local_irq_enable(void)
+static inline notrace void arch_local_irq_disable(void)
 {
-        native_irq_enable();
+        native_irq_disable();
 }
 ```
 
-Where `native_irq_enable` is `cli` instruction for `x86_64`. As interrupts are disabled we can register the current CPU with the given ID in the CPU bitmap.
+Where `native_irq_disable` is `cli` instruction for `x86_64`. As interrupts are disabled we can register the current CPU with the given ID in the CPU bitmap.
 
 The first processor activation
 ---------------------------------------------------------------------------------

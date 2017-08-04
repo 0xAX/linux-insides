@@ -106,4 +106,4 @@
 * [Sachin Patil](https://github.com/psachin)
 * [Stéphan Gorget](https://github.com/phantez)
 * [Adrian Reyes](https://github.com/int3rrupt)
-* [Chandan Rai](https://github.com/crowchirp)
+* [JB Cayrou](https://github.com/jbcayrou)
