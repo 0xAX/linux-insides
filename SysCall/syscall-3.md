@@ -230,7 +230,7 @@ That's all. Now let's look on the modern concept - `vDSO`.
 Introduction to vDSO
 --------------------------------------------------------------------------------
 
-As I already wrote above, `vsyscall` is an obsolete concept and replaced by the `vDSO` or `virtual dynamic shared object`. The main difference between the `vsyscall` and `vDSO` mechanisms is that `vDSO` maps memory pages into each process in a shared object [form](https://en.wikipedia.org/wiki/Library_%28computing%29#Shared_libraries), but `vsyscall` is static in memory and has the same address every time. For the `x86_64` architecture it is called -`linux-vdso.so.1`. All userspace applications linked with this shared library via the `glibc`. For example:
+As I already wrote above, `vsyscall` is an obsolete concept and replaced by the `vDSO` or `virtual dynamic shared object`. The main difference between the `vsyscall` and `vDSO` mechanisms is that `vDSO` maps memory pages into each process in a shared object [form](https://en.wikipedia.org/wiki/Library_%28computing%29#Shared_libraries), but `vsyscall` is static in memory and has the same address every time. For the `x86_64` architecture it is called -`linux-vdso.so.1`. All userspace applications that dynamically link to `glibc` will use the `vDSO` automatically. For example:
 
 ```
 ~$ ldd /bin/uname
