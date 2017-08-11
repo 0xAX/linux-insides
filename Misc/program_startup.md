@@ -280,19 +280,23 @@ STATIC int LIBC_START_MAIN (int (*main) (int, char **, char **),
 
 It takes the address of the `main` function of a program, `argc` and `argv`. `init` and `fini` functions are constructor and destructor of the program. The `rtld_fini` is the termination function which will be called after the program will be exited to terminate and free its dynamic section. The last parameter of the `__libc_start_main` is a pointer to the stack of the program. Before we can call the `__libc_start_main` function, all of these parameters must be prepared and passed to it. Let's return to the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file and continue to see what happens before the `__libc_start_main` function will be called from there.
 
-We can get all the arguments we need for `__libc_start_main` function from the stack. As `_start` is called, our stack looks like:
+We can get all the arguments we need for `__libc_start_main` function from the stack. At the very beginning, when `_start` is called, our stack looks like:
 
 ```
 +-----------------+
 |       NULL      |
 +-----------------+ 
+|       ...       |
 |       envp      |
+|       ...       |
 +-----------------+ 
 |       NULL      |
 +------------------
-|       argv      | <- rsp
+|       ...       |
+|       argv      |
+|       ...       |
 +------------------
-|       argc      |
+|       argc      | <- rsp
 +-----------------+ 
 ```
 
@@ -302,11 +306,15 @@ After we cleared `ebp` register and saved the address of the termination functio
 +-----------------+
 |       NULL      |
 +-----------------+ 
+|       ...       |
 |       envp      |
+|       ...       |
 +-----------------+ 
 |       NULL      |
 +------------------
-|       argv      | <- rsp
+|       ...       |
+|       argv      |
+|       ...       | <- rsp
 +-----------------+
 ```
 
