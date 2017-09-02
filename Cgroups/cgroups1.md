@@ -70,7 +70,7 @@ dr-xr-xr-x 5 root root  0 Dec  2 22:37 systemd
 
 As you already may guess that `control groups` mechanism is not such mechanism which was invented only directly to the needs of the Linux kernel, but mostly for userspace needs. To use a `control group`, we should create it at first. We may create a `cgroup` via two ways.
 
-The first way is to create subdirectory in any subsystem from `sys/fs/cgroup` and add a pid of a task to a `tasks` file which will be created automatically right after we will create the subdirectory.
+The first way is to create subdirectory in any subsystem from `/sys/fs/cgroup` and add a pid of a task to a `tasks` file which will be created automatically right after we will create the subdirectory.
 
 The second way is to create/destroy/manage `cgroups` with utils from `libcgroup` library (`libcgroup-tools` in Fedora).
 
@@ -108,7 +108,7 @@ $ cd /sys/fs/cgroup
 And now let's go to the `devices` subdirectory which represents kind of resources that allows or denies access to devices by tasks in a `cgroup`:
 
 ```
-# cd /devices
+# cd devices
 ```
 
 and create `cgroup_test_group` directory there:
