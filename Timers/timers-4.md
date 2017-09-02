@@ -240,7 +240,7 @@ The last step in the `init_timers` function is the call of the:
 open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
 ```
 
-function. The `open_softirq` function may be already familar to you if you have read the ninth [part](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) about the interrupts and interrupt handling in the Linux kernel. In short words, the `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/softirq.c) source code file and executes initialization of the deferred interrupt handler.
+function. The `open_softirq` function may be already familiar to you if you have read the ninth [part](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) about the interrupts and interrupt handling in the Linux kernel. In short words, the `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/softirq.c) source code file and executes initialization of the deferred interrupt handler.
 
 In our case the deferred function is the `run_timer_softirq` function that is will be called after a hardware interrupt in the `do_IRQ` function which defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irq.c) source code file. The main point of this function is to handle a software dynamic timer. The Linux kernel does not do this thing during the hardware timer interrupt handling because this is time consuming operation.
 
@@ -383,9 +383,9 @@ function which fields the given `timer` with default values. The second way is t
 	__TIMER_INITIALIZER((_function), (_expires), (_data), 0)
 ```
 
-macro which will initilize the given `timer_list` structure too.
+macro which will initialize the given `timer_list` structure too.
 
-After a `dynamic timer` is initialzed we can start this `timer` with the call of the:
+After a `dynamic timer` is initialized we can start this `timer` with the call of the:
 
 ```C
 void add_timer(struct timer_list * timer);
@@ -404,7 +404,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fourth part of the chapter that describes timers and timer management related stuff in the Linux kernel. In the previous part we got acquainted with the two new concepts: the `tick broadcast` framework and the `NO_HZ` mode. In this part we continued to dive into time managemented related stuff and got acquainted with the new concept - `dynamic timer` or software timer. We didn't saw implementation of a `dynamic timers` management code in details in this part but saw data structures and API around this concept.
+This is the end of the fourth part of the chapter that describes timers and timer management related stuff in the Linux kernel. In the previous part we got acquainted with the two new concepts: the `tick broadcast` framework and the `NO_HZ` mode. In this part we continued to dive into time management related stuff and got acquainted with the new concept - `dynamic timer` or software timer. We didn't saw implementation of a `dynamic timers` management code in details in this part but saw data structures and API around this concept.
 
 In the next part we will continue to dive into timer management related things in the Linux kernel and will see new concept for us - `timers`.
 

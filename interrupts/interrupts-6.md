@@ -402,7 +402,7 @@ First of all the `math_error` function defines current interrupted task, address
 		return;
 ```
 
-After this we check that we are from the kernel mode and if yes we will try to fix an excetpion with the `fixup_exception` function. If we cannot we fill the task with the exception's error code and vector number and die:
+After this we check that we are from the kernel mode and if yes we will try to fix an exception with the `fixup_exception` function. If we cannot we fill the task with the exception's error code and vector number and die:
 
 ```C
 if (!user_mode(regs)) {
