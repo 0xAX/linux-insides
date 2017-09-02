@@ -6,7 +6,7 @@ vsyscalls and vDSO
 
 This is the third part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) that describes system calls in the Linux kernel and we saw preparations after a system call caused by a userspace application and process of handling of a system call in the previous [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html). In this part we will look at two concepts that are very close to the system call concept, they are called `vsyscall` and `vdso`.
 
-We already know what is a `system call`. This is special routine in the Linux kernel which userspace application asks to do privileged tasks, like to read or to write to a file, to open a socket and etc. As you may know, invoking a system call is an expensive operation in the Linux kernel, because the processor must interrupt the currently executing task and switch context to kernel mode, subsequently jumping again into userspace after the system call handler finishes its work. These two mechanisms - `vsyscall` and `vdso` are designed to speed up this process for certain system calls and in this part we will try to understand how these mechanisms work.
+We already know what `system call`s are. They are special routines in the Linux kernel which userspace applications ask to do privileged tasks, like to read or to write to a file, to open a socket, etc. As you may know, invoking a system call is an expensive operation in the Linux kernel, because the processor must interrupt the currently executing task and switch context to kernel mode, subsequently jumping again into userspace after the system call handler finishes its work. These two mechanisms - `vsyscall` and `vdso` are designed to speed up this process for certain system calls and in this part we will try to understand how these mechanisms work.
 
 Introduction to vsyscalls
 --------------------------------------------------------------------------------
@@ -230,7 +230,7 @@ That's all. Now let's look on the modern concept - `vDSO`.
 Introduction to vDSO
 --------------------------------------------------------------------------------
 
-As I already wrote above, `vsyscall` is an obsolete concept and replaced by the `vDSO` or `virtual dynamic shared object`. The main difference between the `vsyscall` and `vDSO` mechanisms is that `vDSO` maps memory pages into each process in a shared object [form](https://en.wikipedia.org/wiki/Library_%28computing%29#Shared_libraries), but `vsyscall` is static in memory and has the same address every time. For the `x86_64` architecture it is called -`linux-vdso.so.1`. All userspace applications linked with this shared library via the `glibc`. For example:
+As I already wrote above, `vsyscall` is an obsolete concept and replaced by the `vDSO` or `virtual dynamic shared object`. The main difference between the `vsyscall` and `vDSO` mechanisms is that `vDSO` maps memory pages into each process in a shared object [form](https://en.wikipedia.org/wiki/Library_%28computing%29#Shared_libraries), but `vsyscall` is static in memory and has the same address every time. For the `x86_64` architecture it is called -`linux-vdso.so.1`. All userspace applications that dynamically link to `glibc` will use the `vDSO` automatically. For example:
 
 ```
 ~$ ldd /bin/uname
