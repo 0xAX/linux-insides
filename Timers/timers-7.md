@@ -10,11 +10,7 @@ This is the seventh and last part [chapter](https://0xax.gitbooks.io/linux-insid
 * `gettimeofday`;
 * `nanosleep`.
 
-<<<<<<< HEAD
-We will start from simple userspace [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) program and see all way from the call of the [standard library](https://en.wikipedia.org/wiki/Standard_library) function to the implementation of certain system call. As each [architecture](https://github.com/torvalds/linux/tree/master/arch) provides its own implementation of certain system call, we will consider only [x86_64](https://en.wikipedia.org/wiki/X86-64) specific implementations of system calls, as this book is related to this architecture.
-=======
 We will start from a simple userspace [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) program and see all way from the call of the [standard library](https://en.wikipedia.org/wiki/Standard_library) function to the implementation of certain system calls. As each [architecture](https://github.com/torvalds/linux/tree/master/arch) provides its own implementation of certain system calls, we will consider only [x86_64](https://en.wikipedia.org/wiki/X86-64) specific implementations of system calls, as this book is related to this architecture.
->>>>>>> b9d8ea78bb41df5ffd2ea94b745298c91c8d171c
 
 Additionally, we will not consider the concept of system calls in this part, but only implementations of these three system calls in the Linux kernel. If you are interested in what is a `system call`, there is a special [chapter](https://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) about this.
 
