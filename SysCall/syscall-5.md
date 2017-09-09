@@ -216,7 +216,7 @@ At the next step we check that a file is not tried to be opened via [fanotify](h
 flags &= ~FMODE_NONOTIFY & ~O_CLOEXEC;
 ```
 
-We do this to not leak a [file descriptor](https://en.wikipedia.org/wiki/File_descriptor). By default, the new file descriptor is set to remain open across an `execve` system call, but the `open` system call supports `O_CLOEXEC` flag that can be used to change this default behaviour. So we do this to prevent leaking of a file descriptor when one thread opens a file to set `O_CLOEXEC` flag and in the same time the second process does a [fork](https://en.wikipedia.org/wiki/Fork_(system_call)) + [execve](https://en.wikipedia.org/wiki/Exec_(system_call)) and as you may remember that child will have copies of the parent's set of open file descriptors.
+We do this to not leak a [file descriptor](https://en.wikipedia.org/wiki/File_descriptor). By default, the new file descriptor is set to remain open across an `execve` system call, but the `open` system call supports `O_CLOEXEC` flag that can be used to change this default behaviour. So we do this to prevent leaking of a file descriptor when one thread opens a file to set `O_CLOEXEC` flag and in the same time the second process does a [fork](https://en.wikipedia.org/wiki/Fork_\(system_call\)) + [execve](https://en.wikipedia.org/wiki/Exec_\(system_call\)) and as you may remember that child will have copies of the parent's set of open file descriptors.
 
 At the next step we check that if our flags contains `O_SYNC` flag, we apply `O_DSYNC` flag too:
 
@@ -393,8 +393,8 @@ Links
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [opendir](http://man7.org/linux/man-pages/man3/opendir.3.html)
 * [fanotify](http://man7.org/linux/man-pages/man7/fanotify.7.html)
-* [fork](https://en.wikipedia.org/wiki/Fork_(system_call))
-* [execve](https://en.wikipedia.org/wiki/Exec_(system_call))
+* [fork](https://en.wikipedia.org/wiki/Fork_\(system_call\))
+* [execve](https://en.wikipedia.org/wiki/Exec_\(system_call\))
 * [symlink](https://en.wikipedia.org/wiki/Symbolic_link)
 * [audit](https://linux.die.net/man/8/auditd)
 * [inode](https://en.wikipedia.org/wiki/Inode)
