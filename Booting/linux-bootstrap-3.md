@@ -556,13 +556,15 @@ movl	%ecx, %gs
 movl	%ecx, %ss
 ```
 
-If you paid attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. And setup valid stack for debugging purposes:
+If you paid attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. Now we fill it with all segment registers besides `cs` (`cs` is already `__BOOT_CS`).
+
+And setup valid stack for debugging purposes:
 
 ```assembly
 addl	%ebx, %esp
 ```
 
-Now we fill it with all segment registers besides `cs` (`cs` is already `__BOOT_CS`). Next we zero out all general purpose registers besides `eax` with:
+The last step before jump into 32-bit entry point is clearing of general purpose registers:
 
 ```assembly
 xorl	%ecx, %ecx
