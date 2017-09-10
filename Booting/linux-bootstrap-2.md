@@ -401,13 +401,16 @@ Keyboard initialization
 --------------------------------------------------------------------------------
 
 The next step is the initialization of the keyboard with the call of the [`keyboard_init()`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L65) function. At first `keyboard_init` initializes registers using the `initregs` function and calling the [0x16](http://www.ctyme.com/intr/rb-1756.htm) interrupt for getting the keyboard status.
+
 ```c
     initregs(&ireg);
     ireg.ah = 0x02;     /* Get keyboard status */
     intcall(0x16, &ireg, &oreg);
     boot_params.kbd_status = oreg.al;
 ```
+
 After this it calls [0x16](http://www.ctyme.com/intr/rb-1757.htm) again to set repeat rate and delay.
+
 ```c
     ireg.ax = 0x0305;   /* Set keyboard repeat rate */
     intcall(0x16, &ireg, NULL);
@@ -418,75 +421,7 @@ Querying
 
 The next couple of steps are queries for different parameters. We will not dive into details about these queries but will get back to it in later parts. Let's take a short look at these functions:
 
-The [query_mca](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/mca.c#L18) routine calls the [0x15](http://www.ctyme.com/intr/rb-1594.htm) BIOS interrupt to get the machine model number, sub-model number, BIOS revision level, and other hardware-specific attributes:
-
-```c
-int query_mca(void)
-{
-    struct biosregs ireg, oreg;
-    u16 len;
-
-    initregs(&ireg);
-    ireg.ah = 0xc0;
-    intcall(0x15, &ireg, &oreg);
-
-    if (oreg.eflags & X86_EFLAGS_CF)
-        return -1;  /* No MCA present */
-
-    set_fs(oreg.es);
-    len = rdfs16(oreg.bx);
-
-    if (len > sizeof(boot_params.sys_desc_table))
-        len = sizeof(boot_params.sys_desc_table);
-
-    copy_from_fs(&boot_params.sys_desc_table, oreg.bx, len);
-    return 0;
-}
-```
-
-It fills the `ah` register with `0xc0` and calls the `0x15` BIOS interruption. After the interrupt execution it checks the [carry flag](http://en.wikipedia.org/wiki/Carry_flag) and if it is set to 1, the BIOS doesn't support [**MCA**](https://en.wikipedia.org/wiki/Micro_Channel_architecture). If carry flag is set to 0, `ES:BX` will contain a pointer to the system information table, which looks like this:
-
-```
-Offset  Size    Description
- 00h    WORD    number of bytes following
- 02h    BYTE    model (see #00515)
- 03h    BYTE    submodel (see #00515)
- 04h    BYTE    BIOS revision: 0 for first release, 1 for 2nd, etc.
- 05h    BYTE    feature byte 1 (see #00510)
- 06h    BYTE    feature byte 2 (see #00511)
- 07h    BYTE    feature byte 3 (see #00512)
- 08h    BYTE    feature byte 4 (see #00513)
- 09h    BYTE    feature byte 5 (see #00514)
----AWARD BIOS---
- 0Ah  N BYTEs   AWARD copyright notice
----Phoenix BIOS---
- 0Ah    BYTE    ??? (00h)
- 0Bh    BYTE    major version
- 0Ch    BYTE    minor version (BCD)
- 0Dh  4 BYTEs   ASCIZ string "PTL" (Phoenix Technologies Ltd)
----Quadram Quad386---
- 0Ah 17 BYTEs   ASCII signature string "Quadram Quad386XT"
----Toshiba (Satellite Pro 435CDS at least)---
- 0Ah  7 BYTEs   signature "TOSHIBA"
- 11h    BYTE    ??? (8h)
- 12h    BYTE    ??? (E7h) product ID??? (guess)
- 13h  3 BYTEs   "JPN"
- ```
-
-Next, we call the `set_fs` routine and pass the value of the `es` register to it. The implementation of `set_fs` is pretty simple:
-
-```c
-static inline void set_fs(u16 seg)
-{
-    asm volatile("movw %0,%%fs" : : "rm" (seg));
-}
-```
-
-This function contains inline assembly which gets the value of the `seg` parameter and puts it into the `fs` register. There are many functions in [boot.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/boot.h) like `set_fs`, for example `set_gs`, `fs`, `gs` for reading a value in it etc...
-
-At the end of `query_mca` it just copies the table pointed to by `es:bx` to the `boot_params.sys_desc_table`.
-
-The next step is getting [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep) information by calling the `query_ist` function. First of all, it checks the CPU level and if it is correct, calls `0x15` for getting info and saves the result to `boot_params`.
+The first step is getting [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep) information by calling the `query_ist` function. First of all, it checks the CPU level and if it is correct, calls `0x15` for getting info and saves the result to `boot_params`.
 
 The following [query_apm_bios](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/apm.c#L21) function gets [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management) information from the BIOS. `query_apm_bios` calls the `0x15` BIOS interruption too, but with `ah` = `0x53` to check `APM` installation. After the `0x15` execution, `query_apm_bios` functions check the `PM` signature (it must be `0x504d`), carry flag (it must be 0 if `APM` supported) and value of the `cx` register (if it's 0x02, protected mode interface is supported).
 
