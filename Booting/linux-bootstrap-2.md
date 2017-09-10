@@ -397,6 +397,24 @@ You can see the result of this in the `dmesg` output, something like:
 [    0.000000] BIOS-e820: [mem 0x00000000fffc0000-0x00000000ffffffff] reserved
 ```
 
+Next we may see call of the `set_bios_mode` function after physical memory is detected. As we may see, this function is implemented only for the `x86_64` mode:
+
+```C
+static void set_bios_mode(void)
+{
+#ifdef CONFIG_X86_64
+	struct biosregs ireg;
+
+	initregs(&ireg);
+	ireg.ax = 0xec00;
+	ireg.bx = 2;
+	intcall(0x15, &ireg, NULL);
+#endif
+}
+```
+
+The `set_bios_mode` executes `0x15` BIOS interrupt to tell the BIOS that [long mode](https://en.wikipedia.org/wiki/Long_mode) (in a case of `bx = 2`) will be used.
+
 Keyboard initialization
 --------------------------------------------------------------------------------
 
