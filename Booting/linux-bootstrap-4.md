@@ -8,7 +8,7 @@ This is the fourth part of the `Kernel booting process` where we will see first 
 
 **NOTE: there will be much assembly code in this part, so if you are not familiar with that, you might want to consult a book about it**
 
-In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md) we stopped at the jump to the 32-bit entry point in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S):
+In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md) we stopped at the jump to the `32-bit` entry point in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S):
 
 ```assembly
 jmpl	*%eax
@@ -41,12 +41,14 @@ fs             0x18	24
 gs             0x18	24
 ```
 
-We can see here that `cs` register contains - `0x10` (as you will remember from the previous part, this is the second index in the Global Descriptor Table), `eip` register is `0x100000` and the base address of all segments including the code segment are zero. So we can get the physical address, it will be `0:0x100000` or just `0x100000`, as specified by the boot protocol. Now let's start with the 32-bit entry point.
+We can see here that `cs` register contains - `0x10` (as you may remember from the [previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), this is the second index in the `Global Descriptor Table`), `eip` register contains `0x100000` and the base address of all segments including the code segment are zero.
+
+So we can get the physical address, it will be `0:0x100000` or just `0x100000`, as specified by the boot protocol. Now let's start with the `32-bit` entry point.
 
 32-bit entry point
 --------------------------------------------------------------------------------
 
-We can find the definition of the 32-bit entry point in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly source code file:
+We can find the definition of the `32-bit` entry point in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
 ```assembly
 	__HEAD
@@ -58,14 +60,14 @@ ENTRY(startup_32)
 ENDPROC(startup_32)
 ```
 
-First of all, why `compressed` directory? Actually `bzimage` is a gzipped `vmlinux + header + kernel setup code`. We saw the kernel setup code in all of the previous parts. So, the main goal of the `head_64.S` is to prepare for entering long mode, enter into it and then decompress the kernel. We will see all of the steps up to kernel decompression in this part.
+First of all, why the directory is named `compressed`? Actually `bzimage` is a gzipped `vmlinux + header + kernel setup code`. We saw the kernel setup code in all of the previous parts. So, the main goal of the `head_64.S` is to prepare for entering long mode, enter into it and then decompress the kernel. We will see all of the steps up to kernel decompression in this part.
 
-There were two files in the `arch/x86/boot/compressed` directory:
+You may find two files in the `arch/x86/boot/compressed` directory:
 
 * [head_32.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_32.S)
 * [head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S)
 
-but we will see only `head_64.S` because, as you may remember, this book is only `x86_64` related; `head_32.S` is not used in our case. Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile). There we can see the following target:
+but we will consider only `head_64.S` source code file because, as you may remember, this book is only `x86_64` related; Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile). We can find the following `make` target here:
 
 ```Makefile
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
@@ -73,7 +75,9 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
 
-Note `$(obj)/head_$(BITS).o`. This means that we will select which file to link based on what `$(BITS)` is set to, either head_32.o or head_64.o.   `$(BITS)` is defined elsewhere in [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile) based on the .config file:
+Take a look on the `$(obj)/head_$(BITS).o`.
+
+This means that we will select which file to link based on what `$(BITS)` is set to, either `head_32.o` or `head_64.o`. The `$(BITS)` variable is defined elsewhere in [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile) based on the kernel configuration:
 
 ```Makefile
 ifeq ($(CONFIG_X86_32),y)
@@ -96,7 +100,7 @@ As indicated above, we start in the [arch/x86/boot/compressed/head_64.S](https:/
 
 ```assembly
     __HEAD
-	.code32
+    .code32
 ENTRY(startup_32)
 ```
 
