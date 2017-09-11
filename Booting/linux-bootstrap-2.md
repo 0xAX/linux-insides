@@ -381,7 +381,7 @@ Next is a loop where data about the memory will be collected. It starts from the
     ireg.ebx = oreg.ebx;
 ```
 
-Ultimately, it does iterations in the loop to collect data from the address allocation table and writes this data into the `e820entry` array:
+Ultimately, it does iterations in the loop to collect data from the address allocation table and writes this data into the `e820_entry` array:
 
 * start of memory segment
 * size  of memory segment
