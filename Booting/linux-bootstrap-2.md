@@ -329,10 +329,12 @@ First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds
 or in other words `stack_end = esp - STACK_SIZE`.
 
 Then there is the `heap_end` calculation:
-```c
-    heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
+
+```C
+     heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
 ```
-which means `heap_end_ptr` or `_end` + `512`(`0x200h`). The last check is whether `heap_end` is greater than `stack_end`. If it is then `stack_end` is assigned to `heap_end` to make them equal.
+
+which means `heap_end_ptr` or `_end` + `512` (`0x200h`). The last check is whether `heap_end` is greater than `stack_end`. If it is then `stack_end` is assigned to `heap_end` to make them equal.
 
 Now the heap is initialized and we can use it using the `GET_HEAP` method. We will see how it is used, how to use it and how it is implemented in the next posts.
 

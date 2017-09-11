@@ -432,7 +432,7 @@ Field name: loadflags
     functionality will be disabled.
 ```
 
-If the `CAN_USE_HEAP` bit is set, we put `heap_end_ptr` into `dx` (which points to `_end`) and add `STACK_SIZE` (minimum stack size, `512` bytes) to it. After this, if `dx` is not carried (it will not be carried, `dx = _end + 512`), jump to label `2` (as in the previous case) and make a correct stack.
+If the `CAN_USE_HEAP` bit is set, we put `heap_end_ptr` into `dx` (which points to `_end`) and add `STACK_SIZE` (minimum stack size, `1024` bytes) to it. After this, if `dx` is not carried (it will not be carried, `dx = _end + 1024`), jump to label `2` (as in the previous case) and make a correct stack.
 
 ![stack](http://oi62.tinypic.com/dr7b5w.jpg)
 
