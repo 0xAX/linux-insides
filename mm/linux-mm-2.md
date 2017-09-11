@@ -317,7 +317,7 @@ static unsigned long slot_virt[FIX_BTMAPS_SLOTS] __initdata;
 ```C
 static inline pmd_t * __init early_ioremap_pmd(unsigned long addr)
 {
-	pgd_t *base = __va(read_cr3());
+	pgd_t *base = __va(read_cr3_pa());
 	pgd_t *pgd = &base[pgd_index(addr)];
 	pud_t *pud = pud_offset(pgd, addr);
 	pmd_t *pmd = pmd_offset(pud, addr);
@@ -477,7 +477,7 @@ static inline void __flush_tlb_one(unsigned long addr)
 The `__flush_tlb_one` function invalidates the given address in the [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer). As you just saw we updated the paging structure, but `TLB` is not informed of the changes, that's why we need to do it manually. There are two ways to do it. The first is to update the `cr3` control register and the `__flush_tlb` function does this:
 
 ```C
-native_write_cr3(native_read_cr3());
+native_write_cr3(__native_read_cr3());
 ```
 
 The second method is to use the `invlpg` instruction to invalidate the `TLB` entry. Let's look at the `__flush_tlb_one` implementation. As you can see, first of all the function checks `cpu_has_invlpg` which is defined as:
