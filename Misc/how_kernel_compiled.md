@@ -129,7 +129,7 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
 				  -e s/sh[234].*/sh/ -e s/aarch64.*/arm64/ )
 ```
 
-As you can see, it executes the [uname](https://en.wikipedia.org/wiki/Uname) util that prints information about machine, operating system and architecture. As it gets the output of `uname`, it parses the output and assigns the result to the `SUBARCH` variable. Now that we have `SUBARCH`, we set the `SRCARCH` variable that provides the directory of the certain architecture and `hfr-arch` that provides the directory for the header files:
+As you can see, it executes the [uname](https://en.wikipedia.org/wiki/Uname) util that prints information about machine, operating system and architecture. As it gets the output of `uname`, it parses the output and assigns the result to the `SUBARCH` variable. Now that we have `SUBARCH`, we set the `SRCARCH` variable that provides the directory of the certain architecture and `hdr-arch` that provides the directory for the header files:
 
 ```Makefile
 ifeq ($(ARCH),i386)
