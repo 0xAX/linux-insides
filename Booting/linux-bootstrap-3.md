@@ -507,7 +507,7 @@ It takes two parameters:
 
 Let's look inside `protected_mode_jump`. As I wrote above, you can find it in `arch/x86/boot/pmjump.S`. The first parameter will be in the `eax` register and the second one is in `edx`.
 
-First of all, we put the address of `boot_params` in the `esi` register and the address of code segment register `cs` (0x1000) in `bx`. After this, we shift `bx` by 4 bits and add the address of label `2` to it (we will have the physical address of label `2` in the `bx` after this) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
+First of all, we put the address of `boot_params` in the `esi` register and the address of code segment register `cs` (0x1000) in `bx`. After this, we shift `bx` by 4 bits and add it to the memory location labeled `2` (which is `bx << 4 + in_pm32`, the physical address to jump after transitioned to 32-bit mode) and jump to label `1`. Next we put data segment and task state segment in the `cx` and `di` registers with:
 
 ```assembly
 movw	$__BOOT_DS, %cx
