@@ -243,7 +243,7 @@ if (!irq_settings_can_request(desc) || WARN_ON(irq_settings_is_per_cpu_devid(des
     return -EINVAL;
 ```
 
-and exit with the `-EINVAL` in othre way. After this we check the given interrupt handler. If it was not passed to the `request_irq` function, we check the `thread_fn`. If both handlers are `NULL`, we return with the `-EINVAL`. If an interrupt handler was not passed to the `request_irq` function, but the `thread_fn` is not null, we set handler to the `irq_default_primary_handler`:
+and exit with the `-EINVAL`otherways. After this we check the given interrupt handler. If it was not passed to the `request_irq` function, we check the `thread_fn`. If both handlers are `NULL`, we return with the `-EINVAL`. If an interrupt handler was not passed to the `request_irq` function, but the `thread_fn` is not null, we set handler to the `irq_default_primary_handler`:
 
 ```C
 if (!handler) {
