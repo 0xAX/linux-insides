@@ -4,7 +4,7 @@
 Инициализация видеорежима и переход в защищённый режим
 --------------------------------------------------------------------------------
 
-Это третья часть серии `Процесса загрузки ядра`. В предыдущей [части](linux-bootstrap-2.md#kernel-booting-process-part-2) мы остановились прямо перед вызовом функции `set_video` из [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181). В этой части мы увидим:
+Это третья часть серии `Процесса загрузки ядра`. В предыдущей [части](linux-bootstrap-2.md#kernel-booting-process-part-2) мы остановились прямо перед вызовом функции `set_video` из [main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L181). В этой части мы увидим:
 
 - Инициализацию видеорежима в коде настройки ядра,
 - подготовку перед переключением в защищённый режим,
@@ -12,7 +12,7 @@
 
 **ПРИМЕЧАНИЕ:** если вы ничего не знаете о защищённом режиме, вы можете найти некоторую информацию о нём в предыдущей [части](linux-bootstrap-2.md#protected-mode). Также есть несколько [ссылок](linux-bootstrap-2.md#links), которые могут вам помочь.
 
-Как я уже писал ранее, мы начнём с функции `set_video`, которая определена в [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315). Как мы можем видеть, она начинает работу с получения видеорежима из структуры `boot_params.hdr`:
+Как я уже писал ранее, мы начнём с функции `set_video`, которая определена в [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/video.c#L315). Как мы можем видеть, она начинает работу с получения видеорежима из структуры `boot_params.hdr`:
 
 ```C
 u16 mode = boot_params.hdr.vid_mode;
@@ -59,13 +59,13 @@ vga=<mode>
 API кучи
 --------------------------------------------------------------------------------
 
-После того как мы получим `vid_mode` из `boot_params.hdr` в функции `set_video`, мы можем видеть вызов `RESET_HEAP`. `RESET_HEAP` представляет собой макрос, определённый в [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199):
+После того как мы получим `vid_mode` из `boot_params.hdr` в функции `set_video`, мы можем видеть вызов `RESET_HEAP`. `RESET_HEAP` представляет собой макрос, определённый в [boot.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/boot.h#L199):
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-Если вы читали вторую часть, то помните, что мы инициализировали кучу с помощью функции [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116).  У нас есть несколько полезных функций для кучи, которые определены в `boot.h`:
+Если вы читали вторую часть, то помните, что мы инициализировали кучу с помощью функции [`init_heap`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L116).  У нас есть несколько полезных функций для кучи, которые определены в `boot.h`:
 
 ```C
 #define RESET_HEAP()
@@ -277,9 +277,9 @@ static int vga_set_mode(struct mode_info *mode)
 Последняя подготовка перед переходом в защищённый режим
 --------------------------------------------------------------------------------
 
-Мы можем видеть последний вызов функции - `go_to_protected_mode` - в [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). Как говорится в комментарии: `Do the last things and invoke protected mode`, так что давайте посмотрим на эти последние вещи и перейдём в защищённый режим.
+Мы можем видеть последний вызов функции - `go_to_protected_mode` - в [main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L184). Как говорится в комментарии: `Do the last things and invoke protected mode`, так что давайте посмотрим на эти последние вещи и перейдём в защищённый режим.
 
-Функция `go_to_protected_mode` определена в [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104). Она содержит функции, которые совершают последние приготовления, прежде чем мы сможем перейти в защищённый режим, так что давайте посмотрим на них и попытаться понять, что они делают и как это работает.
+Функция `go_to_protected_mode` определена в [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c#L104). Она содержит функции, которые совершают последние приготовления, прежде чем мы сможем перейти в защищённый режим, так что давайте посмотрим на них и попытаться понять, что они делают и как это работает.
 
 Во-первых, это вызов функции `realmode_switch_hook` в `go_to_protected_mode`. Эта функция вызывает хук переключения режима реальных адресов, если он присутствует, и выключает [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Хуки используются, если загрузчик работает во "враждебной" среде. Вы можете прочитать больше о хуках в [протоколе загрузки](https://www.kernel.org/doc/Documentation/x86/boot.txt) (см. **ADVANCED BOOT LOADER HOOKS**).
 
@@ -308,7 +308,7 @@ static inline void io_delay(void)
 
 Для вывода любого байта в порт `0x80` необходима задержка в 1 мкс. Таким образом, мы можем записать любое значение (в нашем случае значение из регистра `AL`) в порт `0x80`. После задержки, функция `realmode_switch_hook` завершает выполнение и мы можем перейти к следующей функции.
 
-Следующая функция - `enable_a20` - включает [линию A20](http://en.wikipedia.org/wiki/A20_line). Она определена в [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/a20.c) и совершает попытку включения шлюза адресной линии A20 различными методами. Первым из них является функция `a20_test_short`, которая проверят, является ли A20 включённой или нет с помощью функции `a20_test`:
+Следующая функция - `enable_a20` - включает [линию A20](http://en.wikipedia.org/wiki/A20_line). Она определена в [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/a20.c) и совершает попытку включения шлюза адресной линии A20 различными методами. Первым из них является функция `a20_test_short`, которая проверят, является ли A20 включённой или нет с помощью функции `a20_test`:
 
 ```C
 static int a20_test(int loops)
@@ -338,7 +338,7 @@ static int a20_test(int loops)
 
 После этого мы записываем обновлённое значение `ctr` в `fs:gs` с помощью функции `wrfs32`, совершаем задержку в 1 мс, а затем читаем значение из регистра `GS` по адресу `A20_TEST_ADDR+0x10`. Если это не ноль, то линия A20 уже включена. Если линия A20 отключена, мы пытаемся включить её с помощью других методов, которые вы можете найти в `a20.c`. Например, с помощью вызова BIOS прерывания `0x15` с `AH=0x2041` и т.д.
 
-Если функция `enabled_a20` завершается неудачей, выводится сообщение об ошибке и вызывается функция `die`. Вы можете вспомнить её из первого файла исходного кода, откуда мы начали - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
+Если функция `enabled_a20` завершается неудачей, выводится сообщение об ошибке и вызывается функция `die`. Вы можете вспомнить её из первого файла исходного кода, откуда мы начали - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S):
 
 ```assembly
 die:
@@ -497,7 +497,7 @@ asm volatile("lgdtl %0" : : "m" (gdt));
 protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
 ```
 
-которая определена в [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26). Она получает два параметра:
+которая определена в [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S#L26). Она получает два параметра:
 
 * адрес точки входа в защищённый режим
 * адрес `boot_params`

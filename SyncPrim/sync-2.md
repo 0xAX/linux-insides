@@ -17,7 +17,7 @@ We saw [API](https://en.wikipedia.org/wiki/Application_programming_interface) of
 * `spin_is_locked` - returns the state of the given `spinlock`;
 * and etc.
 
-And we know that all of these macro which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock.h) header file will be expanded to the call of the functions with `arch_spin_.*` prefix from the  [arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/spinlock.h) for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at this header fill with attention, we will that these functions (`arch_spin_is_locked`, `arch_spin_lock`, `arch_spin_unlock` and etc) defined only if the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option is disabled: 
+And we know that all of these macro which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock.h) header file will be expanded to the call of the functions with `arch_spin_.*` prefix from the  [arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/spinlock.h) for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at this header fill with attention, we will that these functions (`arch_spin_is_locked`, `arch_spin_lock`, `arch_spin_unlock` and etc) defined only if the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option is disabled: 
 
 ```C
 #ifdef CONFIG_QUEUED_SPINLOCKS
@@ -35,7 +35,7 @@ static __always_inline void arch_spin_lock(arch_spinlock_t *lock)
 #endif
 ```
 
-This means that the [arch/x86/include/asm/qspinlock.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/qspinlock.h) header file provides own implementation of these functions. Actually they are macros and they are located in other header file. This header file is - [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h#L126). If we will look into this header file, we will find definition of these macros:
+This means that the [arch/x86/include/asm/qspinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/qspinlock.h) header file provides own implementation of these functions. Actually they are macros and they are located in other header file. This header file is - [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/qspinlock.h#L126). If we will look into this header file, we will find definition of these macros:
 
 ```C
 #define arch_spin_is_locked(l)          queued_spin_is_locked(l)
@@ -53,7 +53,7 @@ Before we will consider how queued spinlocks and their [API](https://en.wikipedi
 Introduction to queued spinlocks
 -------------------------------------------------------------------------------
 
-Queued spinlocks is a [locking mechanism](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) in the Linux kernel which is replacement for the standard `spinlocks`. At least this is true for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at the following kernel configuration file - [kernel/Kconfig.locks](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks), we will see following configuration entries:
+Queued spinlocks is a [locking mechanism](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) in the Linux kernel which is replacement for the standard `spinlocks`. At least this is true for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at the following kernel configuration file - [kernel/Kconfig.locks](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/Kconfig.locks), we will see following configuration entries:
 
 ```
 config ARCH_USE_QUEUED_SPINLOCKS
@@ -64,7 +64,7 @@ config QUEUED_SPINLOCKS
 	depends on SMP
 ```
 
-This means that the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option will be enabled by default if the `ARCH_USE_QUEUED_SPINLOCKS` is enabled. We may see that the `ARCH_USE_QUEUED_SPINLOCKS` is enabled by default in the `x86_64` specific kernel configuration file - [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig):
+This means that the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option will be enabled by default if the `ARCH_USE_QUEUED_SPINLOCKS` is enabled. We may see that the `ARCH_USE_QUEUED_SPINLOCKS` is enabled by default in the `x86_64` specific kernel configuration file - [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Kconfig):
 
 ```
 config X86
@@ -187,7 +187,7 @@ That's all about theory of the `queued spinlocks`, now let's consider how this m
 API of queued spinlocks
 -------------------------------------------------------------------------------
 
-Now we know a little about `queued spinlocks` from the theoretical side, time to see the implementation of this mechanism in the Linux kernel. As we saw above, the [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h#L126) header files provides a set of macro which are represent API for  a spinlock acquiring, releasing and etc:
+Now we know a little about `queued spinlocks` from the theoretical side, time to see the implementation of this mechanism in the Linux kernel. As we saw above, the [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/qspinlock.h#L126) header files provides a set of macro which are represent API for  a spinlock acquiring, releasing and etc:
 
 ```C
 #define arch_spin_is_locked(l)          queued_spin_is_locked(l)
@@ -200,7 +200,7 @@ Now we know a little about `queued spinlocks` from the theoretical side, time to
 #define arch_spin_unlock_wait(l)        queued_spin_unlock_wait(l)
 ```
 
-All of these macros expand to the call of functions from the same header file. Additionally, we saw the `qspinlock` structure from the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) header file which represents a queued spinlock in the Linux kernel:
+All of these macros expand to the call of functions from the same header file. Additionally, we saw the `qspinlock` structure from the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/qspinlock_types.h) header file which represents a queued spinlock in the Linux kernel:
 
 ```C
 typedef struct qspinlock {
@@ -227,7 +227,7 @@ struct mcs_spinlock {
 };
 ```
 
-from the [kernel/locking/mcs_spinlock.h](https://github.com/torvalds/linux/blob/master/kernel/locking/mcs_spinlock.h) header file. The first field represents a pointer to the next thread in the `queue`. The second field represents the state of the current thread in the `queue`, where `1` is `lock` already acquired and `0` in other way. And the last field of the `mcs_spinlock` structure represents nested locks. To understand what is it nested lock, imagine situation when a thread acquired lock, but was interrupted by the hardware [interrupt](https://en.wikipedia.org/wiki/Interrupt) and an [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler) tries to take a lock too. For this case, each processor has not just copy of the `mcs_spinlock` structure but array of these structures:
+from the [kernel/locking/mcs_spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/mcs_spinlock.h) header file. The first field represents a pointer to the next thread in the `queue`. The second field represents the state of the current thread in the `queue`, where `1` is `lock` already acquired and `0` in other way. And the last field of the `mcs_spinlock` structure represents nested locks. To understand what is it nested lock, imagine situation when a thread acquired lock, but was interrupted by the hardware [interrupt](https://en.wikipedia.org/wiki/Interrupt) and an [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler) tries to take a lock too. For this case, each processor has not just copy of the `mcs_spinlock` structure but array of these structures:
 
 ```C
 static DEFINE_PER_CPU_ALIGNED(struct mcs_spinlock, mcs_nodes[4]);
@@ -255,7 +255,7 @@ Ok, now we know data structures which represents queued spinlock in the Linux ke
 #define arch_spin_lock(l)               queued_spin_lock(l)
 ```
 
-Yes, this function is - `queued_spin_lock`. As we may understand from the function's name, it allows to acquire lock by the thread. This function is defined in the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) header file and its implementation looks:
+Yes, this function is - `queued_spin_lock`. As we may understand from the function's name, it allows to acquire lock by the thread. This function is defined in the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/qspinlock_types.h) header file and its implementation looks:
 
 ```C
 static __always_inline void queued_spin_lock(struct qspinlock *lock)
@@ -271,13 +271,13 @@ static __always_inline void queued_spin_lock(struct qspinlock *lock)
 
 Looks pretty easy, except the `queued_spin_lock_slowpath` function. We may see that it takes only one parameter. In our case this parameter will represent `queued spinlock` which will be locked. Let's consider the situation that `queue` with locks is empty for now and the first thread wanted to acquire lock. As we may see the `queued_spin_lock` function starts from the call of the `atomic_cmpxchg_acquire` macro. As you may guess from the name of this macro, it executes atomic [CMPXCHG](http://x86.renejeschke.de/html/file_module_x86_id_41.html) instruction which compares value of the second parameter (zero in our case) with the value of the first parameter (current state of the given spinlock) and if they are identical, it stores value of the `_Q_LOCKED_VAL` in the memory location which is pointed by the `&lock->val` and return the initial value from this memory location.
 
-The `atomic_cmpxchg_acquire` macro is defined in the [include/linux/atomic.h](https://github.com/torvalds/linux/blob/master/include/linux/atomic.h) header file and expands to the call of the `atomic_cmpxchg` function:
+The `atomic_cmpxchg_acquire` macro is defined in the [include/linux/atomic.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/atomic.h) header file and expands to the call of the `atomic_cmpxchg` function:
 
 ```C
 #define  atomic_cmpxchg_acquire         atomic_cmpxchg
 ```
 
-which is architecture specific. We consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, so in our case this header file will be [arch/x86/include/asm/atomic.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/atomic.h) and the implementation of the `atomic_cmpxchg` function is just returns the result of the `cmpxchg` macro:
+which is architecture specific. We consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, so in our case this header file will be [arch/x86/include/asm/atomic.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/atomic.h) and the implementation of the `atomic_cmpxchg` function is just returns the result of the `cmpxchg` macro:
 
 ```C
 static __always_inline int atomic_cmpxchg(atomic_t *v, int old, int new)
@@ -286,7 +286,7 @@ static __always_inline int atomic_cmpxchg(atomic_t *v, int old, int new)
 }
 ```
 
-This macro is defined in the [arch/x86/include/asm/cmpxchg.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/cmpxchg.h) header file and looks:
+This macro is defined in the [arch/x86/include/asm/cmpxchg.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/cmpxchg.h) header file and looks:
 
 ```C
 #define cmpxchg(ptr, old, new) \
@@ -325,7 +325,7 @@ if (likely(val == 0))
 
 From this moment, our first thread will hold a lock. Notice that this behavior differs from the behavior which was described in the `MCS` algorithm. The thread acquired lock, but we didn't add it to the `queue`. As I already wrote the implementation of `queued spinlocks` concept is based on the `MCS` algorithm in the Linux kernel, but in the same time it has some difference like this for optimization purpose.
 
-So the first thread have acquired lock and now let's consider that the second thread tried to acquire the same lock. The second thread will start from the same `queued_spin_lock` function, but the `lock->val` will contain `1` or `_Q_LOCKED_VAL`, because first thread already holds lock. So, in this case the `queued_spin_lock_slowpath` function will be called. The `queued_spin_lock_slowpath` function is defined in the [kernel/locking/qspinlock.c](https://github.com/torvalds/linux/blob/master/kernel/locking/qspinlock.c) source code file and starts from the following checks:
+So the first thread have acquired lock and now let's consider that the second thread tried to acquire the same lock. The second thread will start from the same `queued_spin_lock` function, but the `lock->val` will contain `1` or `_Q_LOCKED_VAL`, because first thread already holds lock. So, in this case the `queued_spin_lock_slowpath` function will be called. The `queued_spin_lock_slowpath` function is defined in the [kernel/locking/qspinlock.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/qspinlock.c) source code file and starts from the following checks:
 
 ```C
 void queued_spin_lock_slowpath(struct qspinlock *lock, u32 val)
@@ -403,7 +403,7 @@ if (queued_spin_trylock(lock))
 		goto release;
 ```
 
-The `queued_spin_trylock` function is defined in the  [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h) header file and just does the same `queued_spin_lock` function that does:
+The `queued_spin_trylock` function is defined in the  [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/qspinlock.h) header file and just does the same `queued_spin_lock` function that does:
 
 ```C
 static __always_inline int queued_spin_trylock(struct qspinlock *lock)

@@ -22,7 +22,7 @@ clocksource_select();
 mutex_unlock(&clocksource_mutex);
 ```
 
-from the [kernel/time/clocksource.c](https://github.com/torvalds/linux/blob/master/kernel/time/clocksource.c) source code file. This code is from the `__clocksource_register_scale` function which adds the given [clocksource](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-2.html) to a list shared by more than one process. It's the `mutex_lock` and `mutex_unlock` functions we're interested in here, which take one parameter - the `clocksource_mutex` in our case. These functions provide [mutual exclusion](https://en.wikipedia.org/wiki/Mutual_exclusion) with the mutex synchronization primitive; enabling proccesses or threads to coordinate use of a shared resource. The clocksource is added with the `clocksource_enqueue` function (after the clock source in the list which has the biggest rating, the highest frequency clocksource regestered in the system):
+from the [kernel/time/clocksource.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/clocksource.c) source code file. This code is from the `__clocksource_register_scale` function which adds the given [clocksource](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-2.html) to a list shared by more than one process. It's the `mutex_lock` and `mutex_unlock` functions we're interested in here, which take one parameter - the `clocksource_mutex` in our case. These functions provide [mutual exclusion](https://en.wikipedia.org/wiki/Mutual_exclusion) with the mutex synchronization primitive; enabling proccesses or threads to coordinate use of a shared resource. The clocksource is added with the `clocksource_enqueue` function (after the clock source in the list which has the biggest rating, the highest frequency clocksource regestered in the system):
 
 ```C
 static void clocksource_enqueue(struct clocksource *cs)
@@ -75,7 +75,7 @@ typedef struct spinlock {
 } spinlock_t;
 ```
 
-and located in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file. We may see that its implementation depends on the state of the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option. We will skip this now, because all debugging related stuff will be at the end of this part. So, if the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option is disabled, the `spinlock_t` contains a union [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with one field - `raw_spinlock`:
+and located in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file. We may see that its implementation depends on the state of the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option. We will skip this now, because all debugging related stuff will be at the end of this part. So, if the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option is disabled, the `spinlock_t` contains a union [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with one field - `raw_spinlock`:
 
 ```C
 typedef struct spinlock {
@@ -85,7 +85,7 @@ typedef struct spinlock {
 } spinlock_t;
 ```
 
-The `raw_spinlock` structure is defined in the [same](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file:
+The `raw_spinlock` structure is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file:
 
 ```C
 typedef struct raw_spinlock {
@@ -96,7 +96,7 @@ typedef struct raw_spinlock {
 } raw_spinlock_t;
 ```
 
-where the `arch_spinlock_t` represents architecture-specific `spinlock` implementation.The `break_lock` field is set to value - `1` when one processor starts to wait while the lock is held by another processor (on [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) systems). This helps prevent locks of exessive duration. We focus on the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture in this book, so the `arch_spinlock_t` is defined in the [arch/x86/include/asm/spinlock_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/spinlock_types.h) header file and looks like:
+where the `arch_spinlock_t` represents architecture-specific `spinlock` implementation.The `break_lock` field is set to value - `1` when one processor starts to wait while the lock is held by another processor (on [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) systems). This helps prevent locks of exessive duration. We focus on the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture in this book, so the `arch_spinlock_t` is defined in the [arch/x86/include/asm/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/spinlock_types.h) header file and looks like:
 
 ```C
 #ifdef CONFIG_QUEUED_SPINLOCKS
@@ -120,7 +120,7 @@ typedef struct qspinlock {
 } arch_spinlock_t;
 ```
 
-from the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) header file.
+from the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/qspinlock_types.h) header file.
 
 We will not stop on this structure for now and before we will consider both `arch_spinlock` and the `qspinlock`,
 
@@ -163,7 +163,7 @@ do {                                                  \
 } while (0)                                           \
 ```
 
-assigns the value of `__RAW_SPIN_LOCK_UNLOCKED` to the given `spinlock`. As we may understand from the name of the `__RAW_SPIN_LOCK_UNLOCKED` macro; initializatingthe given `spinlock` and setting it in a `released` state. This macro defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file and expands to the following macros:
+assigns the value of `__RAW_SPIN_LOCK_UNLOCKED` to the given `spinlock`. As we may understand from the name of the `__RAW_SPIN_LOCK_UNLOCKED` macro; initializatingthe given `spinlock` and setting it in a `released` state. This macro defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file and expands to the following macros:
 
 ```C
 #define __RAW_SPIN_LOCK_UNLOCKED(lockname)      \
@@ -206,7 +206,7 @@ static __always_inline void spin_lock(spinlock_t *lock)
 }
 ```
 
-the function used to `acquire` a spinlock, from  [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock.h). The `raw_spin_lock` macro is defined in the same header file and expands to the call of the `_raw_spin_lock` function:
+the function used to `acquire` a spinlock, from  [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock.h). The `raw_spin_lock` macro is defined in the same header file and expands to the call of the `_raw_spin_lock` function:
 
 ```C
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)
@@ -222,7 +222,7 @@ The definition of the `_raw_spin_lock` macro depends on the `CONFIG_SMP` kernel 
 #endif
 ```
 
-if the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) is enabled in the Linux kernel, the `_raw_spin_lock` macro is defined in the [arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/spinlock.h) header file and looks like:
+if the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) is enabled in the Linux kernel, the `_raw_spin_lock` macro is defined in the [arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/spinlock.h) header file and looks like:
 
 ```C
 #define _raw_spin_lock(lock) __raw_spin_lock(lock)
@@ -239,7 +239,7 @@ static inline void __raw_spin_lock(raw_spinlock_t *lock)
 }
 ```
 
-this, first of all, disables [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) by calling the `preempt_disable` macro (from [include/linux/preempt.h](https://github.com/torvalds/linux/blob/master/include/linux/preempt.h), more about this in [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-9.html) nine  of the Linux kernel initialization process chapter). When we unlock the given `spinlock`, preemption will be reenabled:
+this, first of all, disables [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) by calling the `preempt_disable` macro (from [include/linux/preempt.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/preempt.h), more about this in [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-9.html) nine  of the Linux kernel initialization process chapter). When we unlock the given `spinlock`, preemption will be reenabled:
 
 ```C
 static inline void __raw_spin_unlock(raw_spinlock_t *lock)
@@ -284,7 +284,7 @@ void lock_acquire(struct lockdep_map *lock, unsigned int subclass,
 
 The `lock_acquire`function disables hardware interrupts by calling the `raw_local_irq_save` macro. This is to ensure the process is not preempted until the `spinlock` has been safely aquired. Hardware interrupts are reenabled before the function exits with the `raw_local_irq_restore` macro.
 
-The interesting work here is being done by the `__lock_acquire` function (defined in [kernel/locking/lockdep.c](https://github.com/torvalds/linux/blob/master/kernel/locking/lockdep.c)), which is large, so we won't get into it right away. It's mostly related to the Linux kernel [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt).
+The interesting work here is being done by the `__lock_acquire` function (defined in [kernel/locking/lockdep.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/lockdep.c)), which is large, so we won't get into it right away. It's mostly related to the Linux kernel [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt).
 
 Returning to the `__raw_spin_lock` function, we will see that it contains the following:
 
@@ -292,14 +292,14 @@ Returning to the `__raw_spin_lock` function, we will see that it contains the fo
 LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
 ```
 
-The `LOCK_CONTENDED` macro is defined in the [include/linux/lockdep.h](https://github.com/torvalds/linux/blob/master/include/linux/lockdep.h) header file and is defined as:
+The `LOCK_CONTENDED` macro is defined in the [include/linux/lockdep.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/lockdep.h) header file and is defined as:
 
 ```C
 #define LOCK_CONTENDED(_lock, try, lock) \
          lock(_lock)
 ```
 
-In our case, the `lock` is `do_raw_spin_lock` function from [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/master/include/linux/spnlock.h) and the `_lock` is the given `raw_spinlock_t`:
+In our case, the `lock` is `do_raw_spin_lock` function from [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spnlock.h) and the `_lock` is the given `raw_spinlock_t`:
 
 ```C
 static inline void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock)
@@ -311,7 +311,7 @@ static inline void do_raw_spin_lock(raw_spinlock_t *lock) __acquires(lock)
 
 `__acquire` here is just [sparse](https://en.wikipedia.org/wiki/Sparse) related macro and is not immediately interesting. The definition of the `arch_spin_lock` function is dependant on the architecture of system and whether queued spinlocks are supported.
 
-For the `x86_64` architecture without queued spin locks (we'll get there later) it's defined in arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/spinlock.h). Let's quickly look at the definition of the `arch_spinlock` structure again:
+For the `x86_64` architecture without queued spin locks (we'll get there later) it's defined in arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/spinlock.h). Let's quickly look at the definition of the `arch_spinlock` structure again:
 
 ```C
 typedef struct arch_spinlock {

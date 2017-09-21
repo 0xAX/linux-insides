@@ -439,13 +439,13 @@ $ ld @linker.ld
 
 The next command line option is `-b` or `--format`. This command line option specifies format of the input object files `ELF`, `DJGPP/COFF` and etc. There is a command line option for the same purpose but for the output file: `--oformat=output-format`.
 
-The next command line option is `--defsym`. Full format of this command line option is the `--defsym=symbol=expression`. It allows to create global symbol in the output file containing the absolute address given by expression. We can find following case where this command line option can be useful: in the Linux kernel source code and more precisely in the Makefile that is related to the kernel decompression for the ARM architecture - [arch/arm/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/arm/boot/compressed/Makefile), we can find following definition:
+The next command line option is `--defsym`. Full format of this command line option is the `--defsym=symbol=expression`. It allows to create global symbol in the output file containing the absolute address given by expression. We can find following case where this command line option can be useful: in the Linux kernel source code and more precisely in the Makefile that is related to the kernel decompression for the ARM architecture - [arch/arm/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/arm/boot/compressed/Makefile), we can find following definition:
 
 ```
 LDFLAGS_vmlinux = --defsym _kernel_bss_size=$(KBSS_SZ)
 ```
 
-As we already know, it defines the `_kernel_bss_size` symbol with the size of the `.bss` section in the output file. This symbol will be used in the first [assembly file](https://github.com/torvalds/linux/blob/master/arch/arm/boot/compressed/head.S) that will be executed during kernel decompressing:
+As we already know, it defines the `_kernel_bss_size` symbol with the size of the `.bss` section in the output file. This symbol will be used in the first [assembly file](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/arm/boot/compressed/head.S) that will be executed during kernel decompressing:
 
 ```assembly
 ldr r5, =_kernel_bss_size

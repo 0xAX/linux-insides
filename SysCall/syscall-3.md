@@ -11,7 +11,7 @@ We already know what is a `system call`. This is special routine in the Linux ke
 Introduction to vsyscalls
 --------------------------------------------------------------------------------
 
-The `vsyscall` or `virtual system call` is the first and oldest mechanism in the Linux kernel that is designed to accelerate execution of certain system calls. The principle of work of the `vsyscall` concept is simple. The Linux kernel maps into user space a page that contains some variables and the implementation of some system calls. We can find information about this memory space in the Linux kernel [documentation](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
+The `vsyscall` or `virtual system call` is the first and oldest mechanism in the Linux kernel that is designed to accelerate execution of certain system calls. The principle of work of the `vsyscall` concept is simple. The Linux kernel maps into user space a page that contains some variables and the implementation of some system calls. We can find information about this memory space in the Linux kernel [documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/x86_64/mm.txt) for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
 
 ```
 ffffffffff600000 - ffffffffffdfffff (=8 MB) vsyscalls
@@ -24,7 +24,7 @@ or:
 ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
 ```
 
-After this, these system calls will be executed in userspace and this means that there will not be [context switching](https://en.wikipedia.org/wiki/Context_switch). Mapping of the `vsyscall` page occurs in the `map_vsyscall` function that is defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file. This function is called during the Linux kernel initialization in the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file (we saw this function in the fifth [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-5.html) of the Linux kernel initialization process chapter).
+After this, these system calls will be executed in userspace and this means that there will not be [context switching](https://en.wikipedia.org/wiki/Context_switch). Mapping of the `vsyscall` page occurs in the `map_vsyscall` function that is defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vsyscall/vsyscall_64.c) source code file. This function is called during the Linux kernel initialization in the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code file (we saw this function in the fifth [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-5.html) of the Linux kernel initialization process chapter).
 
 Note that implementation of the `map_vsyscall` function depends on the `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option:
 
@@ -49,7 +49,7 @@ void __init map_vsyscall(void)
 }
 ```
 
-As we can see, at the beginning of the `map_vsyscall` function we get the physical address of the `vsyscall` page with the `__pa_symbol` macro (we already saw implementation if this macro in the fourth [path](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process). The `__vsyscall_page` symbol defined in the [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S) assembly source code file and have the following [virtual address](https://en.wikipedia.org/wiki/Virtual_address_space):
+As we can see, at the beginning of the `map_vsyscall` function we get the physical address of the `vsyscall` page with the `__pa_symbol` macro (we already saw implementation if this macro in the fourth [path](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process). The `__vsyscall_page` symbol defined in the [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vsyscall/vsyscall_emu_64.S) assembly source code file and have the following [virtual address](https://en.wikipedia.org/wiki/Virtual_address_space):
 
 ```
 ffffffff81881000 D __vsyscall_page
@@ -149,7 +149,7 @@ BUILD_BUG_ON((unsigned long)__fix_to_virt(VSYSCALL_PAGE) !=
              (unsigned long)VSYSCALL_ADDR);
 ```
 
-That's all. `vsyscall` page is set up. The result of the all the above is the following: If we pass `vsyscall=native` parameter to the kernel command line, virtual system calls will be handled as native `syscall` instructions in the [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S). The [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) knows addresses of the virtual system call handlers. Note that virtual system call handlers are aligned by `1024` (or `0x400`) bytes:
+That's all. `vsyscall` page is set up. The result of the all the above is the following: If we pass `vsyscall=native` parameter to the kernel command line, virtual system calls will be handled as native `syscall` instructions in the [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vsyscall/vsyscall_emu_64.S). The [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) knows addresses of the virtual system call handlers. Note that virtual system call handlers are aligned by `1024` (or `0x400`) bytes:
 
 ```assembly
 __vsyscall_page:
@@ -178,7 +178,7 @@ And the start address of the `vsyscall` page is the `ffffffffff600000` every tim
 
 All virtual system call requests will fall into the `__vsyscall_page` + `VSYSCALL_ADDR_vsyscall_name` offset, put the number of a virtual system call to the `rax` general purpose [register](https://en.wikipedia.org/wiki/Processor_register) and the native for the x86_64 `syscall` instruction will be executed.
 
-In the second case, if we pass `vsyscall=emulate` parameter to the kernel command line, an attempt to perform virtual system call handler will cause a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception. Of course, remember, the `vsyscall` page has `__PAGE_KERNEL_VVAR` access rights that forbid execution. The `do_page_fault` function is the `#PF` or page fault handler. It tries to understand the reason of the last page fault. And one of the reason can be situation when virtual system call called and `vsyscall` mode is `emulate`. In this case `vsyscall` will be handled by the `emulate_vsyscall` function that defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file.
+In the second case, if we pass `vsyscall=emulate` parameter to the kernel command line, an attempt to perform virtual system call handler will cause a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception. Of course, remember, the `vsyscall` page has `__PAGE_KERNEL_VVAR` access rights that forbid execution. The `do_page_fault` function is the `#PF` or page fault handler. It tries to understand the reason of the last page fault. And one of the reason can be situation when virtual system call called and `vsyscall` mode is `emulate`. In this case `vsyscall` will be handled by the `emulate_vsyscall` function that defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vsyscall/vsyscall_64.c) source code file.
 
 The `emulate_vsyscall` function gets the number of a virtual system call, checks it, prints error and sends [segmentation fault](https://en.wikipedia.org/wiki/Segmentation_fault) simply:
 
@@ -254,7 +254,7 @@ Here we can see that [uname](https://en.wikipedia.org/wiki/Uname) util was linke
 
 The first provides `vDSO` functionality, the second is `C` [standard library](https://en.wikipedia.org/wiki/C_standard_library) and the third is the program interpreter (more about this you can read in the part that describes [linkers](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Misc/linkers.html)). So, the `vDSO` solves limitations of the `vsyscall`. Implementation of the `vDSO` is similar to `vsyscall`.
 
-Initialization of the `vDSO` occurs in the `init_vdso` function that defined in the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vma.c) source code file. This function starts from the initialization of the `vDSO` images for 32-bits and 64-bits depends on the `CONFIG_X86_X32_ABI` kernel configuration option:
+Initialization of the `vDSO` occurs in the `init_vdso` function that defined in the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vma.c) source code file. This function starts from the initialization of the `vDSO` images for 32-bits and 64-bits depends on the `CONFIG_X86_X32_ABI` kernel configuration option:
 
 ```C
 static int __init init_vdso(void)
@@ -266,7 +266,7 @@ static int __init init_vdso(void)
 #endif	
 ```
 
-Both function initialize the `vdso_image` structure. This structure is defined in the two generated source code files: the [arch/x86/entry/vdso/vdso-image-64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vdso-image-64.c) and the [arch/x86/entry/vdso/vdso-image-64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vdso-image-64.c). These source code files generated by the [vdso2c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vdso2c.c) program from the different source code files, represent different approaches to call a system call like `int 0x80`, `sysenter` and etc. The full set of the images depends on the kernel configuration.
+Both function initialize the `vdso_image` structure. This structure is defined in the two generated source code files: the [arch/x86/entry/vdso/vdso-image-64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vdso-image-64.c) and the [arch/x86/entry/vdso/vdso-image-64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vdso-image-64.c). These source code files generated by the [vdso2c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vdso2c.c) program from the different source code files, represent different approaches to call a system call like `int 0x80`, `sysenter` and etc. The full set of the images depends on the kernel configuration.
 
 For example for the `x86_64` Linux kernel it will contain `vdso_image_64`:
 
@@ -339,13 +339,13 @@ void __init init_vdso_image(const struct vdso_image *image)
 }
 ```
 
-The `init_vdso` function passed to the `subsys_initcall` macro adds the given function to the `initcalls` list. All functions from this list will be called in the `do_initcalls` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+The `init_vdso` function passed to the `subsys_initcall` macro adds the given function to the `initcalls` list. All functions from this list will be called in the `do_initcalls` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file:
 
 ```C
 subsys_initcall(init_vdso);
 ```
 
-Ok, we just saw initialization of the `vDSO` and initialization of `page` structures that are related to the memory pages that contain `vDSO` system calls. But to where do their pages map? Actually they are mapped by the kernel, when it loads binary to the memory. The Linux kernel calls the `arch_setup_additional_pages` function from the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vma.c) source code file that checks that `vDSO` enabled for the `x86_64` and calls the `map_vdso` function:
+Ok, we just saw initialization of the `vDSO` and initialization of `page` structures that are related to the memory pages that contain `vDSO` system calls. But to where do their pages map? Actually they are mapped by the kernel, when it loads binary to the memory. The Linux kernel calls the `arch_setup_additional_pages` function from the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vma.c) source code file that checks that `vDSO` enabled for the `x86_64` and calls the `map_vdso` function:
 
 ```C
 int arch_setup_additional_pages(struct linux_binprm *bprm, int uses_interp)
@@ -383,7 +383,7 @@ If you have questions or suggestions, feel free to ping me in twitter [0xAX](htt
 Links
 --------------------------------------------------------------------------------
 
-* [x86_64 memory map](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt)
+* [x86_64 memory map](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/x86_64/mm.txt)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [context switching](https://en.wikipedia.org/wiki/Context_switch)
 * [ABI](https://en.wikipedia.org/wiki/Application_binary_interface)

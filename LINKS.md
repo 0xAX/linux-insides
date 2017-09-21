@@ -5,7 +5,7 @@
 ------------------------
 
 * [Протокол загрузки Linux/x86](https://www.kernel.org/doc/Documentation/x86/boot.txt)
-* [Параметры ядра Linux](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst)
+* [Параметры ядра Linux](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/admin-guide/kernel-parameters.rst)
 
 Защищённый режим
 ------------------------

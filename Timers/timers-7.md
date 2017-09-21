@@ -70,7 +70,7 @@ return (_dl_vdso_vsym ("__vdso_gettimeofday", &linux26)
   ?: (void*) (&__gettimeofday_syscall));
 ```
 
-The `gettimeofday` entry is located in the [arch/x86/entry/vdso/vclock_gettime.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vclock_gettime.c) source code file. As we can see the `gettimeofday` is a weak alias of the `__vdso_gettimeofday`:
+The `gettimeofday` entry is located in the [arch/x86/entry/vdso/vclock_gettime.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vclock_gettime.c) source code file. As we can see the `gettimeofday` is a weak alias of the `__vdso_gettimeofday`:
 
 ```C
 int gettimeofday(struct timeval *, struct timezone *)
@@ -109,7 +109,7 @@ notrace static long vdso_fallback_gtod(struct timeval *tv, struct timezone *tz)
 }
 ```
 
-The `do_realtime` function gets the time data from the `vsyscall_gtod_data` structure which is defined in the [arch/x86/include/asm/vgtod.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/vgtod.h#L16) header file and contains mapping of the `timespec` structure and a couple of fields which are related to the current clock source in the system. This function fills the given `timeval` structure with values from the `vsyscall_gtod_data` which contains a time related data which is updated via timer interrupt.
+The `do_realtime` function gets the time data from the `vsyscall_gtod_data` structure which is defined in the [arch/x86/include/asm/vgtod.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/vgtod.h#L16) header file and contains mapping of the `timespec` structure and a couple of fields which are related to the current clock source in the system. This function fills the given `timeval` structure with values from the `vsyscall_gtod_data` which contains a time related data which is updated via timer interrupt.
 
 First of all we try to access the `gtod` or `global time of day` the `vsyscall_gtod_data` structure via the call of the `gtod_read_begin` and will continue to do it until it will be successful:
 
@@ -195,7 +195,7 @@ The `clock_id` maybe one of the following:
 * `CLOCK_PROCESS_CPUTIME_ID` - per-process time consumed by all threads in the process;
 * `CLOCK_THREAD_CPUTIME_ID` - thread-specific clock.
 
-The `clock_gettime` is not usual syscall too, but as the `gettimeofday`, this system call is placed in the `vDSO` area. Entry of this system call is located in the same source code file - [arch/x86/entry/vdso/vclock_gettime.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vclock_gettime.c)) as for `gettimeofday`.
+The `clock_gettime` is not usual syscall too, but as the `gettimeofday`, this system call is placed in the `vDSO` area. Entry of this system call is located in the same source code file - [arch/x86/entry/vdso/vclock_gettime.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vclock_gettime.c)) as for `gettimeofday`.
 
 The Implementation of the `clock_gettime` depends on the clock id. If we have passed the `CLOCK_REALTIME` clock id, the `do_realtime` function will be called:
 
@@ -312,7 +312,7 @@ To call system call, we need put the `req` to the `rdi` register, and the `rem` 
   INTERNAL_SYSCALL_NCS (__NR_##name, err, nr, ##args)
 ```
 
-which takes the name of the system call, storage for possible error during execution of system call, number of the system call (all `x86_64` system calls you can find in the [system calls table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)) and arguments of certain system call. The `INTERNAL_SYSCALL` macro just expands to the call of the `INTERNAL_SYSCALL_NCS` macro, which prepares arguments of system call (puts them into the processor registers in correct order), executes `syscall` instruction and returns the result:
+which takes the name of the system call, storage for possible error during execution of system call, number of the system call (all `x86_64` system calls you can find in the [system calls table](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl)) and arguments of certain system call. The `INTERNAL_SYSCALL` macro just expands to the call of the `INTERNAL_SYSCALL_NCS` macro, which prepares arguments of system call (puts them into the processor registers in correct order), executes `syscall` instruction and returns the result:
 
 ```C
 # define INTERNAL_SYSCALL_NCS(name, err, nr, args...)      \
@@ -342,7 +342,7 @@ The `LOAD_ARGS_##nr` macro calls the `LOAD_ARGS_N` macro where the `N` is number
 ...
 ```
 
-After the `syscall` instruction will be executed, the [context switch](https://en.wikipedia.org/wiki/Context_switch) will occur and the kernel will transfer execution to the system call handler. The system call handler for the `nanosleep` system call is located in the [kernel/time/hrtimer.c](https://github.com/torvalds/linux/blob/master/kernel/time/hrtimer.c) source code file and defined with the `SYSCALL_DEFINE2` macro helper:
+After the `syscall` instruction will be executed, the [context switch](https://en.wikipedia.org/wiki/Context_switch) will occur and the kernel will transfer execution to the system call handler. The system call handler for the `nanosleep` system call is located in the [kernel/time/hrtimer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/hrtimer.c) source code file and defined with the `SYSCALL_DEFINE2` macro helper:
 
 ```C
 SYSCALL_DEFINE2(nanosleep, struct timespec __user *, rqtp,
@@ -418,7 +418,7 @@ Links
 * [context switch](https://en.wikipedia.org/wiki/Context_switch)
 * [Introduction to timers in the Linux kernel](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-4.html)
 * [uptime](https://en.wikipedia.org/wiki/Uptime#Using_uptime)
-* [system calls table for x86_64](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)
+* [system calls table for x86_64](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl)
 * [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
 * [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)

@@ -98,7 +98,7 @@ Now let's look at list of available resources:
 
 If you're looking into source code of open source projects, you will note that reading or updating of a resource limit is quite widely used operation.
 
-For example: [systemd](https://github.com/systemd/systemd/blob/master/src/core/main.c)
+For example: [systemd](https://github.com/systemd/systemd/blob/01a45898fce8def67d51332bccc410eb1e8710e7/src/core/main.c)
 
 ```C
 /* Don't limit the coredump size */
@@ -151,7 +151,7 @@ SYSCALL_DEFINE2(setrlimit, unsigned int, resource, struct rlimit __user *, rlim)
 }
 ```
 
-Implementations of these system calls are defined in the [kernel/sys.c](https://github.com/torvalds/linux/blob/master/kernel/sys.c) kernel source code file.
+Implementations of these system calls are defined in the [kernel/sys.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sys.c) kernel source code file.
 
 First of all the `do_prlimit` function executes a check that the given resource is valid:
 

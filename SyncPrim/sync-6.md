@@ -43,7 +43,7 @@ Ok, now we know what a `seqlock` synchronization primitive is and how it is repr
 Sequential lock API
 --------------------------------------------------------------------------------
 
-So, now we know a little about `sequentional lock` synchronization primitive from theoretical side, let's look at its implementation in the Linux kernel. All `sequentional locks` [API](https://en.wikipedia.org/wiki/Application_programming_interface) are located in the [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/master/include/linux/seqlock.h) header file.
+So, now we know a little about `sequentional lock` synchronization primitive from theoretical side, let's look at its implementation in the Linux kernel. All `sequentional locks` [API](https://en.wikipedia.org/wiki/Application_programming_interface) are located in the [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/seqlock.h) header file.
 
 First of all we may see that the a `sequential lock` machanism is represented by the following type:
 
@@ -81,7 +81,7 @@ ways. Let's look at the first approach. We are able to intialize a `seqlock_t` s
 		seqlock_t x = __SEQLOCK_UNLOCKED(x)
 ```
 
-which is defined in the [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/master/include/linux/seqlock.h) header file. As we may see, the `DEFINE_SEQLOCK` macro takes one argument and expands to the definition and initialization of the `seqlock_t` structure. Initialization occurs with the help of the `__SEQLOCK_UNLOCKED` macro which is defined in the same source code file. Let's look at the implementation of this macro:
+which is defined in the [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/seqlock.h) header file. As we may see, the `DEFINE_SEQLOCK` macro takes one argument and expands to the definition and initialization of the `seqlock_t` structure. Initialization occurs with the help of the `__SEQLOCK_UNLOCKED` macro which is defined in the same source code file. Let's look at the implementation of this macro:
 
 ```C
 #define __SEQLOCK_UNLOCKED(lockname)			\
@@ -114,9 +114,9 @@ So we just initialize counter of the given sequential lock to zero and additiona
 #endif
 ```
 
-As I already wrote in previous parts of this [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/) we will not consider [debugging](https://en.wikipedia.org/wiki/Debugging) and [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related stuff in this part. So for now we just skip the `SEQCOUNT_DEP_MAP_INIT` macro. The second field of the given `seqlock_t` is `lock` initialized with the `__SPIN_LOCK_UNLOCKED` macro which is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file. We will not consider implementation of this macro here as it just initialize [rawspinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) with architecture-specific methods (More abot spinlocks you may read in first parts of this [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/)).
+As I already wrote in previous parts of this [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/) we will not consider [debugging](https://en.wikipedia.org/wiki/Debugging) and [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related stuff in this part. So for now we just skip the `SEQCOUNT_DEP_MAP_INIT` macro. The second field of the given `seqlock_t` is `lock` initialized with the `__SPIN_LOCK_UNLOCKED` macro which is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file. We will not consider implementation of this macro here as it just initialize [rawspinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) with architecture-specific methods (More abot spinlocks you may read in first parts of this [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/)).
 
-We have considered the first way to initialize a sequential lock. Let's consider second way to do the same, but do it dynamically. We can initialize a sequentional lock with the `seqlock_init` macro which is defined in the same  [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/master/include/linux/seqlock.h) header file.
+We have considered the first way to initialize a sequential lock. Let's consider second way to do the same, but do it dynamically. We can initialize a sequentional lock with the `seqlock_init` macro which is defined in the same  [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/seqlock.h) header file.
 
 Let's look at the implementation of this macro:
 
