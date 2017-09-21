@@ -4,12 +4,12 @@ Kernel initialization. Part 9.
 RCU initialization
 ================================================================================
 
-This is ninth part of the [Linux Kernel initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) and in the previous part we stopped at the [scheduler initialization](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-8.html). In this part we will continue to dive to the linux kernel initialization process and the main purpose of this part will be to learn about initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update). We can see that the next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) after the `sched_init` is the call of the `preempt_disable`. There are two macros:
+This is ninth part of the [Linux Kernel initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) and in the previous part we stopped at the [scheduler initialization](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-8.html). In this part we will continue to dive to the linux kernel initialization process and the main purpose of this part will be to learn about initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update). We can see that the next step in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) after the `sched_init` is the call of the `preempt_disable`. There are two macros:
 
 * `preempt_disable`
 * `preempt_enable`
 
-for preemption disabling and enabling. First of all let's try to understand what is `preempt` in the context of an operating system kernel. In simple words, preemption is ability of the operating system kernel to preempt current task to run task with higher priority. Here we need to disable preemption because we will have only one `init` process for the early boot time and we don't need to stop it before we call `cpu_idle` function. The `preempt_disable` macro is defined in the [include/linux/preempt.h](https://github.com/torvalds/linux/blob/master/include/linux/preempt.h) and depends on the `CONFIG_PREEMPT_COUNT` kernel configuration option. This macro is implemented as:
+for preemption disabling and enabling. First of all let's try to understand what is `preempt` in the context of an operating system kernel. In simple words, preemption is ability of the operating system kernel to preempt current task to run task with higher priority. Here we need to disable preemption because we will have only one `init` process for the early boot time and we don't need to stop it before we call `cpu_idle` function. The `preempt_disable` macro is defined in the [include/linux/preempt.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/preempt.h) and depends on the `CONFIG_PREEMPT_COUNT` kernel configuration option. This macro is implemented as:
 
 ```C
 #define preempt_disable() \
@@ -71,7 +71,7 @@ That's all. Preemption is disabled and we can go ahead.
 Initialization of the integer ID management
 --------------------------------------------------------------------------------
 
-In the next step we can see the call of the `idr_init_cache` function which defined in the [lib/idr.c](https://github.com/torvalds/linux/blob/master/lib/idr.c). The `idr` library is used in a various [places](http://lxr.free-electrons.com/ident?i=idr_find) in the linux kernel to manage assigning integer `IDs` to objects and looking up objects by id.
+In the next step we can see the call of the `idr_init_cache` function which defined in the [lib/idr.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/idr.c). The `idr` library is used in a various [places](http://lxr.free-electrons.com/ident?i=idr_find) in the linux kernel to manage assigning integer `IDs` to objects and looking up objects by id.
 
 Let's look on the implementation of the `idr_init_cache` function:
 
@@ -83,7 +83,7 @@ void __init idr_init_cache(void)
 }
 ```
 
-Here we can see the call of the `kmem_cache_create`. We already called the `kmem_cache_init` in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L485). This function create generalized caches again using the `kmem_cache_alloc` (more about caches we will see in the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) chapter). In our case, as we are using `kmem_cache_t` which will be used by the [slab](http://en.wikipedia.org/wiki/Slab_allocation) allocator and `kmem_cache_create` creates it. As you can see we pass five parameters to the `kmem_cache_create`:
+Here we can see the call of the `kmem_cache_create`. We already called the `kmem_cache_init` in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L485). This function create generalized caches again using the `kmem_cache_alloc` (more about caches we will see in the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) chapter). In our case, as we are using `kmem_cache_t` which will be used by the [slab](http://en.wikipedia.org/wiki/Slab_allocation) allocator and `kmem_cache_create` creates it. As you can see we pass five parameters to the `kmem_cache_create`:
 
 * name of the cache;
 * size of the object to store in cache;
@@ -91,7 +91,7 @@ Here we can see the call of the `kmem_cache_create`. We already called the `kmem
 * flags;
 * constructor for the objects.
 
-and it will create `kmem_cache` for the integer IDs. Integer `IDs` is commonly used pattern to map set of integer IDs to the set of pointers. We can see usage of the integer IDs in the [i2c](http://en.wikipedia.org/wiki/I%C2%B2C) drivers subsystem. For example [drivers/i2c/i2c-core.c](https://github.com/torvalds/linux/blob/master/drivers/i2c/i2c-core.c) which represents the core of the `i2c` subsystem defines `ID` for the `i2c` adapter with the `DEFINE_IDR` macro:
+and it will create `kmem_cache` for the integer IDs. Integer `IDs` is commonly used pattern to map set of integer IDs to the set of pointers. We can see usage of the integer IDs in the [i2c](http://en.wikipedia.org/wiki/I%C2%B2C) drivers subsystem. For example [drivers/i2c/i2c-core.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/i2c/i2c-core.c) which represents the core of the `i2c` subsystem defines `ID` for the `i2c` adapter with the `DEFINE_IDR` macro:
 
 ```C
 static DEFINE_IDR(i2c_adapter_idr);
@@ -125,13 +125,13 @@ The next step is [RCU](http://en.wikipedia.org/wiki/Read-copy-update) initializa
 * `CONFIG_TINY_RCU`
 * `CONFIG_TREE_RCU`
 
-In the first case `rcu_init` will be in the [kernel/rcu/tiny.c](https://github.com/torvalds/linux/blob/master/kernel/rcu/tiny.c) and in the second case it will be defined in the [kernel/rcu/tree.c](https://github.com/torvalds/linux/blob/master/kernel/rcu/tree.c). We will see the implementation of the `tree rcu`, but first of all about the `RCU` in general.
+In the first case `rcu_init` will be in the [kernel/rcu/tiny.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tiny.c) and in the second case it will be defined in the [kernel/rcu/tree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tree.c). We will see the implementation of the `tree rcu`, but first of all about the `RCU` in general.
 
 `RCU` or read-copy update is a scalable high-performance synchronization mechanism implemented in the Linux kernel. On the early stage the linux kernel provided support and environment for the concurrently running applications, but all execution was serialized in the kernel using a single global lock. In our days linux kernel has no single global lock, but provides different mechanisms including [lock-free data structures](http://en.wikipedia.org/wiki/Concurrent_data_structure), [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) data structures and other. One of these mechanisms is - the `read-copy update`. The `RCU` technique is designed for rarely-modified data structures. The idea of the `RCU` is simple. For example we have a rarely-modified data structure. If somebody wants to change this data structure, we make a copy of this data structure and make all changes in the copy. In the same time all other users of the data structure use old version of it. Next, we need to choose safe moment when original version of the data structure will have no users and update it with the modified copy.
 
 Of course this description of the `RCU` is very simplified. To understand some details about `RCU`, first of all we need to learn some terminology. Data readers in the `RCU` executed in the [critical section](http://en.wikipedia.org/wiki/Critical_section). Every time when data reader get to the critical section, it calls the `rcu_read_lock`, and `rcu_read_unlock` on exit from the critical section. If the thread is not in the critical section, it will be in state which called - `quiescent state`. The moment when every thread is in the `quiescent state` called - `grace period`. If a thread wants to remove an element from the data structure, this occurs in two steps. First step is `removal` - atomically removes element from the data structure, but does not release the physical memory. After this thread-writer announces and waits until it is finished. From this moment, the removed element is available to the thread-readers. After the `grace period` finished, the second step of the element removal will be started, it just removes the element from the physical memory.
 
-There a couple of implementations of the `RCU`. Old `RCU` called classic, the new implementation called `tree` RCU. As you may already understand, the `CONFIG_TREE_RCU` kernel configuration option enables tree `RCU`. Another is the `tiny` RCU which depends on `CONFIG_TINY_RCU` and `CONFIG_SMP=n`. We will see more details about the `RCU` in general in the separate chapter about synchronization primitives, but now let's look on the `rcu_init` implementation from the [kernel/rcu/tree.c](https://github.com/torvalds/linux/blob/master/kernel/rcu/tree.c):
+There a couple of implementations of the `RCU`. Old `RCU` called classic, the new implementation called `tree` RCU. As you may already understand, the `CONFIG_TREE_RCU` kernel configuration option enables tree `RCU`. Another is the `tiny` RCU which depends on `CONFIG_TINY_RCU` and `CONFIG_SMP=n`. We will see more details about the `RCU` in general in the separate chapter about synchronization primitives, but now let's look on the `rcu_init` implementation from the [kernel/rcu/tree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tree.c):
 
 ```C
 void __init rcu_init(void)
@@ -186,7 +186,7 @@ determined by the number of CPUs and by CONFIG_RCU_FANOUT.
 Small systems will have a "hierarchy" consisting of a single rcu_node.
 ```
 
-The `rcu_node` structure is defined in the [kernel/rcu/tree.h](https://github.com/torvalds/linux/blob/master/kernel/rcu/tree.h) and contains information about current grace period, is grace period completed or not, CPUs or groups that need to switch in order for current grace period to proceed, etc. Every `rcu_node` contains a lock for a couple of CPUs. These `rcu_node` structures are embedded into a linear array in the `rcu_state` structure and represented as a tree with the root as the first element and covers all CPUs. As you can see the number of the rcu nodes determined by the `NUM_RCU_NODES` which depends on number of available CPUs:
+The `rcu_node` structure is defined in the [kernel/rcu/tree.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tree.h) and contains information about current grace period, is grace period completed or not, CPUs or groups that need to switch in order for current grace period to proceed, etc. Every `rcu_node` contains a lock for a couple of CPUs. These `rcu_node` structures are embedded into a linear array in the `rcu_state` structure and represented as a tree with the root as the first element and covers all CPUs. As you can see the number of the rcu nodes determined by the `NUM_RCU_NODES` which depends on number of available CPUs:
 
 ```C
 #define NUM_RCU_NODES (RCU_SUM - NR_CPUS)
@@ -271,7 +271,7 @@ for (i = 2; i <= MAX_RCU_LVLS; i++)
     rcu_capacity[i] = rcu_capacity[i - 1] * CONFIG_RCU_FANOUT;
 ```
 
-And in the last step we calculate the number of rcu_nodes at each level of the tree in the [loop](https://github.com/torvalds/linux/blob/master/kernel/rcu/tree.c#L4094).
+And in the last step we calculate the number of rcu_nodes at each level of the tree in the [loop](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tree.c#L4094).
 
 As we calculated geometry of the `rcu_node` tree, we need to go back to the `rcu_init` function and next step we need to initialize two `rcu_state` structures with the `rcu_init_one` function:
 
@@ -285,7 +285,7 @@ The `rcu_init_one` function takes two arguments:
 * Global `RCU` state;
 * Per-CPU data for `RCU`.
 
-Both variables defined in the [kernel/rcu/tree.h](https://github.com/torvalds/linux/blob/master/kernel/rcu/tree.h) with its `percpu` data:
+Both variables defined in the [kernel/rcu/tree.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tree.h) with its `percpu` data:
 
 ```
 extern struct rcu_state rcu_bh_state;
@@ -307,7 +307,7 @@ struct softirq_action
 };
 ```
 
-which is defined in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h) and contains only one field - handler of an interrupt. You can check about `softirqs` in the your system with the:
+which is defined in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/interrupt.h) and contains only one field - handler of an interrupt. You can check about `softirqs` in the your system with the:
 
 ```
 $ cat /proc/softirqs
@@ -338,7 +338,7 @@ void open_softirq(int nr, void (*action)(struct softirq_action *))
 }
 ```
 
-In our case the interrupt handler is - `rcu_process_callbacks` which is defined in the [kernel/rcu/tree.c](https://github.com/torvalds/linux/blob/master/kernel/rcu/tree.c) and does the `RCU` core processing for the current CPU. After we registered `softirq` interrupt for the `RCU`, we can see the following code:
+In our case the interrupt handler is - `rcu_process_callbacks` which is defined in the [kernel/rcu/tree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tree.c) and does the `RCU` core processing for the current CPU. After we registered `softirq` interrupt for the `RCU`, we can see the following code:
 
 ```C
 cpu_notifier(rcu_cpu_notify, 0);
@@ -376,9 +376,9 @@ Ok, we already passed the main theme of this part which is `RCU` initialization,
 * They have the character of debugging and not important for now;
 * We will see many of this stuff in the separate parts/chapters.
 
-After we initialized `RCU`, the next step which you can see in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) is the - `trace_init` function. As you can understand from its name, this function initialize [tracing](http://en.wikipedia.org/wiki/Tracing_%28software%29) subsystem. You can read more about linux kernel trace system - [here](http://elinux.org/Kernel_Trace_Systems).
+After we initialized `RCU`, the next step which you can see in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) is the - `trace_init` function. As you can understand from its name, this function initialize [tracing](http://en.wikipedia.org/wiki/Tracing_%28software%29) subsystem. You can read more about linux kernel trace system - [here](http://elinux.org/Kernel_Trace_Systems).
 
-After the `trace_init`, we can see the call of the `radix_tree_init`. If you are familiar with the different data structures, you can understand from the name of this function that it initializes kernel implementation of the [Radix tree](http://en.wikipedia.org/wiki/Radix_tree). This function is defined in the [lib/radix-tree.c](https://github.com/torvalds/linux/blob/master/lib/radix-tree.c) and you can read more about it in the part about [Radix tree](https://0xax.gitbooks.io/linux-insides/content/DataStructures/radix-tree.html).
+After the `trace_init`, we can see the call of the `radix_tree_init`. If you are familiar with the different data structures, you can understand from the name of this function that it initializes kernel implementation of the [Radix tree](http://en.wikipedia.org/wiki/Radix_tree). This function is defined in the [lib/radix-tree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/radix-tree.c) and you can read more about it in the part about [Radix tree](https://0xax.gitbooks.io/linux-insides/content/DataStructures/radix-tree.html).
 
 In the next step we can see the functions which are related to the `interrupts handling` subsystem, they are:
 
@@ -396,7 +396,7 @@ local_irq_enable();
 
 which expands to the `sti` instruction and making post initialization of the [SLAB](http://en.wikipedia.org/wiki/Slab_allocation) with the call of the `kmem_cache_init_late` function (As I wrote above we will know about the `SLAB` in the [Linux memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) chapter).
 
-After the post initialization of the `SLAB`, next point is initialization of the console with the `console_init` function from the [drivers/tty/tty_io.c](https://github.com/torvalds/linux/blob/master/drivers/tty/tty_io.c).
+After the post initialization of the `SLAB`, next point is initialization of the console with the `console_init` function from the [drivers/tty/tty_io.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/tty/tty_io.c).
 
 After the console initialization, we can see the `lockdep_info` function which prints information about the [Lock dependency validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). After this, we can see the initialization of the dynamic allocation of the `debug objects` with the `debug_objects_mem_init`, kernel memory leak [detector](https://www.kernel.org/doc/Documentation/kmemleak.txt) initialization with the `kmemleak_init`, `percpu` pageset setup with the `setup_per_cpu_pageset`, setup of the [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) policy with the `numa_policy_init`, setting time for the scheduler with the `sched_clock_init`, `pidmap` initialization with the call of the `pidmap_init` function for the initial `PID` namespace, cache creation with the `anon_vma_init` for the private virtual memory areas and early initialization of the [ACPI](http://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) with the `acpi_early_init`.
 
@@ -405,7 +405,7 @@ This is the end of the ninth part of the [linux kernel initialization process](h
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the ninth part about the linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). In this part, we looked on the initialization process of the `RCU` subsystem. In the next part we will continue to dive into linux kernel initialization process and I hope that we will finish with the `start_kernel` function and will go to the `rest_init` function from the same [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file and will see the start of the first process.
+It is the end of the ninth part about the linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). In this part, we looked on the initialization process of the `RCU` subsystem. In the next part we will continue to dive into linux kernel initialization process and I hope that we will finish with the `start_kernel` function and will go to the `rest_init` function from the same [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file and will see the start of the first process.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 

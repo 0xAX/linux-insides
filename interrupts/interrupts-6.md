@@ -21,13 +21,13 @@ A [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt
 * External hardware asserts the non-maskable interrupt [pin](https://en.wikipedia.org/wiki/CPU_socket) on the CPU.
 * The processor receives a message on the system bus or the APIC serial bus with a delivery mode `NMI`.
 
-When the processor receives a `NMI` from one of these sources, the processor handles it immediately by calling the `NMI` handler pointed to by interrupt vector which has number `2` (see table in the first [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)). We already filled the [Interrupt Descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table) with the [vector number](https://en.wikipedia.org/wiki/Interrupt_vector_table), address of the `nmi` interrupt handler and `NMI_STACK` [Interrupt Stack Table entry](https://github.com/torvalds/linux/blob/master/Documentation/x86/kernel-stacks):
+When the processor receives a `NMI` from one of these sources, the processor handles it immediately by calling the `NMI` handler pointed to by interrupt vector which has number `2` (see table in the first [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)). We already filled the [Interrupt Descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table) with the [vector number](https://en.wikipedia.org/wiki/Interrupt_vector_table), address of the `nmi` interrupt handler and `NMI_STACK` [Interrupt Stack Table entry](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/kernel-stacks):
 
 ```C
 set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
 ```
 
-in the `trap_init` function which defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c) source code file. In the previous [parts](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we saw that entry points of the all interrupt handlers are defined with the:
+in the `trap_init` function which defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) source code file. In the previous [parts](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we saw that entry points of the all interrupt handlers are defined with the:
 
 ```assembly
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
@@ -39,7 +39,7 @@ END(\sym)
 .endm
 ```
 
-macro from the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly source code file. But the handler of the `Non-Maskable` interrupts is not defined with this macro. It has own entry point:
+macro from the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly source code file. But the handler of the `Non-Maskable` interrupts is not defined with this macro. It has own entry point:
 
 ```assembly
 ENTRY(nmi)
@@ -49,7 +49,7 @@ ENTRY(nmi)
 END(nmi)
 ```
 
-in the same [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file. Lets dive into it and will try to understand how `Non-Maskable` interrupt handler works. The `nmi` handlers starts from the call of the:
+in the same [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly file. Lets dive into it and will try to understand how `Non-Maskable` interrupt handler works. The `nmi` handlers starts from the call of the:
 
 ```assembly
 PARAVIRT_ADJUST_EXCEPTION_FRAME
@@ -68,7 +68,7 @@ cmpl	$__KERNEL_CS, 16(%rsp)
 jne	first_nmi
 ```
 
-The `__KERNEL_CS` macro defined in the [arch/x86/include/asm/segment.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/segment.h) and represented second descriptor in the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table):
+The `__KERNEL_CS` macro defined in the [arch/x86/include/asm/segment.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/segment.h) and represented second descriptor in the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table):
 
 ```C
 #define GDT_ENTRY_KERNEL_CS	2
@@ -169,7 +169,7 @@ pushq	$-1
 ALLOC_PT_GPREGS_ON_STACK
 ```
 
-We already saw implementation of the `ALLOC_PT_GREGS_ON_STACK` macro in the third part of the interrupts [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html). This macro defined in the [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/master/arch/x86/entry/calling.h) and yet another allocates `120` bytes on stack for the general purpose registers, from the `rdi` to the `r15`:
+We already saw implementation of the `ALLOC_PT_GREGS_ON_STACK` macro in the third part of the interrupts [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html). This macro defined in the [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) and yet another allocates `120` bytes on stack for the general purpose registers, from the `rdi` to the `r15`:
 
 ```assembly
 .macro ALLOC_PT_GPREGS_ON_STACK addskip=0
@@ -237,7 +237,7 @@ nmi_restore:
 	INTERRUPT_RETURN
 ```
 
-where `INTERRUPT_RETURN` is defined in the [arch/x86/include/irqflags.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/irqflags.h) and just expands to the `iret` instruction. That's all.
+where `INTERRUPT_RETURN` is defined in the [arch/x86/include/irqflags.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/irqflags.h) and just expands to the `iret` instruction. That's all.
 
 Now let's consider case when another `NMI` interrupt occurred when previous `NMI` interrupt didn't finish its execution. You can remember from the beginning of this part that we've made a check that we came from userspace and jump on the `first_nmi` in this case:
 
@@ -255,12 +255,12 @@ je	nested_nmi
 
 and if it is set to `1` we jump to the `nested_nmi` label. If it is not `1`, we test the `IST` stack. In the case of nested `NMIs` we check that we are above the `repeat_nmi`. In this case we ignore it, in other way we check that we above than `end_repeat_nmi` and jump on the `nested_nmi_out` label.
 
-Now let's look on the `do_nmi` exception handler. This function defined in the [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/nmi.c) source code file and takes two parameters:
+Now let's look on the `do_nmi` exception handler. This function defined in the [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/nmi.c) source code file and takes two parameters:
 
 * address of the `pt_regs`;
 * error code.
 
-as all exception handlers. The `do_nmi` starts from the call of the `nmi_nesting_preprocess` function and ends with the call of the `nmi_nesting_postprocess`. The `nmi_nesting_preprocess` function checks that we likely do not work with the debug stack and if we on the debug stack set the `update_debug_stack` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable to `1` and call the `debug_stack_set_zero` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c). This function increases the `debug_stack_use_ctr` per-cpu variable and loads new `Interrupt Descriptor Table`:
+as all exception handlers. The `do_nmi` starts from the call of the `nmi_nesting_preprocess` function and ends with the call of the `nmi_nesting_postprocess`. The `nmi_nesting_preprocess` function checks that we likely do not work with the debug stack and if we on the debug stack set the `update_debug_stack` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable to `1` and call the `debug_stack_set_zero` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function increases the `debug_stack_use_ctr` per-cpu variable and loads new `Interrupt Descriptor Table`:
  
 ```C
 static inline void nmi_nesting_preprocess(struct pt_regs *regs)
@@ -310,7 +310,7 @@ That's all.
 Range Exceeded Exception
 --------------------------------------------------------------------------------
 
-The next exception is the `BOUND` range exceeded exception. The `BOUND` instruction determines if the first operand (array index) is within the bounds of an array specified the second operand (bounds operand). If the index is not within bounds, a `BOUND` range exceeded exception or `#BR` is occurred. The handler of the `#BR` exception is the `do_bounds` function that defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c). The `do_bounds` handler starts with the call of the `exception_enter` function and ends with the call of the `exception_exit`:
+The next exception is the `BOUND` range exceeded exception. The `BOUND` instruction determines if the first operand (array index) is within the bounds of an array specified the second operand (bounds operand). If the index is not within bounds, a `BOUND` range exceeded exception or `#BR` is occurred. The handler of the `#BR` exception is the `do_bounds` function that defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c). The `do_bounds` handler starts with the call of the `exception_enter` function and ends with the call of the `exception_exit`:
 
 ```C
 prev_state = exception_enter();
@@ -362,7 +362,7 @@ After all of this, there is still only one way when `MPX` is responsible for thi
 Coprocessor exception and SIMD exception
 --------------------------------------------------------------------------------
 
-The next two exceptions are [x87 FPU](https://en.wikipedia.org/wiki/X87) Floating-Point Error exception or `#MF` and [SIMD](https://en.wikipedia.org/wiki/SIMD) Floating-Point Exception or `#XF`. The first exception occurs when the `x87 FPU` has detected floating point error. For example divide by zero, numeric overflow and etc. The second exception occurs when the processor has detected [SSE/SSE2/SSE3](https://en.wikipedia.org/wiki/SSE3) `SIMD` floating-point exception. It can be the same as for the `x87 FPU`. The handlers for these exceptions are `do_coprocessor_error` and `do_simd_coprocessor_error` are defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c) and very similar on each other. They both make a call of the `math_error` function from the same source code file but pass different vector number. The `do_coprocessor_error` passes `X86_TRAP_MF` vector number to the `math_error`:
+The next two exceptions are [x87 FPU](https://en.wikipedia.org/wiki/X87) Floating-Point Error exception or `#MF` and [SIMD](https://en.wikipedia.org/wiki/SIMD) Floating-Point Exception or `#XF`. The first exception occurs when the `x87 FPU` has detected floating point error. For example divide by zero, numeric overflow and etc. The second exception occurs when the processor has detected [SSE/SSE2/SSE3](https://en.wikipedia.org/wiki/SSE3) `SIMD` floating-point exception. It can be the same as for the `x87 FPU`. The handlers for these exceptions are `do_coprocessor_error` and `do_simd_coprocessor_error` are defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) and very similar on each other. They both make a call of the `math_error` function from the same source code file but pass different vector number. The `do_coprocessor_error` passes `X86_TRAP_MF` vector number to the `math_error`:
 
 ```C
 dotraplinkage void do_coprocessor_error(struct pt_regs *regs, long error_code)
@@ -402,7 +402,7 @@ First of all the `math_error` function defines current interrupted task, address
 		return;
 ```
 
-After this we check that we are from the kernel mode and if yes we will try to fix an excetpion with the `fixup_exception` function. If we cannot we fill the task with the exception's error code and vector number and die:
+After this we check that we are from the kernel mode and if yes we will try to fix an exception with the `fixup_exception` function. If we cannot we fill the task with the exception's error code and vector number and die:
 
 ```C
 if (!user_mode(regs)) {
@@ -446,7 +446,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the sixth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally we have finsihed with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c).
+It is the end of the sixth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally we have finsihed with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c).
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
@@ -461,7 +461,7 @@ Links
 * [BOUND instruction](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm)
 * [CPU socket](https://en.wikipedia.org/wiki/CPU_socket)
 * [Interrupt Descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table)
-* [Interrupt Stack Table](https://github.com/torvalds/linux/blob/master/Documentation/x86/kernel-stacks)
+* [Interrupt Stack Table](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/kernel-stacks)
 * [Paravirtualization](https://en.wikipedia.org/wiki/Paravirtualization)
 * [.rept](http://tigcc.ticalc.org/doc/gnuasm.html#SEC116)
 * [SIMD](https://en.wikipedia.org/wiki/SIMD)

@@ -6,7 +6,7 @@ Timers
 
 This is fourth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-3.html) we knew about the `tick broadcast` framework and `NO_HZ` mode in the Linux kernel. We will continue to dive into the time management related stuff in the Linux kernel in this part and will be acquainted with yet another concept in the Linux kernel - `timers`. Before we will look at timers in the Linux kernel, we have to learn some theory about this concept. Note that we will consider software timers in this part.
 
-The Linux kernel provides a `software timer` concept to allow to kernel functions could be invoked at future moment. Timers are widely used in the Linux kernel. For example, look in the [net/netfilter/ipset/ip_set_list_set.c](https://github.com/torvalds/linux/blob/master/net/netfilter/ipset/ip_set_list_set.c) source code file. This source code file provides implementation of the framework for the managing of groups of [IP](https://en.wikipedia.org/wiki/Internet_Protocol) addresses.
+The Linux kernel provides a `software timer` concept to allow to kernel functions could be invoked at future moment. Timers are widely used in the Linux kernel. For example, look in the [net/netfilter/ipset/ip_set_list_set.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/net/netfilter/ipset/ip_set_list_set.c) source code file. This source code file provides implementation of the framework for the managing of groups of [IP](https://en.wikipedia.org/wiki/Internet_Protocol) addresses.
 
 We can find the `list_set` structure that contains `gc` filed in this source code file:
 
@@ -18,7 +18,7 @@ struct list_set {
 };
 ```
 
-Not that the `gc` filed has `timer_list` type. This structure defined in the [include/linux/timer.h](https://github.com/torvalds/linux/blob/master/include/linux/timer.h) header file and main point of this structure is to store `dynamic` timers in the Linux kernel. Actually, the Linux kernel provides two types of timers called dynamic timers and interval timers. First type of timers is used by the kernel, and the second can be used by user mode. The `timer_list` structure contains actual `dynamic` timers. The `list_set` contains `gc` timer in our example represents timer for garbage collection. This timer will be initialized in the `list_set_gc_init` function:
+Not that the `gc` filed has `timer_list` type. This structure defined in the [include/linux/timer.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/timer.h) header file and main point of this structure is to store `dynamic` timers in the Linux kernel. Actually, the Linux kernel provides two types of timers called dynamic timers and interval timers. First type of timers is used by the kernel, and the second can be used by user mode. The `timer_list` structure contains actual `dynamic` timers. The `list_set` contains `gc` timer in our example represents timer for garbage collection. This timer will be initialized in the `list_set_gc_init` function:
 
 ```C
 static void
@@ -45,13 +45,13 @@ Now let's continue to research source code of Linux kernel which is related to t
 Introduction to dynamic timers in the Linux kernel
 --------------------------------------------------------------------------------
 
-As I already wrote, we knew about the `tick broadcast` framework and `NO_HZ` mode in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-3.html). They will be initialized in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file by the call of the `tick_init` function. If we will look at this source code file, we will see that the next time management related function is:
+As I already wrote, we knew about the `tick broadcast` framework and `NO_HZ` mode in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-3.html). They will be initialized in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file by the call of the `tick_init` function. If we will look at this source code file, we will see that the next time management related function is:
 
 ```C
 init_timers();
 ```
 
-This function defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file and contains calls of four functions:
+This function defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/timer.c) source code file and contains calls of four functions:
 
 ```C
 void __init init_timers(void)
@@ -63,7 +63,7 @@ void __init init_timers(void)
 }
 ```
 
-Let's look on implementation of each function. The first function is `init_timer_cpus` defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file and just calls the `init_timer_cpu` function for each possible processor in the system:
+Let's look on implementation of each function. The first function is `init_timer_cpus` defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/timer.c) source code file and just calls the `init_timer_cpu` function for each possible processor in the system:
 
 ```C
 static void __init init_timer_cpus(void)
@@ -77,7 +77,7 @@ static void __init init_timer_cpus(void)
 
 If you do not know or do not remember what is it a `possible` cpu, you can read the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) of this book which describes `cpumask` concept in the Linux kernel. In short words, a `possible` processor is a processor which can be plugged in anytime during the life of the system.
 
-The `init_timer_cpu` function does main work for us, namely it executes initialization of the `tvec_base` structure for each processor. This structure defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file and stores data related to a `dynamic` timer for a certain processor. Let's look on the definition of this structure:
+The `init_timer_cpu` function does main work for us, namely it executes initialization of the `tvec_base` structure for each processor. This structure defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/timer.c) source code file and stores data related to a `dynamic` timer for a certain processor. Let's look on the definition of this structure:
 
 ```C
 struct tvec_base {
@@ -121,7 +121,7 @@ type. Note that the value of the `TVR_SIZE` depends on the `CONFIG_BASE_SMALL` k
 
 that reduces size of the kernel data structures if disabled. The `v1` is array that may contain `64` or `256` elements where an each element represents a dynamic timer that will decay within the next `255` system timer interrupts. Next three fields: `tv2`, `tv3` and `tv4` are lists with dynamic timers too, but they store dynamic timers which will decay the next `2^14 - 1`, `2^20 - 1` and `2^26` respectively. The last `tv5` field represents list which stores dynamic timers with a large expiring period.
 
-So, now we saw the `tvec_base` structure and description of its fields and we can look on the implementation of the `init_timer_cpu` function. As I already wrote, this function defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file and executes initialization of the `tvec_bases`:
+So, now we saw the `tvec_base` structure and description of its fields and we can look on the implementation of the `init_timer_cpu` function. As I already wrote, this function defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/timer.c) source code file and executes initialization of the `tvec_bases`:
 
 ```C
 static void __init init_timer_cpu(int cpu)
@@ -232,7 +232,7 @@ static int timer_cpu_notify(struct notifier_block *self,
 }
 ```
 
-This chapter will not describe `hotplug` related events in the Linux kernel source code, but if you are interesting in such things, you can find implementation of the `migrate_timers` function in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file.
+This chapter will not describe `hotplug` related events in the Linux kernel source code, but if you are interesting in such things, you can find implementation of the `migrate_timers` function in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/timer.c) source code file.
 
 The last step in the `init_timers` function is the call of the:
 
@@ -240,9 +240,9 @@ The last step in the `init_timers` function is the call of the:
 open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
 ```
 
-function. The `open_softirq` function may be already familar to you if you have read the ninth [part](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) about the interrupts and interrupt handling in the Linux kernel. In short words, the `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c) source code file and executes initialization of the deferred interrupt handler.
+function. The `open_softirq` function may be already familiar to you if you have read the ninth [part](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) about the interrupts and interrupt handling in the Linux kernel. In short words, the `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/softirq.c) source code file and executes initialization of the deferred interrupt handler.
 
-In our case the deferred function is the `run_timer_softirq` function that is will be called after a hardware interrupt in the `do_IRQ` function which defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) source code file. The main point of this function is to handle a software dynamic timer. The Linux kernel does not do this thing during the hardware timer interrupt handling because this is time consuming operation.
+In our case the deferred function is the `run_timer_softirq` function that is will be called after a hardware interrupt in the `do_IRQ` function which defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irq.c) source code file. The main point of this function is to handle a software dynamic timer. The Linux kernel does not do this thing during the hardware timer interrupt handling because this is time consuming operation.
 
 Let's look on the implementation of the `run_timer_softirq` function:
 
@@ -256,7 +256,7 @@ static void run_timer_softirq(struct softirq_action *h)
 }
 ```
 
-At the beginning of the `run_timer_softirq` function we get a `dynamic` timer for a current processor and compares the current value of the [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html) with the value of the `timer_jiffies` for the current structure by the call of the `time_after_eq` macro which is defined in the [include/linux/jiffies.h](https://github.com/torvalds/linux/blob/master/include/linux/jiffies.h) header file:
+At the beginning of the `run_timer_softirq` function we get a `dynamic` timer for a current processor and compares the current value of the [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html) with the value of the `timer_jiffies` for the current structure by the call of the `time_after_eq` macro which is defined in the [include/linux/jiffies.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/jiffies.h) header file:
 
 ```C
 #define time_after_eq(a,b)          \
@@ -360,7 +360,7 @@ Now let's look usage of `dynamic timers` in the Linux kernel.
 Usage of dynamic timers
 --------------------------------------------------------------------------------
 
-As you already can noted, if the Linux kernel provides a concept, it also provides API for managing of this concept and the `dynamic timers` concept is not exception here. To use a timer in the Linux kernel code, we must define a variable with a `timer_list` type. We can initialize our `timer_list` structure in two ways. The first is to use the `init_timer` macro that defined in the [include/linux/timer.h](https://github.com/torvalds/linux/blob/master/include/linux/timer.h) header file:
+As you already can noted, if the Linux kernel provides a concept, it also provides API for managing of this concept and the `dynamic timers` concept is not exception here. To use a timer in the Linux kernel code, we must define a variable with a `timer_list` type. We can initialize our `timer_list` structure in two ways. The first is to use the `init_timer` macro that defined in the [include/linux/timer.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/timer.h) header file:
 
 ```C
 #define init_timer(timer)    \
@@ -383,9 +383,9 @@ function which fields the given `timer` with default values. The second way is t
 	__TIMER_INITIALIZER((_function), (_expires), (_data), 0)
 ```
 
-macro which will initilize the given `timer_list` structure too.
+macro which will initialize the given `timer_list` structure too.
 
-After a `dynamic timer` is initialzed we can start this `timer` with the call of the:
+After a `dynamic timer` is initialized we can start this `timer` with the call of the:
 
 ```C
 void add_timer(struct timer_list * timer);
@@ -404,7 +404,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fourth part of the chapter that describes timers and timer management related stuff in the Linux kernel. In the previous part we got acquainted with the two new concepts: the `tick broadcast` framework and the `NO_HZ` mode. In this part we continued to dive into time managemented related stuff and got acquainted with the new concept - `dynamic timer` or software timer. We didn't saw implementation of a `dynamic timers` management code in details in this part but saw data structures and API around this concept.
+This is the end of the fourth part of the chapter that describes timers and timer management related stuff in the Linux kernel. In the previous part we got acquainted with the two new concepts: the `tick broadcast` framework and the `NO_HZ` mode. In this part we continued to dive into time management related stuff and got acquainted with the new concept - `dynamic timer` or software timer. We didn't saw implementation of a `dynamic timers` management code in details in this part but saw data structures and API around this concept.
 
 In the next part we will continue to dive into timer management related things in the Linux kernel and will see new concept for us - `timers`.
 

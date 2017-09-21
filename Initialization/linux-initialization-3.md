@@ -4,7 +4,7 @@ Kernel initialization. Part 3.
 Last preparations before the kernel entry point
 --------------------------------------------------------------------------------
 
-This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we call the `start_kernel` function, we must do some preparations. So let's continue.
+This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we call the `start_kernel` function, we must do some preparations. So let's continue.
 
 boot_params again
 --------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ In the previous part we stopped at setting Interrupt Descriptor Table and loadin
 copy_bootdata(__va(real_mode_data));
 ```
 
-This function takes one argument - virtual address of the `real_mode_data`. Remember that we passed the address of the `boot_params` structure from [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L114)  to the `x86_64_start_kernel` function as first argument in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
+This function takes one argument - virtual address of the `real_mode_data`. Remember that we passed the address of the `boot_params` structure from [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L114)  to the `x86_64_start_kernel` function as first argument in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
 
 ```
 	/* rsi is pointer to real mode structure with interesting info.
@@ -23,13 +23,13 @@ This function takes one argument - virtual address of the `real_mode_data`. Reme
 	movq	%rsi, %rdi
 ```
 
-Now let's look at `__va` macro. This macro defined in [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c):
+Now let's look at `__va` macro. This macro defined in [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c):
 
 ```C
 #define __va(x)                 ((void *)((unsigned long)(x)+PAGE_OFFSET))
 ```
 
-where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of the `boot_params` structure and pass it to the `copy_bootdata` function, where we copy `real_mod_data` to the `boot_params` which is declared in the [arch/x86/kernel/setup.h](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.h)
+where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of the `boot_params` structure and pass it to the `copy_bootdata` function, where we copy `real_mod_data` to the `boot_params` which is declared in the [arch/x86/kernel/setup.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.h)
 
 ```C
 extern struct boot_params boot_params;
@@ -82,7 +82,7 @@ In the next step, as we have copied `boot_params` structure, we need to move fro
 	clear_page(init_level4_pgt);
 ```
 
-function and pass `init_level4_pgt` which also defined in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) and looks:
+function and pass `init_level4_pgt` which also defined in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) and looks:
 
 ```assembly
 NEXT_PAGE(init_level4_pgt)
@@ -93,7 +93,7 @@ NEXT_PAGE(init_level4_pgt)
 	.quad   level3_kernel_pgt - __START_KERNEL_map + _PAGE_TABLE
 ```
 
-which maps first 2 gigabytes and 512 megabytes for the kernel code, data and bss. `clear_page` function defined in the [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/lib/clear_page_64.S) let's look on this function:
+which maps first 2 gigabytes and 512 megabytes for the kernel code, data and bss. `clear_page` function defined in the [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/clear_page_64.S) let's look on this function:
 
 ```assembly
 ENTRY(clear_page)
@@ -172,7 +172,7 @@ if (!boot_params.hdr.version)
 
 and if it is zero we call `copy_bootdata` function again with the virtual address of the `real_mode_data` (read about its implementation).
 
-In the next step we can see the call of the `reserve_ebda_region` function which defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head.c). This function reserves memory block for the `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area located in the top of conventional memory and contains data about ports, disk parameters and etc...
+In the next step we can see the call of the `reserve_ebda_region` function which defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head.c). This function reserves memory block for the `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area located in the top of conventional memory and contains data about ports, disk parameters and etc...
 
 Let's look on the `reserve_ebda_region` function. It starts from the checking is paravirtualization enabled or not:
 
@@ -194,7 +194,7 @@ We're getting the virtual address of the BIOS low memory in kilobytes and conver
 ebda_addr = get_bios_ebda();
 ```
 
-where `get_bios_ebda` function defined in the [arch/x86/include/asm/bios_ebda.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bios_ebda.h) and looks like:
+where `get_bios_ebda` function defined in the [arch/x86/include/asm/bios_ebda.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bios_ebda.h) and looks like:
 
 ```C
 static inline unsigned int get_bios_ebda(void)
@@ -250,7 +250,7 @@ lowmem = min(lowmem, LOWMEM_CAP);
 memblock_reserve(lowmem, 0x100000 - lowmem);
 ```
 
-`memblock_reserve` function is defined at [mm/block.c](https://github.com/torvalds/linux/blob/master/mm/block.c) and takes two parameters:
+`memblock_reserve` function is defined at [mm/block.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/block.c) and takes two parameters:
 
 * base physical address;
 * region size.
@@ -260,7 +260,7 @@ and reserves memory region for the given base address and size. `memblock_reserv
 First touch of the linux kernel memory manager framework
 --------------------------------------------------------------------------------
 
-In the previous paragraph we stopped at the call of the `memblock_reserve` function and as i sad before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function just calls:
+In the previous paragraph we stopped at the call of the `memblock_reserve` function and as i said before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function just calls:
 
 ```C
 memblock_reserve_region(base, size, MAX_NUMNODES, 0);
@@ -376,7 +376,7 @@ struct memblock_region {
 };
 ```
 
-NUMA node id depends on `MAX_NUMNODES` macro which is defined in the [include/linux/numa.h](https://github.com/torvalds/linux/blob/master/include/linux/numa.h):
+NUMA node id depends on `MAX_NUMNODES` macro which is defined in the [include/linux/numa.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/numa.h):
 
 ```C
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
@@ -401,7 +401,7 @@ static inline void memblock_set_region_node(struct memblock_region *r, int nid)
 }
 ```
 
-After this we will have first reserved `memblock` for the extended bios data area in the `.meminit.data` section. `reserve_ebda_region` function finished its work on this step and we can go back to the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c).
+After this we will have first reserved `memblock` for the extended bios data area in the `.meminit.data` section. `reserve_ebda_region` function finished its work on this step and we can go back to the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c).
 
 We finished all preparations before the kernel entry point! The last step in the `x86_64_start_reservations` function is the call of the:
 
@@ -409,7 +409,7 @@ We finished all preparations before the kernel entry point! The last step in the
 start_kernel()
 ```
 
-function from [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) file.
+function from [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) file.
 
 That's all for this part.
 

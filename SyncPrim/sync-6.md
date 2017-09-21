@@ -4,9 +4,9 @@ Synchronization primitives in the Linux kernel. Part 6.
 Introduction
 --------------------------------------------------------------------------------
 
-This is the sixth part of the chapter which describes [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_(computer_science)) in the Linux kernel and in the previous parts we finished to consider different [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) synchronization primitives. We will continue to learn synchronization primitives in this part and start to consider a similar synchronization primitive which can be used to avoid the `writer starvation` problem. The name of this synchronization primitive is - `seqlock` or `sequential locks`.
+This is the sixth part of the chapter which describes [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_\(computer_science\)) in the Linux kernel and in the previous parts we finished to consider different [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) synchronization primitives. We will continue to learn synchronization primitives in this part and start to consider a similar synchronization primitive which can be used to avoid the `writer starvation` problem. The name of this synchronization primitive is - `seqlock` or `sequential locks`.
 
-We know from the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-5.html) that [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) is a special lock mechanism which allows concurrent access for read-only operations, but an exclusive lock is needed for writing or modifying data. As we may guess, it may lead to a problem which is called `writer starvation`. In other words, a writer process can't acquire a lock as long as at least one reader process which aqcuired a lock holds it. So, in the situation when contention is high, it will lead to situation when a writer process which wants to acquire a lock will wait for it for a long time.
+We know from the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-5.html) that [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) is a special lock mechanism which allows concurrent access for read-only operations, but an exclusive lock is needed for writing or modifying data. As we may guess, it may lead to a problem which is called `writer starvation`. In other words, a writer process can't acquire a lock as long as at least one reader process which acquired a lock holds it. So, in the situation when contention is high, it will lead to situation when a writer process which wants to acquire a lock will wait for it for a long time.
 
 The `seqlock` synchronization primitive can help solve this problem.
 
@@ -43,9 +43,9 @@ Ok, now we know what a `seqlock` synchronization primitive is and how it is repr
 Sequential lock API
 --------------------------------------------------------------------------------
 
-So, now we know a little about `sequentional lock` synchronization primitive from theoretical side, let's look at its implementation in the Linux kernel. All `sequentional locks` [API](https://en.wikipedia.org/wiki/Application_programming_interface) are located in the [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/master/include/linux/seqlock.h) header file.
+So, now we know a little about `sequential lock` synchronization primitive from theoretical side, let's look at its implementation in the Linux kernel. All `sequential locks` [API](https://en.wikipedia.org/wiki/Application_programming_interface) are located in the [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/seqlock.h) header file.
 
-First of all we may see that the a `sequential lock` machanism is represented by the following type:
+First of all we may see that the a `sequential lock` mechanism is represented by the following type:
 
 ```C
 typedef struct {
@@ -74,14 +74,14 @@ We saw in the previous parts that often the Linux kernel provides two approaches
 * `statically`;
 * `dynamically`.
 
-ways. Let's look at the first approach. We are able to intialize a `seqlock_t` statically with the `DEFINE_SEQLOCK` macro:
+ways. Let's look at the first approach. We are able to initialize a `seqlock_t` statically with the `DEFINE_SEQLOCK` macro:
 
 ```C
 #define DEFINE_SEQLOCK(x) \
 		seqlock_t x = __SEQLOCK_UNLOCKED(x)
 ```
 
-which is defined in the [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/master/include/linux/seqlock.h) header file. As we may see, the `DEFINE_SEQLOCK` macro takes one argument and expands to the definition and initialization of the `seqlock_t` structure. Initialization occurs with the help of the `__SEQLOCK_UNLOCKED` macro which is defined in the same source code file. Let's look at the implementation of this macro:
+which is defined in the [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/seqlock.h) header file. As we may see, the `DEFINE_SEQLOCK` macro takes one argument and expands to the definition and initialization of the `seqlock_t` structure. Initialization occurs with the help of the `__SEQLOCK_UNLOCKED` macro which is defined in the same source code file. Let's look at the implementation of this macro:
 
 ```C
 #define __SEQLOCK_UNLOCKED(lockname)			\
@@ -114,9 +114,9 @@ So we just initialize counter of the given sequential lock to zero and additiona
 #endif
 ```
 
-As I already wrote in previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/) we will not consider [debugging](https://en.wikipedia.org/wiki/Debugging) and [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related stuff in this part. So for now we just skip the `SEQCOUNT_DEP_MAP_INIT` macro. The second field of the given `seqlock_t` is `lock` initialized with the `__SPIN_LOCK_UNLOCKED` macro which is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file. We will not consider implementation of this macro here as it just initialize [rawspinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) with architecture-specific methods (More abot spinlocks you may read in first parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/)).
+As I already wrote in previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/) we will not consider [debugging](https://en.wikipedia.org/wiki/Debugging) and [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related stuff in this part. So for now we just skip the `SEQCOUNT_DEP_MAP_INIT` macro. The second field of the given `seqlock_t` is `lock` initialized with the `__SPIN_LOCK_UNLOCKED` macro which is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file. We will not consider implementation of this macro here as it just initialize [rawspinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) with architecture-specific methods (More abot spinlocks you may read in first parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/)).
 
-We have considered the first way to initialize a sequential lock. Let's consider second way to do the same, but do it dynamically. We can initialize a sequentional lock with the `seqlock_init` macro which is defined in the same  [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/master/include/linux/seqlock.h) header file.
+We have considered the first way to initialize a sequential lock. Let's consider second way to do the same, but do it dynamically. We can initialize a sequential lock with the `seqlock_init` macro which is defined in the same  [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/seqlock.h) header file.
 
 Let's look at the implementation of this macro:
 
@@ -321,7 +321,7 @@ static inline void write_sequnlock_irq(seqlock_t *sl)
 
 As we may see, these functions differ only in the initialization of spinlock. They call `spin_lock_irq` and `spin_unlock_irq` instead of `spin_lock` and `spin_unlock`.
 
-Or for example `write_seqlock_irqsave` and `write_sequnlock_irqrestore` functions which are the same but used `spin_lock_irqsave` and `spin_unlock_irqsave` macro to use in [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_(PC_architecture)) handlers.
+Or for example `write_seqlock_irqsave` and `write_sequnlock_irqrestore` functions which are the same but used `spin_lock_irqsave` and `spin_unlock_irqsave` macro to use in [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_\(PC_architecture\)) handlers.
 
 That's all.
 
@@ -337,7 +337,7 @@ If you have questions or suggestions, feel free to ping me in twitter [0xAX](htt
 Links
 --------------------------------------------------------------------------------
 
-* [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_(computer_science))
+* [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_\(computer_science\))
 * [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) 
 * [spinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html)
 * [critical section](https://en.wikipedia.org/wiki/Critical_section)
@@ -348,5 +348,5 @@ Links
 * [Timers and time management in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/Timers/)
 * [interrupt handlers](https://en.wikipedia.org/wiki/Interrupt_handler)
 * [softirq](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html)
-* [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_(PC_architecture))
+* [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_\(PC_architecture\))
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-5.html)

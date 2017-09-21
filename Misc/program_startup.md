@@ -6,9 +6,9 @@ Introduction
 
 Despite the [linux-insides](https://www.gitbook.com/book/0xax/linux-insides/details) described mostly Linux kernel related stuff, I have decided to write this one part which mostly related to userspace.
 
-There is already fourth [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) of [System calls](https://en.wikipedia.org/wiki/System_call) chapter which describes what does the Linux kernel do when we want to start a program. In this part I want to explore what happens when we run a program on Linux machine from userspace perspective.
+There is already fourth [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) of [System calls](https://en.wikipedia.org/wiki/System_call) chapter which describes what does the Linux kernel do when we want to start a program. In this part I want to explore what happens when we run a program on a Linux machine from userspace perspective.
 
-I don't know how about you, but in my university I learn that a `C` program starts to execute from the function which is called `main`. And that's partly true. Whenever we are starting to write new program, we start our program from the following lines of code:
+I don't know how about you, but in my university I learn that a `C` program starts executing from the function which is called `main`. And that's partly true. Whenever we are starting to write new program, we start our program from the following lines of code:
 
 ```C
 int main(int argc, char *argv[]) {
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
 }
 ```
 
-But if you are interested in low-level programming, you may already know that the `main` function isn't actual entry point of a program. You will believe it's true after you look at this simple program in debugger:
+But if you are interested in low-level programming, you may already know that the `main` function isn't the actual entry point of a program. You will believe it's true after you look at this simple program in debugger:
 
 ```C
 int main(int argc, char *argv[]) {
@@ -69,7 +69,7 @@ Local exec file:
 	0x0000000000601034 - 0x0000000000601038 is .bss
 ```
 
-Note on `Entry point: 0x400430` line. Now we know the actual address of entry point of our program. Let's put breakpoint by this address, run our program and see what happens:
+Note on `Entry point: 0x400430` line. Now we know the actual address of entry point of our program. Let's put a breakpoint by this address, run our program and see what happens:
 
 ```
 (gdb) break *0x400430
@@ -80,9 +80,9 @@ Starting program: /home/alex/program
 Breakpoint 1, 0x0000000000400430 in _start ()
 ```
 
-Interesting. We don't see execution of `main` function here, but we have seen that another function is called. This function is `_start` and as debugger shows us, it is actual entry point of our program. Where is this function from? Who does call `main` and when is it called. I will try to answer all the questions in the following post.
+Interesting. We don't see execution of the `main` function here, but we have seen that another function is called. This function is `_start` and as our debugger shows us, it is the actual entry point of our program. Where is this function from? Who does call `main` and when is it called? I will try to answer all these questions in the following post.
 
-How kernel does start new program
+How the kernel starts a new program
 --------------------------------------------------------------------------------
 
 First of all, let's take a look at the following simple `C` program:
@@ -119,11 +119,11 @@ $ ./sum
 x + y + z = 6
 ```
 
-Ok, everything looks pretty good up to now. You may already know that there is special family of [system calls](https://en.wikipedia.org/wiki/System_call) - [exec*](http://man7.org/linux/man-pages/man3/execl.3.html) system calls. As we read in the man page:
+Ok, everything looks pretty good up to now. You may already know that there is a special family of functions - [exec*](http://man7.org/linux/man-pages/man3/execl.3.html). As we read in the man page:
 
 > The exec() family of functions replaces the current process image with a new process image.
 
-If you have read fourth [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) of the chapter which describes [system calls](https://en.wikipedia.org/wiki/System_call), you may know that for example [execve](http://linux.die.net/man/2/execve) system call is defined in the [files/exec.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/fs/exec.c#L1888) source code file and looks like:
+All the `exec*` functions are simple frontends to the [execve](http://man7.org/linux/man-pages/man2/execve.2.html) system call. If you have read the fourth [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) of the chapter which describes [system calls](https://en.wikipedia.org/wiki/System_call), you may know that the [execve](http://linux.die.net/man/2/execve) system call is defined in the [files/exec.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/fs/exec.c#L1888) source code file and looks like:
 
 ```C
 SYSCALL_DEFINE3(execve,
@@ -135,22 +135,22 @@ SYSCALL_DEFINE3(execve,
 }
 ```
 
-It takes executable file name, set of command line arguments and set of enviroment variables. As you may guess, everything is done by the `do_execve` function. I will not describe implementation of the `do_execve` function in details because you can read about this in [here](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/arch/x86/kernel/process_64.c#L239) source code file.
+It takes an executable file name, set of command line arguments, and set of enviroment variables. As you may guess, everything is done by the `do_execve` function. I will not describe the implementation of the `do_execve` function in detail because you can read about this in [here](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/arch/x86/kernel/process_64.c#L239) source code file.
 
-The `start_thread` function sets new value to [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation) and program execution address. From this point, new process is ready to start. Once the [context switch](https://en.wikipedia.org/wiki/Context_switch) will be done, control will be returned to the userspace with new values of registers and new executable will be started to execute.
+The `start_thread` function sets new value to [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation) and program execution address. From this point, our new process is ready to start. Once the [context switch](https://en.wikipedia.org/wiki/Context_switch) will be done, control will be returned to userspace with new values of registers and the new executable will be started to execute.
 
-That's all from the kernel side. The Linux kernel prepares binary image for execution and its execution starts right after context switch and returns controll to userspace when it is finished. But it does not answer on questions like where is from `_start` come and others. Let's try to answer on these questions in the next paragraph.
+That's all from the kernel side. The Linux kernel prepares the binary image for execution and its execution starts right after the context switch and returns controll to userspace when it is finished. But it does not answer our questions like where does `_start` come from and others. Let's try to answer these questions in the next paragraph.
 
-How does program start in userspace
+How does a program start in userspace
 --------------------------------------------------------------------------------
 
-In the previous paragraph we saw how an executable file is prepared to run by the Linux kernel. Let's look at the same, but from userspace side. We already know that entry point of each program is `_start` function. But where is this function from? It may came from a library. But if you remember correctly we didn't link our program with any libraries during compilation of our program:
+In the previous paragraph we saw how an executable file is prepared to run by the Linux kernel. Let's look at the same, but from userspace side. We already know that the entry point of each program is its `_start` function. But where is this function from? It may came from a library. But if you remember correctly we didn't link our program with any libraries during compilation of our program:
 
 ```
 $ gcc -Wall program.c -o sum
 ```
 
-You may guess that `_start` comes from [stanard libray](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass `-v` option to gcc which will enable `verbose mode`, you will see following long output. Full output is not interesting for us, let's look at the following steps: 
+You may guess that `_start` comes from the [stanard libray](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass the `-v` option to gcc which will enable `verbose mode`, you will see a long output. The full output is not interesting for us, let's look at the following steps: 
 
 First of all, our program should be compiled with `gcc`:
 
@@ -165,7 +165,7 @@ $ gcc -v -ggdb program.c -o sum
 ...
 ```
 
-The `cc1` compiler will compile our `C` source code and produce assembly `/tmp/ccvUWZkF.s` file. After this we can see that our assembly file will be compiled into object file with `GNU as` assembler:
+The `cc1` compiler will compile our `C` source code and an produce assembly named `/tmp/ccvUWZkF.s` file. After this we can see that our assembly file will be compiled into object file with the `GNU as` assembler:
 
 ```
 $ gcc -v -ggdb program.c -o sum
@@ -200,7 +200,7 @@ $ ldd program
 	/lib64/ld-linux-x86-64.so.2 (0x0000556198231000)
 ```
 
-as we use some stuff from there like `printf` and etc. But not only. That's why we will get error when we will pass `-nostdlib` option to the compiler:
+as we use some stuff from there like `printf` and etc. But not only. That's why we will get an error when we pass `-nostdlib` option to the compiler:
 
 ```
 $ gcc -nostdlib program.c -o program
@@ -210,14 +210,14 @@ $ gcc -nostdlib program.c -o program
 collect2: error: ld returned 1 exit status
 ```
 
-Besides other errors, we also see that `_start` symbol is undefined. So now we are sure that the `_start` function comes from standard library. But even if we link it with standard library, it will not be compiled successfully anyway:
+Besides other errors, we also see that `_start` symbol is undefined. So now we are sure that the `_start` function comes from standard library. But even if we link it with the standard library, it will not be compiled successfully anyway:
 
 ```
 $ gcc -nostdlib -lc -ggdb program.c -o program
 /usr/bin/ld: warning: cannot find entry symbol _start; defaulting to 0000000000400350
 ```
 
-Ok, compiler does not complain about undefined reference of standard library functions as we linked our program with `/usr/lib64/libc.so.6`, but the `_start` symbol isn't resolved yet. Let's return to the verbose output of `gcc` and look at the parameters of `collect2`. The most important thing that we may see is that our program is linked not only with standard library, but also with some object files. The first object file is: `/lib64/crt1.o`. And if we look inside this object file with `objdump` util, we will see the `_start` symbol: 
+Ok, the compiler does not complain about undefined reference of standard library functions anymore as we linked our program with `/usr/lib64/libc.so.6`, but the `_start` symbol isn't resolved yet. Let's return to the verbose output of `gcc` and look at the parameters of `collect2`. The most important thing that we may see is that our program is linked not only with the standard library, but also with some object files. The first object file is: `/lib64/crt1.o`. And if we look inside this object file with `objdump`, we will see the `_start` symbol: 
 
 ```
 $ objdump -d /lib64/crt1.o 
@@ -264,7 +264,7 @@ As described in the [ELF](http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf) spe
 > Similarly, shared objects may have termination functions, which are executed with the atexit (BA_OS)
 > mechanism after the base process begins its termination sequence.
 
-So we need to put address of termination function to the `r9` register as it will be passed `__libc_start_main` in future as sixth argument. Note that the address of the termination function initially is located in the `rdx` register. Other registers besides `rdx` and `rsp` contain unspecified values. Actually main point of the `_start` function is to call `__libc_start_main`. So the next action is to prepare for this function.
+So we need to put the address of the termination function to the `r9` register as it will be passed to `__libc_start_main` in future as sixth argument. Note that the address of the termination function initially is located in the `rdx` register. Other registers besides `rdx` and `rsp` contain unspecified values. Actually the main point of the `_start` function is to call `__libc_start_main`. So the next action is to prepare for this function.
 
 The signature of the `__libc_start_main` function is located in the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=9a56dcbbaeb7ef85c495b4df9ab1d0b13454c043;hb=HEAD#l107) source code file. Let's look on it:
 
@@ -278,46 +278,54 @@ STATIC int LIBC_START_MAIN (int (*main) (int, char **, char **),
 			                void *stack_end)
 ```
 
-It takes address of the `main` function of a program, `argc` and `argv`. `init` and `fini` functions are constructor and destructor of the program. The `rtld_fini` is termination function which will be called after the program will be exited to terminate and free dynamic section. The last parameter of the `__libc_start_main` is the pointer to the stack of the program. Before we can call the `__libc_start_main` function, all of these parameters must be prepared and passed to it. Let's return to the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file and continue to see what happens before the `__libc_start_main` function will be called from there.
+It takes the address of the `main` function of a program, `argc` and `argv`. `init` and `fini` functions are constructor and destructor of the program. The `rtld_fini` is the termination function which will be called after the program will be exited to terminate and free its dynamic section. The last parameter of the `__libc_start_main` is a pointer to the stack of the program. Before we can call the `__libc_start_main` function, all of these parameters must be prepared and passed to it. Let's return to the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file and continue to see what happens before the `__libc_start_main` function will be called from there.
 
-We can get all the arguments we need for `__libc_start_main` function from the stack. As `_start` is called, our stack looks like:
+We can get all the arguments we need for `__libc_start_main` function from the stack. At the very beginning, when `_start` is called, our stack looks like:
 
 ```
 +-----------------+
 |       NULL      |
 +-----------------+ 
+|       ...       |
 |       envp      |
+|       ...       |
 +-----------------+ 
 |       NULL      |
 +------------------
-|       argv      | <- rsp
+|       ...       |
+|       argv      |
+|       ...       |
 +------------------
-|       argc      |
+|       argc      | <- rsp
 +-----------------+ 
 ```
 
-After we cleared `ebp` register and saved address of the termination function in the `r9` register, we pop element from the stack to the `rsi` register, so after this `rsp` will point to the `argv` array and `rsi` will contain count of command line arguemnts passed to the program:
+After we cleared `ebp` register and saved the address of the termination function in the `r9` register, we pop an element from the stack to the `rsi` register, so after this `rsp` will point to the `argv` array and `rsi` will contain count of command line arguemnts passed to the program:
 
 ```
 +-----------------+
 |       NULL      |
 +-----------------+ 
+|       ...       |
 |       envp      |
+|       ...       |
 +-----------------+ 
 |       NULL      |
 +------------------
-|       argv      | <- rsp
+|       ...       |
+|       argv      |
+|       ...       | <- rsp
 +-----------------+
 ```
 
-After this we move address of the `argv` array to the `rdx` register
+After this we move the address of the `argv` array to the `rdx` register
 
 ```assembly
 popq %rsi
 mov %RSP_LP, %RDX_LP
 ```
 
-From this moment we have `argc`, `argv`. We still need to put pointers to the construtor, destructor in appropriate registers and pass pointer to the stack. At the first following three lines we align stack to `16` bytes boundary as suggested in [ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf) and push `rax` which contains garbage:
+From this moment we have `argc`cand `argv`. We still need to put pointers to the construtor, destructor in appropriate registers and pass pointer to the stack. At the first following three lines we align stack to `16` bytes boundary as suggested in [ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf) and push `rax` which contains garbage:
 
 ```assembly
 and  $~15, %RSP_LP
@@ -329,7 +337,7 @@ mov $__libc_csu_init, %RCX_LP
 mov $main, %RDI_LP
 ```
 
-After stack aligning we push address of the stack, move addresses of contstructor and destructor to the `r8` and `rcx` registers and address of the `main` symbol to the `rdi`. From this moment we can call the `__libc_start_main` function from the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD).
+After stack aligning we push the address of the stack, move the addresses of contstructor and destructor to the `r8` and `rcx` registers and address of the `main` symbol to the `rdi`. From this moment we can call the `__libc_start_main` function from the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD).
 
 Before we look at the `__libc_start_main` function, let's add the `/lib64/crt1.o` and try to compile our program again:
 
@@ -342,7 +350,7 @@ $ gcc -nostdlib /lib64/crt1.o -lc -ggdb program.c -o program
 collect2: error: ld returned 1 exit status
 ```
 
-Now we see another error that both `__libc_csu_fini` and `__libc_csu_init` functions are not found. We know that addresses of these two functions are passed to the `__libc_start_main` as parameters and also these functions are constructor and destructor of our programs. But what do `constructor` and `destructor` in terms of `C` program means? We already saw the quote from the [ELF](http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf) specification:
+Now we see another error that both `__libc_csu_fini` and `__libc_csu_init` functions are not found. We know that the addresses of these two functions are passed to the `__libc_start_main` as parameters and also these functions are constructor and destructor of our programs. But what do `constructor` and `destructor` in terms of `C` program means? We already saw the quote from the [ELF](http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf) specification:
 
 > After the dynamic linker has built the process image and performed the relocations, each shared object
 > gets the opportunity to execute some initialization code.
@@ -355,7 +363,7 @@ So the linker creates two special sections besides usual sections like `.text`, 
 * `.init`
 * `.fini`
 
-We can find them with `readelf` util:
+We can find them with the `readelf` util:
 
 ```
 $ readelf -e test | grep init
@@ -365,9 +373,9 @@ $ readelf -e test | grep fini
   [15] .fini             PROGBITS         0000000000400504  00000504
 ```
 
-Both of these sections will be placed at the start and end of binary image and contain routines which are called constructor and destructor respectively. The main point of these routines is to do some initialization/finalization like initialization of global variables, such as [errno](http://man7.org/linux/man-pages/man3/errno.3.html), allocation and deallocation of memory for system routines and etc., before actual code of a program is executed.
+Both of these sections will be placed at the start and end of the binary image and contain routines which are called constructor and destructor respectively. The main point of these routines is to do some initialization/finalization like initialization of global variables, such as [errno](http://man7.org/linux/man-pages/man3/errno.3.html), allocation and deallocation of memory for system routines and etc., before the actual code of a program is executed.
 
-You may infer from names of these functions, they will be called before `main` function and after the `main` function. Definitions of `.init` and `.fini` sections are located in the `/lib64/crti.o` and if we add this object file:
+You may infer from the names of these functions, they will be called before the `main` function and after the `main` function. Definitions of `.init` and `.fini` sections are located in the `/lib64/crti.o` and if we add this object file:
 
 ```
 $ gcc -nostdlib /lib64/crt1.o /lib64/crti.o  -lc -ggdb program.c -o program
@@ -380,7 +388,7 @@ $ ./program
 Segmentation fault (core dumped)
 ```
 
-Yeah, we got segmentation fault. Let's look inside of the `lib64/crti.o` with `objdump` util:
+Yeah, we got segmentation fault. Let's look inside of the `lib64/crti.o` with `objdump`:
 
 ```
 $ objdump -D /lib64/crti.o
@@ -420,7 +428,7 @@ _init:
 	call PREINIT_FUNCTION
 ```
 
-It contains definition of the `.init` section and assembly code does 16-byte stack alignment and next we move address of the `PREINIT_FUNCTION` and if it is zero we don't call it:
+It contains the definition of the `.init` section and assembly code does 16-byte stack alignment and next we move address of the `PREINIT_FUNCTION` and if it is zero we don't call it:
 
 ```
 00000000004003c8 <_init>:
@@ -433,7 +441,7 @@ It contains definition of the `.init` section and assembly code does 16-byte sta
   4003e1:       c3                      retq
 ```
 
-where the `PREINIT_FUNCTION` is the `__gmon_start__` which does setup for profiling. You may note that we have no return instruction in the [sysdeps/x86_64/crti.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crti.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD). Actually that's why we got segmentation fault. Prolog of `_init` and `_fini` is placed in the [sysdeps/x86_64/crtn.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crtn.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD) assembly file:
+where the `PREINIT_FUNCTION` is the `__gmon_start__` which does setup for profiling. You may note that we have no return instruction in the [sysdeps/x86_64/crti.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crti.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD). Actually that's why we got a segmentation fault. Prolog of `_init` and `_fini` is placed in the [sysdeps/x86_64/crtn.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crtn.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD) assembly file:
 
 ```assembly
 .section .init,"ax",@progbits

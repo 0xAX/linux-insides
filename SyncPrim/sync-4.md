@@ -47,9 +47,9 @@ struct mutex {
 };
 ```
 
-structure in the Linux kernel. This structure is defined in the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file and contains similar to the `semaphore` structure set of fields. The first field of the `mutex` structure is - `count`. Value of this field represents state of a `mutex`. In a case when the value of the `count` field is `1`, a `mutex` is in `unlocked` state. When the value of the `count` field is `zero`, a `mutex` is in the `locked` state. Additionally value of the `count` field may be `negative`. In this case a `mutex` is in the `locked` state and has possible waiters.
+structure in the Linux kernel. This structure is defined in the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and contains similar to the `semaphore` structure set of fields. The first field of the `mutex` structure is - `count`. Value of this field represents state of a `mutex`. In a case when the value of the `count` field is `1`, a `mutex` is in `unlocked` state. When the value of the `count` field is `zero`, a `mutex` is in the `locked` state. Additionally value of the `count` field may be `negative`. In this case a `mutex` is in the `locked` state and has possible waiters.
 
-The next two fields of the `mutex` structure - `wait_lock` and `wait_list` are [spinlock](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) for the protection of a `wait queue` and list of waiters which represents this `wait queue` for a certain lock. As you may notice, the similarity of the `mutex` and `semaphore` structures ends. Remaining fields of the `mutex` structure, as we may see depends on different configuration options of the Linux kernel.
+The next two fields of the `mutex` structure - `wait_lock` and `wait_list` are [spinlock](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) for the protection of a `wait queue` and list of waiters which represents this `wait queue` for a certain lock. As you may notice, the similarity of the `mutex` and `semaphore` structures ends. Remaining fields of the `mutex` structure, as we may see depends on different configuration options of the Linux kernel.
 
 The first field - `owner` represents [process](https://en.wikipedia.org/wiki/Process_%28computing%29) which acquired a lock. As we may see, existence of this field in the `mutex` structure depends on the `CONFIG_DEBUG_MUTEXES` or `CONFIG_MUTEX_SPIN_ON_OWNER` kernel configuration options. Main point of this field and the next `osq` fields is support of `optimistic spinning` which we will see later. The last two fields - `magic` and `dep_map` are used only in [debugging](https://en.wikipedia.org/wiki/Debugging) mode. The `magic` field is to storing a `mutex` related information for debugging and the second field - `lockdep_map` is for [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
 
@@ -77,7 +77,7 @@ struct mutex_waiter {
 };
 ```
 
-structure from the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file and will be sleep. Before we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) which is provided by the Linux kernel for manipulation with `mutexes`, let's consider the `mutex_waiter` structure. If you have read the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-3.html) of this chapter, you may notice that the `mutex_waiter` structure is similar to the `semaphore_waiter` structure from the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file:
+structure from the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and will be sleep. Before we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) which is provided by the Linux kernel for manipulation with `mutexes`, let's consider the `mutex_waiter` structure. If you have read the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-3.html) of this chapter, you may notice that the `mutex_waiter` structure is similar to the `semaphore_waiter` structure from the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file:
 
 ```C
 struct semaphore_waiter {
@@ -94,7 +94,7 @@ Now we know what is it `mutex` and how it is represented the Linux kernel. In th
 Mutex API
 --------------------------------------------------------------------------------
 
-Ok, in the previous paragraph we knew what is it `mutex` synchronization primitive and saw the `mutex` structure which represents `mutex` in the Linux kernel. Now it's time to consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) for manipulation of mutexes. Description of the `mutex` API is located in the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file. As always, before we will consider how to acquire and release a `mutex`, we need to know how to initialize it.
+Ok, in the previous paragraph we knew what is it `mutex` synchronization primitive and saw the `mutex` structure which represents `mutex` in the Linux kernel. Now it's time to consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) for manipulation of mutexes. Description of the `mutex` API is located in the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file. As always, before we will consider how to acquire and release a `mutex`, we need to know how to initialize it.
 
 There are two approaches to initialize a `mutex`. The first is to do it statically. For this purpose the Linux kernel provides following:
 
@@ -114,9 +114,9 @@ macro. Let's consider implementation of this macro. As we may see, the `DEFINE_M
 }
 ```
 
-This macro is defined in the [same](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file and as we may understand it initializes fields of the `mutex` structure the initial values. The `count` field get initialized with the `1` which represents `unlocked` state of a mutex. The `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) get initialized to the unlocked state and the last field `wait_list` to empty [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html).
+This macro is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and as we may understand it initializes fields of the `mutex` structure the initial values. The `count` field get initialized with the `1` which represents `unlocked` state of a mutex. The `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) get initialized to the unlocked state and the last field `wait_list` to empty [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html).
 
-The second approach allows us to initialize a `mutex` dynamically. To do this we need to call the `__mutex_init` function from the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/master/kernel/locking/mutex.c) source code file. Actually, the `__mutex_init` function rarely called directly. Instead of the `__mutex_init`, the:
+The second approach allows us to initialize a `mutex` dynamically. To do this we need to call the `__mutex_init` function from the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/mutex.c) source code file. Actually, the `__mutex_init` function rarely called directly. Instead of the `__mutex_init`, the:
 
 ```C
 # define mutex_init(mutex)                \
@@ -150,7 +150,7 @@ As we may see the `__mutex_init` function takes three arguments:
 * `name` - name of mutex for debugging purpose;
 * `key`  - key for [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt).
 
-At the beginning of the `__mutex_init` function, we may see initialization of the `mutex` state. We set it to `unlocked` state with the `atomic_set` function which atomically set the give variable to the given value. After this we may see initialization of the `spinlock` to the unlocked state which will protect `wait queue` of the `mutex` and initialization of the `wait queue` of the `mutex`. After this we clear owner of the `lock` and initialize optimistic queue by the call of the `osq_lock_init` function from the [include/linux/osq_lock.h](https://github.com/torvalds/linux/blob/master/include/linux/osq_lock.h) header file. This function just sets the tail of the optimistic queue to the unlocked state:
+At the beginning of the `__mutex_init` function, we may see initialization of the `mutex` state. We set it to `unlocked` state with the `atomic_set` function which atomically set the give variable to the given value. After this we may see initialization of the `spinlock` to the unlocked state which will protect `wait queue` of the `mutex` and initialization of the `wait queue` of the `mutex`. After this we clear owner of the `lock` and initialize optimistic queue by the call of the `osq_lock_init` function from the [include/linux/osq_lock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/osq_lock.h) header file. This function just sets the tail of the optimistic queue to the unlocked state:
 
 ```C
 static inline bool osq_is_locked(struct optimistic_spin_queue *lock)
@@ -161,7 +161,7 @@ static inline bool osq_is_locked(struct optimistic_spin_queue *lock)
 
 In the end of the `__mutex_init` function we may see the call of the `debug_mutex_init` function, but as I already wrote in previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will not consider debugging related stuff in this chapter.
 
-After the `mutex` structure is initialized, we may go ahead and will look at the `lock` and `unlock` API of `mutex` synchronization primitive. Implementation of `mutex_lock` and `mutex_unlock` functions located in the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/master/kernel/locking/mutex.c) source code file. First of all let's start from the implementation of the `mutex_lock`. It looks:
+After the `mutex` structure is initialized, we may go ahead and will look at the `lock` and `unlock` API of `mutex` synchronization primitive. Implementation of `mutex_lock` and `mutex_unlock` functions located in the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/mutex.c) source code file. First of all let's start from the implementation of the `mutex_lock`. It looks:
 
 ```C
 void __sched mutex_lock(struct mutex *lock)
@@ -172,9 +172,9 @@ void __sched mutex_lock(struct mutex *lock)
 }
 ```
 
-We may see the call of the `might_sleep` macro from the [include/linux/kernel.h](https://github.com/torvalds/linux/blob/master/include/linux/kernel.h) header file at the beginning of the `mutex_lock` function. Implementation of this macro depends on the `CONFIG_DEBUG_ATOMIC_SLEEP` kernel configuration option and if this option is enabled, this macro just prints a stack trace if it was executed in [atomic](https://en.wikipedia.org/wiki/Linearizability) context. This macro is helper for debugging purposes. In other way this macro does nothing.
+We may see the call of the `might_sleep` macro from the [include/linux/kernel.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/kernel.h) header file at the beginning of the `mutex_lock` function. Implementation of this macro depends on the `CONFIG_DEBUG_ATOMIC_SLEEP` kernel configuration option and if this option is enabled, this macro just prints a stack trace if it was executed in [atomic](https://en.wikipedia.org/wiki/Linearizability) context. This macro is helper for debugging purposes. In other way this macro does nothing.
 
-After the `might_sleep` macro, we may see the call of the `__mutex_fastpath_lock` function. This function is architecture-specific and as we consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture in this book, the implementation of the `__mutex_fastpath_lock` is located in the [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/mutex_64.h) header file. As we may understand from the name of the `__mutex_fastpath_lock` function, this function will try to acquire lock in a fast path or in other words this function will try to decrement the value of the `count` of the given mutex.
+After the `might_sleep` macro, we may see the call of the `__mutex_fastpath_lock` function. This function is architecture-specific and as we consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture in this book, the implementation of the `__mutex_fastpath_lock` is located in the [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/mutex_64.h) header file. As we may understand from the name of the `__mutex_fastpath_lock` function, this function will try to acquire lock in a fast path or in other words this function will try to decrement the value of the `count` of the given mutex.
 
 Implementation of the `__mutex_fastpath_lock` function consists from two parts. The first part is [inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/asm.html) statement. Let's look at it:
 
@@ -186,7 +186,7 @@ asm_volatile_goto(LOCK_PREFIX "   decl %0\n"
                               : exit);
 ```
 
-First of all, let's pay attention to the `asm_volatile_goto`. This macro is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) header file and just expands to the two inline assembly statements:
+First of all, let's pay attention to the `asm_volatile_goto`. This macro is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/compiler-gcc.h) header file and just expands to the two inline assembly statements:
 
 ```C
 #define asm_volatile_goto(x...) do { asm goto(x); asm (""); } while (0)
@@ -217,7 +217,7 @@ will be called after our inline assembly statement. The `fail_fn` is the second 
 mutex_set_owner(lock);
 ```
 
-in the end of the `mutex_lock`. The `mutex_set_owner` function is defined in the [kernel/locking/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) header file and just sets owner of a lock to the current process:
+in the end of the `mutex_lock`. The `mutex_set_owner` function is defined in the [kernel/locking/mutex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and just sets owner of a lock to the current process:
 
 ```C
 static inline void mutex_set_owner(struct mutex *lock)
@@ -226,7 +226,7 @@ static inline void mutex_set_owner(struct mutex *lock)
 }
 ```
 
-In other way, let's consider situation when a process which wants to acquire a lock is unable to do it, because another process already acquired the same lock. We already know that the `__mutex_lock_slowpath` function will be called in this case. Let's consider implementation of this function. This function is defined in the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/master/kernel/locking/mutex.c) source code file and starts from the obtaining of the proper mutex by the mutex state given from the `__mutex_fastpath_lock` with the `container_of` macro:
+In other way, let's consider situation when a process which wants to acquire a lock is unable to do it, because another process already acquired the same lock. We already know that the `__mutex_lock_slowpath` function will be called in this case. Let's consider implementation of this function. This function is defined in the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/mutex.c) source code file and starts from the obtaining of the proper mutex by the mutex state given from the `__mutex_fastpath_lock` with the `container_of` macro:
 
 ```C
 __visible void __sched
@@ -239,7 +239,7 @@ __mutex_lock_slowpath(atomic_t *lock_count)
 }
 ```
 
-and call the `__mutex_lock_common` function with the obtained `mutex`. The `__mutex_lock_common` function starts from [preemtion](https://en.wikipedia.org/wiki/Preemption_%28computing%29) disabling until rescheduling:
+and call the `__mutex_lock_common` function with the obtained `mutex`. The `__mutex_lock_common` function starts from [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) disabling until rescheduling:
 
 ```C
 preempt_disable();
@@ -279,7 +279,7 @@ while (true) {
 }
 ```
 
-and try to acquire a lock. First of all we try to take current owner and if the owner exists (it may not exists in a case when a process already released a mutex) and we wait for it in the `mutex_spin_on_owner` function before the owner will release a lock. If new task with higher priority have appeared during wait of the lock owner, we break the loop and go to sleep. In other case, the process already may release a lock, so we try to acquire a lock with the `mutex_try_to_acquired`. If this operation finished successfully, we set new owner for the given mutex, removes ourself from the `MCS` wait queue and exit from the `mutex_optimistic_spin` function. At this state a lock will be acquired by a process and we enable [preemtion](https://en.wikipedia.org/wiki/Preemption_%28computing%29) and exit from the `__mutex_lock_common` function:
+and try to acquire a lock. First of all we try to take current owner and if the owner exists (it may not exists in a case when a process already released a mutex) and we wait for it in the `mutex_spin_on_owner` function before the owner will release a lock. If new task with higher priority have appeared during wait of the lock owner, we break the loop and go to sleep. In other case, the process already may release a lock, so we try to acquire a lock with the `mutex_try_to_acquired`. If this operation finished successfully, we set new owner for the given mutex, removes ourself from the `MCS` wait queue and exit from the `mutex_optimistic_spin` function. At this state a lock will be acquired by a process and we enable [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) and exit from the `__mutex_lock_common` function:
 
 ```C
 if (mutex_optimistic_spin(lock, ww_ctx, use_ww_ctx)) {
@@ -348,7 +348,7 @@ for (;;) {
 
 where try to acquire a lock again and exit if this operation was successful. Yes, we try to acquire a lock again right after unsuccessful try  before the loop. We need to do it to make sure that we get a wakeup once a lock will be unlocked. Besides this, it allows us to acquire a lock after sleep.  In other case we check the current process for pending [signals](https://en.wikipedia.org/wiki/Unix_signal) and exit if the process was interrupted by a `signal` during wait for a lock acquisition. In the end of loop we didn't acquire a lock, so we set the task state for `TASK_UNINTERRUPTIBLE` and go to sleep with call of the `schedule_preempt_disabled` function.
 
-That's all. We have considered all three possible paths through which a process may pass when it will wan to acquire a lock. Now let's consider how `mutex_unlock` is implemented. When the `mutex_unlock` will be called by a process which wants to release a lock, the `__mutex_fastpath_unlock` will be called from the  [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/mutex_64.h)  header file:
+That's all. We have considered all three possible paths through which a process may pass when it will wan to acquire a lock. Now let's consider how `mutex_unlock` is implemented. When the `mutex_unlock` will be called by a process which wants to release a lock, the `__mutex_fastpath_unlock` will be called from the  [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/mutex_64.h)  header file:
 
 ```C
 void __sched mutex_unlock(struct mutex *lock)
@@ -435,6 +435,6 @@ Links
 * [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
 * [Lock instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [JNS instruction](http://unixwiz.net/techtips/x86-jumps.html)
-* [preemtion](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
+* [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [Unix signals](https://en.wikipedia.org/wiki/Unix_signal)
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-3.html)

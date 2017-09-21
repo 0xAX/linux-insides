@@ -10,7 +10,7 @@ The kernel provides an API for creating per-cpu variables - the `DEFINE_PER_CPU`
         DEFINE_PER_CPU_SECTION(type, name, "")
 ```
 
-This macro defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) as many other macros for work with per-cpu variables. Now we will see how this feature is implemented.
+This macro defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/percpu-defs.h) as many other macros for work with per-cpu variables. Now we will see how this feature is implemented.
 
 Take a look at the `DECLARE_PER_CPU` definition. We see that it takes 2 parameters: `type` and `name`, so we can use it to create per-cpu variables, for example like this:
 
@@ -53,7 +53,7 @@ It means that we will have a `per_cpu_n` variable in the `.data..percpu` section
 
 Ok, now we know that when we use the `DEFINE_PER_CPU` macro, a per-cpu variable in the `.data..percpu` section will be created. When the kernel initializes it calls the `setup_per_cpu_areas` function which loads the `.data..percpu` section multiple times, one section per CPU.
 
-Let's look at the per-CPU areas initialization process. It starts in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) from the call of the `setup_per_cpu_areas` function which is defined in the [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c).
+Let's look at the per-CPU areas initialization process. It starts in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) from the call of the `setup_per_cpu_areas` function which is defined in the [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup_percpu.c).
 
 ```C
 pr_info("NR_CPUS:%d nr_cpumask_bits:%d nr_cpu_ids:%d nr_node_ids:%d\n",
@@ -80,7 +80,7 @@ percpu_alloc=	Select which percpu first chunk allocator to use.
 		and performance comparison.
 ```
 
-The [mm/percpu.c](https://github.com/torvalds/linux/blob/master/mm/percpu.c) contains the handler of this command line option:
+The [mm/percpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/percpu.c) contains the handler of this command line option:
 
 ```C
 early_param("percpu_alloc", percpu_alloc_setup);
@@ -218,7 +218,7 @@ where `NR_CPUS` is the number of CPUs. The `__per_cpu_offset` array is filled wi
 
 `RELOC_HIDE` just returns offset `(typeof(ptr)) (__ptr + (off))` and it will return a pointer to the variable.
 
-That's all! Of course it is not the full API, but a general overview. It can be hard to start with, but to understand per-cpu variables you mainly need to understand the  [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) magic.
+That's all! Of course it is not the full API, but a general overview. It can be hard to start with, but to understand per-cpu variables you mainly need to understand the  [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/percpu-defs.h) magic.
 
 Let's again look at the algorithm of getting a pointer to a per-cpu variable:
 

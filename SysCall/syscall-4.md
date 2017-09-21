@@ -24,7 +24,7 @@ In this part we will consider the way when we just launch an application from th
 
 Let's consider what does occur when we launch an application from the shell, what does shell do when we write program name, what does Linux kernel do etc. But before we will start to consider these interesting things, I want to warn that this book is about the Linux kernel. That's why we will see Linux kernel insides related stuff mostly in this part. We will not consider in details what does shell do, we will not consider complex cases, for example subshells etc.
 
-My default shell is - [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29), so I will consider how do bash shell launches a program. So let's start. The `bash` shell as well as any program that written with [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) programming language starts from the [main](https://en.wikipedia.org/wiki/Entry_point) function. If you will look on the source code of the `bash` shell, you will find the `main` function in the [shell.c](https://github.com/bminor/bash/blob/master/shell.c#L357) source code file. This function makes many different things before the main thread loop of the `bash` started to work. For example this function:
+My default shell is - [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29), so I will consider how do bash shell launches a program. So let's start. The `bash` shell as well as any program that written with [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) programming language starts from the [main](https://en.wikipedia.org/wiki/Entry_point) function. If you will look on the source code of the `bash` shell, you will find the `main` function in the [shell.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/shell.c#L357) source code file. This function makes many different things before the main thread loop of the `bash` started to work. For example this function:
 
 * checks and tries to open `/dev/tty`;
 * check that shell running in debug mode;
@@ -33,7 +33,7 @@ My default shell is - [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29
 * loads `.bashrc`, `.profile` and other configuration files;
 * and many many more.
 
-After all of these operations we can see the call of the `reader_loop` function. This function defined in the [eval.c](https://github.com/bminor/bash/blob/master/eval.c#L67) source code file and represents main thread loop or in other words it reads and executes commands. As the `reader_loop` function made all checks and read the given program name and arguments, it calls the `execute_command` function from the [execute_cmd.c](https://github.com/bminor/bash/blob/master/execute_cmd.c#L378) source code file. The `execute_command` function through the chain of the functions calls:
+After all of these operations we can see the call of the `reader_loop` function. This function defined in the [eval.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/eval.c#L67) source code file and represents main thread loop or in other words it reads and executes commands. As the `reader_loop` function made all checks and read the given program name and arguments, it calls the `execute_command` function from the [execute_cmd.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/execute_cmd.c#L378) source code file. The `execute_command` function through the chain of the functions calls:
 
 ```
 execute_command
@@ -73,7 +73,7 @@ So, a user application (`bash` in our case) calls the system call and as we alre
 execve system call
 --------------------------------------------------------------------------------
 
-We saw preparation before a system call called by a user application and after a system call handler finished its work in the second [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
+We saw preparation before a system call called by a user application and after a system call handler finished its work in the second [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/exec.c) source code file and as we already know it takes three arguments:
 
 ```
 SYSCALL_DEFINE3(execve,
@@ -115,7 +115,7 @@ if ((current->flags & PF_NPROC_EXCEEDED) &&
 current->flags &= ~PF_NPROC_EXCEEDED;
 ```
 
-If these two checks were successful we unset `PF_NPROC_EXCEEDED` flag in the flags of the current process to prevent fail of the `execve`. You can see that in the next step we call the `unshare_files` function that defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/master/kernel/fork.c) and unshares the files of the current task and check the result of this function:
+If these two checks were successful we unset `PF_NPROC_EXCEEDED` flag in the flags of the current process to prevent fail of the `execve`. You can see that in the next step we call the `unshare_files` function that defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/fork.c) and unshares the files of the current task and check the result of this function:
 
 ```C
 retval = unshare_files(&displaced);
@@ -123,7 +123,7 @@ if (retval)
 	goto out_ret;
 ```
 
-We need to call this function to eliminate potential leak of the execve'd binary's [file descriptor](https://en.wikipedia.org/wiki/File_descriptor). In the next step we start preparation of the `bprm` that represented by the `struct linux_binprm` structure (defined in the [include/linux/binfmts.h](https://github.com/torvalds/linux/blob/master/linux/binfmts.h) header file). The `linux_binprm` structure is used to hold the arguments that are used when loading binaries. For example it contains `vma` field which has `vm_area_struct` type and represents single memory area over a contiguous interval in a given address space where our application will be loaded, `mm` field which is memory descriptor of the binary, pointer to the top of memory and many other different fields.
+We need to call this function to eliminate potential leak of the execve'd binary's [file descriptor](https://en.wikipedia.org/wiki/File_descriptor). In the next step we start preparation of the `bprm` that represented by the `struct linux_binprm` structure (defined in the [include/linux/binfmts.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/linux/binfmts.h) header file). The `linux_binprm` structure is used to hold the arguments that are used when loading binaries. For example it contains `vma` field which has `vm_area_struct` type and represents single memory area over a contiguous interval in a given address space where our application will be loaded, `mm` field which is memory descriptor of the binary, pointer to the top of memory and many other different fields.
 
 First of all we allocate memory for this structure with the `kzalloc` function and check the result of the allocation:
 
@@ -199,7 +199,7 @@ if (retval)
 	goto out_unmark;
 ```
 
-The `bprm_mm_init` defined in the same source code file and as we can understand from the function's name, it makes initialization of the memory descriptor or in other words the `bprm_mm_init` function initializes `mm_struct` structure. This structure defined in the [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/master/include/mm_types.h) header file and represents address space of a process. We will not consider implementation of the `bprm_mm_init` function because we do not know many important stuff related to the Linux kernel memory manager, but we just need to know that this function initializes `mm_struct` and populate it with a temporary stack `vm_area_struct`.
+The `bprm_mm_init` defined in the same source code file and as we can understand from the function's name, it makes initialization of the memory descriptor or in other words the `bprm_mm_init` function initializes `mm_struct` structure. This structure defined in the [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/mm_types.h) header file and represents address space of a process. We will not consider implementation of the `bprm_mm_init` function because we do not know many important stuff related to the Linux kernel memory manager, but we just need to know that this function initializes `mm_struct` and populate it with a temporary stack `vm_area_struct`.
 
 After this we calculate the count of the command line arguments which are were passed to the our executable binary, the count of the environment variables and set it to the `bprm->argc` and `bprm->envc` respectively:
 
@@ -213,7 +213,7 @@ if ((retval = bprm->envc) < 0)
 	goto out;
 ```
 
-As you can see we do this operations with the help of the `count` function that defined in the [same](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and calculates the count of strings in the `argv` array. The `MAX_ARG_STRINGS` macro defined in the [include/uapi/linux/binfmts.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/binfmts.h) header file and as we can understand from the macro's name, it represents maximum number of strings that were passed to the `execve` system call. The value of the `MAX_ARG_STRINGS`:
+As you can see we do this operations with the help of the `count` function that defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/exec.c) source code file and calculates the count of strings in the `argv` array. The `MAX_ARG_STRINGS` macro defined in the [include/uapi/linux/binfmts.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/binfmts.h) header file and as we can understand from the macro's name, it represents maximum number of strings that were passed to the `execve` system call. The value of the `MAX_ARG_STRINGS`:
 
 ```C
 #define MAX_ARG_STRINGS 0x7FFFFFFF
@@ -249,7 +249,7 @@ And set the pointer to the top of new program's stack that we set in the `bprm_m
 bprm->exec = bprm->p;
 ```
 
-The top of the stack will contain the program filename and we store this fileneme to the `exec` field of the `linux_bprm` structure.
+The top of the stack will contain the program filename and we store this filename to the `exec` field of the `linux_bprm` structure.
 
 Now we have filled `linux_bprm` structure, we call the `exec_binprm` function:
 
@@ -394,7 +394,7 @@ That's all. From this point our program will be executed.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fourth and last part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from a user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run a user program.
+This is the end of the fourth part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from a user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run a user program.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 

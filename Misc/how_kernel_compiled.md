@@ -6,7 +6,7 @@ Introduction
 
 I won't tell you how to build and install a custom Linux kernel on your machine. If you need help with this, you can find many [resources](https://encrypted.google.com/search?q=building+linux+kernel#q=building+linux+kernel+from+source+code) that will help you do it. Instead, we will learn what occurs when you execute `make` in the root directory of the Linux kernel source code.
 
-When I started to study the source code of the Linux kernel, the [makefile](https://github.com/torvalds/linux/blob/master/Makefile) was the first file that I opened. And it was scary :). The [makefile](https://en.wikipedia.org/wiki/Make_%28software%29) contained `1591` lines of code when I wrote this part and the kernel was the [4.2.0-rc3](https://github.com/torvalds/linux/commit/52721d9d3334c1cb1f76219a161084094ec634dc) release.
+When I started to study the source code of the Linux kernel, the [makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) was the first file that I opened. And it was scary :). The [makefile](https://en.wikipedia.org/wiki/Make_%28software%29) contained `1591` lines of code when I wrote this part and the kernel was the [4.2.0-rc3](https://github.com/torvalds/linux/commit/52721d9d3334c1cb1f76219a161084094ec634dc) release.
 
 This makefile is the top makefile in the Linux kernel source code and the kernel building starts here. Yes, it is big, but moreover, if you've read the source code of the Linux kernel you may have noted that all directories containing source code has its own makefile. Of course it is not possible to describe how each source file is compiled and linked, so we will only study the standard compilation case. You will not find here building of the kernel's documentation, cleaning of the kernel source code, [tags](https://en.wikipedia.org/wiki/Ctags) generation, [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler) related stuff, etc... We will start from the `make` execution with the standard kernel configuration file and will finish with the building of the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage).
 
@@ -20,7 +20,7 @@ Preparation before the kernel compilation
 There are many things to prepare before the kernel compilation can be started. The main point here is to find and configure
 the type of compilation, to parse command line arguments that are passed to `make`, etc... So let's dive into the top `Makefile` of Linux kernel.
 
-The top `Makefile` of Linux kernel is responsible for building two major products: [vmlinux](https://en.wikipedia.org/wiki/Vmlinux) (the resident kernel image) and the modules (any module files). The [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) of the Linux kernel starts with the definition of following variables:
+The top `Makefile` of Linux kernel is responsible for building two major products: [vmlinux](https://en.wikipedia.org/wiki/Vmlinux) (the resident kernel image) and the modules (any module files). The [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) of the Linux kernel starts with the definition of following variables:
 
 ```Makefile
 VERSION = 4
@@ -129,7 +129,7 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
 				  -e s/sh[234].*/sh/ -e s/aarch64.*/arm64/ )
 ```
 
-As you can see, it executes the [uname](https://en.wikipedia.org/wiki/Uname) util that prints information about machine, operating system and architecture. As it gets the output of `uname`, it parses the output and assigns the result to the `SUBARCH` variable. Now that we have `SUBARCH`, we set the `SRCARCH` variable that provides the directory of the certain architecture and `hfr-arch` that provides the directory for the header files:
+As you can see, it executes the [uname](https://en.wikipedia.org/wiki/Uname) util that prints information about machine, operating system and architecture. As it gets the output of `uname`, it parses the output and assigns the result to the `SUBARCH` variable. Now that we have `SUBARCH`, we set the `SRCARCH` variable that provides the directory of the certain architecture and `hdr-arch` that provides the directory for the header files:
 
 ```Makefile
 ifeq ($(ARCH),i386)
@@ -183,7 +183,7 @@ Here we can see definition of these variables and the value of `KBUILD_BUILTIN` 
 include scripts/Kbuild.include
 ```
 
-The [Kbuild](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/kbuild.txt) or `Kernel Build System` is a special infrastructure to manage building the kernel and its modules. `kbuild` files have the same syntax as makefiles. The [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/master/scripts/Kbuild.include) file provides some generic definitions for the `kbuild` system. After including this `kbuild` file (back in [makefile](https://github.com/torvalds/linux/blob/master/Makefile)) we can see the definitions of the variables that are related to the different tools used during kernel and module compilation (like linker, compilers, utils from the [binutils](http://www.gnu.org/software/binutils/), etc...):
+The [Kbuild](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/kbuild.txt) or `Kernel Build System` is a special infrastructure to manage building the kernel and its modules. `kbuild` files have the same syntax as makefiles. The [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/Kbuild.include) file provides some generic definitions for the `kbuild` system. After including this `kbuild` file (back in [makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile)) we can see the definitions of the variables that are related to the different tools used during kernel and module compilation (like linker, compilers, utils from the [binutils](http://www.gnu.org/software/binutils/), etc...):
 
 ```Makefile
 AS		= $(CROSS_COMPILE)as
@@ -241,7 +241,7 @@ With that, we have finished all preparations. The next step is building the `vml
 Directly to the kernel build
 --------------------------------------------------------------------------------
 
-We have now finished all the preparations, and next step in the main makefile is related to the kernel build. Before this moment, nothing has been printed to the terminal by `make`. But now the first steps of the compilation are started. We need to go to line [598](https://github.com/torvalds/linux/blob/master/Makefile#L598) of the Linux kernel top makefile and we will find the `vmlinux` target there:
+We have now finished all the preparations, and next step in the main makefile is related to the kernel build. Before this moment, nothing has been printed to the terminal by `make`. But now the first steps of the compilation are started. We need to go to line [598](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile#L598) of the Linux kernel top makefile and we will find the `vmlinux` target there:
 
 ```Makefile
 all: vmlinux
@@ -250,13 +250,13 @@ all: vmlinux
 
 Don't worry that we have missed many lines in Makefile that are between `export RCS_FIND_IGNORE.....` and `all: vmlinux.....`. This part of the makefile is responsible for the `make *.config` targets and as I wrote in the beginning of this part we will see only building of the kernel in a general way.
 
-The `all:` target is the default when no target is given on the command line. You can see here that we include architecture specific makefile there (in our case it will be [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile)). From this moment we will continue from this makefile. As we can see `all` target depends on the `vmlinux` target that defined a little lower in the top makefile:
+The `all:` target is the default when no target is given on the command line. You can see here that we include architecture specific makefile there (in our case it will be [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile)). From this moment we will continue from this makefile. As we can see `all` target depends on the `vmlinux` target that defined a little lower in the top makefile:
 
 ```Makefile
 vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
 ```
 
-The `vmlinux` is the Linux kernel in a statically linked executable file format. The [scripts/link-vmlinux.sh](https://github.com/torvalds/linux/blob/master/scripts/link-vmlinux.sh) script links and combines different compiled subsystems into vmlinux. The second target is the `vmlinux-deps` that defined as:
+The `vmlinux` is the Linux kernel in a statically linked executable file format. The [scripts/link-vmlinux.sh](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/link-vmlinux.sh) script links and combines different compiled subsystems into vmlinux. The second target is the `vmlinux-deps` that defined as:
 
 ```Makefile
 vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_INIT) $(KBUILD_VMLINUX_MAIN)
@@ -302,7 +302,7 @@ prepare1: prepare2 $(version_h) include/generated/utsrelease.h \
 prepare2: prepare3 outputmakefile asm-generic
 ```
 
-The first `prepare0` expands to the `archprepare` that expands to the `archheaders` and `archscripts` that defined in the `x86_64` specific [Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile). Let's look on it. The `x86_64` specific makefile starts from the definition of the variables that are related to the architecture-specific configs ([defconfig](https://github.com/torvalds/linux/tree/master/arch/x86/configs), etc...). After this it defines flags for the compiling of the [16-bit](https://en.wikipedia.org/wiki/Real_mode) code, calculating of the `BITS` variable that can be `32` for `i386` or `64` for the `x86_64` flags for the assembly source code, flags for the linker and many many more (all definitions you can find in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile)). The first target is `archheaders` in the makefile generates syscall table:
+The first `prepare0` expands to the `archprepare` that expands to the `archheaders` and `archscripts` that defined in the `x86_64` specific [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile). Let's look on it. The `x86_64` specific makefile starts from the definition of the variables that are related to the architecture-specific configs ([defconfig](https://github.com/torvalds/linux/tree/master/arch/x86/configs), etc...). After this it defines flags for the compiling of the [16-bit](https://en.wikipedia.org/wiki/Real_mode) code, calculating of the `BITS` variable that can be `32` for `i386` or `64` for the `x86_64` flags for the assembly source code, flags for the linker and many many more (all definitions you can find in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile)). The first target is `archheaders` in the makefile generates syscall table:
 
 ```Makefile
 archheaders:
@@ -316,7 +316,7 @@ archscripts: scripts_basic
 	$(Q)$(MAKE) $(build)=arch/x86/tools relocs
 ```
 
-We can see that it depends on the `scripts_basic` target from the top [Makefile](https://github.com/torvalds/linux/blob/master/Makefile). At the first we can see the `scripts_basic` target that executes make for the [scripts/basic](https://github.com/torvalds/linux/blob/master/scripts/basic/Makefile) makefile:
+We can see that it depends on the `scripts_basic` target from the top [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile). At the first we can see the `scripts_basic` target that executes make for the [scripts/basic](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/basic/Makefile) makefile:
 
 ```Makefile
 scripts_basic:
@@ -333,14 +333,14 @@ always		:= $(hostprogs-y)
 $(addprefix $(obj)/,$(filter-out fixdep,$(always))): $(obj)/fixdep
 ```
 
-First program is `fixdep` - optimizes list of dependencies generated by [gcc](https://gcc.gnu.org/) that tells make when to remake a source code file. The second program is `bin2c`, which depends on the value of the `CONFIG_BUILD_BIN2C` kernel configuration option and is a very little C program that allows to convert a binary on stdin to a C include on stdout. You can note here a strange notation: `hostprogs-y`, etc... This notation is used in the all `kbuild` files and you can read more about it in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/makefiles.txt). In our case `hostprogs-y` tells `kbuild` that there is one host program named `fixdep` that will be built from `fixdep.c` that is located in the same directory where the `Makefile` is. The first output after we execute `make` in our terminal will be result of this `kbuild` file:
+First program is `fixdep` - optimizes list of dependencies generated by [gcc](https://gcc.gnu.org/) that tells make when to remake a source code file. The second program is `bin2c`, which depends on the value of the `CONFIG_BUILD_BIN2C` kernel configuration option and is a very little C program that allows to convert a binary on stdin to a C include on stdout. You can note here a strange notation: `hostprogs-y`, etc... This notation is used in the all `kbuild` files and you can read more about it in the [documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/makefiles.txt). In our case `hostprogs-y` tells `kbuild` that there is one host program named `fixdep` that will be built from `fixdep.c` that is located in the same directory where the `Makefile` is. The first output after we execute `make` in our terminal will be result of this `kbuild` file:
 
 ```
 $ make
   HOSTCC  scripts/basic/fixdep
 ```
 
-As `script_basic` target was executed, the `archscripts` target will execute `make` for the [arch/x86/tools](https://github.com/torvalds/linux/blob/master/arch/x86/tools/Makefile) makefile with the `relocs` target:
+As `script_basic` target was executed, the `archscripts` target will execute `make` for the [arch/x86/tools](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/tools/Makefile) makefile with the `relocs` target:
 
 ```Makefile
 $(Q)$(MAKE) $(build)=arch/x86/tools relocs
@@ -376,7 +376,7 @@ prepare0: archprepare FORCE
 	$(Q)$(MAKE) $(build)=.
 ```
 
-Note on the `build`. It defined in the [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/master/scripts/Kbuild.include) and looks like this:
+Note on the `build`. It defined in the [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/Kbuild.include) and looks like this:
 
 ```Makefile
 build := -f $(srctree)/scripts/Makefile.build obj
@@ -388,13 +388,13 @@ Or in our case it is current source directory - `.`:
 $(Q)$(MAKE) -f $(srctree)/scripts/Makefile.build obj=.
 ```
 
-The [scripts/Makefile.build](https://github.com/torvalds/linux/blob/master/scripts/Makefile.build) tries to find the `Kbuild` file by the given directory via the `obj` parameter, include this `Kbuild` files:
+The [scripts/Makefile.build](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/Makefile.build) tries to find the `Kbuild` file by the given directory via the `obj` parameter, include this `Kbuild` files:
 
 ```Makefile
 include $(kbuild-file)
 ```
 
-and build targets from it. In our case `.` contains the [Kbuild](https://github.com/torvalds/linux/blob/master/Kbuild) file that generates the `kernel/bounds.s` and the `arch/x86/kernel/asm-offsets.s`. After this the `prepare` target finished to work. The `vmlinux-dirs` also depends on the second target - `scripts` that compiles following programs: `file2alias`, `mk_elfconfig`, `modpost`, etc..... After scripts/host-programs compilation our `vmlinux-dirs` target can be executed. First of all let's try to understand what does `vmlinux-dirs` contain. For my case it contains paths of the following kernel directories:
+and build targets from it. In our case `.` contains the [Kbuild](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Kbuild) file that generates the `kernel/bounds.s` and the `arch/x86/kernel/asm-offsets.s`. After this the `prepare` target finished to work. The `vmlinux-dirs` also depends on the second target - `scripts` that compiles following programs: `file2alias`, `mk_elfconfig`, `modpost`, etc..... After scripts/host-programs compilation our `vmlinux-dirs` target can be executed. First of all let's try to understand what does `vmlinux-dirs` contain. For my case it contains paths of the following kernel directories:
 
 ```
 init usr arch/x86 kernel mm fs ipc security crypto block
@@ -402,7 +402,7 @@ drivers sound firmware arch/x86/pci arch/x86/power
 arch/x86/video net lib arch/x86/lib
 ```
 
-We can find definition of the `vmlinux-dirs` in the top [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) of the Linux kernel:
+We can find definition of the `vmlinux-dirs` in the top [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) of the Linux kernel:
 
 ```Makefile
 vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
@@ -464,7 +464,7 @@ vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
     +$(call if_changed,link-vmlinux)
 ```
 
-As you can see main purpose of it is a call of the [scripts/link-vmlinux.sh](https://github.com/torvalds/linux/blob/master/scripts/link-vmlinux.sh) script is linking of the all `built-in.o`(s) to the one statically linked executable and creation of the [System.map](https://en.wikipedia.org/wiki/System.map). In the end we will see following output:
+As you can see main purpose of it is a call of the [scripts/link-vmlinux.sh](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/link-vmlinux.sh) script is linking of the all `built-in.o`(s) to the one statically linked executable and creation of the [System.map](https://en.wikipedia.org/wiki/System.map). In the end we will see following output:
 
 ```
   LINK    vmlinux
@@ -500,7 +500,7 @@ The `bzImage` file is the compressed Linux kernel image. We can get it by execut
 all: bzImage
 ```
 
-in the [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile). Let's look on this target, it will help us to understand how this image builds. As I already said the `bzImage` target defined in the [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) and looks like this:
+in the [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile). Let's look on this target, it will help us to understand how this image builds. As I already said the `bzImage` target defined in the [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile) and looks like this:
 
 ```Makefile
 bzImage: vmlinux
@@ -515,7 +515,7 @@ We can see here, that first of all called `make` for the boot directory, in our 
 boot := arch/x86/boot
 ```
 
-The main goal now is to build the source code in the `arch/x86/boot` and `arch/x86/boot/compressed` directories, build `setup.bin` and `vmlinux.bin`, and build the `bzImage` from them in the end. First target in the [arch/x86/boot/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/Makefile) is the `$(obj)/setup.elf`:
+The main goal now is to build the source code in the `arch/x86/boot` and `arch/x86/boot/compressed` directories, build `setup.bin` and `vmlinux.bin`, and build the `bzImage` from them in the end. First target in the [arch/x86/boot/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/Makefile) is the `$(obj)/setup.elf`:
 
 ```Makefile
 $(obj)/setup.elf: $(src)/setup.ld $(SETUP_OBJS) FORCE
@@ -537,7 +537,7 @@ We already have the `setup.ld` linker script in the `arch/x86/boot` directory an
   CC      arch/x86/boot/edd.o
 ```
 
-The next source file is [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S), but we can't build it now because this target depends on the following two header files:
+The next source file is [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S), but we can't build it now because this target depends on the following two header files:
 
 ```Makefile
 $(obj)/header.o: $(obj)/voffset.h $(obj)/zoffset.h
@@ -550,7 +550,7 @@ The first is `voffset.h` generated by the `sed` script that gets two addresses f
 #define VO__text 0xffffffff81000000
 ```
 
-They are the start and the end of the kernel. The second is `zoffset.h` depens on the `vmlinux` target from the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile):
+They are the start and the end of the kernel. The second is `zoffset.h` depens on the `vmlinux` target from the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile):
 
 ```Makefile
 $(obj)/zoffset.h: $(obj)/compressed/vmlinux FORCE
@@ -627,7 +627,7 @@ and the creation of the `vmlinux.bin` from the `vmlinux`:
 objcopy  -O binary -R .note -R .comment -S arch/x86/boot/compressed/vmlinux arch/x86/boot/vmlinux.bin
 ```
 
-In the end we compile host program: [arch/x86/boot/tools/build.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tools/build.c) that will create our `bzImage` from the `setup.bin` and the `vmlinux.bin`:
+In the end we compile host program: [arch/x86/boot/tools/build.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/tools/build.c) that will create our `bzImage` from the `setup.bin` and the `vmlinux.bin`:
 
 ```
 arch/x86/boot/tools/build arch/x86/boot/setup.bin arch/x86/boot/vmlinux.bin arch/x86/boot/zoffset.h arch/x86/boot/bzImage
@@ -653,16 +653,16 @@ Links
 ================================================================================
 
 * [GNU make util](https://en.wikipedia.org/wiki/Make_%28software%29)
-* [Linux kernel top Makefile](https://github.com/torvalds/linux/blob/master/Makefile)
+* [Linux kernel top Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile)
 * [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler)
 * [Ctags](https://en.wikipedia.org/wiki/Ctags)
 * [sparse](https://en.wikipedia.org/wiki/Sparse)
 * [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage)
 * [uname](https://en.wikipedia.org/wiki/Uname)
 * [shell](https://en.wikipedia.org/wiki/Shell_%28computing%29)
-* [Kbuild](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/kbuild.txt)
+* [Kbuild](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/kbuild.txt)
 * [binutils](http://www.gnu.org/software/binutils/)
 * [gcc](https://gcc.gnu.org/)
-* [Documentation](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/makefiles.txt)
+* [Documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/makefiles.txt)
 * [System.map](https://en.wikipedia.org/wiki/System.map)
 * [Relocation](https://en.wikipedia.org/wiki/Relocation_%28computing%29)

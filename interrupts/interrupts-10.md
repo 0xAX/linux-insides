@@ -7,7 +7,7 @@ Last part
 This is the tenth part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about interrupts and interrupt handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) we saw a little about deferred interrupts and related concepts like `softirq`, `tasklet` and `workqeue`. In this part we will continue to dive into this theme and now it's time to look at real hardware driver.
 
 Let's consider serial driver of the [StrongARM** SA-110/21285 Evaluation Board](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf) board for example and will look how this driver requests an [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) line, 
-what happens when an interrupt is triggered and etc. The source code of this driver is placed in the [drivers/tty/serial/21285.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/21285.c) source code file. Ok, we have source code, let's start.
+what happens when an interrupt is triggered and etc. The source code of this driver is placed in the [drivers/tty/serial/21285.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/tty/serial/21285.c) source code file. Ok, we have source code, let's start.
 
 Initialization of a kernel module
 --------------------------------------------------------------------------------
@@ -24,7 +24,7 @@ module_init(serial21285_init);
 module_exit(serial21285_exit);
 ```
 
-The most part of device drivers can be compiled as a loadable kernel [module](https://en.wikipedia.org/wiki/Loadable_kernel_module) or in another way they can be statically linked into the Linux kernel. In the first case initialization of a device driver will be produced via the `module_init` and `module_exit` macros that are defined in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h):
+The most part of device drivers can be compiled as a loadable kernel [module](https://en.wikipedia.org/wiki/Loadable_kernel_module) or in another way they can be statically linked into the Linux kernel. In the first case initialization of a device driver will be produced via the `module_init` and `module_exit` macros that are defined in the [include/linux/init.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init.h):
 
 ```C
 #define module_init(initfn)                                     \
@@ -51,14 +51,14 @@ and will be called by the [initcall](http://kernelnewbies.org/Documents/Initcall
 * `device_initcall`
 * `late_initcall`
 
-that are called in the `do_initcalls` from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). Otherwise, if a device driver is statically linked into the Linux kernel, implementation of these macros will be following:
+that are called in the `do_initcalls` from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). Otherwise, if a device driver is statically linked into the Linux kernel, implementation of these macros will be following:
 
 ```C
 #define module_init(x)  __initcall(x);
 #define module_exit(x)  __exitcall(x);
 ```
 
-In this way implementation of module loading placed in the [kernel/module.c](https://github.com/torvalds/linux/blob/master/kernel/module.c) source code file and initialization occurs in the `do_init_module` function. We will not dive into details about loadable modules in this chapter, but will see it in the special chapter that will describe Linux kernel modules. Ok, the `module_init` macro takes one parameter - the `serial21285_init` in our case. As we can understand from function's name, this function does stuff related to the driver initialization. Let's look at it:
+In this way implementation of module loading placed in the [kernel/module.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/module.c) source code file and initialization occurs in the `do_init_module` function. We will not dive into details about loadable modules in this chapter, but will see it in the special chapter that will describe Linux kernel modules. Ok, the `module_init` macro takes one parameter - the `serial21285_init` in our case. As we can understand from function's name, this function does stuff related to the driver initialization. Let's look at it:
 
 ```C
 static int __init serial21285_init(void)
@@ -102,7 +102,7 @@ static struct uart_driver serial21285_reg = {
 };
 ```
 
-If the driver registered successfully we attach the driver-defined port `serial21285_port` structure with the `uart_add_one_port` function from the [drivers/tty/serial/serial_core.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/serial_core.c) source code file and return from the `serial21285_init` function:
+If the driver registered successfully we attach the driver-defined port `serial21285_port` structure with the `uart_add_one_port` function from the [drivers/tty/serial/serial_core.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/tty/serial/serial_core.c) source code file and return from the `serial21285_init` function:
 
 ```C
 if (ret == 0)
@@ -111,7 +111,7 @@ if (ret == 0)
 return ret;
 ```
 
-That's all. Our driver is initialized. When an `uart` port will be opened with the call of the `uart_open` function from the [drivers/tty/serial/serial_core.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/serial_core.c), it will call the `uart_startup` function to start up the serial port. This function will call the `startup` function that is part of the `uart_ops` structure. Each `uart` driver has the definition of this structure, in our case it is:
+That's all. Our driver is initialized. When an `uart` port will be opened with the call of the `uart_open` function from the [drivers/tty/serial/serial_core.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/tty/serial/serial_core.c), it will call the `uart_startup` function to start up the serial port. This function will call the `startup` function that is part of the `uart_ops` structure. Each `uart` driver has the definition of this structure, in our case it is:
 
 ```C
 static struct uart_ops serial21285_ops = {
@@ -149,7 +149,7 @@ static int serial21285_startup(struct uart_port *port)
 }
 ```
 
-First of all about `TX` and `RX`. A serial bus of a device consists of just two wires: one for sending data and another for receiving. As such, serial devices should have two serial pins: the receiver - `RX`, and the transmitter - `TX`. With the call of first two macros: `tx_enabled` and `rx_enabled`, we enable these wires. The following part of these function is the greatest interest for us. Note on `request_irq` functions. This function registers an interrupt handler and enables a given interrupt line. Let's look at the implementation of this function and get into the details. This function defined in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h) header file and looks as:
+First of all about `TX` and `RX`. A serial bus of a device consists of just two wires: one for sending data and another for receiving. As such, serial devices should have two serial pins: the receiver - `RX`, and the transmitter - `TX`. With the call of first two macros: `tx_enabled` and `rx_enabled`, we enable these wires. The following part of these function is the greatest interest for us. Note on `request_irq` functions. This function registers an interrupt handler and enables a given interrupt line. Let's look at the implementation of this function and get into the details. This function defined in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/interrupt.h) header file and looks as:
 
 ```C
 static inline int __must_check
@@ -168,7 +168,7 @@ As we can see, the `request_irq` function takes five parameters:
 * `name` - the name of the owner of an interrupt;
 * `dev` - the pointer used for shared interrupt lines;
 
-Now let's look at the calls of the `request_irq` functions in our example. As we can see the first parameter is `IRQ_CONRX`. We know that it is number of the interrupt, but what is it `CONRX`? This macro defined in the [arch/arm/mach-footbridge/include/mach/irqs.h](https://github.com/torvalds/linux/blob/master/arch/arm/mach-footbridge/include/mach/irqs.h) header file. We can find the full list of interrupts that the `21285` board can generate. Note that in the second call of the `request_irq` function we pass the `IRQ_CONTX` interrupt number. Both these interrupts will handle `RX` and `TX` event in our driver. Implementation of these macros is easy:
+Now let's look at the calls of the `request_irq` functions in our example. As we can see the first parameter is `IRQ_CONRX`. We know that it is number of the interrupt, but what is it `CONRX`? This macro defined in the [arch/arm/mach-footbridge/include/mach/irqs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/arm/mach-footbridge/include/mach/irqs.h) header file. We can find the full list of interrupts that the `21285` board can generate. Note that in the second call of the `request_irq` function we pass the `IRQ_CONTX` interrupt number. Both these interrupts will handle `RX` and `TX` event in our driver. Implementation of these macros is easy:
 
 ```C
 #define IRQ_CONRX               _DC21285_IRQ(0)
@@ -179,7 +179,7 @@ Now let's look at the calls of the `request_irq` functions in our example. As we
 #define _DC21285_IRQ(x)         (16 + (x))
 ```
 
-The [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) IRQs on this board are from `0` to `15`, so, our interrupts will have first two numbers: `16` and `17`. Second parameters for two calls of the `request_irq` functions are `serial21285_rx_chars` and `serial21285_tx_chars`. These functions will be called when an `RX` or `TX` interrupt occurred. We will not dive in this part into details of these functions, because this chapter covers the interrupts and interrupts handling but not device and drivers. The next parameter - `flags` and as we can see, it is zero in both calls of the `request_irq` function. All acceptable flags are defined as `IRQF_*` macros in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h). Some of it:
+The [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) IRQs on this board are from `0` to `15`, so, our interrupts will have first two numbers: `16` and `17`. Second parameters for two calls of the `request_irq` functions are `serial21285_rx_chars` and `serial21285_tx_chars`. These functions will be called when an `RX` or `TX` interrupt occurred. We will not dive in this part into details of these functions, because this chapter covers the interrupts and interrupts handling but not device and drivers. The next parameter - `flags` and as we can see, it is zero in both calls of the `request_irq` function. All acceptable flags are defined as `IRQF_*` macros in the [include/linux/interrupt.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/interrupt.h). Some of it:
 
 * `IRQF_SHARED` - allows sharing the irq among several devices;
 * `IRQF_PERCPU` - an interrupt is per cpu;
@@ -194,7 +194,7 @@ In our case we pass `0`, so it will be `IRQF_TRIGGER_NONE`. This flag means that
 static const char serial21285_name[] = "Footbridge UART";
 ```
 
-and will be displayed in the output of the `/proc/interrupts`. And in the last parameter we pass the pointer to the our main `uart_port` structure. Now we know a little about `request_irq` function and its parameters, let's look at its implemenetation. As we can see above, the `request_irq` function just makes a call of the `request_threaded_irq` function inside. The `request_threaded_irq` function defined in the [kernel/irq/manage.c](https://github.com/torvalds/linux/blob/master/kernel/irq/manage.c) source code file and allocates a given interrupt line. If we will look at this function, it starts from the definition of the `irqaction` and the `irq_desc`:
+and will be displayed in the output of the `/proc/interrupts`. And in the last parameter we pass the pointer to the our main `uart_port` structure. Now we know a little about `request_irq` function and its parameters, let's look at its implemenetation. As we can see above, the `request_irq` function just makes a call of the `request_threaded_irq` function inside. The `request_threaded_irq` function defined in the [kernel/irq/manage.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/manage.c) source code file and allocates a given interrupt line. If we will look at this function, it starts from the definition of the `irqaction` and the `irq_desc`:
 
 ```C
 int request_threaded_irq(unsigned int irq, irq_handler_t handler,
@@ -219,7 +219,7 @@ if (((irqflags & IRQF_SHARED) && !dev_id) ||
                return -EINVAL;
 ```
 
-First of all we check that real `dev_id` is passed for the shared interrupt and the `IRQF_COND_SUSPEND` only makes sense for shared interrupts. Otherwise we exit from this function with the `-EINVAL` error. After this we convert the given `irq` number to the `irq` descriptor wit the help of the `irq_to_desc` function that defined in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/master/kernel/irq/irqdesc.c) source code file and exit from this function with the `-EINVAL` error if it was not successful:
+First of all we check that real `dev_id` is passed for the shared interrupt and the `IRQF_COND_SUSPEND` only makes sense for shared interrupts. Otherwise we exit from this function with the `-EINVAL` error. After this we convert the given `irq` number to the `irq` descriptor wit the help of the `irq_to_desc` function that defined in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c) source code file and exit from this function with the `-EINVAL` error if it was not successful:
 
 ```C
 desc = irq_to_desc(irq);
@@ -243,7 +243,7 @@ if (!irq_settings_can_request(desc) || WARN_ON(irq_settings_is_per_cpu_devid(des
     return -EINVAL;
 ```
 
-and exit with the `-EINVAL` in othre way. After this we check the given interrupt handler. If it was not passed to the `request_irq` function, we check the `thread_fn`. If both handlers are `NULL`, we return with the `-EINVAL`. If an interrupt handler was not passed to the `request_irq` function, but the `thread_fn` is not null, we set handler to the `irq_default_primary_handler`:
+and exit with the `-EINVAL`otherways. After this we check the given interrupt handler. If it was not passed to the `request_irq` function, we check the `thread_fn`. If both handlers are `NULL`, we return with the `-EINVAL`. If an interrupt handler was not passed to the `request_irq` function, but the `thread_fn` is not null, we set handler to the `irq_default_primary_handler`:
 
 ```C
 if (!handler) {
@@ -271,7 +271,7 @@ action->name = devname;
 action->dev_id = dev_id;
 ```
 
-In the end of the `request_threaded_irq` function we call the `__setup_irq` function from the [kernel/irq/manage.c](https://github.com/torvalds/linux/blob/master/kernel/irq/manage.c) and registers a given `irqaction`. Release memory for the `irqaction` and return:
+In the end of the `request_threaded_irq` function we call the `__setup_irq` function from the [kernel/irq/manage.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/manage.c) and registers a given `irqaction`. Release memory for the `irqaction` and return:
 
 ```C
 chip_bus_lock(desc);
@@ -284,7 +284,7 @@ if (retval)
 return retval;
 ```
 
-Note that the call of the `__setup_irq` function is placed between the `chip_bus_lock` and the `chip_bus_sync_unlock` functions. These functions locl/unlock access to slow bus (like [i2c](https://en.wikipedia.org/wiki/I%C2%B2C)) chips. Now let's look at the implementation of the `__setup_irq` function. In the beginning of the `__setup_irq` function we can see a couple of different checks. First of all we check that the given interrupt descriptor is not `NULL`, `irqchip` is not `NULL` and that given interrupt descriptor module owner is not `NULL`. After this we check is interrupt nest into another interrupt thread or not, and if it is nested we replace the `irq_default_primary_handler` with the `irq_nested_primary_handler`.
+Note that the call of the `__setup_irq` function is placed between the `chip_bus_lock` and the `chip_bus_sync_unlock` functions. These functions lock/unlock access to slow busses (like [i2c](https://en.wikipedia.org/wiki/I%C2%B2C)) chips. Now let's look at the implementation of the `__setup_irq` function. In the beginning of the `__setup_irq` function we can see a couple of different checks. First of all we check that the given interrupt descriptor is not `NULL`, `irqchip` is not `NULL` and that given interrupt descriptor module owner is not `NULL`. After this we check if the interrupt is nested into another interrupt thread or not, and if it is nested we replace the `irq_default_primary_handler` with the `irq_nested_primary_handler`.
 
 In the next step we create an irq handler thread with the `kthread_create` function, if the given interrupt is not nested and the `thread_fn` is not `NULL`:
 
@@ -316,7 +316,7 @@ Here we iterate over all the cleared bit of the `used_vectors` bitmap starting a
 int first_system_vector = FIRST_SYSTEM_VECTOR; // 0xef
 ```
 
-and set interrupt gates with the `i` vector number and the `irq_entries_start + 8 * (i - FIRST_EXTERNAL_VECTOR)` start address. Only one things is unclear here - the `irq_entries_start`. This symbol defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) assembly file and provides `irq` entries. Let's look at it:
+and set interrupt gates with the `i` vector number and the `irq_entries_start + 8 * (i - FIRST_EXTERNAL_VECTOR)` start address. Only one thing is unclear here - the `irq_entries_start`. This symbol defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry_entry_64.S) assembly file and provides `irq` entries. Let's look at it:
 
 ```assembly
 	.align 8
@@ -346,7 +346,7 @@ common_interrupt:
 	interrupt do_IRQ
 ```
 
-The macro `interrupt` defined in the same source code file and saves [general purpose](https://en.wikipedia.org/wiki/Processor_register) registers on the stack, change the userspace `gs` on the kernel with the `SWAPGS` assembler instruction if need, increase [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) - `irq_count` variable that shows that we are in interrupt and call the `do_IRQ` function. This function defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) source code file and handles our device interrupt. Let's look at this function. The `do_IRQ` function takes one parameter - `pt_regs` structure that stores values of the userspace registers:
+The macro `interrupt` defined in the same source code file and saves [general purpose](https://en.wikipedia.org/wiki/Processor_register) registers on the stack, change the userspace `gs` on the kernel with the `SWAPGS` assembler instruction if need, increase [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) - `irq_count` variable that shows that we are in interrupt and call the `do_IRQ` function. This function defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irq.c) source code file and handles our device interrupt. Let's look at this function. The `do_IRQ` function takes one parameter - `pt_regs` structure that stores values of the userspace registers:
 
 ```C
 __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
@@ -413,7 +413,7 @@ We already know that when an `IRQ` finishes its work, deferred interrupts will b
 Exit from interrupt
 --------------------------------------------------------------------------------
 
-Ok, the interrupt handler finished its execution and now we must return from the interrupt. When the work of the `do_IRQ` function will be finsihed, we will return back to the assembler code in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) to the `ret_from_intr` label. First of all we disable interrupts with the `DISABLE_INTERRUPTS` macro that expands to the `cli` instruction and decreases value of the `irq_count` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable. Remember, this variable had value - `1`, when we were in interrupt context:
+Ok, the interrupt handler finished its execution and now we must return from the interrupt. When the work of the `do_IRQ` function will be finsihed, we will return back to the assembler code in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry_entry_64.S) to the `ret_from_intr` label. First of all we disable interrupts with the `DISABLE_INTERRUPTS` macro that expands to the `cli` instruction and decreases value of the `irq_count` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable. Remember, this variable had value - `1`, when we were in interrupt context:
 
 ```assembly
 DISABLE_INTERRUPTS(CLBR_NONE)
