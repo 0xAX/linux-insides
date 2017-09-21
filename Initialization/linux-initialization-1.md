@@ -1,25 +1,25 @@
-Kernel initialization. Part 1.
+Инициализация ядра. Часть 1.
 ================================================================================
 
-First steps in the kernel code
+Первые шаги в коде ядра
 --------------------------------------------------------------------------------
 
-The previous [post](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/linux-bootstrap-5.html) was a last part of the Linux kernel [booting process](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/index.html) chapter and now we are starting to dive into initialization process of the Linux kernel. After the image of the Linux kernel is decompressed and placed in a correct place in memory, it starts to work. All previous parts describe the work of the Linux kernel setup code which does preparation before the first bytes of the Linux kernel code will be executed. From now we are in the kernel and all parts of this chapter will be devoted to the initialization process of the kernel before it will launch process with [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. There are many things to do before the kernel will start first `init` process. Hope we will see all of the preparations before kernel will start in this big chapter. We will start from the kernel entry point, which is located in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) and will move further and further. We will see first preparations like early page tables initialization, switch to a new descriptor in kernel space and many many more, before we will see the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489) will be called.
+Предыдущая [статья](../Booting/linux-bootstrap-5.html) была последней частью главы [процесса загрузки](../Booting/README.md) ядра Linux и теперь мы начинаем погружение в процесс инициализации. После того как образ ядра Linux распакован и помещён в нужное место, ядро начинает свою работу. Все предыдущие части описывают работу кода настройки ядра, который выполняет подготовку до того, как будут выполнены первые байты кода ядра Linux. Теперь мы находимся в ядре, и все части этой главы будут посвящены процессу инициализации ядра, прежде чем оно запустит процесс с помощью [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. Есть ещё много вещей, который необходимо сделать, прежде чем ядро запустит первый `init` процесс. Мы начнём с точки входа в ядро, которая находится в [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) и будем двигаться дальше и дальше. Мы увидим первые приготовления, такие как инициализацию начальных таблиц страниц, переход на новый дескриптор в пространстве ядра и многое другое, прежде чем вы увидим запуск функции `start_kernel` в [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489).
 
-In the last [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/linux-bootstrap-5.html) of the previous [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/index.html) we stopped at the [jmp](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) instruction from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
+В последней [части](../Booting/linux-bootstrap-5.html) предыдущей [главы](../Booting/README.md) мы остановились на инструкции [jmp](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) из ассемблерного файла исходного кода [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 jmp	*%rax
 ```
 
-At this moment the `rax` register contains address of the Linux kernel entry point which that was obtained as a result of the call of the `decompress_kernel` function from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) source code file. So, our last instruction in the kernel setup code is a jump on the kernel entry point. We already know where is defined the entry point of the linux kernel, so we are able to start to learn what does the Linux kernel does after the start.
+В данный момент регистр `rax` содержит адрес точки входа в ядро Linux, который был получен в результате вызова функции `decompress_kernel` из файла [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c). Итак, наша последняя инструкция в коде настройки ядра - это переход на точку входа в ядро. Мы уже знаем, где определена точка входа в ядро linux, поэтому мы можем начать изучение того, что делает ядро Linux после запуска.
 
-First steps in the kernel
+Первые шаги в ядре
 --------------------------------------------------------------------------------
 
-Okay, we got the address of the decompressed kernel image from the `decompress_kernel` function into `rax` register and just jumped there. As we already know the entry point of the decompressed kernel image starts in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) assembly source code file and at the beginning of it, we can see following definitions:
+Хорошо, мы получили адрес распакованного образа ядра с помощью функции `decompress_kernel` в регистр `rax`. Как мы уже знаем, начальная точка распакованного образа ядра начинается в файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S), а также в его начале можно увидеть следующие определения:
 
-```assembly
+```assembly0
     .text
 	__HEAD
 	.code64
@@ -30,13 +30,13 @@ startup_64:
 	...
 ```
 
-We can see definition of the `startup_64` routine that is defined in the `__HEAD` section, which is just a macro which expands to the definition of executable `.head.text` section:
+Мы можем видеть определение подпрограммы `startup_64` в секции `__HEAD`, которая является просто макросом, раскрываемым до определения исполняемой секции `.head.text`:
 
 ```C
 #define __HEAD		.section	".head.text","ax"
 ```
 
-We can see definition of this section in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S#L93) linker script:
+Определение данной секции расположено в скрипте компоновщика [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S#L93):
 
 ```
 .text : AT(ADDR(.text) - LOAD_OFFSET) {
@@ -47,13 +47,13 @@ We can see definition of this section in the [arch/x86/kernel/vmlinux.lds.S](htt
 } :text = 0x9090
 ```
 
-Besides the definition of the `.text` section, we can understand default virtual and physical addresses from the linker script. Note that address of the `_text` is location counter which is defined as:
+Помимо определения секции `.text`, мы можем понять виртуальные и физические адреса по умолчанию из скрипта компоновщика. Обратите внимание, что адрес `_text` - это счётчик местоположения, определённый как:
 
 ```
 . = __START_KERNEL;
 ```
 
-for the [x86_64](https://en.wikipedia.org/wiki/X86-64). The definition of the `__START_KERNEL` macro is located in the [arch/x86/include/asm/page_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_types.h) header file and represented by the sum of the base virtual address of the kernel mapping and physical start:
+для [x86_64](https://en.wikipedia.org/wiki/X86-64). Определение макроса `__START_KERNEL` находится в заголовочном файле [arch/x86/include/asm/page_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_types.h) и представлен суммой базового виртуального адреса отображения ядра и физического старта:
 
 ```C
 #define __START_KERNEL	(__START_KERNEL_map + __PHYSICAL_START)
@@ -61,49 +61,49 @@ for the [x86_64](https://en.wikipedia.org/wiki/X86-64). The definition of the `_
 #define __PHYSICAL_START  ALIGN(CONFIG_PHYSICAL_START, CONFIG_PHYSICAL_ALIGN)
 ```
 
-Or in other words:
+Или другими словами:
 
-* Base physical address of the Linux kernel - `0x1000000`;
-* Base virtual address of the Linux kernel - `0xffffffff81000000`.
+* Базовый физический адрес ядра Linux - `0x1000000`;
+* Базовый виртуальный адрес ядра Linux - `0xffffffff81000000`.
 
-Now we know default physical and virtual addresses of the `startup_64` routine, but to know actual addresses we must to calculate it with the following code:
+Теперь мы знаем физические и виртуальные адреса по умолчанию подпрограммы `startup_64`, но для того чтобы узнать фактические адреса, мы должны вычислить их с помощью следующего кода:
 
 ```assembly
 	leaq	_text(%rip), %rbp
 	subq	$_text - __START_KERNEL_map, %rbp
 ```
 
-Yes, it defined as `0x1000000`, but it may be different, for example if [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) is enabled. So our current goal is to calculate delta between `0x1000000` and where we actually loaded. Here we just put the `rip-relative` address to the `rbp` register and then subtract `$_text - __START_KERNEL_map` from it. We know that compiled virtual address of the `_text` is `0xffffffff81000000` and the physical address of it is `0x1000000`. The `__START_KERNEL_map` macro expands to the `0xffffffff80000000` address, so at the second line of the assembly code, we will get following expression:
+Да, оно определено как `0x1000000`, но может быть другим, например, если включен [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux). Поэтому наша текущая цель - вычислить разницу между `0x1000000` и где мы действительно загружены. Мы просто помещаем адрес `rip-relative` в регистр `rbp`, а затем вычитаем из него `$_text - __START_KERNEL_map`. Мы знаем, что скомпилированный виртуальный адрес `_text` равен `0xffffffff81000000`, а физический - `0x1000000`. The `__START_KERNEL_map` расширяется до адреса `0xffffffff80000000`, поэтому на второй строке ассемблерного кода мы получим следующее выражение:
 
 ```
 rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 ```
 
-So, after the calculation,  the `rbp` will contain `0` which represents difference between addresses where we actually loaded and where the code was compiled. In our case `zero` means that the Linux kernel was loaded by default address and the [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) was disabled.
+После вычисления регистр `rbp` будет содержать `0`, который представляет разницу между адресами, где мы фактически загрузились, и где был скомпилирован код. В нашем случае `ноль` означает, что ядро Linux было загружено по дефолтному адресу и [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) отключен.
 
-After we got the address of the `startup_64`, we need to do a check that this address is correctly aligned. We will do it with the following code:
+После того как мы получили адрес `startup_64`, нам необходимо проверить чтобы этот адрес правильно выровнен. Мы сделаем это с помощью следующего кода:
 
 ```assembly
 	testl	$~PMD_PAGE_MASK, %ebp
 	jnz	bad_address
 ```
 
-Here we just compare low part of the `rbp` register with the complemented value of the `PMD_PAGE_MASK`. The `PMD_PAGE_MASK` indicates the mask for `Page middle directory` (read [paging](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/Paging.html) about it) and defined as:
+Мы сравниваем нижнюю часть регистра `rbp` с дополняемым значением `PMD_PAGE_MASK`. `PMD_PAGE_MASK` указывает маску для `Каталога страниц среднего уровня` (см. [подкачку страниц](../Theory/Paging.md)) и определена как:
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
 ```
 
-where `PMD_PAGE_SIZE` macro defined as:
+где макрос `PMD_PAGE_SIZE` определён как:
 
 ```
 #define PMD_PAGE_SIZE           (_AC(1, UL) << PMD_SHIFT)
 #define PMD_SHIFT       21
 ```
 
-As we can easily calculate, `PMD_PAGE_SIZE` is `2` megabytes. Here we use standard formula for checking alignment and if `text` address is not aligned for `2` megabytes, we jump to `bad_address` label.
+Можно легко вычислить, что размер `PMD_PAGE_SIZE` составляет `2` мегабайта. Здесь мы используем стандартную формулу для проверки выравнивания, и если адрес `text` не выровнен по `2` мегабайтам, мы переходим на метку `bad_address`.
 
-After this we check address that it is not too large by the checking of highest `18` bits:
+После этого мы проверяем адрес на то, что он не слишком велик, путём проверки наивысших `18` бит:
 
 ```assembly
 	leaq	_text(%rip), %rax
@@ -111,18 +111,18 @@ After this we check address that it is not too large by the checking of highest 
 	jnz	bad_address
 ```
 
-The address must not be greater than `46`-bits:
+Адрес не должен превышать `46` бит:
 
 ```C
 #define MAX_PHYSMEM_BITS       46
 ```
 
-Okay, we did some early checks and now we can move on.
+Хорошо, мы сделали некоторые начальные проверки, и теперь можем двигаться дальше.
 
-Fix base addresses of page tables
+Исправление базовых адресов таблиц страниц
 --------------------------------------------------------------------------------
 
-The first step before we start to setup identity paging is to fixup following addresses:
+Первым шагом, прежде чем начать настройку подкачки страниц "один в один" (identity paging), является исправление следующих адресов:
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -131,7 +131,7 @@ The first step before we start to setup identity paging is to fixup following ad
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-All of `early_level4_pgt`, `level3_kernel_pgt` and other address may be wrong if the `startup_64` is not equal to default `0x1000000` address. The `rbp` register contains the delta address so we add to the certain entries of the `early_level4_pgt`, the `level3_kernel_pgt` and the `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
+Все адреса: `early_level4_pgt`, `level3_kernel_pgt` и другие могут быть некорректными, если `startup_64` не равен адресу по умолчанию - `0x1000000`. Регистр `rbp` содержит адрес разницы, поэтому мы добавляем его к `early_level4_pgt`, `level3_kernel_pgt` и `level2_fixmap_pgt`. Давайте попробуем понять, что означают эти метки. Прежде всего давайте посмотрим на их определение:
 
 ```assembly
 NEXT_PAGE(early_level4_pgt)
@@ -156,25 +156,24 @@ NEXT_PAGE(level1_fixmap_pgt)
 	.fill	512,8,0
 ```
 
-Looks hard, but it isn't. First of all let's look at the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use the first `511` entries. And after this we can see one `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look at `_PAGE_TABLE`, it is just page entry access rights:
+Выглядит сложно, но на самом деле это не так. Прежде всего, давайте посмотрим на `early_level4_pgt`. Он начинается с (4096 - 8) байтов нулей, это означает, что мы не используем первые `511` записей. И после этого мы видим одну запись `level3_kernel_pgt`. Обратите внимание, что мы вычитаем из него `__START_KERNEL_map + _PAGE_TABLE`. Как известно, `__START_KERNEL_map` является базовым виртуальным адресом сегмента кода ядра, поэтому, если мы вычтем `__START_KERNEL_map`, мы получим физический адрес `level3_kernel_pgt`. Теперь давайте посмотрим на `_PAGE_TABLE`, это просто права доступа к странице:
 
 ```C
 #define _PAGE_TABLE     (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER | \
                          _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-You can read more about it in the [paging](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/Paging.html) part.
+Вы можете больше узнать об этом в статье [Подкачка страниц](../Theory/Paging.html).
 
-The `level3_kernel_pgt` - stores two entries which map kernel space. At the start of it's definition, we can see that it is filled with zeros `L3_START_KERNEL` or `510` times. Here the `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After this, we can see the definition of the two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
+`level3_kernel_pgt` хранит две записи, которые отображают пространство ядра. В начале его определения мы видим, что он заполнен нулями `L3_START_KERNEL` или `510` раз. `L3_START_KERNEL` - это индекс в верхнем каталоге страниц, который содержит адрес `__START_KERNEL_map` и равен `510`. После этого мы можем видеть определение двух записей `level3_kernel_pgt`: `level2_kernel_pgt` и `level2_fixmap_pgt`. Первая очень проста - это запись в таблице страниц, которая содержит указатель на каталог страниц среднего уровня, который отображает пространство ядра и содержит права доступа:
 
 ```C
 #define _KERNPG_TABLE   (_PAGE_PRESENT | _PAGE_RW | _PAGE_ACCESSED | \
                          _PAGE_DIRTY)
 ```
+Второй - `level2_fixmap_pgt` это виртуальные адреса, которые могут ссылаться на любые физические адреса даже в пространстве ядра. Они представлены одной записью `level2_fixmap_pgt` и "дырой" в `10` мегабайт для отображения [vsyscalls](https://lwn.net/Articles/446528/). `level2_kernel_pgt` вызывает макрос `PDMS`, который выделяет `512` мегабайт из `__START_KERNEL_map` для сегмента ядра `.text` (после этого `512` мегабайт будут модулем пространства памяти).
 
-access rights. The second - `level2_fixmap_pgt` is a virtual addresses which can refer to any physical addresses even under kernel space. They represented by the one `level2_fixmap_pgt` entry and `10` megabytes hole for the [vsyscalls](https://lwn.net/Articles/446528/) mapping. The next `level2_kernel_pgt` calls the `PDMS` macro which creates `512` megabytes from the `__START_KERNEL_map` for kernel `.text` (after these `512` megabytes will be modules memory space).
-
-Now, after we saw definitions of these symbols, let's get back to the code which is described at the beginning of the section. Remember that the `rbp` register contains delta between the address of the `startup_64` symbol which was got during kernel [linking](https://en.wikipedia.org/wiki/Linker_%28computing%29) and the actual address. So, for this moment, we just need to add this delta to the base address of some page table entries, that they'll have correct addresses. In our case these entries are:
+После того как мы увидели определения этих символов, вернёмся к коду, описанному в начале раздела. Вы помните, что регистр `rbp` содержит разницу между адресом символа `startup_64`, который был получен получен во время [компоновки](https://en.wikipedia.org/wiki/Linker_%28computing%29) ядра и фактического адреса. Итак, на этот момент нам просто нужно добавить эту разницу к базовому адресу некоторых записей таблицы страниц, чтобы получить корректные адреса. В нашем случае эти записи:
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -183,38 +182,38 @@ Now, after we saw definitions of these symbols, let's get back to the code which
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-or the last entry of the `early_level4_pgt` which is the `level3_kernel_pgt`, last two entries of the `level3_kernel_pgt` which are the `level2_kernel_pgt` and the `level2_fixmap_pgt` and five hundreds seventh entry of the `level2_fixmap_pgt` which is `level1_fixmap_pgt` page directory.
+последняя запись `early_level4_pgt` является каталогом `level3_kernel_pgt`, последние две записи `level3_kernel_pgt` являются каталогами `level2_kernel_pgt` и `level2_fixmap_pgt` соответственно, и 507 запись `level2_fixmap_pgt` является каталогом `level1_fixmap_pgt`.
 
-After all of this we will have:
+После этого у нас будет:
 
 ```
 early_level4_pgt[511] -> level3_kernel_pgt[0]
 level3_kernel_pgt[510] -> level2_kernel_pgt[0]
 level3_kernel_pgt[511] -> level2_fixmap_pgt[0]
-level2_kernel_pgt[0]   -> 512 MB kernel mapping
+level2_kernel_pgt[0]   -> 512 Мб, отображённые на ядро
 level2_fixmap_pgt[507] -> level1_fixmap_pgt
 ```
 
-Note that we didn't fixup base address of the `early_level4_pgt` and some of other page table directories, because we will see this during of building/filling of structures for these page tables. As we corrected base addresses of the page tables, we can start to build it.
+Обратите внимание, что мы не исправляли базовый адрес `early_level4_pgt` и некоторых других каталогов таблицы страниц, потому что мы увидим это во время построения/заполнения структур для этих таблиц страниц. После исправления базовых адресов таблиц страниц, мы можем приступить к их построению.
 
-Identity mapping setup
+Настройка отображения "один в один" (identity mapping)
 --------------------------------------------------------------------------------
 
-Now we can see the set up of identity mapping of early page tables. In Identity Mapped Paging, virtual addresses are mapped to physical addresses that have the same value, `1 : 1`. Let's look at it in detail. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
+Теперь мы можем увидеть настройку отображения "один в один" начальных таблиц страниц. В подкаче, отображённой "один в один", виртуальные адреса сопоставляются с физическими адресами, которые имеют одно и то же значение, `один в один`. Давайте рассмотрим это подробнее. Прежде всего, мы получаем `rip-относительный` адрес `_text` и `_early_level4_pgt` и помещаем их в регистры `rdi` и `rbx`:
 
 ```assembly
 	leaq	_text(%rip), %rdi
 	leaq	early_level4_pgt(%rip), %rbx
 ```
 
-After this we store address of the `_text` in the `rax` and get the index of the page global directory entry which stores `_text` address, by shifting `_text` address on the `PGDIR_SHIFT`:
+После этого мы сохраняем адрес `_text` в регистр `rax` и получаем индекс записи глобального каталога страниц, который хранит адрес `_text` address, путём сдвига адреса `_text` на `PGDIR_SHIFT`:
 
 ```assembly
 	movq	%rdi, %rax
 	shrq	$PGDIR_SHIFT, %rax
 ```
 
-where `PGDIR_SHIFT` is `39`. `PGDIR_SHFT` indicates the mask for page global directory bits in a virtual address. There are macro for all types of page directories:
+где `PGDIR_SHIFT` равен `39`. `PGDIR_SHFT` указывает маску для битов глобального каталога страниц в виртуальном адресе. Существуют макросы для всех типов каталогов страниц:
 
 ```C
 #define PGDIR_SHIFT     39
@@ -222,7 +221,7 @@ where `PGDIR_SHIFT` is `39`. `PGDIR_SHFT` indicates the mask for page global dir
 #define PMD_SHIFT       21
 ```
 
-After this we put the address of the first entry of the `early_dynamic_pgts` page table to the `rdx` register with the `_KERNPG_TABLE` access rights (see above) and fill the `early_level4_pgt` with the 2 `early_dynamic_pgts` entries:
+После этого мы помещаем адрес первой записи таблицы страниц `early_dynamic_pgts` в регистр `rdx` с правами доступа `_KERNPG_TABLE` (см. выше) и заполняем `early_level4_pgt` двумя записями `early_dynamic_pgts`:
 
 ```assembly
 	leaq	(4096 + _KERNPG_TABLE)(%rbx), %rdx
@@ -230,15 +229,15 @@ After this we put the address of the first entry of the `early_dynamic_pgts` pag
 	movq	%rdx, 8(%rbx,%rax,8)
 ```
 
-The `rbx` register contains address of the `early_level4_pgt` and `%rax * 8` here is index of a page global directory occupied by the `_text` address. So here we fill two entries of the `early_level4_pgt` with address of two entries of the `early_dynamic_pgts` which is related to `_text`. The `early_dynamic_pgts` is array of arrays:
+Регистр `rbx` содержит адрес `early_level4_pgt` и здесь `%rax * 8` - это индекс глобального каталога страниц, занятого адресом `_text`s. Итак, здесь мы заполняем две записи `early_level4_pgt` адресом двух записей `early_dynamic_pgts`, который связан с `_text`. `early_dynamic_pgts` является массивом массивов:
 
 ```C
 extern pmd_t early_dynamic_pgts[EARLY_DYNAMIC_PAGE_TABLES][PTRS_PER_PMD];
 ```
 
-which will store temporary page tables for early kernel which we will not move to the `init_level4_pgt`.
+который будет хранить временные таблицы страниц для раннего ядра и которые мы не будем перемещать в `init_level4_pgt`.
 
-After this we add `4096` (size of the `early_level4_pgt`) to the `rdx` (it now contains the address of the first entry of the `early_dynamic_pgts`) and put `rdi` (it now contains physical address of the `_text`)  to the `rax`. Now we shift address of the `_text` ot `PUD_SHIFT` to get index of an entry from page upper directory which contains this address and clears high bits to get only `pud` related part:
+После этого мы добавляем `4096` (размер`early_level4_pgt`) в регистр `rdx` (теперь он содержит адрес первой записи `early_dynamic_pgts`) и помещаем значение регистра `rdi` (теперь он содержит физический адрес `_text`) в регистр `rax`. Теперь мы смещаем адрес `_text` на `PUD_SHIFT`, чтобы получить индекс записи из верхнего каталога страниц, который содержит этот адрес, и очищает старшие биты, для того чтобы получить только связанную с `pud` часть:
 
 ```assembly
 	addq	$4096, %rdx
@@ -247,7 +246,7 @@ After this we add `4096` (size of the `early_level4_pgt`) to the `rdx` (it now c
 	andl	$(PTRS_PER_PUD-1), %eax
 ```
 
-As we have index of a page upper directory we write two addresses of the second entry of the `early_dynamic_pgts` array to the first entry of this temporary page directory:
+Поскольку у нас есть индекс верхнего каталога таблиц страниц, мы записываем два адреса второй записи массива `early_dynamic_pgts` в первую запись временного каталога страниц:
 
 ```assembly
 	movq	%rdx, 4096(%rbx,%rax,8)
@@ -256,18 +255,18 @@ As we have index of a page upper directory we write two addresses of the second 
 	movq	%rdx, 4096(%rbx,%rax,8)
 ```
 
-In the next step we do the same operation for last page table directory, but filling not two entries, but all entries to cover full size of the kernel.
+На следующем шаге мы выполняем ту же операцию для последнего каталога таблиц страниц, но заполняем не две записи, а все записи, чтобы охватить полный размер ядра.
 
-After our early page table directories filled, we put physical address of the `early_level4_pgt` to the `rax` register and jump to label `1`:
+После заполнения наших начальных каталогов таблиц страниц мы помещаем физический адрес `early_level4_pgt` в регистр `rax` и переходим на метку `1`:
 
 ```assembly
 	movq	$(early_level4_pgt - __START_KERNEL_map), %rax
 	jmp 1f
 ```
 
-That's all for now. Our early paging is prepared and we just need to finish last preparation before we will jump into C code and kernel entry point later.
+На данный момент это всё. Наша ранняя подкачка страниц подготовлена и нам нужно совершить последнее приготовление, прежде чем мы перейдём к коду на C и к точке входа в ядро.
 
-Last preparation before jump at the kernel entry point
+Последнее приготовление перед переходом на точку входа в ядро
 --------------------------------------------------------------------------------
 
 After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extension) and put the physical address of the `phys_base` (see above) to the `rax` register and fill `cr3` register with it:
