@@ -12,7 +12,7 @@ The kernel provides an API for creating per-cpu variables - the `DEFINE_PER_CPU`
 
 This macro defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/percpu-defs.h) as many other macros for work with per-cpu variables. Now we will see how this feature is implemented.
 
-Take a look at the `DECLARE_PER_CPU` definition. We see that it takes 2 parameters: `type` and `name`, so we can use it to create per-cpu variables, for example like this:
+Take a look at the `DEFINE_PER_CPU` definition. We see that it takes 2 parameters: `type` and `name`, so we can use it to create per-cpu variables, for example like this:
 
 ```C
 DEFINE_PER_CPU(int, per_cpu_n)
