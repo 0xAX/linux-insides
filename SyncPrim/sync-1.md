@@ -6,7 +6,7 @@ Introduction
 
 This part opens new chapter in the [linux-insides](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/) book. Timers and time management related stuff was described in the previous [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/index.html). This chapter will describe [synchronization](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) primitives in the Linux kernel.
 
-As always, before we consider something synchronization related, we will look at the concept of a`synchronization primitive` in general. A synchronization primitive is a software mechanism which provides ability to two or more [parallel](https://en.wikipedia.org/wiki/Parallel_computing) processes or threads to coordinate. For example, to not execute simultaneously one the same segment of a code (such as writing different values to a shared variable). Let's look on the following piece of code:
+As always, before we will consider something synchronization related, we will try to know what is `synchronization primitive` in general. Actually, synchronization primitive is a software mechanism which provides ability to two or more [parallel](https://en.wikipedia.org/wiki/Parallel_computing) processes or threads to not execute simultaneously on the same segment of a code. For example let's look on the following piece of code:
 
 ```C
 mutex_lock(&clocksource_mutex);
