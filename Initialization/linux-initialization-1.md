@@ -4,20 +4,20 @@
 Первые шаги в коде ядра
 --------------------------------------------------------------------------------
 
-Предыдущая [статья](../Booting/linux-bootstrap-5.html) была последней частью главы [процесса загрузки](../Booting/README.md) ядра Linux и теперь мы начинаем погружение в процесс инициализации. После того как образ ядра Linux распакован и помещён в нужное место, ядро начинает свою работу. Все предыдущие части описывают работу кода настройки ядра, который выполняет подготовку до того, как будут выполнены первые байты кода ядра Linux. Теперь мы находимся в ядре, и все части этой главы будут посвящены процессу инициализации ядра, прежде чем оно запустит процесс с помощью [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. Есть ещё много вещей, который необходимо сделать, прежде чем ядро запустит первый `init` процесс. Мы начнём с точки входа в ядро, которая находится в [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) и будем двигаться дальше и дальше. Мы увидим первые приготовления, такие как инициализацию начальных таблиц страниц, переход на новый дескриптор в пространстве ядра и многое другое, прежде чем вы увидим запуск функции `start_kernel` в [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L489).
+Предыдущая [статья](../Booting/linux-bootstrap-5.html) была последней частью главы [процесса загрузки](../Booting/README.md) ядра Linux и теперь мы начинаем погружение в процесс инициализации. После того как образ ядра Linux распакован и помещён в нужное место, ядро начинает свою работу. Все предыдущие части описывают работу кода настройки ядра, который выполняет подготовку до того, как будут выполнены первые байты кода ядра Linux. Теперь мы находимся в ядре, и все части этой главы будут посвящены процессу инициализации ядра, прежде чем оно запустит процесс с помощью [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. Есть ещё много вещей, который необходимо сделать, прежде чем ядро запустит первый `init` процесс. Мы начнём с точки входа в ядро, которая находится в [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) и будем двигаться дальше и дальше. Мы увидим первые приготовления, такие как инициализацию начальных таблиц страниц, переход на новый дескриптор в пространстве ядра и многое другое, прежде чем увидим запуск функции `start_kernel` в [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L489).
 
-В последней [части](../Booting/linux-bootstrap-5.html) предыдущей [главы](../Booting/README.md) мы остановились на инструкции [jmp](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) из ассемблерного файла исходного кода [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S):
+В последней [части](../Booting/linux-bootstrap-5.html) предыдущей [главы](../Booting/README.md) мы остановились на инструкции [jmp](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) из ассемблерного файла [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 jmp	*%rax
 ```
 
-В данный момент регистр `rax` содержит адрес точки входа в ядро Linux, который был получен в результате вызова функции `decompress_kernel` из файла [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c). Итак, наша последняя инструкция в коде настройки ядра - это переход на точку входа в ядро. Мы уже знаем, где определена точка входа в ядро linux, поэтому мы можем начать изучение того, что делает ядро Linux после запуска.
+В данный момент регистр `rax` содержит адрес точки входа в ядро Linux, который был получен в результате вызова функции `decompress_kernel` из файла [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c). Итак, наша последняя инструкция в коде настройки ядра - это переход на точку входа. Мы уже знаем, где она определена, поэтому мы можем начать изучение того, что делает ядро Linux после запуска.
 
 Первые шаги в ядре
 --------------------------------------------------------------------------------
 
-Хорошо, мы получили адрес распакованного образа ядра с помощью функции `decompress_kernel` в регистр `rax`. Как мы уже знаем, начальная точка распакованного образа ядра начинается в файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S), а также в его начале можно увидеть следующие определения:
+Хорошо, мы получили адрес распакованного образа ядра с помощью функции `decompress_kernel` в регистр `rax`. Как мы уже знаем, начальная точка распакованного образа ядра находится в файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S), а также в его начале можно увидеть следующие определения:
 
 ```assembly0
     .text
@@ -30,7 +30,7 @@ startup_64:
 	...
 ```
 
-Мы можем видеть определение подпрограммы `startup_64` в секции `__HEAD`, которая является просто макросом, раскрываемым до определения исполняемой секции `.head.text`:
+Мы можем видеть определение подпрограммы `startup_64` в секции `__HEAD`, которая является просто макросом, раскрывающимся до определения исполняемой секции `.head.text`:
 
 ```C
 #define __HEAD		.section	".head.text","ax"
@@ -47,13 +47,13 @@ startup_64:
 } :text = 0x9090
 ```
 
-Помимо определения секции `.text`, мы можем понять виртуальные и физические адреса по умолчанию из скрипта компоновщика. Обратите внимание, что адрес `_text` - это счётчик местоположения, определённый как:
+Помимо определения секции `.text` из скрипта компоновщика, мы можем понять виртуальные и физические адреса по умолчанию. Обратите внимание, что адрес `_text` - это счётчик местоположения, определённый как:
 
 ```
 . = __START_KERNEL;
 ```
 
-для [x86_64](https://en.wikipedia.org/wiki/X86-64). Определение макроса `__START_KERNEL` находится в заголовочном файле [arch/x86/include/asm/page_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/page_types.h) и представлен суммой базового виртуального адреса отображения ядра и физического старта:
+для [x86_64](https://en.wikipedia.org/wiki/X86-64). Определение макроса `__START_KERNEL` находится в заголовочном файле [arch/x86/include/asm/page_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/page_types.h) и представлен суммой базового виртуального адреса отображения ядра и физического начала:
 
 ```C
 #define __START_KERNEL	(__START_KERNEL_map + __PHYSICAL_START)
@@ -73,22 +73,22 @@ startup_64:
 	subq	$_text - __START_KERNEL_map, %rbp
 ```
 
-Да, оно определено как `0x1000000`, но может быть другим, например, если включен [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux). Поэтому наша текущая цель - вычислить разницу между `0x1000000` и где мы действительно загружены. Мы просто помещаем адрес `rip-relative` в регистр `rbp`, а затем вычитаем из него `$_text - __START_KERNEL_map`. Мы знаем, что скомпилированный виртуальный адрес `_text` равен `0xffffffff81000000`, а физический - `0x1000000`. The `__START_KERNEL_map` расширяется до адреса `0xffffffff80000000`, поэтому на второй строке ассемблерного кода мы получим следующее выражение:
+Да, он определён как `0x1000000`, но может быть другим, например, если включён [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux). Поэтому наша текущая цель - вычислить разницу между `0x1000000` и тем, где мы действительно загружены. Мы просто помещаем `rip-относительный` адрес в регистр `rbp`, а затем вычитаем из него `$_text - __START_KERNEL_map`. Мы знаем, что скомпилированный виртуальный адрес `_text` равен `0xffffffff81000000`, а физический - `0x1000000`. `__START_KERNEL_map` расширяется до адреса `0xffffffff80000000`, поэтому во второй строке ассемблерного кода мы получим следующее выражение:
 
 ```
 rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 ```
 
-После вычисления регистр `rbp` будет содержать `0`, который представляет разницу между адресами, где мы фактически загрузились, и где был скомпилирован код. В нашем случае `ноль` означает, что ядро Linux было загружено по дефолтному адресу и [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) отключен.
+После вычисления регистр `rbp` будет содержать `0`, который представляет разницу между адресом где мы фактически загрузились, и адресом где был скомпилирован код. В нашем случае `ноль` означает, что ядро Linux было загружено по дефолтному адресу и [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) отключён.
 
-После того как мы получили адрес `startup_64`, нам необходимо проверить чтобы этот адрес правильно выровнен. Мы сделаем это с помощью следующего кода:
+После того как мы получили адрес `startup_64`, нам необходимо проверить, правильно ли он выровнен. Мы сделаем это с помощью следующего кода:
 
 ```assembly
 	testl	$~PMD_PAGE_MASK, %ebp
 	jnz	bad_address
 ```
 
-Мы сравниваем нижнюю часть регистра `rbp` с дополняемым значением `PMD_PAGE_MASK`. `PMD_PAGE_MASK` указывает маску для `Каталога страниц среднего уровня` (см. [подкачку страниц](../Theory/Paging.md)) и определена как:
+Мы сравниваем нижнюю часть регистра `rbp` с дополняемым значением `PMD_PAGE_MASK`. `PMD_PAGE_MASK` указывает маску для `каталога страниц среднего уровня` (см. [подкачку страниц](../Theory/Paging.md)) и определён как:
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
@@ -101,7 +101,7 @@ rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 #define PMD_SHIFT       21
 ```
 
-Можно легко вычислить, что размер `PMD_PAGE_SIZE` составляет `2` мегабайта. Здесь мы используем стандартную формулу для проверки выравнивания, и если адрес `text` не выровнен по `2` мегабайтам, мы переходим на метку `bad_address`.
+Размер `PMD_PAGE_SIZE` можно легко вычислить - он составляет `2` мегабайта. Здесь мы используем стандартную формулу для проверки выравнивания, и если адрес `text` не выровнен по `2` мегабайтам, то переходим на метку `bad_address`.
 
 После этого мы проверяем адрес на то, что он не слишком велик, путём проверки наивысших `18` бит:
 
@@ -131,7 +131,7 @@ rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-Все адреса: `early_level4_pgt`, `level3_kernel_pgt` и другие могут быть некорректными, если `startup_64` не равен адресу по умолчанию - `0x1000000`. Регистр `rbp` содержит адрес разницы, поэтому мы добавляем его к `early_level4_pgt`, `level3_kernel_pgt` и `level2_fixmap_pgt`. Давайте попробуем понять, что означают эти метки. Прежде всего давайте посмотрим на их определение:
+Все адреса: `early_level4_pgt`, `level3_kernel_pgt` и другие могут быть некорректными, если `startup_64` не равен адресу по умолчанию - `0x1000000`. Регистр `rbp` содержит разницу адресов, поэтому мы добавляем его к `early_level4_pgt`, `level3_kernel_pgt` и `level2_fixmap_pgt`. Давайте попробуем понять, что означают эти метки. Прежде всего посмотрим на их определение:
 
 ```assembly
 NEXT_PAGE(early_level4_pgt)
@@ -156,7 +156,7 @@ NEXT_PAGE(level1_fixmap_pgt)
 	.fill	512,8,0
 ```
 
-Выглядит сложно, но на самом деле это не так. Прежде всего, давайте посмотрим на `early_level4_pgt`. Он начинается с (4096 - 8) байтов нулей, это означает, что мы не используем первые `511` записей. И после этого мы видим одну запись `level3_kernel_pgt`. Обратите внимание, что мы вычитаем из него `__START_KERNEL_map + _PAGE_TABLE`. Как известно, `__START_KERNEL_map` является базовым виртуальным адресом сегмента кода ядра, поэтому, если мы вычтем `__START_KERNEL_map`, мы получим физический адрес `level3_kernel_pgt`. Теперь давайте посмотрим на `_PAGE_TABLE`, это просто права доступа к странице:
+Выглядит сложно, но на самом деле это не так. Прежде всего, давайте посмотрим на `early_level4_pgt`. Он начинается с (4096 - 8) нулевых байтов, это означает, что мы не используем первые `511` записей. После этого мы видим одну запись `level3_kernel_pgt`. Обратите внимание на то, что мы вычитаем из него `__START_KERNEL_map + _PAGE_TABLE`. Как известно, `__START_KERNEL_map` является базовым виртуальным адресом сегмента кода ядра, поэтому, если мы вычтем `__START_KERNEL_map`, мы получим физический адрес `level3_kernel_pgt`. Теперь давайте посмотрим на `_PAGE_TABLE`, это просто права доступа к странице:
 
 ```C
 #define _PAGE_TABLE     (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER | \
@@ -171,9 +171,9 @@ NEXT_PAGE(level1_fixmap_pgt)
 #define _KERNPG_TABLE   (_PAGE_PRESENT | _PAGE_RW | _PAGE_ACCESSED | \
                          _PAGE_DIRTY)
 ```
-Второй - `level2_fixmap_pgt` это виртуальные адреса, которые могут ссылаться на любые физические адреса даже в пространстве ядра. Они представлены одной записью `level2_fixmap_pgt` и "дырой" в `10` мегабайт для отображения [vsyscalls](https://lwn.net/Articles/446528/). `level2_kernel_pgt` вызывает макрос `PDMS`, который выделяет `512` мегабайт из `__START_KERNEL_map` для сегмента ядра `.text` (после этого `512` мегабайт будут модулем пространства памяти).
+Второй - `level2_fixmap_pgt` - это виртуальные адреса, которые могут ссылаться на любые физические адреса даже в пространстве ядра. Они представлены одной записью `level2_fixmap_pgt` и "дырой" в `10` мегабайт для отображения [vsyscalls](https://lwn.net/Articles/446528/). `level2_kernel_pgt` вызывает макрос `PDMS`, который выделяет `512` мегабайт из `__START_KERNEL_map` для сегмента ядра `.text` (после этого `512` мегабайт будут модулем пространства памяти).
 
-После того как мы увидели определения этих символов, вернёмся к коду, описанному в начале раздела. Вы помните, что регистр `rbp` содержит разницу между адресом символа `startup_64`, который был получен получен во время [компоновки](https://en.wikipedia.org/wiki/Linker_%28computing%29) ядра и фактического адреса. Итак, на этот момент нам просто нужно добавить эту разницу к базовому адресу некоторых записей таблицы страниц, чтобы получить корректные адреса. В нашем случае эти записи:
+После того как мы увидели определения этих символов, вернёмся к коду, описанному в начале раздела. Вы должны помнить, что регистр `rbp` содержит разницу между адресом символа `startup_64`, который был получен во время [компоновки](https://en.wikipedia.org/wiki/Linker_%28computing%29) ядра, и фактическим адреса. Итак, на данный момент нам просто нужно добавить эту разницу к базовому адресу некоторых записей таблицы страниц, чтобы получить корректные адреса. В нашем случае это записи:
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -194,19 +194,19 @@ level2_kernel_pgt[0]   -> 512 Мб, отображённые на ядро
 level2_fixmap_pgt[507] -> level1_fixmap_pgt
 ```
 
-Обратите внимание, что мы не исправляли базовый адрес `early_level4_pgt` и некоторых других каталогов таблицы страниц, потому что мы увидим это во время построения/заполнения структур для этих таблиц страниц. После исправления базовых адресов таблиц страниц, мы можем приступить к их построению.
+Обратите внимание, что мы не исправили базовый адрес `early_level4_pgt` и некоторых других каталогов таблицы страниц, потому что мы увидим это во время построения/заполнения структур для этих таблиц страниц. После исправления базовых адресов таблиц страниц, мы можем приступить к их построению.
 
 Настройка отображения "один в один" (identity mapping)
 --------------------------------------------------------------------------------
 
-Теперь мы можем увидеть настройку отображения "один в один" начальных таблиц страниц. В подкаче, отображённой "один в один", виртуальные адреса сопоставляются с физическими адресами, которые имеют одно и то же значение, `один в один`. Давайте рассмотрим это подробнее. Прежде всего, мы получаем `rip-относительный` адрес `_text` и `_early_level4_pgt` и помещаем их в регистры `rdi` и `rbx`:
+Теперь мы можем увидеть настройку отображения "один в один" начальных таблиц страниц. В подкачке, отображённой "один в один", виртуальные адреса сопоставляются с физическими адресами, которые имеют одно и то же значение, `один в один`. Давайте рассмотрим это подробнее. Прежде всего, мы получаем `rip-относительные` адреса `_text` и `_early_level4_pgt` и помещаем их в регистры `rdi` и `rbx`:
 
 ```assembly
 	leaq	_text(%rip), %rdi
 	leaq	early_level4_pgt(%rip), %rbx
 ```
 
-После этого мы сохраняем адрес `_text` в регистр `rax` и получаем индекс записи глобального каталога страниц, который хранит адрес `_text` address, путём сдвига адреса `_text` на `PGDIR_SHIFT`:
+После этого мы сохраняем адрес `_text` в регистр `rax` и получаем индекс записи глобального каталога страниц, который хранит адрес `_text`, путём сдвига адреса `_text` на `PGDIR_SHIFT`:
 
 ```assembly
 	movq	%rdi, %rax
@@ -229,7 +229,7 @@ level2_fixmap_pgt[507] -> level1_fixmap_pgt
 	movq	%rdx, 8(%rbx,%rax,8)
 ```
 
-Регистр `rbx` содержит адрес `early_level4_pgt` и здесь `%rax * 8` - это индекс глобального каталога страниц, занятого адресом `_text`s. Итак, здесь мы заполняем две записи `early_level4_pgt` адресом двух записей `early_dynamic_pgts`, который связан с `_text`. `early_dynamic_pgts` является массивом массивов:
+Регистр `rbx` содержит адрес `early_level4_pgt` и здесь `%rax * 8` - это индекс глобального каталога страниц, занятого адресом `_text`. Итак, здесь мы заполняем две записи `early_level4_pgt` адресами двух записей `early_dynamic_pgts`, который связан с `_text`. `early_dynamic_pgts` является массивом массивов:
 
 ```C
 extern pmd_t early_dynamic_pgts[EARLY_DYNAMIC_PAGE_TABLES][PTRS_PER_PMD];
@@ -237,7 +237,7 @@ extern pmd_t early_dynamic_pgts[EARLY_DYNAMIC_PAGE_TABLES][PTRS_PER_PMD];
 
 который будет хранить временные таблицы страниц для раннего ядра и которые мы не будем перемещать в `init_level4_pgt`.
 
-После этого мы добавляем `4096` (размер`early_level4_pgt`) в регистр `rdx` (теперь он содержит адрес первой записи `early_dynamic_pgts`) и помещаем значение регистра `rdi` (теперь он содержит физический адрес `_text`) в регистр `rax`. Теперь мы смещаем адрес `_text` на `PUD_SHIFT`, чтобы получить индекс записи из верхнего каталога страниц, который содержит этот адрес, и очищает старшие биты, для того чтобы получить только связанную с `pud` часть:
+После этого мы добавляем `4096` (размер `early_level4_pgt`) в регистр `rdx` (теперь он содержит адрес первой записи `early_dynamic_pgts`) и помещаем значение регистра `rdi` (теперь он содержит физический адрес `_text`) в регистр `rax`. Далее мы смещаем адрес `_text` на `PUD_SHIFT`, чтобы получить индекс записи из верхнего каталога страниц, который содержит этот адрес, и очищаем старшие биты, для того чтобы получить только связанную с `pud` часть:
 
 ```assembly
 	addq	$4096, %rdx
@@ -255,7 +255,7 @@ extern pmd_t early_dynamic_pgts[EARLY_DYNAMIC_PAGE_TABLES][PTRS_PER_PMD];
 	movq	%rdx, 4096(%rbx,%rax,8)
 ```
 
-На следующем шаге мы выполняем ту же операцию для последнего каталога таблиц страниц, но заполняем не две записи, а все записи, чтобы охватить полный размер ядра.
+На следующем шаге мы выполняем ту же операцию для последнего каталога таблиц страниц, но заполняем не две записи, а все, чтобы охватить полный размер ядра.
 
 После заполнения наших начальных каталогов таблиц страниц мы помещаем физический адрес `early_level4_pgt` в регистр `rax` и переходим на метку `1`:
 
@@ -264,12 +264,12 @@ extern pmd_t early_dynamic_pgts[EARLY_DYNAMIC_PAGE_TABLES][PTRS_PER_PMD];
 	jmp 1f
 ```
 
-На данный момент это всё. Наша ранняя подкачка страниц подготовлена и нам нужно совершить последнее приготовление, прежде чем мы перейдём к коду на C и к точке входа в ядро.
+На данный момент это всё. Наша ранняя подкачка страниц настроена и нам нужно совершить последнее приготовление, прежде чем мы перейдём к коду на C и к точке входа в ядро.
 
 Последнее приготовление перед переходом на точку входа в ядро
 --------------------------------------------------------------------------------
 
-After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extension) and put the physical address of the `phys_base` (see above) to the `rax` register and fill `cr3` register with it:
+После перехода на метку `1` мы включаем `PAE`, `PGE` (Paging Global Extension) и помещаем физический адрес `phys_base` (см. выше) в регистр `rax` и заполняем регистр `cr3`:
 
 ```assembly
 1:
@@ -280,7 +280,7 @@ After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extens
 	movq	%rax, %cr3
 ```
 
-In the next step we check that CPU supports [NX](http://en.wikipedia.org/wiki/NX_bit) bit with:
+На следующем шаге мы проверяем, поддерживает ли процессор бит [NX](http://en.wikipedia.org/wiki/NX_bit):
 
 ```assembly
 	movl	$0x80000001, %eax
@@ -288,33 +288,33 @@ In the next step we check that CPU supports [NX](http://en.wikipedia.org/wiki/NX
 	movl	%edx,%edi
 ```
 
-We put `0x80000001` value to the `eax` and execute `cpuid` instruction for getting the extended processor info and feature bits. The result will be in the `edx` register which we put to the `edi`.
+Мы помещаем значение `0x80000001` в `eax` и выполняем инструкцию `cpuid` для получения расширенной информации о процессоре и битах. Полученный результат находится в регистре `edx`, который мы помещаем в `edi`.
 
-Now we put `0xc0000080` or `MSR_EFER` to the `ecx` and call `rdmsr` instruction for the reading model specific register.
+Теперь мы помещаем `0xc0000080` (`MSR_EFER`) в `ecx` и вызываем инструкцию `rdmsr` для чтения моделезависимого регистра.
 
 ```assembly
 	movl	$MSR_EFER, %ecx
 	rdmsr
 ```
 
-The result will be in the `edx:eax`. General view of the `EFER` is following:
+Результат находится в `edx:eax`. Общий вид `EFER` следующий:
 
 ```
 63                                                                              32
 ┌───────────────────────────────────────────────────────────────────────────────┐
 │                                                                               │
-│                                Reserved MBZ                                   │
+│                                Зарезервированный MBZ                          │
 │                                                                               │
 └───────────────────────────────────────────────────────────────────────────────┘
 31                            16  15      14      13   12  11   10  9  8 7  1   0
 ┌──────────────────────────────┬───┬───────┬───────┬────┬───┬───┬───┬───┬───┬───┐
 │                              │ T │       │       │    │   │   │   │   │   │   │
-│ Reserved MBZ                 │ C │ FFXSR | LMSLE │SVME│NXE│LMA│MBZ│LME│RAZ│SCE│
+│ Зарезервированный MBZ        │ C │ FFXSR | LMSLE │SVME│NXE│LMA│MBZ│LME│RAZ│SCE│
 │                              │ E │       │       │    │   │   │   │   │   │   │
 └──────────────────────────────┴───┴───────┴───────┴────┴───┴───┴───┴───┴───┴───┘
 ```
 
-We will not see all fields in details here, but we will learn about this and other `MSRs` in a special part about it. As we read `EFER` to the `edx:eax`, we check `_EFER_SCE` or zero bit which is `System Call Extensions` with `btsl` instruction and set it to one. By the setting `SCE` bit we enable `SYSCALL` and `SYSRET` instructions. In the next step we check 20th bit in the `edi`, remember that this register stores result of the `cpuid` (see above). If `20` bit is set (`NX` bit) we just write `EFER_SCE` to the model specific register.
+Здесь мы не увидим все поля, но узнаем об этих и других `MSR` в специальной части. Когда мы считываем `EFER` в `edx:eax`, мы проверяем `_EFER_SCE` или нулевой бит, являющийся `System Call Extensions` с инструкцией `btsl` и устанавливаем его в единицу. С помощью бита `SCE` мы включаем инструкции `SYSCALL` и `SYSRET`. На следующем шаге мы проверяем 20 бит в регистре `edi`, который хранит результат `cpuid` (см. выше). Если `20` бит установлен (бит `NX`), мы просто записываем `EFER_SCE` в моделезависимый регистр.
 
 ```assembly
 	btsl	$_EFER_SCE, %eax
@@ -325,17 +325,17 @@ We will not see all fields in details here, but we will learn about this and oth
 1:	wrmsr
 ```
 
-If the [NX](https://en.wikipedia.org/wiki/NX_bit) bit is supported we enable `_EFER_NX`  and write it too, with the `wrmsr` instruction. After the [NX](https://en.wikipedia.org/wiki/NX_bit) bit is set, we set some bits in the `cr0` [control register](https://en.wikipedia.org/wiki/Control_register), namely:
+Если бит [NX](https://en.wikipedia.org/wiki/NX_bit) поддерживается, мы включаем `_EFER_NX` и записываем в него с помощью инструкции `wrmsr`. После того как бит [NX](https://en.wikipedia.org/wiki/NX_bit) установлен, мы устанавливаем некоторые биты в [регистре управления](https://en.wikipedia.org/wiki/Control_register) `cr0`, а именно:
 
-* `X86_CR0_PE` - system is in protected mode;
-* `X86_CR0_MP` - controls interaction of WAIT/FWAIT instructions with TS flag in CR0;
-* `X86_CR0_ET` - on the 386, it allowed to specify whether the external math coprocessor was an 80287 or 80387;
-* `X86_CR0_NE` - enable internal x87 floating point error reporting when set, else enables PC style x87 error detection;
-* `X86_CR0_WP` - when set, the CPU can't write to read-only pages when privilege level is 0;
-* `X86_CR0_AM` - alignment check enabled if AM set, AC flag (in EFLAGS register) set, and privilege level is 3;
-* `X86_CR0_PG` - enable paging.
+* `X86_CR0_PE` - система в защищённом режиме;
+* `X86_CR0_MP` - контролирует взаимодействие инструкций WAIT/FWAIT с помощью флага TS в CR0;
+* `X86_CR0_ET` - на 386 позволяло указать, был ли внешний математический сопроцессор 80287 или 80387;
+* `X86_CR0_NE` - позволяет включить внутреннюю x87 отчётность об ошибках с плавающей запятой, иначе включает PC-стиль x87 обнаружение ошибок;
+* `X86_CR0_WP` - если установлен, CPU не может писать в страницы только для чтения, когда уровень привилегий равен 0;
+* `X86_CR0_AM` - проверка выравнивания включена, если установлен AM и флаг AC (в регистре EFLAGS), а уровень привелигий равен 3;
+* `X86_CR0_PG` - включает подкачку страниц.
 
-by the execution following assembly code:
+с помощью выполнения данного ассемблерного кода:
 
 ```assembly
 #define CR0_STATE	(X86_CR0_PE | X86_CR0_MP | X86_CR0_ET | \
@@ -345,7 +345,7 @@ movl	$CR0_STATE, %eax
 movq	%rax, %cr0
 ```
 
-We already know that to run any code, and even more [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code from assembly, we need to setup a stack. As always, we are doing it by the setting of [stack pointer](https://en.wikipedia.org/wiki/Stack_register) to a correct place in memory and resetting [flags](https://en.wikipedia.org/wiki/FLAGS_register) register after this:
+Мы уже знаем, что для запуска любого кода и даже большего количества [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) кода из ассемблера, нам необходимо настроить стек. Как всегда, мы делаем это путём установки [указателя стека](https://en.wikipedia.org/wiki/Stack_register) на корректное место в памяти и сброса [регистра флагов](https://en.wikipedia.org/wiki/FLAGS_register):
 
 ```assembly
 movq initial_stack(%rip), %rsp
@@ -353,14 +353,14 @@ pushq $0
 popfq
 ```
 
-The most interesting thing here is the `initial_stack`. This symbol is defined in the [source](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) code file and looks like:
+Самое интересное здесь - `initial_stack`. Этот символ определён в файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) и выглядит следующим образом:
 
 ```assembly
 GLOBAL(initial_stack)
     .quad  init_thread_union+THREAD_SIZE-8
 ```
 
-The `GLOBAL` is already familiar to us from. It defined in the [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/linkage.h) header file expands to the `global` symbol definition:
+Макрос `GLOBAL` нам уже знаком. Он определён в файле [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/linkage.h) и раскрывается до `глобального` определения символа:
 
 ```C
 #define GLOBAL(name)    \
@@ -368,16 +368,16 @@ The `GLOBAL` is already familiar to us from. It defined in the [arch/x86/include
          name:
 ```
 
-The `THREAD_SIZE` macro is defined in the [arch/x86/include/asm/page_64_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/page_64_types.h) header file and depends on value of the `KASAN_STACK_ORDER` macro:
+Макрос `THREAD_SIZE` определён в [arch/x86/include/asm/page_64_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/page_64_types.h) и зависит от значения макроса `KASAN_STACK_ORDER`:
 
 ```C
 #define THREAD_SIZE_ORDER       (2 + KASAN_STACK_ORDER)
 #define THREAD_SIZE  (PAGE_SIZE << THREAD_SIZE_ORDER)
 ```
 
-We consider when the [kasan](http://lxr.free-electrons.com/source/Documentation/kasan.txt) is disabled and the `PAGE_SIZE` is `4096` bytes. So the `THREAD_SIZE` will expands to `16` kilobytes and represents size of the stack of a thread. Why is `thread`? You may already know that each [process](https://en.wikipedia.org/wiki/Process_%28computing%29) may have parent [processes](https://en.wikipedia.org/wiki/Parent_process) and [child](https://en.wikipedia.org/wiki/Child_process) processes. Actually, a parent process and child process differ in stack. A new kernel stack is allocated for a new process. In the Linux kernel this stack is represented by the [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with the `thread_info` structure.
+когда [kasan](http://lxr.free-electrons.com/source/Documentation/kasan.txt) отключён, а `PAGE_SIZE` равен `4096` байтам. Таким образом, `THREAD_SIZE` будет раскрыт до `16` килобайт и представляет собой размер стека потока. Почему `потока`? Возможно, вы уже знаете, что каждый [процесс](https://en.wikipedia.org/wiki/Process_%28computing%29) может иметь [родительские](https://en.wikipedia.org/wiki/Parent_process) и [дочерние](https://en.wikipedia.org/wiki/Child_process) процессы. На самом деле родительский и дочерний процесс различаются в стеке. Для нового процесса выделяется новый стек ядра. В ядре Linux этот стек представлен [объединением (union)](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) со структурой `thread_info`.
 
-And as we can see the `init_thread_union` is represented by the `thread_union` [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B). Earlier this union looked like:
+Как мы видим, `init_thread_union` представлен [объединением](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) `thread_union`. Раньше это объединение выглядело следующим образом:
 
 ```C
 union thread_union {
@@ -386,7 +386,7 @@ union thread_union {
 };
 ```
 
-but from the Linux kernel `4.9-rc1` release, `thread_info` was moved to the `task_struct` structure which represents a thread. So, for now `thread_union` looks like:
+но начиная с версии `4.9-rc1` `thread_info` была перемещена в структуру `task_struct`, представляющую потоки. На данный момент `thread_union` выглядит так:
 
 ```C
 union thread_union {
@@ -397,9 +397,9 @@ union thread_union {
 };
 ```
 
-where the `CONFIG_THREAD_INFO_IN_TASK` kernel configuration option is enabled for `x86_64` architecture. So, as we consider only `x86_64` architecture in this book, an instance of `thread_union` will contain only stack and `thread_info` structure will be placed in the `task_struct`.
+где `CONFIG_THREAD_INFO_IN_TASK` - параметр конфигурации ядра, включённый для архитектуры `x86_64`. Поскольку в этой книге мы рассматриваем только архитектуру `x86_64`, экземпляр `thread_union` будет содержать только стек, а структура `thread_info` будет помещена в `task_struct`.
 
-The `init_thread_union` looks like:
+`init_thread_union` выглядит следующим образом:
 
 ```
 union thread_union init_thread_union __init_task_data = {
@@ -409,7 +409,7 @@ union thread_union init_thread_union __init_task_data = {
 };
 ```
 
-which represents just thread stack. Now we may understand this expression:
+который представляет собой только стек потока. Теперь мы можем понять это выражение:
 
 ```assembly
 GLOBAL(initial_stack)
@@ -417,15 +417,15 @@ GLOBAL(initial_stack)
 ```
 
 
-that `initial_stack` symbol points to the start of the `thread_union.stack` array + `THREAD_SIZE` which is 16 killobytes and - 8 bytes. Here we need to subtract `8` bytes at the to of stack. This is necessary to guarantee illegal access of the next page memory.
+где символ `initial_stack` указывает на начало массива `thread_union.stack` + `THREAD_SIZE`, который равен 16 килобайтам и - 8 байт. Здесь нам нужно вычесть `8` байт в верхней части стека. Это необходимо для обеспечения незаконного доступа следующей страницы памяти.
 
-After the early boot stack is set, to update the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table) with the `lgdt` instruction:
+После настройки начального загрузочного стека, необходимо обновить [глобальную таблицу дескрипторов](https://en.wikipedia.org/wiki/Global_Descriptor_Table) с помощью инструкции `lgdt`:
 
 ```assembly
 lgdt	early_gdt_descr(%rip)
 ```
 
-where the `early_gdt_descr` is defined as:
+где `early_gdt_descr` определён как:
 
 ```assembly
 early_gdt_descr:
@@ -434,15 +434,15 @@ early_gdt_descr_base:
 	.quad	INIT_PER_CPU_VAR(gdt_page)
 ```
 
-We need to reload `Global Descriptor Table` because now kernel works in the low userspace addresses, but soon kernel will work in its own space. Now let's look at the definition of `early_gdt_descr`. Global Descriptor Table contains `32` entries:
+Это необходимо, поскольку теперь ядро работает в нижних адресах пользовательского пространства, но вскоре ядро будет работать в своём собственном пространстве. Теперь давайте посмотрим на определение `early_gdt_descr`. Глобальная таблица дескриптор содержит `32` записи:
 
 ```C
 #define GDT_ENTRIES 32
 ```
 
-for kernel code, data, thread local storage segments and etc... it's simple. Now let's look at the definition of the `early_gdt_descr_base`.
+для кода ядра, данных, сегментов локального хранилища потоков и т.д. Теперь давайте посмотрим на определение `early_gdt_descr_base`.
 
-First of `gdt_page` defined as:
+`gdt_page` определена как:
 
 ```C
 struct gdt_page {
@@ -450,7 +450,7 @@ struct gdt_page {
 } __attribute__((aligned(PAGE_SIZE)));
 ```
 
-in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h). It contains one field `gdt` which is array of the `desc_struct` structure which is defined as:
+в файле [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h). Она содержит одно поле `gdt`, которое является массивом структур `desc_struct`:
 
 ```C
 struct desc_struct {
@@ -469,24 +469,24 @@ struct desc_struct {
  } __attribute__((packed));
 ```
 
-and presents familiar to us `GDT` descriptor. Also we can note that `gdt_page` structure aligned to `PAGE_SIZE` which is `4096` bytes. It means that `gdt` will occupy one page. Now let's try to understand what is `INIT_PER_CPU_VAR`. `INIT_PER_CPU_VAR` is a macro which defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/percpu.h) and just concats `init_per_cpu__` with the given parameter:
+и представляет собой знакомый нам дескриптор `GDT`. Также мы можем отметить, что структура `gdt_page` выровнена по `PAGE_SIZE`, равному `4096` байтам. Это значит, что `gdt` займёт одну страницу. Теперь попробуем понять, что такое `INIT_PER_CPU_VAR`. `INIT_PER_CPU_VAR` это макрос, определённый в [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/percpu.h), который просто совершает конкатенацию `init_per_cpu__` с заданным параметром:
 
 ```C
 #define INIT_PER_CPU_VAR(var) init_per_cpu__##var
 ```
 
-After the `INIT_PER_CPU_VAR` macro will be expanded, we will have `init_per_cpu__gdt_page`. We can see in the [linker script](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vmlinux.lds.S):
+После того, как макрос `INIT_PER_CPU_VAR` будет раскрыт, мы будем иметь `init_per_cpu__gdt_page`. Мы можем видеть это в [скрипте компоновщика](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vmlinux.lds.S):
 
 ```
 #define INIT_PER_CPU(x) init_per_cpu__##x = x + __per_cpu_load
 INIT_PER_CPU(gdt_page);
 ```
 
-As we got `init_per_cpu__gdt_page` in `INIT_PER_CPU_VAR` and `INIT_PER_CPU` macro from linker script will be expanded we will get offset from the `__per_cpu_load`. After this calculations, we will have correct base address of the new GDT.
+После того как макросы `INIT_PER_CPU_VAR` и `INIT_PER_CPU` будут раскрыты до `init_per_cpu__gdt_page` мы получим смещение от `__per_cpu_load`. После этих расчётов мы получим корректный базовый адрес нового `GDT`.
 
-Generally per-CPU variables is a 2.6 kernel feature. You can understand what it is from its name. When we create `per-CPU` variable, each CPU will have will have its own copy of this variable. Here we creating `gdt_page` per-CPU variable. There are many advantages for variables of this type, like there are no locks, because each CPU works with its own copy of variable and etc... So every core on multiprocessor will have its own `GDT` table and every entry in the table will represent a memory segment which can be accessed from the thread which ran on the core. You can read in details about `per-CPU` variables in the [Theory/per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) post.
+Переменные, локальные для каждого процессора (`per-CPU variables`), являются особенностью ядра версии 2.6. Вы уже можете понять что это, исходя из названия. Когда мы создаём `per-CPU` переменную, каждый процессор будет иметь свою собственную копию этой переменной. Здесь мы создаём `per-CPU` переменную `gdt_page`. Существует много преимуществ для переменных этого типа, например, нет блокировок, поскольку каждый процессор работает со своей собственной копией переменной и т.д. Таким образом, каждое ядро на многопроцессорной машине будет иметь свою собственную таблицу `GDT` и каждая запись в таблице будет представлять сегмент памяти, к которому можно получить доступ из потока, который запускался на ядре. Подробнее о `per-CPU` переменных можно почитать в статье [Concepts/per-cpu](Concepts/per-cpu.md).
 
-As we loaded new Global Descriptor Table, we reload segments as we did it every time:
+После загрузки новой глобальной таблицы дескрипторов мы перезагружаем сегменты:
 
 ```assembly
 	xorl %eax,%eax
@@ -497,7 +497,7 @@ As we loaded new Global Descriptor Table, we reload segments as we did it every 
 	movl %eax,%gs
 ```
 
-After all of these steps we set up `gs` register that it post to the `irqstack` which represents special stack where [interrupts](https://en.wikipedia.org/wiki/Interrupt) will be handled on:
+После всех этих шагов мы настраиваем регистр `gs`, указывающий на `irqstack`, который представляет собой специальный стек для обработки [прерываний](https://en.wikipedia.org/wiki/Interrupt):
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -506,24 +506,24 @@ After all of these steps we set up `gs` register that it post to the `irqstack` 
 	wrmsr
 ```
 
-where `MSR_GS_BASE` is:
+где `MSR_GS_BASE`:
 
 ```C
 #define MSR_GS_BASE             0xc0000101
 ```
 
-We need to put `MSR_GS_BASE` to the `ecx` register and load data from the `eax` and `edx` (which are point to the `initial_gs`) with `wrmsr` instruction. We don't use `cs`, `fs`, `ds` and `ss` segment registers for addressing in the 64-bit mode, but `fs` and `gs` registers can be used. `fs` and `gs` have a hidden part (as we saw it in the real mode for `cs`) and this part contains descriptor which mapped to [Model Specific Registers](https://en.wikipedia.org/wiki/Model-specific_register). So we can see above `0xc0000101` is a `gs.base` MSR address. When a [system call](https://en.wikipedia.org/wiki/System_call) or [interrupt](https://en.wikipedia.org/wiki/Interrupt) occurred, there is no kernel stack at the entry point, so the value of the `MSR_GS_BASE` will store address of the interrupt stack.
+Нам необходимо поместить `MSR_GS_BASE` в регистр `ecx` и загрузить данные из `eax` и `edx` (которые указывают на `initial_gs`) с помощью инструкции `wrmsr`. Мы не используем регистры сегментов `cs`, `fs`, `ds` и `ss` для адресации в 64-битном режиме, но могут использоваться регистры `fs` и `gs`. `fs` и `gs` имеют скрытую часть (как мы видели в режиме реальных адресов для `cs`) и эта часть содержит дескриптор, который отображён на [моделезависимый регистр](https://en.wikipedia.org/wiki/Model-specific_register). Таким образом, выше мы можем видеть `0xc0000101` - это MSR-адрес `gs.base`. Когда произошёл [системный вызов](https://en.wikipedia.org/wiki/System_call) или [прерывание](https://en.wikipedia.org/wiki/Interrupt), в точке входа нет стека ядра, поэтому значение `MSR_GS_BASE` будет хранить адрес стека прерываний.
 
-In the next step we put the address of the real mode bootparam structure to the `rdi` (remember `rsi` holds pointer to this structure from the start) and jump to the C code with:
+На следующем шаге мы помещаем адрес структуры параметров загрузки режима реальных адресов в регистр `rdi` (напомним, что `rsi` содержит указатель на эту структуру с самого начала) и переходим к коду на C:
 
 ```assembly
 	movq	initial_code(%rip), %rax
-	pushq	$__KERNEL_CS	# set correct cs
-	pushq	%rax		# target address in negative space
+	pushq	$__KERNEL_CS	# устанавливает корректный cs
+	pushq	%rax		# целевой адрес в отрицательном пространстве
 	lretq
 ```
 
-Here we put the address of the `initial_code` to the `rax` and push fake address, `__KERNEL_CS` and the address of the `initial_code` to the stack. After this we can see `lretq` instruction which means that after it return address will be extracted from stack (now there is address of the `initial_code`) and jump there. `initial_code` is defined in the same source code file and looks:
+Здесь мы помещаем адрес `initial_code` в `rax` и помещаем фейковый адрес `__KERNEL_CS` и адрес `initial_code` в стек. После этого мы видим инструкцию `lretq`, означающую что после неё адрес возврата будет извлечён из стека (теперь это адрес `initial_code`) и будет совершён переход по нему. `initial_code` определён в том же файле исходного кода и выглядит следующим образом:
 
 ```assembly
 	.balign	8
@@ -534,7 +534,7 @@ Here we put the address of the `initial_code` to the `rax` and push fake address
 	...
 ```
 
-As we can see `initial_code` contains address of the `x86_64_start_kernel`, which is defined in the [arch/x86/kerne/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c) and looks like this:
+Как мы видим `initial_code` содержит адрес `x86_64_start_kernel`, определённой в [arch/x86/kerne/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c):
 
 ```C
 asmlinkage __visible void __init x86_64_start_kernel(char * real_mode_data) {
@@ -544,16 +544,16 @@ asmlinkage __visible void __init x86_64_start_kernel(char * real_mode_data) {
 }
 ```
 
-It has one argument is a `real_mode_data` (remember that we passed address of the real mode data to the `rdi` register previously).
+У неё есть один аргумент - `real_mode_data` (помните, ранее мы помещали адрес данных режима реальных адресов в регистр `rdi`).
 
-This is first C code in the kernel!
+Это первый C код в ядре!
 
-Next to start_kernel
+Далее в start_kernel
 --------------------------------------------------------------------------------
 
-We need to see last preparations before we can see "kernel entry point" - start_kernel function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L489).
+Мы увидим последние приготовления, прежде чем сможем перейти к "точке входа в ядро" - к функции `start_kernel` в файле [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L489).
 
-First of all we can see some checks in the `x86_64_start_kernel` function:
+Прежде всего в функции `x86_64_start_kernel` мы видим некоторый проверки:
 
 ```C
 BUILD_BUG_ON(MODULES_VADDR < __START_KERNEL_map);
@@ -566,20 +566,20 @@ BUILD_BUG_ON(!(((MODULES_END - 1) & PGDIR_MASK) == (__START_KERNEL & PGDIR_MASK)
 BUILD_BUG_ON(__fix_to_virt(__end_of_fixed_addresses) <= MODULES_END);
 ```
 
-There are checks for different things like virtual addresses of modules space is not fewer than base address of the kernel text - `__STAT_KERNEL_map`, that kernel text with modules is not less than image of the kernel and etc... `BUILD_BUG_ON` is a macro which looks as:
+например, виртуальные адреса пространства модулей не меньше, чем базовый адрес кода ядра (`__STAT_KERNEL_map`), код ядра с модулями не меньше образа ядра и т.д. `BUILD_BUG_ON` является макросом и выглядит следующим образом:
 
 ```C
 #define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
 ```
 
-Let's try to understand how this trick works. Let's take for example first condition: `MODULES_VADDR < __START_KERNEL_map`. `!!conditions` is the same that `condition != 0`. So it means if `MODULES_VADDR < __START_KERNEL_map` is true, we will get `1` in the `!!(condition)` or zero if not. After `2*!!(condition)` we will get or `2` or `0`. In the end of calculations we can get two different behaviors:
+Давайте попробуем понять, как работает этот трюк. Возьмём, например, первое условие: `MODULES_VADDR < __START_KERNEL_map`. `!!conditions` тоже самое что и `condition != 0`. Таким образом, если `MODULES_VADDR < __START_KERNEL_map` истинно, мы получим `1` в `!!(condition)` или ноль, если ложно. После `2*!!(condition)` мы получим или `2` или `0`. В конце вычислений мы можем получить два разных поведения:
 
-* We will have compilation error, because try to get size of the char array with negative index (as can be in our case, because `MODULES_VADDR` can't be less than `__START_KERNEL_map` will be in our case);
-* No compilation errors.
+* У нас будет ошибка компиляции, поскольку мы попытаемся получить размер `char` массива с отрицательным индексом (вполне возможно, но в нашем случае `MODULES_VADDR` не может быть меньше `__START_KERNEL_map`);
+* Ошибки компиляции не будет.
 
-That's all. So interesting C trick for getting compile error which depends on some constants.
+На этом всё. Очень интересный C-трюк для получения ошибки компиляции, которая зависит от некоторых констант.
 
-In the next step we can see call of the `cr4_init_shadow` function which stores shadow copy of the `cr4` per cpu. Context switches can change bits in the `cr4` so we need to store `cr4` for each CPU. And after this we can see call of the `reset_early_page_tables` function where we resets all page global directory entries and write new pointer to the PGT in `cr3`:
+На следующем шаге мы видим вызов функции `cr4_init_shadow`, которая сохраняет копии `cr4` для каждого процессора. Переключения контекста могут изменять биты в `cr4`, поэтому нам нужно сохранить `cr4` для каждого процессора. После этого происходит вызов функции `reset_early_page_tables`, которая сбрасывает все записи глобального каталога страниц и записывает новый указатель на PGT в `cr3`:
 
 ```C
 for (i = 0; i < PTRS_PER_PGD-1; i++)
@@ -590,30 +590,28 @@ next_early_pgt = 0;
 write_cr3(__pa_nodebug(early_level4_pgt));
 ```
 
-Soon we will build new page tables. Here we can see that we go through all Page Global Directory Entries (`PTRS_PER_PGD` is `512`) in the loop and make it zero. After this we set `next_early_pgt` to zero (we will see details about it in the next post) and write physical address of the `early_level4_pgt` to the `cr3`. `__pa_nodebug` is a macro which will be expanded to:
+Вскоре мы создадим новые таблицы страниц. Далее в цикле мы проходим по всему глобальному каталогу страниц (`PTRS_PER_PGD` равен `512`) и обнуляем его. После этого мы устанавливаем `next_early_pgt` в ноль (подробнее об этом в следующей статье) и записываем физический адрес `early_level4_pgt` в `cr3`. `__pa_nodebug` - макрос, который выглядит следующим образом:
 
 ```C
 ((unsigned long)(x) - __START_KERNEL_map + phys_base)
 ```
 
-After this we clear `_bss` from the `__bss_stop` to `__bss_start` and the next step will be setup of the early `IDT` handlers, but it's big concept so we will see it in the next part.
+После этого мы очищаем `_bss` от `__bss_stop` до `__bss_start` и следующим шагом будет настройка начальных обработчиков `IDT`. Это большой раздел, поэтому мы увидим его в следующей статье.
 
-Conclusion
+Заключение
 --------------------------------------------------------------------------------
 
-This is the end of the first part about linux kernel initialization.
+Это конец первой части об инициализации ядра Linux.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+В следующей части мы увидим инициализацию начальных обработчиков прерываний, отображение памяти пространства ядра и многое другое.
 
-In the next part we will see initialization of the early interruption handlers, kernel space memory mapping and a lot more.
+**От переводчика: пожалуйста, имейте в виду, что английский - не мой родной язык, и я очень извиняюсь за возможные неудобства. Если вы найдёте какие-либо ошибки или неточности в переводе, пожалуйста, пришлите pull request в [linux-insides-ru](https://github.com/proninyaroslav/linux-insides-ru).**
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
-
-Links
+Ссылки
 --------------------------------------------------------------------------------
 
-* [Model Specific Register](http://en.wikipedia.org/wiki/Model-specific_register)
-* [Paging](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/Paging.html)
-* [Previous part - Kernel decompression](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/linux-bootstrap-5.html)
-* [NX](http://en.wikipedia.org/wiki/NX_bit)
+* [Моделезависимый регистр](http://en.wikipedia.org/wiki/Model-specific_register)
+* [Подкачка страниц](Theory/Paging.md)
+* [Предыдущая часть - Декомпрессия ядра](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Booting/linux-bootstrap-5.html)
+* [Бит NX](http://en.wikipedia.org/wiki/NX_bit)
 * [ASLR](http://en.wikipedia.org/wiki/Address_space_layout_randomization)

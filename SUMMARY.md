@@ -7,7 +7,7 @@
     * [Переход в 64-битный режим](Booting/linux-bootstrap-4.md)
     * [Декомпрессия ядра](Booting/linux-bootstrap-5.md)
 * [Инициализация](Initialization/README.md)
-    * [First steps in the kernel](Initialization/linux-initialization-1.md)
+    * [Первые шаги в ядре](Initialization/linux-initialization-1.md)
     * [Early interrupts handler](Initialization/linux-initialization-2.md)
     * [Last preparations before the kernel entry point](Initialization/linux-initialization-3.md)
     * [Kernel entry point](Initialization/linux-initialization-4.md)
@@ -87,4 +87,3 @@
     * [IDT](KernelStructures/idt.md)
 * [Полезные ссылки](LINKS.md)
 * [Участники](contributors-ru.md)
-
