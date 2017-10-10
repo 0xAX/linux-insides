@@ -5,4 +5,4 @@ This chapter describes various concepts which are used in the Linux kernel.
 * [Per-CPU variables](per-cpu.md)
 * [CPU masks](cpumask.md)
 * [The initcall mechanism](initcall.md)
-* [Notification Chains in Linux Kernel](notification_chains.md)
+* [Notification Chains](notification_chains.md)
