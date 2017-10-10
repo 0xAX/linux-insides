@@ -63,6 +63,7 @@
     * [Per-CPU variables](Concepts/per-cpu.md)
     * [Cpumasks](Concepts/cpumask.md)
     * [The initcall mechanism](Concepts/initcall.md)
+    * [Notification Chains](Concepts/notification_chains.md)
 * [Data Structures in the Linux Kernel](DataStructures/README.md)
     * [Doubly linked list](DataStructures/dlist.md)
     * [Radix tree](DataStructures/radix-tree.md)
