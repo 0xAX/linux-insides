@@ -39,7 +39,7 @@ The Linux kernel calls all architecture-specific `initcalls` before the `fs` rel
 * `core`;
 * `postcore`;
 * `arch`;
-* `susys`;
+* `subsys`;
 * `fs`;
 * `device`;
 * `late`.
