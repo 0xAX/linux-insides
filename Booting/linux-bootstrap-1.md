@@ -4,9 +4,9 @@ Kernel booting process. Part 1.
 From the bootloader to the kernel
 --------------------------------------------------------------------------------
 
-If you have been reading my previous [blog posts](https://0xax.github.io/categories/assembler/), then you can see that, for some time ago, I have been starting to get involved into low-level programming. I have written some posts about assembly programming for `x86_64` Linux and, at the same time, I have also started to dive into the Linux kernel source code.
+If you have been reading my previous [blog posts](https://0xax.github.io/categories/assembler/), then you can see that, for some time now, I have been starting to get involved with low-level programming. I have written some posts about assembly programming for `x86_64` Linux and, at the same time, I have also started to dive into the Linux kernel source code.
 
-I have a great interest in understanding how low-level things work, how programs run on my computer, how are they located in memory, how the kernel manages processes and memory, how the network stack works at a low level, and many many other things. So, I have decided to write yet another series of posts about the Linux kernel for **x86_64** architecture.
+I have a great interest in understanding how low-level things work, how programs run on my computer, how they are located in memory, how the kernel manages processes and memory, how the network stack works at a low level, and many many other things. So, I have decided to write yet another series of posts about the Linux kernel for the **x86_64** architecture.
 
 Note that I'm not a professional kernel hacker and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on Twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). I appreciate it.
 
@@ -19,16 +19,16 @@ All posts will also be accessible at [github repo](https://github.com/0xAX/linux
 * Understanding C code
 * Understanding assembly code (AT&T syntax)
 
-Anyway, if you just start to learn such tools, I will try to explain some parts during this and the following posts. Alright, this is the end of the simple introduction, and now we can start to dive into the Linux kernel and low-level stuff.
+Anyway, if you are just starting to learn such tools, I will try to explain some parts during this and the following posts. Alright, this is the end of the simple introduction, and now we can start to dive into the Linux kernel and low-level stuff.
 
-I've started to write this book in a time of Linux kernel `3.18` and many things might change from that time. If there are changes, I will update the posts accordingly.
+I've started to write this book at the time of the `3.18` Linux kernel, and many things might change from that time. If there are changes, I will update the posts accordingly.
 
 The Magical Power Button, What happens next?
 --------------------------------------------------------------------------------
 
 Although this is a series of posts about the Linux kernel, we will not be starting directly from the kernel code - at least not, in this paragraph. As soon as you press the magical power button on your laptop or desktop computer, it starts working. The motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply) device. After receiving the signal, the power supply provides the proper amount of electricity to the computer. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to start the CPU. The CPU resets all leftover data in its registers and sets up predefined values for each of them.
 
-[80386](https://en.wikipedia.org/wiki/Intel_80386) CPU and later CPUs define the following predefined data in CPU registers after the computer resets:
+The [80386](https://en.wikipedia.org/wiki/Intel_80386) CPU and later define the following predefined data in CPU registers after the computer resets:
 
 ```
 IP          0xfff0
@@ -60,7 +60,7 @@ But, if we take the largest segment selector and offset, `0xffff:0xffff`, then t
 '0x10ffef'
 ```
 
-which is `65520` bytes past the first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20 line](https://en.wikipedia.org/wiki/A20_line).
+which is `65520` bytes past the first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with the [A20 line](https://en.wikipedia.org/wiki/A20_line) disabled.
 
 Ok, now we know a little bit about real mode and memory addressing in this mode. Let's get back to discussing register values after reset.
 
