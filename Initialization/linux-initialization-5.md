@@ -54,7 +54,7 @@ As you can read above, we passed address of the `#DB` handler as `&debug` in the
 asmlinkage void debug(void);
 ```
 
-We can see `asmlinkage` attribute which tells to us that `debug` is function written with [assembly](http://en.wikipedia.org/wiki/Assembly_language). Yeah, again and again assembly :). Implementation of the `#DB` handler as other handlers is in this [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S) and defined with the `idtentry` assembly macro:
+We can see `asmlinkage` attribute which tells to us that `debug` is function written with [assembly](http://en.wikipedia.org/wiki/Assembly_language). Yeah, again and again assembly :). Implementation of the `#DB` handler as other handlers is in this [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) and defined with the `idtentry` assembly macro:
 
 ```assembly
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
