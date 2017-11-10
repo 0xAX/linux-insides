@@ -139,7 +139,7 @@ After this, the `store_mode_params` checks the current video mode and sets the `
 0xB800:0x0000 	32 Kb 	Color Text Video Memory
 ```
 
-So we set the `video_segment` variable to `0xb000` if the current video mode is MDA, HGC, or VGA in monochrome mode and to `0bB800` if the current video mode is in color mode. After setting up the address of the video segment, font size needs to be stored in `boot_params.screen_info.orig_video_points` with:
+So we set the `video_segment` variable to `0xb000` if the current video mode is MDA, HGC, or VGA in monochrome mode and to `0xb800` if the current video mode is in color mode. After setting up the address of the video segment, font size needs to be stored in `boot_params.screen_info.orig_video_points` with:
 
 ```C
 set_fs(0);
