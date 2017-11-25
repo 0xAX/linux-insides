@@ -31,7 +31,7 @@ We already saw implementation of the `set_intr_gate` in the previous part about 
 * base address of the interrupt/exception handler;
 * third parameter is - `Interrupt Stack Table`. `IST` is a new mechanism in the `x86_64` and part of the [TSS](http://en.wikipedia.org/wiki/Task_state_segment). Every active thread in kernel mode has own kernel stack which is `16` kilobytes. While a thread in user space, this kernel stack is empty.
 
-In addition to per-thread stacks, there are a couple of specialized stacks associated with each CPU. All about these stack you can read in the linux kernel documentation - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks). `x86_64` provides feature which allows to switch to a new `special` stack for during any events as non-maskable interrupt and etc... And the name of this feature is - `Interrupt Stack Table`. There can be up to 7 `IST` entries per CPU and every entry points to the dedicated stack. In our case this is `DEBUG_STACK`.
+In addition to per-thread stacks, there are a couple of specialized stacks associated with each CPU. All about these stack you can read in the linux kernel documentation - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/kernel-stacks). `x86_64` provides feature which allows to switch to a new `special` stack for during any events as non-maskable interrupt and etc... And the name of this feature is - `Interrupt Stack Table`. There can be up to 7 `IST` entries per CPU and every entry points to the dedicated stack. In our case this is `DEBUG_STACK`.
 
 `set_intr_gate_ist` and `set_system_intr_gate_ist` work by the same principle as `set_intr_gate` with only one difference. Both of these functions checks
 interrupt number and call `_set_gate` inside:
@@ -54,7 +54,7 @@ As you can read above, we passed address of the `#DB` handler as `&debug` in the
 asmlinkage void debug(void);
 ```
 
-We can see `asmlinkage` attribute which tells to us that `debug` is function written with [assembly](http://en.wikipedia.org/wiki/Assembly_language). Yeah, again and again assembly :). Implementation of the `#DB` handler as other handlers is in this [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S) and defined with the `idtentry` assembly macro:
+We can see `asmlinkage` attribute which tells to us that `debug` is function written with [assembly](http://en.wikipedia.org/wiki/Assembly_language). Yeah, again and again assembly :). Implementation of the `#DB` handler as other handlers is in this [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) and defined with the `idtentry` assembly macro:
 
 ```assembly
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
