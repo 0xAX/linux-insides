@@ -342,7 +342,7 @@ ENDPROC(memset)
 
 Следующим шагом является проверка CPU с помощью `validate_cpu` из [arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/cpu.c).
 
-Она вызывает функцию [`check_cpu`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/cpucheck.c#L102) и передаёт ей два параметра: уровень CPU и необходимый уровень CPU; `check_cpu` проверяет, запущено ли ядро на нужном уровне CPU.
+Она вызывает функцию [`check_cpu`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/cpucheck.c#L112) и передаёт ей два параметра: уровень CPU и необходимый уровень CPU; `check_cpu` проверяет, запущено ли ядро на нужном уровне CPU.
 
 ```c
 check_cpu(&cpu_level, &req_level, &err_flags);
