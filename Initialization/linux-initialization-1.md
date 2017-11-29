@@ -270,7 +270,7 @@ That's all for now. Our early paging is prepared and we just need to finish last
 Last preparation before jump at the kernel entry point
 --------------------------------------------------------------------------------
 
-After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extension) and put the physical address of the `phys_base` (see above) to the `rax` register and fill `cr3` register with it:
+After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extension) and put the content of the `phys_base` (see above) to the `rax` register and fill `cr3` register with it:
 
 ```assembly
 1:
