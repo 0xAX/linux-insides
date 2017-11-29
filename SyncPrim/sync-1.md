@@ -371,8 +371,7 @@ Note: `cpu_relax` is simply a [NOP](https://en.wikipedia.org/wiki/NOP) instructi
 
 The `barrier` macro, called just before the function exits ensures the compiler will not to change the order of operations that access memory (more about memory barriers can be found in the kernel [documentation](https://www.kernel.org/doc/Documentation/memory-barriers.txt)).
 
-
-The `spin_unlock` operation goes through the a similar set of macros/function as `spin_lock` (disabling hardware interrupts etc.) before the `arch_spin_unlock` function is called; which simply increments `arch_spinlock->ticket->head`:
+The `spin_unlock` operation goes through the all macros/function as `spin_lock`, of course with `unlock` prefix. In the end the `arch_spin_unlock` function will be called. If we will look at the implementation of the `arch_spin_unlock` function, we will see that it increases `head` of the `lock tickets` list:
 
 ```C
 __add(&lock->tickets.head, TICKET_LOCK_INC, UNLOCK_LOCK_PREFIX);
