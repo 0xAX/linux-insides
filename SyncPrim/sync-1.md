@@ -373,7 +373,7 @@ If one process held a lock and a second process started to execute the `arch_spi
 
 and the next iteration of the loop will be started. If these values will be equal, this means that the process which held this lock, released this lock and the next process may acquire the lock.
 
-The `spin_unlock` operation goes through the all macros/function as `spin_lock`, of course with `unlock` prefix. In the end the `arch_spin_unlock` function will be called. If we will look at the implementation of the `arch_spin_lock` function, we will see that it increases `head` of the `lock tickets` list:
+The `spin_unlock` operation goes through the all macros/function as `spin_lock`, of course with `unlock` prefix. In the end the `arch_spin_unlock` function will be called. If we will look at the implementation of the `arch_spin_unlock` function, we will see that it increases `head` of the `lock tickets` list:
 
 ```C
 __add(&lock->tickets.head, TICKET_LOCK_INC, UNLOCK_LOCK_PREFIX);
