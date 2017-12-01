@@ -12,7 +12,7 @@ Memblock
 Memblock is one of the methods of managing memory regions during the early bootstrap period while the usual kernel memory allocators are not up and
 running yet. Previously it was called `Logical Memory Block`, but with the [patch](https://lkml.org/lkml/2010/7/13/68) by Yinghai Lu, it was renamed to the `memblock`. As Linux kernel for `x86_64` architecture uses this method. We already met `memblock` in the [Last preparations before the kernel entry point](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-3.html) part. And now it's time to get acquainted with it closer. We will see how it is implemented.
 
-We will start to learn `memblock` from the data structures. Definitions of all logical memory block related data structures can be found in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/memblock.h) header file.
+We will start to learn `memblock` from the data structures. Definitions of all logical-memory-block-related data structures can be found in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/memblock.h) header file.
 
 The first structure has the same name as this part and it is:
 
