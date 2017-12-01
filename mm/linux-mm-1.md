@@ -12,7 +12,7 @@ Memblock
 Memblock is one of the methods of managing memory regions during the early bootstrap period while the usual kernel memory allocators are not up and
 running yet. Previously it was called `Logical Memory Block`, but with the [patch](https://lkml.org/lkml/2010/7/13/68) by Yinghai Lu, it was renamed to the `memblock`. As Linux kernel for `x86_64` architecture uses this method. We already met `memblock` in the [Last preparations before the kernel entry point](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-3.html) part. And now it's time to get acquainted with it closer. We will see how it is implemented.
 
-We will start to learn `memblock` from the data structures. Definitions of the all data structures can be found in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/memblock.h) header file.
+We will start to learn `memblock` from the data structures. Definitions of all logical memory block related data structures can be found in the [include/linux/memblock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/memblock.h) header file.
 
 The first structure has the same name as this part and it is:
 
@@ -28,7 +28,7 @@ struct memblock {
 };
 ```
 
-This structure contains five fields. First is `bottom_up` which allows allocating memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three fields describe the type of the memory block. It can be: reserved, memory and physical memory if the `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled. Now we see yet another data structure - `memblock_type`. Let's look at its definition:
+This structure contains five fields. First is `bottom_up` which allows allocating memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three fields describe the type of the memory block. It can be: reserved, memory and physical memory (physical memory is available if the `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled). Now we see yet another data structure - `memblock_type`. Let's look at its definition:
 
 ```C
 struct memblock_type {
@@ -39,7 +39,7 @@ struct memblock_type {
 };
 ```
 
-This structure provides information about the memory type. It contains fields which describe the number of memory regions which are inside the current memory block, the size of all memory regions, the size of the allocated array of the memory regions and pointer to the array of the `memblock_region` structures. `memblock_region` is a structure which describes a memory region. Its definition is:
+This structure provides information about the memory type. It contains fields which describe the number of memory regions inside the current memory block, the size of all memory regions, the size of the allocated array of the memory regions, and a pointer to the array of the `memblock_region` structures. `memblock_region` is a structure which describes a memory region. Its definition is:
 
 ```C
 struct memblock_region {

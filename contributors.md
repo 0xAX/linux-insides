@@ -111,3 +111,5 @@
 * [Cornelius Diekmann](https://github.com/diekmann)
 * [Andrés Rojas](https://github.com/c0r3dump3d)
 * [Beomsu Kim](https://github.com/0xF0D0)
+* [Firo Yang](https://github.com/firogh)
+* [Edward Hu](https://github.com/BDHU)
