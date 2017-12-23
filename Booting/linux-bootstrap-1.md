@@ -110,7 +110,6 @@ For example:
 ; Note: this example is written in Intel Assembly syntax
 ;
 [BITS 16]
-[ORG  0x7c00]
 
 boot:
     mov al, '!'
