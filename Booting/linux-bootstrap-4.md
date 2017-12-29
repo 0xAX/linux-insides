@@ -120,7 +120,11 @@ SECTIONS
 		_head = . ;
 		HEAD_TEXT
 		_ehead = . ;
-	}
+     }
+     ...
+     ...
+     ...
+}
 ```
 
 If you are not familiar with the syntax of `GNU LD` linker scripting language, you can find more information in the [documentation](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts). In short, the `.` symbol is a special variable of linker - location counter. The value assigned to it is an offset relative to the offset of the segment. In our case, we assign zero to location counter. This means that our code is linked to run from the `0` offset in memory. Moreover, we can find this information in comments:
