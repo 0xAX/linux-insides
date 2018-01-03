@@ -120,7 +120,11 @@ SECTIONS
 		_head = . ;
 		HEAD_TEXT
 		_ehead = . ;
-	}
+     }
+     ...
+     ...
+     ...
+}
 ```
 
 If you are not familiar with the syntax of `GNU LD` linker scripting language, you can find more information in the [documentation](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts). In short, the `.` symbol is a special variable of linker - location counter. The value assigned to it is an offset relative to the offset of the segment. In our case, we assign zero to location counter. This means that our code is linked to run from the `0` offset in memory. Moreover, we can find this information in comments:
@@ -182,10 +186,10 @@ label: pop %reg
 After this, a `%reg` register will contain the address of a label. Let's look at the similar code which searches address of the `startup_32` in the Linux kernel:
 
 ```assembly
-	leal	(BP_scratch+4)(%esi), %esp
-	call	1f
-1:     popl	%ebp
-	subl	$1b, %ebp
+        leal	(BP_scratch+4)(%esi), %esp
+        call	1f
+1:      popl	%ebp
+        subl	$1b, %ebp
 ```
 
 As you remember from the previous part, the `esi` register contains the address of the [boot_params](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L113) structure which was filled before we moved to the protected mode. The `boot_params` structure contains a special field `scratch` with offset `0x1e4`. These four bytes field will be temporary stack for `call` instruction. We are getting the address of the `scratch` field + `4` bytes and putting it in the `esp` register. We add `4` bytes to the base of the `BP_scratch` field because, as just described, it will be a temporary stack and the stack grows from top to down in `x86_64` architecture. So our stack pointer will point to the top of the stack. Next, we can see the pattern that I've described above. We make a call to the `1f` label and put the address of this label to the `ebp` register because we have return address on the top of stack after the `call` instruction will be executed. So, for now we have an address of the `1f` label and now it is easy to get address of the `startup_32`. We just need to subtract address of label from the address which we got from the stack:

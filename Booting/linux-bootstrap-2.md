@@ -60,21 +60,24 @@ where the `lgdt` instruction loads the base address and limit(size) of global de
 As mentioned above the GDT contains `segment descriptors` which describe memory segments.  Each descriptor is 64-bits in size. The general scheme of a descriptor is:
 
 ```
-31          24        19      16              7            0
+ 63         56         51   48    45           39        32 
 ------------------------------------------------------------
 |             | |B| |A|       | |   | |0|E|W|A|            |
-| BASE 31:24  |G|/|L|V| LIMIT |P|DPL|S|  TYPE | BASE 23:16 | 4
+| BASE 31:24  |G|/|L|V| LIMIT |P|DPL|S|  TYPE | BASE 23:16 |
 |             | |D| |L| 19:16 | |   | |1|C|R|A|            |
 ------------------------------------------------------------
+
+ 31                         16 15                         0 
+------------------------------------------------------------
 |                             |                            |
-|        BASE 15:0            |       LIMIT 15:0           | 0
+|        BASE 15:0            |       LIMIT 15:0           |
 |                             |                            |
 ------------------------------------------------------------
 ```
 
-Don't worry, I know it looks a little scary after real mode, but it's easy. For example LIMIT 15:0 means that bit 0-15 of the Descriptor contain the value for the limit. The rest of it is in LIMIT 19:16. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
+Don't worry, I know it looks a little scary after real mode, but it's easy. For example LIMIT 15:0 means that bits 0-15 of Limit are located in the beginning of the Descriptor. The rest of it is in LIMIT 19:16, which is located at bits 48-51 of the Descriptor. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
 
-1. Limit[20-bits] is at 0-15,16-19 bits. It defines `length_of_segment - 1`. It depends on `G`(Granularity) bit.
+1. Limit[20-bits] is at 0-15, 48-51 bits. It defines `length_of_segment - 1`. It depends on `G`(Granularity) bit.
 
   * if `G` (bit 55) is 0 and segment limit is 0, the size of the segment is 1 Byte
   * if `G` is 1 and segment limit is 0, the size of the segment is 4096 Bytes
@@ -85,9 +88,9 @@ Don't worry, I know it looks a little scary after real mode, but it's easy. For 
   * if G is 0, Limit is interpreted in terms of 1 Byte and the maximum size of the segment can be 1 Megabyte.
   * if G is 1, Limit is interpreted in terms of 4096 Bytes = 4 KBytes = 1 Page and the maximum size of the segment can be 4 Gigabytes. Actually, when G is 1, the value of Limit is shifted to the left by 12 bits. So, 20 bits + 12 bits = 32 bits and 2<sup>32</sup> = 4 Gigabytes.
 
-2. Base[32-bits] is at (0-15, 32-39 and 56-63 bits). It defines the physical address of the segment's starting location.
+2. Base[32-bits] is at 16-31, 32-39 and 56-63 bits. It defines the physical address of the segment's starting location.
 
-3. Type/Attribute (40-47 bits) defines the type of segment and kinds of access to it.
+3. Type/Attribute[5-bits] is at 40-44 bits. It defines the type of segment and kinds of access to it.
   * `S` flag at bit 44 specifies descriptor type. If `S` is 0 then this segment is a system segment, whereas if `S` is 1 then this is a code or data segment (Stack segments are data segments which must be read/write segments).
 
 To determine if the segment is a code or data segment we can check its Ex(bit 43) Attribute marked as 0 in the above diagram. If it is 0, then the segment is a Data segment otherwise it is a code segment.
@@ -138,7 +141,7 @@ As we can see the first bit(bit 43) is `0` for a _data_ segment and `1` for a _c
 Segment registers contain segment selectors as in real mode. However, in protected mode, a segment selector is handled differently. Each Segment Descriptor has an associated Segment Selector which is a 16-bit structure:
 
 ```
-15              3  2   1  0
+ 15             3 2  1     0
 -----------------------------
 |      Index     | TI | RPL |
 -----------------------------
