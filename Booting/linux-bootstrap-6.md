@@ -19,7 +19,7 @@ config PHYSICAL_START
       ...
 ```
 
-This value may be changed during kernel configuration, but also load address can be selected as random value. For this purpose the `CONFIG_RANDOMIZE_BASE` kernel configuration option should be enabled during kernel configuration.
+This value may be changed during kernel configuration, but also load address can be selected as a random value. For this purpose the `CONFIG_RANDOMIZE_BASE` kernel configuration option should be enabled during kernel configuration.
 
 In this case a physical address at which Linux kernel image will be decompressed and loaded will be randomized. This part considers the case when this option is enabled and load address of the kernel image will be randomized for [security reasons](https://en.wikipedia.org/wiki/Address_space_layout_randomization).
 
