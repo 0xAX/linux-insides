@@ -22,11 +22,6 @@ On other languages
   * [Russian](https://github.com/proninyaroslav/linux-insides-ru)
   * [Spanish](https://github.com/leolas95/linux-insides)
   * [Turkish](https://github.com/ayyucedemirbas/linux-insides_Turkish)
-  
-LICENSE
--------------
-
-Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
 
 Contributions 
 --------------
@@ -41,3 +36,8 @@ Author
 ---------------
 
 [@0xAX](https://twitter.com/0xAX)
+
+LICENSE
+-------------
+
+Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
