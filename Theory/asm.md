@@ -73,7 +73,7 @@ Here we see the `native_load_gdt` function which loads a base address from the [
 The second optional `qualifier` is the `goto`. This qualifier tells the compiler that the given assembly statement may perform a jump to one of the labels which are listed in the `GotoLabels`. For example:
 
 ```C
-__asm__ goto("jmp %l[label]" : : : label);
+__asm__ goto("jmp %l[label]" : : : : label);
 ```
 
 Since we finished with these two qualifiers, let's look at the main part of an assembly statement body. As we have seen above, the main part of an assembly statement consists of the following four parts:

@@ -114,3 +114,4 @@ Thank you to all contributors:
 * [Firo Yang](https://github.com/firogh)
 * [Edward Hu](https://github.com/BDHU)
 * [WarpspeedSCP](https://github.com/WarpspeedSCP)
+* [Gabriela Moldovan](https://github.com/gabi-250)
