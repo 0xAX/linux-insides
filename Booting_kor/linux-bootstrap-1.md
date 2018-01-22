@@ -193,7 +193,7 @@ Real mode에서는 오직 16-bit 범용 레지스터만 갖고있다; 16-bit 레
 
 [GRUB 2](https://www.gnu.org/software/grub/) 이나 [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project)처럼 Linux를 부트할 수 있는 부트로더는 많다. Linux 커널은 [Boot protocol](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt) 요구사항을 명시해 부트로더가 Linux support를 구현할 수 있게했다. 다음 예시는 GRUB 2를 설명할 것이다. 
 
-이전과 이어서, 이제 `BIOS`는 boot 장비를 선택했고 boot sector code로 제어를 넘겼다, 실행은 [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD) 에서 시작한다. 이 코드는 제한된 메모리 공간때문에 간단하며, GUB 2의 core image로 점프할 포인터를 갖고있다. 코어이미지는 [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD)로 시작하며, 보통 첫 sector의 바로 다음이나 첫 partition의 사용되지 않은 공간에 저장되어 있다. 나머지 core image를 메모리에 올린 뒤에, [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c) 함수를 실행시킨다.
+이전과 이어서, 이제 `BIOS`는 boot 장비를 선택했고 boot sector code로 제어를 넘겼다, 실행은 [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD) 에서 시작한다. 이 코드는 제한된 메모리 공간때문에 간단하며, GRUB 2의 core image로 점프할 포인터를 갖고있다. 코어이미지는 [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD)로 시작하며, 보통 첫 sector의 바로 다음이나 첫 partition의 사용되지 않은 공간에 저장되어 있다. 나머지 core image를 메모리에 올린 뒤에, [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c) 함수를 실행시킨다.
 
 `grub_main` 함수는 콘솔을 초기화하고, module들의 base address를 구하고, root device를 세팅하고 grub 설정을 불러오고, module를 로딩하는 등의 작업을 한다. 실행의 마지막 부분에서 `grub_main` 함수는 grub을 normal mode(CPU의 모드와 무관)로 옮긴다. `grub_normal_execute` (`grub-core/normal/main.c`) 함수는 마지막 준비를 끝내고 OS선택 메뉴를 보여준다. 우리가 grub menu entry중 하나를 선택하면, `grub_menu_execute_entry` 함수가 grub `boot`명령어를 실행해 선택된 OS를 부팅한다.
 
@@ -211,9 +211,9 @@ hdr:
     boot_flag:   .word 0xAA55
 ```
 
-The bootloader must fill this and the rest of the headers (which are only marked as being type `write` in the Linux boot protocol, such as in [this example](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt#L354)) with values which it has either received from the command line or calculated during boot. (We will not go over full descriptions and explanations for all fields of the kernel setup header now, but we shall do so when we discuss how the kernel uses them; you can find a description of all fields in the [boot protocol](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt#L156).)
+부트로더는 이 부분과 나머지 헤더(Linux boot protocol이 [예제](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt#L354)에서 처럼 `write` type으로 마크돼있다.)를 커맨드라인에서 받거나 부트과정에서 계산된 값으로 채워야 한다. 우리는 지금 kernel setup header의 각필드를 모두 설명하지는 않을 것 이다. 다만 커널이 그 값들을 어떻게 쓰는지 알아볼 때 설명할 것이다;  [Boot protocol](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt#L156) 필드에 대한 모든설명은 링크에서 찾아볼 수 있다.
 
-As we can see in the kernel boot protocol, the memory will be mapped as follows after loading the kernel:
+Kernel boot protocol에서 볼 수 있듯이, 커널을 로드하고 나면 메모리는 다음과 같이 매핑된다.
 
 ```shell
          | Protected-mode kernel  |
@@ -240,34 +240,34 @@ X+08000  +------------------------+
 
 ```
 
-So, when the bootloader transfers control to the kernel, it starts at:
+따라서 부트로더가 커널에게 제어를 넘길때, 다음 주소에서 시작된다:
 
 ```
 X + sizeof(KernelBootSector) + 1
 ```
 
-where `X` is the address of the kernel boot sector being loaded. In my case, `X` is `0x10000`, as we can see in a memory dump:
+`X`는 커널 부트섹터가 로드된 장소이다. 나의경우엔 memory dump에서 볼 수 있듯이 `X`는 `0x10000`이다:
 
-![kernel first address](http://oi57.tinypic.com/16bkco2.jpg)
+![커널 첫 주소](http://oi57.tinypic.com/16bkco2.jpg)
 
-The bootloader has now loaded the Linux kernel into memory, filled the header fields, and then jumped to the corresponding memory address. We can now move directly to the kernel setup code.
+부트로더는 이제 Linux커널을 메모리에 로드했고, 헤더필드를 채웠고, 상응하는 주소(`X + sizeof(KernelBootSector) + 1`)로 점프했다. 이제 우린 바로 커널 setup code를 살펴볼 것이다.
 
-The Beginning of the Kernel Setup Stage
+Kernel Setup 단계의 시작
 --------------------------------------------------------------------------------
 
-Finally, we are in the kernel! Technically, the kernel hasn't run yet; first, the kernel setup part must configure stuff such as the decompressor and some memory management related things, to name a few. After all these things are done, the kernel setup part will decompress the actual kernel and jump to it. Execution of the setup part starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S) at [_start](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292). It is a little strange at first sight, as there are several instructions before it.
+드디어 우린 커널로 입성했다! 엄밀히 말하면, 커널은 아직 실행되지 않았다; 일단 커널 setup 단계는 압축해제나 메모리 관리와 관련된 것들을 설정해야한다. 그런 작업을 모두 마치고 나면, 커널 setup 단계는 진짜 커널을 압축 해제하고 그곳으로 점프한다. 커널 setup 단계는 [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S) 의 [\_start](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292)에서 실행을 시작한다. 처음보는 명령어 때문에 당황할 수 있다.
 
-A long time ago, the Linux kernel used to have its own bootloader. Now, however, if you run, for example,
+옛날에는, Linux커널이 자체 부트로더를 사용했었다. 하지만 예를들어, 현재 다음 명령어를 실행시키면:
 
 ```
 qemu-system-x86_64 vmlinuz-3.18-generic
 ```
 
-then you will see:
+다음을 보게된다.:
 
 ![Try vmlinuz in qemu](http://oi60.tinypic.com/r02xkz.jpg)
 
-Actually, the file `header.S` starts with the magic number [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) (see image above), the error message that displays and, following that, the [PE](https://en.wikipedia.org/wiki/Portable_Executable) header:
+사실 `header.S`파일은 magic number [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable)(위 이미지를 보라), 에러메세지, 그다음 [PE](https://en.wikipedia.org/wiki/Portable_Executable) 헤더로 시작한다:
 
 ```assembly
 #ifdef CONFIG_EFI_STUB
@@ -283,9 +283,9 @@ pe_header:
     .word 0
 ```
 
-It needs this to load an operating system with [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface) support. We won't be looking into its inner workings right now and will cover it in upcoming chapters.
+이렇게 운영체제를 로드할때는 [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface)지원이 필요하다. 우린 지금 이 내부작업은 살펴보지 않을것이고, 다음 추후 챕터에서 살펴볼 예정이다.
 
-The actual kernel setup entry point is:
+실제 커널 setup 진입점은 다음과 같다.
 
 ```assembly
 // header.S line 292
@@ -293,7 +293,7 @@ The actual kernel setup entry point is:
 _start:
 ```
 
-The bootloader (grub2 and others) knows about this point (at an offset of `0x200` from `MZ`) and makes a jump directly to it, despite the fact that `header.S` starts from the `.bstext` section, which prints an error message:
+부트로더(grub2나 다른것들)는 `header.S`가 에러메세지를 출력하는 `.bstext`섹션부터 시작하지만 진입점(`MZ`로부터 `0x200`오프셋 만큼)을 알고있고 바로 점프한다.
 
 ```
 //
@@ -409,7 +409,7 @@ Here we set the alignment of `dx` (which contains the value of `sp` as given by 
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
-* In the second scenario, (`ss` != `ds`). First, we put the value of [_end](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/setup.ld#L52) (the address of the end of the setup code) into `dx` and check the `loadflags` header field using the `testb` instruction to see whether we can use the heap. [loadflags](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
+* In the second scenario, (`ss` != `ds`). First, we put the value of [\_end](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/setup.ld#L52) (the address of the end of the setup code) into `dx` and check the `loadflags` header field using the `testb` instruction to see whether we can use the heap. [loadflags](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
 
 ```C
 #define LOADED_HIGH     (1<<0)
