@@ -150,7 +150,7 @@ In the previous paragraph we saw how an executable file is prepared to run by th
 $ gcc -Wall program.c -o sum
 ```
 
-You may guess that `_start` comes from the [stanard libray](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass the `-v` option to gcc which will enable `verbose mode`, you will see a long output. The full output is not interesting for us, let's look at the following steps: 
+You may guess that `_start` comes from the [standard library](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass the `-v` option to gcc which will enable `verbose mode`, you will see a long output. The full output is not interesting for us, let's look at the following steps: 
 
 First of all, our program should be compiled with `gcc`:
 
