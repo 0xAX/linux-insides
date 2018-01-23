@@ -115,3 +115,4 @@ Thank you to all contributors:
 * [Edward Hu](https://github.com/BDHU)
 * [WarpspeedSCP](https://github.com/WarpspeedSCP)
 * [Gabriela Moldovan](https://github.com/gabi-250)
+* [kuritonasu](https://github.com/kuritonasu/)
