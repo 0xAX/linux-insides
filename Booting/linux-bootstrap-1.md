@@ -21,7 +21,7 @@ All posts will also be accessible at [github repo](https://github.com/0xAX/linux
 
 Anyway, if you are just starting to learn such tools, I will try to explain some parts during this and the following posts. Alright, this is the end of the simple introduction, and now we can start to dive into the Linux kernel and low-level stuff.
 
-I've started to write this book at the time of the `3.18` Linux kernel, and many things might change from that time. If there are changes, I will update the posts accordingly.
+I've started writing this book at the time of the `3.18` Linux kernel, and many things might have changed since that time. If there are changes, I will update the posts accordingly.
 
 The Magical Power Button, What happens next?
 --------------------------------------------------------------------------------
