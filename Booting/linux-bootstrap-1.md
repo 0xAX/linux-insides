@@ -388,13 +388,13 @@ Almost all of the setup code is in preparation for the C language environment in
 
 This can lead to 3 different scenarios:
 
-* `ss` has a valid value `0x1000` (as do all the other segment registers beside `cs`)
+* `ss` has a valid value `0x10000` (as do all the other segment registers beside `cs`)
 * `ss` is invalid and the `CAN_USE_HEAP` flag is set     (see below)
 * `ss` is invalid and the `CAN_USE_HEAP` flag is not set (see below)
 
 Let's look at all three of these scenarios in turn:
 
-* `ss` has a correct address (`0x1000`). In this case, we go to label [2](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L584):
+* `ss` has a correct address (`0x10000`). In this case, we go to label [2](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L584):
 
 ```assembly
 2:  andw    $~3, %dx
@@ -405,7 +405,7 @@ Let's look at all three of these scenarios in turn:
     sti
 ```
 
-Here we set the alignment of `dx` (which contains the value of `sp` as given by the bootloader) to `4` bytes and a check for whether or not it is zero. If it is zero, we put `0xfffc` (4 byte aligned address before the maximum segment size of 64 KB) in `dx`. If it is not zero, we continue to use the value of `sp` given by the bootloader (0xf7f4 in my case). After this, we put the value of `ax` into `ss`, which stores the correct segment address of `0x1000` and sets up a correct `sp`. We now have a correct stack:
+Here we set the alignment of `dx` (which contains the value of `sp` as given by the bootloader) to `4` bytes and a check for whether or not it is zero. If it is zero, we put `0xfffc` (4 byte aligned address before the maximum segment size of 64 KB) in `dx`. If it is not zero, we continue to use the value of `sp` given by the bootloader (0xf7f4 in my case). After this, we put the value of `ax` into `ss`, which stores the correct segment address of `0x10000` and sets up a correct `sp`. We now have a correct stack:
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
