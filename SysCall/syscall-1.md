@@ -76,15 +76,19 @@ by those selector values correspond to the fixed values loaded into the descript
 caches; the SYSCALL instruction does not ensure this correspondence.
 ```
 
-and we are initializing `syscalls` by the writing of the `entry_SYSCALL_64` that defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembler file and represents `SYSCALL` instruction entry to the `IA32_STAR` [Model specific register](https://en.wikipedia.org/wiki/Model-specific_register):
-
+To summarize, the `syscall` instruction jumps to the address stored in the `MSR_LSTAR` [Model specific register](https://en.wikipedia.org/wiki/Model-specific_register) (Long system target address register). The kernel is responsible for providing its own custom function for handling syscalls as well as writing the address of this handler function to the `MSR_LSTAR` register upon system startup.
+The custom function is `entry_SYSCALL_64`, which is defined in [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S#L98). The address of this syscall handling function is written to the `MSR_LSTAR` register during startup in [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c#L1335).
 ```C
 wrmsrl(MSR_LSTAR, entry_SYSCALL_64);
 ```
 
-in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c) source code file.
+So, the `syscall` instruction invokes a handler of a given system call. But how does it know which handler to call? Actually it gets this information from the general purpose [registers](https://en.wikipedia.org/wiki/Processor_register). As you can see in the system call [table](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl), each system call has a unique number. In our example the first system call is `write`, which writes data to the given file. Let's look in the system call table and try to find the `write` system call. As we can see, the [write](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl#L10) system call has number `1`. We pass the number of this system call through the `rax` register in our example. The next general purpose registers: `%rdi`, `%rsi`, and `%rdx` take the three parameters of the `write` syscall. In our case, they are:
 
-So, the `syscall` instruction invokes a handler of a given system call. But how does it know which handler to call? Actually it gets this information from the general purpose [registers](https://en.wikipedia.org/wiki/Processor_register). As you can see in the system call [table](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl), each system call has a unique number. In our example, first system call is - `write` that writes data to the given file. Let's look in the system call table and try to find `write` system call. As we can see, the [write](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl#L10) system call has number - `1`. We pass the number of this system call through the `rax` register in our example. The next general purpose registers: `%rdi`, `%rsi` and `%rdx` take parameters of the `write` syscall. In our case, they are [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) (`1` is [stdout](https://en.wikipedia.org/wiki/Standard_streams#Standard_output_.28stdout.29) in our case), second parameter is the pointer to our string, and the third is size of data. Yes, you heard right. Parameters for a system call. As I already wrote above, a system call is a just `C` function in the kernel space. In our case first system call is write. This system call defined in the [fs/read_write.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/read_write.c) source code file and looks like:
+* [File descriptor](https://en.wikipedia.org/wiki/File_descriptor) (`1` is [stdout](https://en.wikipedia.org/wiki/Standard_streams#Standard_output_.28stdout.29) in our case)
+* Pointer to our string
+* Size of data
+
+Yes, you heard right. Parameters for a system call. As I already wrote above, a system call is a just `C` function in the kernel space. In our case first system call is write. This system call defined in the [fs/read_write.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/read_write.c) source code file and looks like:
 
 ```C
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
@@ -104,7 +108,7 @@ ssize_t write(int fd, const void *buf, size_t nbytes);
 
 Don't worry about the `SYSCALL_DEFINE3` macro for now, we'll come back to it.
 
-The second part of our example is the same, but we call other system call. In this case we call [exit](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl#L69) system call. This system call gets only one parameter:
+The second part of our example is the same, but we call another system call. In this case we call the [exit](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl#L69) system call. This system call gets only one parameter:
 
 * Return value
 
@@ -120,18 +124,18 @@ _exit(0)                                = ?
 +++ exited with 0 +++
 ```
 
-In the first line of the `strace` output, we can see [execve](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl#L68) system call that executes our program, and the second and third are system calls that we have used in our program: `write` and `exit`. Note that we pass the parameter through the general purpose registers in our example. The order of the registers is not accidental. The order of the registers is defined by the following agreement - [x86-64 calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions). This and other agreement for the `x86_64` architecture explained in the special document - [System V Application Binary Interface. PDF](https://github.com/hjl-tools/x86-psABI/wiki/x86-64-psABI-r252.pdf). In a general way, argument(s) of a function are placed either in registers or pushed on the stack. The right order is:
+In the first line of the `strace` output, we can see the [execve](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl#L68) system call that executes our program, and the second and third are system calls that we have used in our program: `write` and `exit`. Note that we pass the parameter through the general purpose registers in our example. The order of the registers is not accidental. The order of the registers is defined by the following agreement - [x86-64 calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions). This, and the other agreement for the `x86_64` architecture are explained in the special document - [System V Application Binary Interface. PDF](https://github.com/hjl-tools/x86-psABI/wiki/x86-64-psABI-r252.pdf). In a general way, argument(s) of a function are placed either in registers or pushed on the stack. The right order is:
 
-* `rdi`;
-* `rsi`;
-* `rdx`;
-* `rcx`;
-* `r8`;
-* `r9`.
+* `rdi`
+* `rsi`
+* `rdx`
+* `rcx`
+* `r8`
+* `r9`
 
-for the first six parameters of a function. If a function has more than six arguments, other parameters will be placed on the stack.
+for the first six parameters of a function. If a function has more than six arguments, the remaining parameters will be placed on the stack.
 
-We do not use system calls in our code directly, but our program uses it when we want to print something, check access to a file or just write or read something to it.
+We do not use system calls in our code directly, but our program uses them when we want to print something, check access to a file or just write or read something to it.
 
 For example:
 
@@ -152,13 +156,13 @@ int main(int argc, char **argv)
 }
 ```
 
-There are no `fopen`, `fgets`, `printf` and `fclose` system calls in the Linux kernel, but `open`, `read` `write` and `close` instead. I think you know that these four functions `fopen`, `fgets`, `printf` and `fclose` are just functions that defined in the `C` [standard library](https://en.wikipedia.org/wiki/GNU_C_Library). Actually these functions are wrappers for the system calls. We do not call system calls directly in our code, but using [wrapper](https://en.wikipedia.org/wiki/Wrapper_function) functions from the standard library. The main reason of this is simple: a system call must be performed quickly, very quickly. As a system call must be quick, it must be small. The standard library takes responsibility to perform system calls with the correct set parameters and makes different checks before it will call the given system call. Let's compile our program with the following command:
+There are no `fopen`, `fgets`, `printf`, and `fclose` system calls in the Linux kernel, but `open`, `read`, `write`, and `close` instead. I think you know that `fopen`, `fgets`, `printf`, and `fclose` are defined in the `C` [standard library](https://en.wikipedia.org/wiki/GNU_C_Library). Actually, these functions are just wrappers for the system calls. We do not call system calls directly in our code, but instead use these [wrapper](https://en.wikipedia.org/wiki/Wrapper_function) functions from the standard library. The main reason of this is simple: a system call must be performed quickly, very quickly. As a system call must be quick, it must be small. The standard library takes responsibility to perform system calls with the correct parameters and makes different checks before it will call the given system call. Let's compile our program with the following command:
 
 ```
 $ gcc test.c -o test
 ```
 
-and look on it with the [ltrace](https://en.wikipedia.org/wiki/Ltrace) util:
+and examine it with the [ltrace](https://en.wikipedia.org/wiki/Ltrace) util:
 
 ```
 $ ltrace ./test
@@ -172,13 +176,13 @@ fclose(0x602010)                                                   = 0
 +++ exited (status 0) +++
 ```
 
-The `ltrace` util displays a set of userspace calls of a program. The `fopen` function opens the given text file, the `fgets` reads file content to the `buf` buffer, the `puts` function prints it to the `stdout` and the `fclose` function closes file by the given file descriptor. And as I already wrote, all of these functions call an appropriate system call. For example `puts` calls the `write` system call inside, we can see it if we will add `-S` option to the `ltrace` program:
+The `ltrace` util displays a set of userspace calls of a program. The `fopen` function opens the given text file, the `fgets` function reads file content to the `buf` buffer, the `puts` function prints the buffer to `stdout`, and the `fclose` function closes the file given by the file descriptor. And as I already wrote, all of these functions call an appropriate system call. For example, `puts` calls the `write` system call inside, we can see it if we will add `-S` option to the `ltrace` program:
 
 ```
 write@SYS(1, "Hello World!\n\n", 14) = 14
 ```
 
-Yes, system calls are ubiquitous. Each program needs to open/write/read file, network connection, allocate memory and many other things that can be provided only by the kernel. The [proc](https://en.wikipedia.org/wiki/Procfs) file system contains special files in a format: `/proc/pid/systemcall` that exposes the system call number and argument registers for the system call currently being executed by the process. For example, pid 1, that is [systemd](https://en.wikipedia.org/wiki/Systemd) for me:
+Yes, system calls are ubiquitous. Each program needs to open/write/read files and network connections, allocate memory, and many other things that can be provided only by the kernel. The [proc](https://en.wikipedia.org/wiki/Procfs) file system contains special files in a format: `/proc/pid/systemcall` that exposes the system call number and argument registers for the system call currently being executed by the process. For example, pid 1 is [systemd](https://en.wikipedia.org/wiki/Systemd) for me:
 
 ```
 $ sudo cat /proc/1/comm

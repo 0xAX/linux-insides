@@ -116,3 +116,4 @@ Thank you to all contributors:
 * [WarpspeedSCP](https://github.com/WarpspeedSCP)
 * [Gabriela Moldovan](https://github.com/gabi-250)
 * [kuritonasu](https://github.com/kuritonasu/)
+* [Miles Frain](https://github.com/milesfrain)
