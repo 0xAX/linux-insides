@@ -115,3 +115,5 @@
 * [Edward Hu](https://github.com/BDHU)
 * [Gabriela Moldovan](https://github.com/gabi-250)
 * [WarpspeedSCP](https://github.com/WarpspeedSCP)
+* [kuritonasu](https://github.com/kuritonasu/)
+* [Miles Frain](https://github.com/milesfrain)
