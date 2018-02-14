@@ -1,3 +1,7 @@
+# latex.sh
+# A script for converting Markdown files in each of the subdirectories into a unified PDF typeset in LaTeX. 
+# Requires TexLive, Pandoc templates and pdfunite. Not necessary if you just want to read the PDF, only if you're compiling it yourself.
+
 #!/bin/bash
 rm -r build 
 mkdir build
