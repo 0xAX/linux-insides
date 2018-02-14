@@ -117,3 +117,4 @@
 * [WarpspeedSCP](https://github.com/WarpspeedSCP)
 * [kuritonasu](https://github.com/kuritonasu/)
 * [Miles Frain](https://github.com/milesfrain)
+* [Horace Heaven](https://github.com/horaceheaven)
