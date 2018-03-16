@@ -97,7 +97,7 @@ After this we can see call of the:
 	memblock_x86_reserve_range_setup_data();
 ```
 
-function. This function is defined in the same [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code file and remaps memory for the `setup_data` and reserved memory block for the `setup_data` (more about `setup_data` you can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) and about `ioremap` and `memblock` you can read in the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)).
+function. This function is defined in the same [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code file and remaps memory for the `setup_data` and reserved memory block for the `setup_data` (more about `setup_data` you can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) and about `ioremap` and `memblock` you can read in the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html)).
 
 In the next step we can see following conditional statement:
 
@@ -500,7 +500,7 @@ for (; pmd < last_pmd; pmd++, vaddr += PMD_SIZE) {
 }
 ```
 
-After this we set the limit for the `memblock` allocation with the `memblock_set_current_limit` function (read more about `memblock` you can in the [Linux kernel memory management Part 2](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md)), it will be `ISA_END_ADDRESS` or `0x100000` and fill the `memblock` information according to `e820` with the call of the `memblock_x86_fill` function. You can see the result of this function in the kernel initialization time:
+After this we set the limit for the `memblock` allocation with the `memblock_set_current_limit` function (read more about `memblock` you can in the [Linux kernel memory management Part 2](https://github.com/0xAX/linux-insides/blob/master/MM/linux-mm-2.md)), it will be `ISA_END_ADDRESS` or `0x100000` and fill the `memblock` information according to `e820` with the call of the `memblock_x86_fill` function. You can see the result of this function in the kernel initialization time:
 
 ```
 MEMBLOCK configuration:
@@ -536,7 +536,7 @@ Links
 * [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt)
 * [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
-* [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
+* [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html)
 * [PCI](http://en.wikipedia.org/wiki/Conventional_PCI)
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS)
