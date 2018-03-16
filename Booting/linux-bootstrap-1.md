@@ -38,7 +38,7 @@ CS base     0xffff0000
 
 The processor starts working in [real mode](https://en.wikipedia.org/wiki/Real_mode). Let's back up a little and try to understand [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation) in this mode. Real mode is supported on all x86-compatible processors, from the [8086](https://en.wikipedia.org/wiki/Intel_8086) CPU all the way to the modern Intel 64-bit CPUs. The `8086` processor has a 20-bit address bus, which means that it could work with a `0-0xFFFFF` or `1 megabyte` address space. But it only has `16-bit` registers, which have a maximum address of `2^16 - 1` or `0xffff` (64 kilobytes).
 
-[Memory segmentation](http://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all the address space available. All memory is divided into small, fixed-size segments of `65536` bytes (64 KB). Since we cannot address memory above `64 KB` with 16-bit registers, an alternate method was devised.
+[Memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation) is used to make use of all the address space available. All memory is divided into small, fixed-size segments of `65536` bytes (64 KB). Since we cannot address memory above `64 KB` with 16-bit registers, an alternate method was devised.
 
 An address consists of two parts: a segment selector, which has a base address, and an offset from this base address. In real mode, the associated base address of a segment selector is `Segment Selector * 16`. Thus, to get a physical address in memory, we need to multiply the segment selector part by `16` and add the offset to it:
 
@@ -73,7 +73,7 @@ The starting address is formed by adding the base address to the value in the EI
 '0xfffffff0'
 ```
 
-We get `0xfffffff0`, which is 16 bytes below 4GB. This point is called the [Reset vector](http://en.wikipedia.org/wiki/Reset_vector). This is the memory location at which the CPU expects to find the first instruction to execute after reset. It contains a [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction that usually points to the BIOS entry point. For example, if we look in the [coreboot](http://www.coreboot.org/) source code (`src/cpu/x86/16bit/reset16.inc`), we will see:
+We get `0xfffffff0`, which is 16 bytes below 4GB. This point is called the [Reset vector](https://en.wikipedia.org/wiki/Reset_vector). This is the memory location at which the CPU expects to find the first instruction to execute after reset. It contains a [jump](https://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction that usually points to the BIOS entry point. For example, if we look in the [coreboot](https://www.coreboot.org/) source code (`src/cpu/x86/16bit/reset16.inc`), we will see:
 
 ```assembly
     .section ".reset"
@@ -180,7 +180,7 @@ In general, real mode's memory map is as follows:
 0x000F0000 - 0x000FFFFF - System BIOS
 ```
 
-In the beginning of this post, I wrote that the first instruction executed by the CPU is located at address `0xFFFFFFF0`, which is much larger than `0xFFFFF` (1MB). How can the CPU access this address in real mode? The answer is in the [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) documentation:
+In the beginning of this post, I wrote that the first instruction executed by the CPU is located at address `0xFFFFFFF0`, which is much larger than `0xFFFFF` (1MB). How can the CPU access this address in real mode? The answer is in the [coreboot](https://www.coreboot.org/Developer_Manual/Memory_map) documentation:
 
 ```
 0xFFFE_0000 - 0xFFFF_FFFF: 128 kilobyte ROM mapped into address space
@@ -491,12 +491,12 @@ Links
 
   * [Intel 80386 programmer's reference manual 1986](http://css.csail.mit.edu/6.858/2014/readings/i386.pdf)
   * [Minimal Boot Loader for Intel® Architecture](https://www.cs.cmu.edu/~410/doc/minimal_boot.pdf)
-  * [8086](http://en.wikipedia.org/wiki/Intel_8086)
-  * [80386](http://en.wikipedia.org/wiki/Intel_80386)
-  * [Reset vector](http://en.wikipedia.org/wiki/Reset_vector)
-  * [Real mode](http://en.wikipedia.org/wiki/Real_mode)
+  * [8086](https://en.wikipedia.org/wiki/Intel_8086)
+  * [80386](https://en.wikipedia.org/wiki/Intel_80386)
+  * [Reset vector](https://en.wikipedia.org/wiki/Reset_vector)
+  * [Real mode](https://en.wikipedia.org/wiki/Real_mode)
   * [Linux kernel boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt)
-  * [CoreBoot developer manual](http://www.coreboot.org/Developer_Manual)
+  * [coreboot developer manual](https://www.coreboot.org/Developer_Manual)
   * [Ralf Brown's Interrupt List](http://www.ctyme.com/intr/int.htm)
-  * [Power supply](http://en.wikipedia.org/wiki/Power_supply)
-  * [Power good signal](http://en.wikipedia.org/wiki/Power_good_signal)
+  * [Power supply](https://en.wikipedia.org/wiki/Power_supply)
+  * [Power good signal](https://en.wikipedia.org/wiki/Power_good_signal)
