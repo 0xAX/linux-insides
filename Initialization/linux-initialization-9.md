@@ -83,7 +83,7 @@ void __init idr_init_cache(void)
 }
 ```
 
-Here we can see the call of the `kmem_cache_create`. We already called the `kmem_cache_init` in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L485). This function create generalized caches again using the `kmem_cache_alloc` (more about caches we will see in the [Linux kernel memory management](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/mm/index.html) chapter). In our case, as we are using `kmem_cache_t` which will be used by the [slab](http://en.wikipedia.org/wiki/Slab_allocation) allocator and `kmem_cache_create` creates it. As you can see we pass five parameters to the `kmem_cache_create`:
+Here we can see the call of the `kmem_cache_create`. We already called the `kmem_cache_init` in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L485). This function create generalized caches again using the `kmem_cache_alloc` (more about caches we will see in the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html) chapter). In our case, as we are using `kmem_cache_t` which will be used by the [slab](http://en.wikipedia.org/wiki/Slab_allocation) allocator and `kmem_cache_create` creates it. As you can see we pass five parameters to the `kmem_cache_create`:
 
 * name of the cache;
 * size of the object to store in cache;
@@ -394,7 +394,7 @@ The next couple of functions are related with the [perf](https://perf.wiki.kerne
 local_irq_enable();
 ```
 
-which expands to the `sti` instruction and making post initialization of the [SLAB](http://en.wikipedia.org/wiki/Slab_allocation) with the call of the `kmem_cache_init_late` function (As I wrote above we will know about the `SLAB` in the [Linux memory management](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/mm/index.html) chapter).
+which expands to the `sti` instruction and making post initialization of the [SLAB](http://en.wikipedia.org/wiki/Slab_allocation) with the call of the `kmem_cache_init_late` function (As I wrote above we will know about the `SLAB` in the [Linux memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html) chapter).
 
 After the post initialization of the `SLAB`, next point is initialization of the console with the `console_init` function from the [drivers/tty/tty_io.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/tty/tty_io.c).
 
@@ -423,8 +423,8 @@ Links
 * [integer ID management](https://lwn.net/Articles/103209/)
 * [Documentation/memory-barriers.txt](https://www.kernel.org/doc/Documentation/memory-barriers.txt)
 * [Runtime locking correctness validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
-* [Per-CPU variables](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
-* [Linux kernel memory management](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/mm/index.html)
+* [Per-CPU variables](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
+* [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html)
 * [slab](http://en.wikipedia.org/wiki/Slab_allocation)
 * [i2c](http://en.wikipedia.org/wiki/I%C2%B2C)
 * [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-8.html)

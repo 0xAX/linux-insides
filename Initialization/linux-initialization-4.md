@@ -74,7 +74,7 @@ Every process has its own stack and it is 16 kilobytes or 4 page frames. in `x86
 struct thread_info {
         struct task_struct      *task;
         struct exec_domain      *exec_domain;
-        __u32                   flags; 
+        __u32                   flags;
         __u32                   status;
         __u32                   cpu;
         int                     saved_preempt_count;
@@ -263,7 +263,7 @@ Remember that we have passed `cpu_number` as `pcp` to the `this_cpu_read` from t
                 __bad_size_call_parameter(); break;                     \
         }                                                               \
         pscr_ret__;                                                     \
-}) 
+})
 ```
 
 Yes, it looks a little strange but it's easy. First of all we can see the definition of the `pscr_ret__` variable with the `int` type. Why int? Ok, `variable` is `common_cpu` and it was declared as per-cpu int variable:
@@ -383,7 +383,7 @@ This function starts from the reserving memory block for the kernel `_text` and 
 memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)_text);
 ```
 
-You can read about `memblock` in the [Linux kernel memory management Part 1.](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/MM/linux-mm-1.html). As you can remember `memblock_reserve` function takes two parameters:
+You can read about `memblock` in the [Linux kernel memory management Part 1.](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html). As you can remember `memblock_reserve` function takes two parameters:
 
 * base physical address of a memory block;
 * size of a memory block.

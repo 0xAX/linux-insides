@@ -47,7 +47,7 @@ The second `FIXADDR_START` macro just subtracts the fix-mapped area size from th
 ```
 
 The `fixed_addresses` enums are used as an index to get the virtual address by the `fix_to_virt` function. Implementation of this function is easy:
- 
+
 ```C
 static __always_inline unsigned long fix_to_virt(const unsigned int idx)
 {
@@ -65,7 +65,7 @@ first of all it checks that the index given for the `fixed_addresses` enum is no
 Here we shift left the given index of a `fix-mapped` area on the `PAGE_SHIFT` which determines size of a page as I wrote above and subtract it from the `FIXADDR_TOP` which is the highest address of the `fix-mapped` area:
 
 ```
-+-----------------+ 
++-----------------+
 |    PAGE 1       | FIXADDR_TOP (virt address)
 |    PAGE 2       |
 |    PAGE 3       |
@@ -535,5 +535,5 @@ Links
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit)
 * [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer)
-* [Paging](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/Paging.html)
-* [Linux kernel memory management Part 1.](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/mm/linux-mm-1.html)
+* [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
+* [Linux kernel memory management Part 1.](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html)

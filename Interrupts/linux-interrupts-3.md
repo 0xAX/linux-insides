@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 3.
 Exception Handling
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) about an interrupts and an exceptions handling in the Linux kernel and in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) we stopped at the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blame/master/arch/x86/kernel/setup.c) source code file.
+This is the third part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) about an interrupts and an exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) we stopped at the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blame/master/arch/x86/kernel/setup.c) source code file.
 
 We already know that this function executes initialization of architecture-specific stuff. In our case the `setup_arch` function does [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture related initializations. The `setup_arch` is big function, and in the previous part we stopped on the setting of the two exceptions handlers for the two following exceptions:
 
@@ -77,7 +77,7 @@ $ gdb breakpoint
 ...
 ...
 (gdb) run
-Starting program: /home/alex/breakpoints 
+Starting program: /home/alex/breakpoints
 i equal to: 0
 
 Program received signal SIGTRAP, Trace/breakpoint trap.
@@ -403,7 +403,7 @@ as it will be passed as first parameter of secondary exception handler.
 .endif
 ```
 
-Additionally you may see that we zeroed the `%esi` register above in a case if an exception does not provide error code. 
+Additionally you may see that we zeroed the `%esi` register above in a case if an exception does not provide error code.
 
 In the end we just call secondary exception handler:
 
@@ -519,4 +519,4 @@ Links
 * [Per-CPU variables](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
 * [kgdb](https://en.wikipedia.org/wiki/KGDB)
 * [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html)

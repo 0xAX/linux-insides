@@ -60,7 +60,7 @@ Note that `__set_param` macro defines with `__section(.init.setup)` attribute. I
                 VMLINUX_SYMBOL(__setup_end) = .;
 ```
 
-Now we know how parameters are defined, let's back to the `parse_early_param` implementation: 
+Now we know how parameters are defined, let's back to the `parse_early_param` implementation:
 
 ```C
 void __init parse_early_param(void)
@@ -97,7 +97,7 @@ After this we can see call of the:
 	memblock_x86_reserve_range_setup_data();
 ```
 
-function. This function is defined in the same [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code file and remaps memory for the `setup_data` and reserved memory block for the `setup_data` (more about `setup_data` you can read in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-5.html) and about `ioremap` and `memblock` you can read in the [Linux kernel memory management](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/mm/index.html)).
+function. This function is defined in the same [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code file and remaps memory for the `setup_data` and reserved memory block for the `setup_data` (more about `setup_data` you can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) and about `ioremap` and `memblock` you can read in the [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html)).
 
 In the next step we can see following conditional statement:
 
@@ -273,13 +273,13 @@ if (max_pfn > (1UL<<(32 - PAGE_SHIFT)))
 	max_low_pfn = e820_end_of_low_ram_pfn();
 else
 	max_low_pfn = max_pfn;
-		
+
 high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
 ```
 
 Next we calculate `high_memory` (defines the upper bound on direct map memory) with `__va` macro which returns a virtual address by the given physical memory.
 
-DMI scanning 
+DMI scanning
 -------------------------------------------------------------------------------
 
 The next step after manipulations with different memory regions and `e820` slots is collecting information about computer. We will get all information with the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface) and following functions:
@@ -535,8 +535,8 @@ Links
 * [NX bit](http://en.wikipedia.org/wiki/NX_bit)
 * [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt)
 * [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
-* [CPU masks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
-* [Linux kernel memory management](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/mm/index.html)
+* [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [Linux kernel memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html)
 * [PCI](http://en.wikipedia.org/wiki/Conventional_PCI)
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS)

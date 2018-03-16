@@ -4,7 +4,7 @@ Linux kernel memory management Part 3.
 Introduction to the kmemcheck in the Linux kernel
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/mm/) which describes [memory management](https://en.wikipedia.org/wiki/Memory_management) in the Linux kernel and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html) of this chapter we met two memory management related concepts:
+This is the third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/MM/) which describes [memory management](https://en.wikipedia.org/wiki/Memory_management) in the Linux kernel and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html) of this chapter we met two memory management related concepts:
 
 * `Fix-Mapped Addresses`;
 * `ioremap`.
@@ -61,7 +61,7 @@ $ sudo cat /proc/ioports
 ...
 ```
 
-can show us lists of currently registered port regions used for input or output communication with a device. All memory-mapped I/O addresses are not used by the kernel directly. So, before the Linux kernel can use such memory, it must map it to the virtual memory space which is the main purpose of the `ioremap` mechanism. Note that we saw only early `ioremap` in the previous [part](https://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html). Soon we will look at the implementation of the non-early `ioremap` function. But before this we must learn other things, like a different types of memory allocators and etc., because in other way it will be very difficult to understand it.
+can show us lists of currently registered port regions used for input or output communication with a device. All memory-mapped I/O addresses are not used by the kernel directly. So, before the Linux kernel can use such memory, it must map it to the virtual memory space which is the main purpose of the `ioremap` mechanism. Note that we saw only early `ioremap` in the previous [part](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html). Soon we will look at the implementation of the non-early `ioremap` function. But before this we must learn other things, like a different types of memory allocators and etc., because in other way it will be very difficult to understand it.
 
 So, before we will move on to the non-early [memory management](https://en.wikipedia.org/wiki/Memory_management) of the Linux kernel, we will see some mechanisms which provide special abilities for [debugging](https://en.wikipedia.org/wiki/Debugging), check of [memory leaks](https://en.wikipedia.org/wiki/Memory_leak), memory control and etc. It will be easier to understand how memory management arranged in the Linux kernel after learning of all of these things.
 
@@ -431,4 +431,4 @@ Links
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [tasklet](https://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html)
 * [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html)

@@ -4,9 +4,9 @@ Interrupts and Interrupt Handling. Part 10.
 Last part
 -------------------------------------------------------------------------------
 
-This is the tenth part of the [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) about interrupts and interrupt handling in the Linux kernel and in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-9.html) we saw a little about deferred interrupts and related concepts like `softirq`, `tasklet` and `workqeue`. In this part we will continue to dive into this theme and now it's time to look at real hardware driver.
+This is the tenth part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) about interrupts and interrupt handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html) we saw a little about deferred interrupts and related concepts like `softirq`, `tasklet` and `workqeue`. In this part we will continue to dive into this theme and now it's time to look at real hardware driver.
 
-Let's consider serial driver of the [StrongARM** SA-110/21285 Evaluation Board](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf) board for example and will look how this driver requests an [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) line, 
+Let's consider serial driver of the [StrongARM** SA-110/21285 Evaluation Board](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf) board for example and will look how this driver requests an [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) line,
 what happens when an interrupt is triggered and etc. The source code of this driver is placed in the [drivers/tty/serial/21285.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/tty/serial/21285.c) source code file. Ok, we have source code, let's start.
 
 Initialization of a kernel module
@@ -261,7 +261,7 @@ if (!action)
     return -ENOMEM;
 ```
 
-More about `kzalloc` will be in the separate chapter about [memory management](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/mm/index.html) in the Linux kernel. As we allocated space for the `irqaction`, we start to initialize this structure with the values of interrupt handler, interrupt flags, device name, etc:
+More about `kzalloc` will be in the separate chapter about [memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html) in the Linux kernel. As we allocated space for the `irqaction`, we start to initialize this structure with the values of interrupt handler, interrupt flags, device name, etc:
 
 ```C
 action->handler = handler;
@@ -296,12 +296,12 @@ if (new->thread_fn && !nested) {
 }
 ```
 
-And fill the rest of the given interrupt descriptor fields in the end. So, our `16` and `17` interrupt request lines are registered and the `serial21285_rx_chars` and `serial21285_tx_chars` functions will be invoked when an interrupt controller will get event releated to these interrupts. Now let's look at what happens when an interrupt occurs. 
+And fill the rest of the given interrupt descriptor fields in the end. So, our `16` and `17` interrupt request lines are registered and the `serial21285_rx_chars` and `serial21285_tx_chars` functions will be invoked when an interrupt controller will get event releated to these interrupts. Now let's look at what happens when an interrupt occurs.
 
 Prepare to handle an interrupt
 --------------------------------------------------------------------------------
 
-In the previous paragraph we saw the requesting of the irq line for the given interrupt descriptor and registration of the `irqaction` structure for the given interrupt. We already know that when an interrupt event occurs, an interrupt controller notifies the processor about this event and processor tries to find appropriate interrupt gate for this interrupt. If you have read the eighth [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-8.html) of this chapter, you may remember the `native_init_IRQ` function. This function makes initialization of the local [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). The following part of this function is the most interesting part for us right now: 
+In the previous paragraph we saw the requesting of the irq line for the given interrupt descriptor and registration of the `irqaction` structure for the given interrupt. We already know that when an interrupt event occurs, an interrupt controller notifies the processor about this event and processor tries to find appropriate interrupt gate for this interrupt. If you have read the eighth [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-8.html) of this chapter, you may remember the `native_init_IRQ` function. This function makes initialization of the local [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). The following part of this function is the most interesting part for us right now:
 
 ```C
 for_each_clear_bit_from(i, used_vectors, first_system_vector) {
@@ -448,7 +448,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the tenth part of the [Interrupts and Interrupt Handling](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) chapter and as you have read in the beginning of this part - it is the last part of this chapter. This chapter started from the explanation of the theory of interrupts and we have learned what is it interrupt and kinds of interrupts, then we saw exceptions and handling of this kind of interrupts, deferred interrupts and finally we looked on the hardware interrupts and the handling of theirs in this part. Of course, this part and even this chapter does not cover full aspects of interrupts and interrupt handling in the Linux kernel. It is not realistic to do this. At least for me. It was the big part, I don't know how about you, but it was really big for me. This theme is much bigger than this chapter and I am not sure that somewhere there is a book that covers it. We have missed many part and aspects of interrupts and interrupt handling, but I think it will be good point to dive in the kernel code related to the interrupts and interrupts handling.
+It is the end of the tenth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) chapter and as you have read in the beginning of this part - it is the last part of this chapter. This chapter started from the explanation of the theory of interrupts and we have learned what is it interrupt and kinds of interrupts, then we saw exceptions and handling of this kind of interrupts, deferred interrupts and finally we looked on the hardware interrupts and the handling of theirs in this part. Of course, this part and even this chapter does not cover full aspects of interrupts and interrupt handling in the Linux kernel. It is not realistic to do this. At least for me. It was the big part, I don't know how about you, but it was really big for me. This theme is much bigger than this chapter and I am not sure that somewhere there is a book that covers it. We have missed many part and aspects of interrupts and interrupt handling, but I think it will be good point to dive in the kernel code related to the interrupts and interrupts handling.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
@@ -462,9 +462,9 @@ Links
 * [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [module](https://en.wikipedia.org/wiki/Loadable_kernel_module)
 * [initcall](http://kernelnewbies.org/Documents/InitcallMechanism)
-* [uart](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter) 
-* [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) 
-* [memory management](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/mm/index.html)
+* [uart](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter)
+* [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture)
+* [memory management](http://0xax.gitbooks.io/linux-insides/content/MM/index.html)d
 * [i2c](https://en.wikipedia.org/wiki/I%C2%B2C)
 * [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [GNU assembler](https://en.wikipedia.org/wiki/GNU_Assembler)
@@ -473,4 +473,4 @@ Links
 * [pid](https://en.wikipedia.org/wiki/Process_identifier)
 * [device tree](https://en.wikipedia.org/wiki/Device_tree)
 * [system calls](https://en.wikipedia.org/wiki/System_call)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-9.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html)

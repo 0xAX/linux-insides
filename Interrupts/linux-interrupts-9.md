@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 9.
 Introduction to deferred interrupts (Softirq, Tasklets and Workqueues)
 --------------------------------------------------------------------------------
 
-It is the nine part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) and in the previous [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
+It is the nine part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) and in the previous [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-8.html) we saw implementation of the `init_IRQ` from that defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irqinit.c) source code file. So, we will continue to dive into the initialization stuff which is related to the external hardware interrupts in this part.
 
 Interrupts may have different important characteristics and there are two among them:
 
@@ -101,8 +101,8 @@ const char * const softirq_to_name[NR_SOFTIRQS] = {
 Or we can see it in the output of the `/proc/softirqs`:
 
 ```
-~$ cat /proc/softirqs 
-                    CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7       
+~$ cat /proc/softirqs
+                    CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7
           HI:          5          0          0          0          0          0          0          0
        TIMER:     332519     310498     289555     272913     282535     279467     282895     270979
       NET_TX:       2320          0          0          2          1          1          0          0
@@ -145,7 +145,7 @@ The `raise_softirq_irqoff` function marks the softirq as deffered by setting the
 __raise_softirq_irqoff(nr);
 ```
 
-macro. After this, it checks the result of the `in_interrupt` that returns `irq_count` value. We already saw the `irq_count` in the first [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-1.html) of this chapter and it is used to check if a CPU is already on an interrupt stack or not. We just exit from the `raise_softirq_irqoff`, restore `IF` flag and enable interrupts on the local processor, if we are in the interrupt context, otherwise  we call the `wakeup_softirqd`:
+macro. After this, it checks the result of the `in_interrupt` that returns `irq_count` value. We already saw the `irq_count` in the first [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-1.html) of this chapter and it is used to check if a CPU is already on an interrupt stack or not. We just exit from the `raise_softirq_irqoff`, restore `IF` flag and enable interrupts on the local processor, if we are in the interrupt context, otherwise  we call the `wakeup_softirqd`:
 
 ```C
 if (!in_interrupt())
@@ -186,7 +186,7 @@ if (pending) {
 		--max_restart)
             goto restart;
 }
-...			
+...
 ```
 
 Checks of the existence of the deferred interrupts performed periodically and there are some points where this check occurs. The main point where this situation occurs is the call of the `do_IRQ` function that defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irq.c) and provides main possibilities for actual interrupt processing in the Linux kernel. When this function will finish to handle an interrupt, it calls the `exiting_irq` function from the [arch/x86/include/asm/apic.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/apic.h) that expands to the call of the `irq_exit` function. The `irq_exit` checks deferred interrupts, current context and calls the `invoke_softirq` function:
@@ -280,7 +280,7 @@ As we can see this structure contains five fields, they are:
 * Parameter of the callback.
 
 In our case, we set only for initialize only two arrays of tasklets in the `softirq_init` function: the `tasklet_vec` and the `tasklet_hi_vec`. Tasklets and high-priority tasklets are stored in the `tasklet_vec` and `tasklet_hi_vec` arrays, respectively. So, we have initialized these arrays and now we can see two calls of the `open_softirq` function that is defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/softirq.c) source code file:
- 
+
 ```C
 open_softirq(TASKLET_SOFTIRQ, tasklet_action);
 open_softirq(HI_SOFTIRQ, tasklet_hi_action);
@@ -306,7 +306,7 @@ There are additional methods to initialize a tasklet statically with the two fol
 
 ```C
 DECLARE_TASKLET(name, func, data);
-DECLARE_TASKLET_DISABLED(name, func, data);	
+DECLARE_TASKLET_DISABLED(name, func, data);
 ```
 
 The Linux kernel provides three following functions to mark a tasklet as ready to run:
@@ -364,7 +364,7 @@ static void tasklet_action(struct softirq_action *a)
 }
 ```
 
-In the beginning of the `tasklet_action` function, we disable interrupts for the local processor with the help of the `local_irq_disable` macro (you can read about this macro in the second [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-2.html) of this chapter). In the next step, we take a head of the list that contains tasklets with normal priority and set this per-cpu list to `NULL` because all tasklets must be executed in a generally way. After this we enable interrupts for the local processor and go through the list of tasklets in the loop. In every iteration of the loop we call the `tasklet_trylock` function for the given tasklet that updates state of the given tasklet on `TASKLET_STATE_RUN`: 
+In the beginning of the `tasklet_action` function, we disable interrupts for the local processor with the help of the `local_irq_disable` macro (you can read about this macro in the second [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-2.html) of this chapter). In the next step, we take a head of the list that contains tasklets with normal priority and set this per-cpu list to `NULL` because all tasklets must be executed in a generally way. After this we enable interrupts for the local processor and go through the list of tasklets in the loop. In every iteration of the loop we call the `tasklet_trylock` function for the given tasklet that updates state of the given tasklet on `TASKLET_STATE_RUN`:
 
 ```C
 static inline int tasklet_trylock(struct tasklet_struct *t)
@@ -506,7 +506,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the ninth part of the [Interrupts and Interrupt Handling](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/interrupts/index.html) chapter and we continued to dive into external hardware interrupts in this part. In the previous part we saw initialization of the `IRQs` and main `irq_desc` structure. In this part we saw three concepts: the `softirq`, `tasklet` and `workqueue` that are used for the deferred functions.
+It is the end of the ninth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) chapter and we continued to dive into external hardware interrupts in this part. In the previous part we saw initialization of the `IRQs` and main `irq_desc` structure. In this part we saw three concepts: the `softirq`, `tasklet` and `workqueue` that are used for the deferred functions.
 
 The next part will be last part of the `Interrupts and Interrupt Handling` chapter and we will look on the real hardware driver and will try to learn how it works with the interrupts subsystem.
 
@@ -523,4 +523,4 @@ Links
 * [CPU masks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
 * [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
 * [Workqueue](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/workqueue.txt)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-8.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-8.html)
