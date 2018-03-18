@@ -187,7 +187,7 @@ At the end, we can see the call to the `extract_kernel` function:
 	popq	%rsi
 ```
 
-Again we set `rdi` to a pointer to the `boot_params` structure and preserve it on the stack. In the same time we set `rsi` to point to the area which should be usedd for kernel uncompression. The last step is preparation of the `extract_kernel` parameters and call of this function which will uncompres the kernel. The `extract_kernel` function is defined in the  [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c) source code file and takes six arguments:
+Again we set `rdi` to a pointer to the `boot_params` structure and preserve it on the stack. In the same time we set `rsi` to point to the area which should be used for kernel uncompression. The last step is preparation of the `extract_kernel` parameters and call of this function which will uncompres the kernel. The `extract_kernel` function is defined in the  [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c) source code file and takes six arguments:
 
 * `rmode` - pointer to the [boot_params](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973//arch/x86/include/uapi/asm/bootparam.h#L114) structure which is filled by bootloader or during early kernel initialization;
 * `heap` - pointer to the `boot_heap` which represents start address of the early boot heap;
@@ -383,10 +383,10 @@ Links
 --------------------------------------------------------------------------------
 
 * [address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
-* [initrd](http://en.wikipedia.org/wiki/Initrd)
-* [long mode](http://en.wikipedia.org/wiki/Long_mode)
+* [initrd](https://en.wikipedia.org/wiki/Initrd)
+* [long mode](https://en.wikipedia.org/wiki/Long_mode)
 * [bzip2](http://www.bzip.org/)
-* [RDdRand instruction](http://en.wikipedia.org/wiki/RdRand)
-* [Time Stamp Counter](http://en.wikipedia.org/wiki/Time_Stamp_Counter)
-* [Programmable Interval Timers](http://en.wikipedia.org/wiki/Intel_8253)
+* [RdRand instruction](https://en.wikipedia.org/wiki/RdRand)
+* [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
+* [Programmable Interval Timers](https://en.wikipedia.org/wiki/Intel_8253)
 * [Previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md)
