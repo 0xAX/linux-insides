@@ -533,7 +533,7 @@ __init void init_sched_fair_class(void)
 }
 ```
 
-Here we register a [soft irq](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-9.html) that will call the `run_rebalance_domains` handler. After the `SCHED_SOFTIRQ` will be triggered, the `run_rebalance` will be called to rebalance a run queue on the current CPU.
+Here we register a [soft irq](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-9.html) that will call the `run_rebalance_domains` handler. After the `SCHED_SOFTIRQ` will be triggered, the `run_rebalance` will be called to rebalance a run queue on the current CPU.
 
 The last two steps of the `sched_init` function is to initialization of scheduler statistics and setting `scheeduler_running` variable:
 
