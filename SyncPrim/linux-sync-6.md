@@ -17,7 +17,7 @@ So, let's start.
 Sequential lock
 --------------------------------------------------------------------------------
 
-So, what is a `seqlock` synchronization primitive and how does it work? Let's try to answer on these questions in this paragraph. Actually `sequential locks` were introduced in the Linux kernel 2.6.x. Main point of this synchronization primitive is to provide fast and lock-free access to shared resources. Since the heart of `sequential lock` synchronization primitive is [spinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) synchronization primitive, `sequential locks` work in situations where the protected resources are small and simple. Additionally write access must be rare and also should be fast. 
+So, what is a `seqlock` synchronization primitive and how does it work? Let's try to answer on these questions in this paragraph. Actually `sequential locks` were introduced in the Linux kernel 2.6.x. Main point of this synchronization primitive is to provide fast and lock-free access to shared resources. Since the heart of `sequential lock` synchronization primitive is [spinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) synchronization primitive, `sequential locks` work in situations where the protected resources are small and simple. Additionally write access must be rare and also should be fast.
 
 Work of this synchronization primitive is based on the sequence of events counter. Actually a `sequential lock` allows free access to a resource for readers, but each reader must check existence of conflicts with a writer. This synchronization primitive introduces a special counter. The main algorithm of work of `sequential locks` is simple: Each writer which acquired a sequential lock increments this counter and additionally acquires a [spinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html). When this writer finishes, it will release the acquired spinlock to give access to other writers and increment the counter of a sequential lock again.
 
@@ -303,7 +303,7 @@ static inline void raw_write_seqcount_end(seqcount_t *s)
 
 and in the end we just call the `spin_unlock` macro to give access for other readers or writers.
 
-That's all about `sequential lock` mechanism in the Linux kernel. Of course we did not consider full [API](https://en.wikipedia.org/wiki/Application_programming_interface) of this mechanism in this part. But all other functions are based on these which we described here. For example, Linux kernel also provides some safe macros/functions to use `sequential lock` mechanism in [interrupt handlers](https://en.wikipedia.org/wiki/Interrupt_handler) of [softirq](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-9.html): `write_seqclock_irq` and `write_sequnlock_irq`:
+That's all about `sequential lock` mechanism in the Linux kernel. Of course we did not consider full [API](https://en.wikipedia.org/wiki/Application_programming_interface) of this mechanism in this part. But all other functions are based on these which we described here. For example, Linux kernel also provides some safe macros/functions to use `sequential lock` mechanism in [interrupt handlers](https://en.wikipedia.org/wiki/Interrupt_handler) of [softirq](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-9.html): `write_seqclock_irq` and `write_sequnlock_irq`:
 
 ```C
 static inline void write_seqlock_irq(seqlock_t *sl)
@@ -338,7 +338,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_(computer_science))
-* [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) 
+* [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock)
 * [spinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html)
 * [critical section](https://en.wikipedia.org/wiki/Critical_section)
 * [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
@@ -347,6 +347,6 @@ Links
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [Timers and time management in the Linux kernel](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/)
 * [interrupt handlers](https://en.wikipedia.org/wiki/Interrupt_handler)
-* [softirq](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Interrupts/interrupts-9.html)
-* [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_(PC_architecture))
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-5.html)
+* [softirq](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-9.html)
+* [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_\(PC_architecture\))
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-5.html)
