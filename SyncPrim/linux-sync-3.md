@@ -4,7 +4,7 @@ Synchronization primitives in the Linux kernel. Part 3.
 Semaphores
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the previous part we saw special type of [spinlocks](https://en.wikipedia.org/wiki/Spinlock) - `queued spinlocks`. The previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html) was the last part which describes `spinlocks` related stuff. So we need to go ahead.
+This is the third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the previous part we saw special type of [spinlocks](https://en.wikipedia.org/wiki/Spinlock) - `queued spinlocks`. The previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-2.html) was the last part which describes `spinlocks` related stuff. So we need to go ahead.
 
 The next [synchronization primitive](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) after `spinlock` which we will see in this part is [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). We will start from theoretical side and will learn what is it `semaphore` and only after this, we will see how it is implemented in the Linux kernel as we did in the previous part.
 
@@ -70,7 +70,7 @@ as we may see, the `DEFINE_SEMAPHORE` macro provides ability to initialize only 
 }
 ```
 
-The `__SEMAPHORE_INITIALIZER` macro takes the name of the future `semaphore` structure and does initialization of the fields of this structure. First of all we initialize a `spinlock` of the given `semaphore` with the `__RAW_SPIN_LOCK_UNLOCKED` macro. As you may remember from the [previous](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) parts, the `__RAW_SPIN_LOCK_UNLOCKED` is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file and expands to the `__ARCH_SPIN_LOCK_UNLOCKED` macro which just expands to zero or unlocked state:
+The `__SEMAPHORE_INITIALIZER` macro takes the name of the future `semaphore` structure and does initialization of the fields of this structure. First of all we initialize a `spinlock` of the given `semaphore` with the `__RAW_SPIN_LOCK_UNLOCKED` macro. As you may remember from the [previous](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) parts, the `__RAW_SPIN_LOCK_UNLOCKED` is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file and expands to the `__ARCH_SPIN_LOCK_UNLOCKED` macro which just expands to zero or unlocked state:
 
 ```C
 #define __ARCH_SPIN_LOCK_UNLOCKED       { { 0 } }
@@ -106,7 +106,7 @@ The first two functions: `down` and `up` are for acquiring and releasing of the 
 
 The `down_killable` function does the same as the `down_interruptible` function, but set the `TASK_KILLABLE` flag for the current process. This means that the waiting process may be interrupted by the kill signal.
 
-The `down_trylock` function is similar on the `spin_trylock` function. This function tries to acquire a lock and exit if this operation was unsuccessful. In this case the process which wants to acquire a lock, will not wait. The last `down_timeout` function tries to acquire a lock. It will be interrupted in a waiting state when the given timeout will be expired. Additionally, you may notice that the timeout is in [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html)
+The `down_trylock` function is similar on the `spin_trylock` function. This function tries to acquire a lock and exit if this operation was unsuccessful. In this case the process which wants to acquire a lock, will not wait. The last `down_timeout` function tries to acquire a lock. It will be interrupted in a waiting state when the given timeout will be expired. Additionally, you may notice that the timeout is in [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html)
 
 We just saw definitions of the `semaphore` [API](https://en.wikipedia.org/wiki/Application_programming_interface). We will start from the `down` function. This function is defined in the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file. Let's look on the implementation function:
 
@@ -343,7 +343,7 @@ Links
 * [deadlocks](https://en.wikipedia.org/wiki/Deadlock)
 * [scheduler](https://en.wikipedia.org/wiki/Scheduling_%28computing%29)
 * [Doubly linked list in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html)
-* [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html)
+* [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html)
 * [interrupts](https://en.wikipedia.org/wiki/Interrupt)
 * [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
 * [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29)
@@ -351,4 +351,4 @@ Links
 * [errno](https://en.wikipedia.org/wiki/Errno.h)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-2.html)
