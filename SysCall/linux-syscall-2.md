@@ -4,7 +4,7 @@ System calls in the Linux kernel. Part 2.
 How does the Linux kernel handle a system call
 --------------------------------------------------------------------------------
 
-The previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SysCall/syscall-1.html) was the first part of the chapter that describes the [system call](https://en.wikipedia.org/wiki/System_call) concepts in the Linux kernel.
+The previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html) was the first part of the chapter that describes the [system call](https://en.wikipedia.org/wiki/System_call) concepts in the Linux kernel.
 In the previous part we learned what a system call is in the Linux kernel, and in operating systems in general. This was introduced from a user-space perspective, and part of the [write](http://man7.org/linux/man-pages/man2/write.2.html) system call implementation was discussed. In this part we continue our look at system calls, starting with some theory before moving onto the Linux kernel code.
 
 A user application does not make the system call directly from our applications. We did not write the `Hello world!` program like:
@@ -378,7 +378,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part about the system calls concept in the Linux kernel. In the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SysCall/syscall-1.html) we saw theory about this concept from the user application view. In this part we continued to dive into the stuff which is related to the system call concept and saw what the Linux kernel does when a system call occurs.
+This is the end of the second part about the system calls concept in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html) we saw theory about this concept from the user application view. In this part we continued to dive into the stuff which is related to the system call concept and saw what the Linux kernel does when a system call occurs.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
@@ -406,4 +406,4 @@ Links
 * [general purpose registers](https://en.wikipedia.org/wiki/Processor_register)
 * [ABI](https://en.wikipedia.org/wiki/Application_binary_interface)
 * [x86_64 C ABI](http://www.x86-64.org/documentation/abi.pdf)
-* [previous chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SysCall/syscall-1.html)
+* [previous chapter](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html)

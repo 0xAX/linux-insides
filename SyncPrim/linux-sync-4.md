@@ -13,7 +13,7 @@ So, let's start.
 Concept of `mutex`
 --------------------------------------------------------------------------------
 
-We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-3.html). It represented by the:
+We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html). It represented by the:
 
 ```C
 struct semaphore {
@@ -77,7 +77,7 @@ struct mutex_waiter {
 };
 ```
 
-structure from the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and will sleep. Before we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) which is provided by the Linux kernel for manipulation with `mutexes`, let's consider the `mutex_waiter` structure. If you have read the [previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-3.html) of this chapter, you may notice that the `mutex_waiter` structure is similar to the `semaphore_waiter` structure from the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file:
+structure from the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and will be sleep. Before we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) which is provided by the Linux kernel for manipulation with `mutexes`, let's consider the `mutex_waiter` structure. If you have read the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html) of this chapter, you may notice that the `mutex_waiter` structure is similar to the `semaphore_waiter` structure from the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file:
 
 ```C
 struct semaphore_waiter {
@@ -205,7 +205,7 @@ exit:
         return;
 ```
 
-For this moment he implementation of the `__mutex_fastpath_lock` function looks pretty easy. But the value of the `mutex->counter` may be negative after increment. In this case the: 
+For this moment he implementation of the `__mutex_fastpath_lock` function looks pretty easy. But the value of the `mutex->counter` may be negative after increment. In this case the:
 
 ```C
 fail_fn(v);
@@ -324,7 +324,7 @@ In a successful case we update the owner of a lock, enable preemption and exit f
 skip_wait:
         mutex_set_owner(lock);
         preempt_enable();
-        return 0; 
+        return 0;
 ```
 
 In this case a lock will be acquired. If can't acquire a lock for now, we enter into the following loop:
@@ -338,7 +338,7 @@ for (;;) {
     if (unlikely(signal_pending_state(state, task))) {
         ret = -EINTR;
         goto err;
-    } 
+    }
 
     __set_task_state(task, state);
 
@@ -390,7 +390,7 @@ In the `__mutex_unlock_common_slowpath` function we will get the first entry fro
 ```C
 if (!list_empty(&lock->wait_list)) {
     struct mutex_waiter *waiter =
-           list_entry(lock->wait_list.next, struct mutex_waiter, list); 
+           list_entry(lock->wait_list.next, struct mutex_waiter, list);
                 wake_up_process(waiter->task);
 }
 ```
@@ -403,7 +403,7 @@ That's all. We have considered main `API` for manipulation with `mutexes`: `mute
 * `mutex_lock_killable`;
 * `mutex_trylock`.
 
-and corresponding versions of `unlock` prefixed functions. This part will not describe this `API`, because it is similar to corresponding `API` of `semaphores`. More about it you may read in the [previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-3.html).
+and corresponding versions of `unlock` prefixed functions. This part will not describe this `API`, because it is similar to corresponding `API` of `semaphores`. More about it you may read in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html).
 
 That's all.
 
@@ -423,7 +423,7 @@ Links
 * [Spinlock](https://en.wikipedia.org/wiki/Spinlock)
 * [Semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)
 * [Synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)
-* [API](https://en.wikipedia.org/wiki/Application_programming_interface) 
+* [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Locking mechanism](https://en.wikipedia.org/wiki/Lock_%28computer_science%29)
 * [Context switches](https://en.wikipedia.org/wiki/Context_switch)
 * [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
@@ -437,4 +437,4 @@ Links
 * [JNS instruction](http://unixwiz.net/techtips/x86-jumps.html)
 * [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [Unix signals](https://en.wikipedia.org/wiki/Unix_signal)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-3.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html)

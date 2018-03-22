@@ -15,7 +15,7 @@ Reader/Writer semaphore
 
 Actually there are two types of operations may be performed on the data. We may read data and make changes in data. Two fundamental operations - `read` and `write`. Usually (but not always), `read` operation is performed more often than `write` operation. In this case, it would be logical to lock data in such a way, that some processes may read locked data in one time, on condition that no one will not change the data. The [readers/writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) allows us to get this lock.
 
-When a process which wants to write something into data, all other `writer` and `reader` processes will be blocked until the process which acquired a lock, will release it. When a process reads data, other processes which want to read the same data too, will not be locked and will be able to do this. As you may guess, implementation of the `reader/writer semaphore` is based on the implementation of the `normal semaphore`. We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the third [part]((https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-4.html) of this chapter. From the theoretical side everything looks pretty simple. Let's look how `reader/writer semaphore` is represented in the Linux kernel.
+When a process which wants to write something into data, all other `writer` and `reader` processes will be blocked until the process which acquired a lock, will not release it. When a process reads data, other processes which want to read the same data too, will not be locked and will be able to do this. As you may guess, implementation of the `reader/writer semaphore` is based on the implementation of the `normal semaphore`. We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the third [part]((https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-4.html) of this chapter. From the theoretical side everything looks pretty simple. Let's look how `reader/writer semaphore` is represented in the Linux kernel.
 
 The `semaphore` is represented by the:
 
@@ -70,7 +70,7 @@ The `count` field of a `rw_semaphore` structure may have following values:
 * `0xffffffff00000000` - represents situation when there are readers or writers are queued, but no one is active or is in the process of acquire of a lock;
 * `0xfffffffe00000001` - a writer is active or attempting to acquire a lock and waiters are in queue.
 
-So, besides the `count` field, all of these fields are similar to fields of the `semaphore` structure. Last three fields depend on the two configuration options of the Linux kernel: the `CONFIG_RWSEM_SPIN_ON_OWNER` and `CONFIG_DEBUG_LOCK_ALLOC`. The first two fields may be familiar us by declaration of the [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) structure from the [previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-4.html). The first `osq` field represents [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) spinner for `optimistic spinning` and the second represents process which is current owner of a lock.
+So, besides the `count` field, all of these fields are similar to fields of the `semaphore` structure. Last three fields depend on the two configuration options of the Linux kernel: the `CONFIG_RWSEM_SPIN_ON_OWNER` and `CONFIG_DEBUG_LOCK_ALLOC`. The first two fields may be familiar us by declaration of the [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) structure from the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-4.html). The first `osq` field represents [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) spinner for `optimistic spinning` and the second represents process which is current owner of a lock.
 
 The last field of the `rw_semaphore` structure is - `dep_map` - debugging related, and as I already wrote in previous parts, we will skip debugging related stuff in this chapter.
 
@@ -103,7 +103,7 @@ As we may see, the `DECLARE_RWSEM` macro just expands to the definition of the `
         .wait_lock = __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock)  \
          __RWSEM_OPT_INIT(name)                                \
          __RWSEM_DEP_MAP_INIT(name)
-} 
+}
 ```
 
 and expands to the initialization of fields of `rw_semaphore` structure. First of all we initialize `count` field of the `rw_semaphore` structure to the `unlocked` state with `RWSEM_UNLOCKED_VALUE` macro from the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/rwsem.h) architecture specific header file:
@@ -193,7 +193,7 @@ void __sched down_write(struct rw_semaphore *sem)
 }
 ```
 
-We already met the `might_sleep` macro in the [previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-4.html). In short words, Implementation of the `might_sleep` macro depends on the `CONFIG_DEBUG_ATOMIC_SLEEP` kernel configuration option and if this option is enabled, this macro just prints a stack trace if it was executed in [atomic](https://en.wikipedia.org/wiki/Linearizability) context. As this macro is mostly for debugging purpose we will skip it and will go ahead. Additionally we will skip the next macro from the `down_read` function - `rwsem_acquire` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel, because this is topic of other part.
+We already met the `might_sleep` macro in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-4.html). In short words, Implementation of the `might_sleep` macro depends on the `CONFIG_DEBUG_ATOMIC_SLEEP` kernel configuration option and if this option is enabled, this macro just prints a stack trace if it was executed in [atomic](https://en.wikipedia.org/wiki/Linearizability) context. As this macro is mostly for debugging purpose we will skip it and will go ahead. Additionally we will skip the next macro from the `down_read` function - `rwsem_acquire` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel, because this is topic of other part.
 
 The only two things that remained in the `down_write` function is the call of the `LOCK_CONTENDED` macro which is defined in the [include/linux/lockdep.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/lockdep.h) header file and setting of owner of a lock with the `rwsem_set_owner` function which sets owner to currently running process:
 
@@ -292,7 +292,7 @@ if (rwsem_optimistic_spin(sem))
       return sem;
 ```
 
-We will skip implementation of the `rwsem_optimistic_spin` function, as it is similar on the `mutex_optimistic_spin` function which we saw in the [previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-4.html). In short words we check existence other tasks ready to run that have higher priority in the `rwsem_optimistic_spin` function. If there are such tasks, the process will be added to the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) `waitqueue` and start to spin in the loop until a lock will be able to be acquired. If `optimistic spinning` is disabled, a process will be added to the and marked as waiting for write:
+We will skip implementation of the `rwsem_optimistic_spin` function, as it is similar on the `mutex_optimistic_spin` function which we saw in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-4.html). In short words we check existence other tasks ready to run that have higher priority in the `rwsem_optimistic_spin` function. If there are such tasks, the process will be added to the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) `waitqueue` and start to spin in the loop until a lock will be able to be acquired. If `optimistic spinning` is disabled, a process will be added to the and marked as waiting for write:
 
 ```C
 waiter.task = current;
@@ -325,7 +325,7 @@ while (true) {
 }
 ```
 
-I will skip explanation of this loop as we already met similar functional in the [previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-4.html).
+I will skip explanation of this loop as we already met similar functional in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-4.html).
 
 That's all. From this moment, our `writer` process will acquire or not acquire a lock depends on the value of the `rw_semaphore->count` field. Now if we will look at the implementation of the `down_read` function which executes a try of acquiring of a lock. We will see similar actions which we saw in the `down_write` function. This function calls different debugging and lock validator related functions/macros:
 
@@ -430,4 +430,4 @@ Links
 * [Inline assembly](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/asm.html)
 * [XADD instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-4.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-4.html)

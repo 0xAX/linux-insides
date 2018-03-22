@@ -28,12 +28,12 @@ int main(int argc, char *argv) {
                 printf("file sucessfully opened\n");
         }
 
-        close(fd); 
+        close(fd);
         return 0;
 }
 ```
 
-In this case, the open is the function from standard library, but not system call. The standard library will call related system call for us. The `open` call will return a [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) which is just an unique number within our process which is associated with the opened file. Now as we opened a file and got file descriptor as result of `open` call, we may start to interact with this file. We can write into, read from it and etc. List of opened file by a process is available via [proc](https://en.wikipedia.org/wiki/Procfs) filesystem: 
+In this case, the open is the function from standard library, but not system call. The standard library will call related system call for us. The `open` call will return a [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) which is just an unique number within our process which is associated with the opened file. Now as we opened a file and got file descriptor as result of `open` call, we may start to interact with this file. We can write into, read from it and etc. List of opened file by a process is available via [proc](https://en.wikipedia.org/wiki/Procfs) filesystem:
 
 ```
 $ sudo ls /proc/1/fd/
@@ -49,7 +49,7 @@ So let's start.
 Definition of the open system call
 --------------------------------------------------------------------------------
 
-If you have read the [fourth part](https://github.com/0xAX/linux-insides/blob/master/SysCall/syscall-4.md) of the [linux-insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book, you should know that system calls are defined with the help of `SYSCALL_DEFINE` macro. So, the `open` system call is not exception.
+If you have read the [fourth part](https://github.com/0xAX/linux-insides/blob/master/SysCall/linux-syscall-4.md) of the [linux-insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book, you should know that system calls are defined with the help of `SYSCALL_DEFINE` macro. So, the `open` system call is not exception.
 
 Definition of the `open` system call is located in the [fs/open.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) source code file and looks pretty small for the first view:
 
@@ -81,19 +81,19 @@ As we may read in the [GNU C Library Reference Manual](https://www.gnu.org/softw
 
 > off_t
 >
->    This is a signed integer type used to represent file sizes. 
+>    This is a signed integer type used to represent file sizes.
 >    In the GNU C Library, this type is no narrower than int.
->    If the source is compiled with _FILE_OFFSET_BITS == 64 this 
+>    If the source is compiled with _FILE_OFFSET_BITS == 64 this
 >    type is transparently replaced by off64_t.
 
 and
 
 > off64_t
 >
->    This type is used similar to off_t. The difference is that 
+>    This type is used similar to off_t. The difference is that
 >    even on 32 bit machines, where the off_t type would have 32 bits,
 >    off64_t has 64 bits and so is able to address files up to 2^63 bytes
->    in length. When compiling with _FILE_OFFSET_BITS == 64 this type 
+>    in length. When compiling with _FILE_OFFSET_BITS == 64 this type
 >    is available under the name off_t.
 
 So it is not hard to guess that the `off_t`, `off64_t` and `O_LARGEFILE` are about a file size. In the case of the Linux kernel, the `O_LARGEFILE` is used  to disallow opening large files on 32bit systems if the caller didn't specify `O_LARGEFILE` flag during opening of a file. On 64bit systems we force on this flag in open system call. And the `force_o_largefile` macro from the [include/linux/fcntl.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/fcntl.h#L7) linux kernel header file confirms this:
@@ -108,7 +108,7 @@ This macro may be architecture-specific as for example for [IA-64](https://en.wi
 
 So, as we may see the `force_o_largefile` is just a macro which expands to the `true` value in our case of [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. As we are considering 64-bit architecture, the `force_o_largefile` will be expanded to `true` and the `O_LARGEFILE` flag will be added to the set of flags which were passed to the `open` system call.
 
-Now as we considered meaning of the `O_LARGEFILE` flag and `force_o_largefile` macro, we can proceed to the consideration of the implementation of the `do_sys_open` function. As I wrote above, this function is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) source code file and looks: 
+Now as we considered meaning of the `O_LARGEFILE` flag and `force_o_largefile` macro, we can proceed to the consideration of the implementation of the `do_sys_open` function. As I wrote above, this function is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) source code file and looks:
 
 ```C
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
@@ -389,7 +389,7 @@ Links
 * [file descriptor](https://en.wikipedia.org/wiki/File_descriptor)
 * [proc](https://en.wikipedia.org/wiki/Procfs)
 * [GNU C Library Reference Manual](https://www.gnu.org/software/libc/manual/html_mono/libc.html#File-Position-Primitive)
-* [IA-64](https://en.wikipedia.org/wiki/IA-64) 
+* [IA-64](https://en.wikipedia.org/wiki/IA-64)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [opendir](http://man7.org/linux/man-pages/man3/opendir.3.html)
 * [fanotify](http://man7.org/linux/man-pages/man7/fanotify.7.html)
@@ -400,4 +400,4 @@ Links
 * [inode](https://en.wikipedia.org/wiki/Inode)
 * [RCU](https://www.kernel.org/doc/Documentation/RCU/whatisRCU.txt)
 * [read](http://man7.org/linux/man-pages/man2/read.2.html)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html)
+* [previous part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-4.html)

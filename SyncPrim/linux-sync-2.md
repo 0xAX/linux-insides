@@ -4,9 +4,9 @@ Synchronization primitives in the Linux kernel. Part 2.
 Queued Spinlocks
 --------------------------------------------------------------------------------
 
-This is the second part of the [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the first [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) of this chapter we met the first - [spinlock](https://en.wikipedia.org/wiki/Spinlock). We will continue to learn this synchronization primitive in this part. If you have read the previous part, you may remember that besides normal spinlocks, the Linux kernel provides special type of `spinlocks` - `queued spinlocks`. In this part we will try to understand what does this concept represent.
+This is the second part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the first [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) of this chapter we met the first - [spinlock](https://en.wikipedia.org/wiki/Spinlock). We will continue to learn this synchronization primitive in this part. If you have read the previous part, you may remember that besides normal spinlocks, the Linux kernel provides special type of `spinlocks` - `queued spinlocks`. In this part we will try to understand what does this concept represent.
 
-We saw [API](https://en.wikipedia.org/wiki/Application_programming_interface) of `spinlock` in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html):
+We saw [API](https://en.wikipedia.org/wiki/Application_programming_interface) of `spinlock` in the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html):
 
 * `spin_lock_init` - produces initialization of the given `spinlock`;
 * `spin_lock` - acquires given `spinlock`;
@@ -17,7 +17,7 @@ We saw [API](https://en.wikipedia.org/wiki/Application_programming_interface) of
 * `spin_is_locked` - returns the state of the given `spinlock`;
 * and etc.
 
-And we know that all of these macro which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock.h) header file will be expanded to the call of the functions with `arch_spin_.*` prefix from the  [arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/spinlock.h) for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at this header fill with attention, we will that these functions (`arch_spin_is_locked`, `arch_spin_lock`, `arch_spin_unlock` and etc) defined only if the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option is disabled: 
+And we know that all of these macro which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock.h) header file will be expanded to the call of the functions with `arch_spin_.*` prefix from the  [arch/x86/include/asm/spinlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/spinlock.h) for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at this header fill with attention, we will that these functions (`arch_spin_is_locked`, `arch_spin_lock`, `arch_spin_unlock` and etc) defined only if the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option is disabled:
 
 ```C
 #ifdef CONFIG_QUEUED_SPINLOCKS
@@ -97,7 +97,7 @@ int unlock(lock)
 
 The first thread will execute the `test_and_set` which will set the `lock` to `1`. When the second thread will call the `lock` function, it will spin in the `while` loop, until the first thread will not call the `unlock` function and the `lock` will be equal to `0`. This implementation is not very good for performance, because it has at least two problems. The first problem is that this implementation may be unfair and the thread from one processor may have long waiting time, even if it called the `lock` before other threads which are waiting for free lock too. The second problem is that all threads which want to acquire a lock, must to execute many `atomic` operations like `test_and_set` on a variable which is in shared memory. This leads to the cache invalidation as the cache of the processor will store `lock=1`, but the value of the `lock` in memory may be `1` after a thread will release this lock.
 
-In the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) we saw the second type of spinlock implementation - `ticket spinlock`. This approach solves the first problem and may guarantee order of threads which want to acquire a lock, but still has a second problem.
+In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) we saw the second type of spinlock implementation - `ticket spinlock`. This approach solves the first problem and may guarantee order of threads which want to acquire a lock, but still has a second problem.
 
 The topic of this part is `queued spinlocks`. This approach may help to solve both of these problems. The `queued spinlocks` allows to each processor to use its own memory location to spin. The basic principle of a queue-based spinlock can best be understood by studying a classic queue-based spinlock implementation called the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) lock. Before we will look at implementation of the `queued spinlocks` in the Linux kernel, we will try to understand what is it `MCS` lock.
 
@@ -455,14 +455,14 @@ Yes, from this moment we are in the head of the `queue`. But before we are able 
 smp_cond_acquire(!((val = atomic_read(&lock->val)) & _Q_LOCKED_PENDING_MASK));
 ```
 
-After both threads will release a lock, the head of the `queue` will hold a lock. In the end we just need to update the tail of the `queue` and remove current head from it. 
+After both threads will release a lock, the head of the `queue` will hold a lock. In the end we just need to update the tail of the `queue` and remove current head from it.
 
 That's all.
 
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock`. In this part we saw another implementation of the `spinlock` mechanism - `queued spinlock`. In the next part we will continue to dive into synchronization primitives in the Linux kernel. 
+This is the end of the second part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock`. In this part we saw another implementation of the `spinlock` mechanism - `queued spinlock`. In the next part we will continue to dive into synchronization primitives in the Linux kernel.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
@@ -473,15 +473,15 @@ Links
 
 * [spinlock](https://en.wikipedia.org/wiki/Spinlock)
 * [interrupt](https://en.wikipedia.org/wiki/Interrupt)
-* [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler) 
+* [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Test and Set](https://en.wikipedia.org/wiki/Test-and-set)
 * [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
 * [per-cpu variables](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
 * [atomic instruction](https://en.wikipedia.org/wiki/Linearizability)
-* [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html) 
+* [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [NOP instruction](https://en.wikipedia.org/wiki/NOP)
 * [PREFETCHW instruction](http://www.felixcloutier.com/x86/PREFETCHW.html)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html)

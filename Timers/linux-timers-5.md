@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 5.
 Introduction to the `clockevents` framework
 --------------------------------------------------------------------------------
 
-This is fifth part of the [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. As you might noted from the title of this part, the `clockevents` framework will be discussed. We already saw one framework in the [second](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-2.html) part of this chapter. It was `clocksource` framework. Both of these frameworks represent timekeeping abstractions in the Linux kernel.
+This is fifth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. As you might noted from the title of this part, the `clockevents` framework will be discussed. We already saw one framework in the [second](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-2.html) part of this chapter. It was `clocksource` framework. Both of these frameworks represent timekeeping abstractions in the Linux kernel.
 
 At first let's refresh your memory and try to remember what is it `clocksource` framework and and what its purpose. The main goal of the `clocksource` framework is to provide `timeline`. As described in the [documentation](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/Documentation/timers/timekeeping.txt):
 
@@ -407,9 +407,9 @@ Links
 * [interrupt](https://en.wikipedia.org/wiki/Interrupt)
 * [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler)
 * [local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
-* [C3 state](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface#Device_states) 
+* [C3 state](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface#Device_states)
 * [Periodic Interval Timer (PIT) for at91sam926x](http://www.atmel.com/Images/doc6062.pdf)
 * [CPU masks in the Linux kernel](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
 * [deadlock](https://en.wikipedia.org/wiki/Deadlock)
 * [CPU hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
-* [previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-3.html)
+* [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-3.html)

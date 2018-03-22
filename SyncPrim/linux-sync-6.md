@@ -6,7 +6,7 @@ Introduction
 
 This is the sixth part of the chapter which describes [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_(computer_science) in the Linux kernel and in the previous parts we finished to consider different [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) synchronization primitives. We will continue to learn synchronization primitives in this part and start to consider a similar synchronization primitive which can be used to avoid the `writer starvation` problem. The name of this synchronization primitive is - `seqlock` or `sequential locks`.
 
-We know from the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-5.html) that [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) is a special lock mechanism which allows concurrent access for read-only operations, but an exclusive lock is needed for writing or modifying data. As we may guess, it may lead to a problem which is called `writer starvation`. In other words, a writer process can't acquire a lock as long as at least one reader process which acquired a lock holds it. So, in the situation when contention is high, it will lead to situation when a writer process which wants to acquire a lock will wait for it for a long time.
+We know from the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-5.html) that [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) is a special lock mechanism which allows concurrent access for read-only operations, but an exclusive lock is needed for writing or modifying data. As we may guess, it may lead to a problem which is called `writer starvation`. In other words, a writer process can't acquire a lock as long as at least one reader process which acquired a lock holds it. So, in the situation when contention is high, it will lead to situation when a writer process which wants to acquire a lock will wait for it for a long time.
 
 The `seqlock` synchronization primitive can help solve this problem.
 
@@ -17,9 +17,9 @@ So, let's start.
 Sequential lock
 --------------------------------------------------------------------------------
 
-So, what is a `seqlock` synchronization primitive and how does it work? Let's try to answer on these questions in this paragraph. Actually `sequential locks` were introduced in the Linux kernel 2.6.x. Main point of this synchronization primitive is to provide fast and lock-free access to shared resources. Since the heart of `sequential lock` synchronization primitive is [spinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) synchronization primitive, `sequential locks` work in situations where the protected resources are small and simple. Additionally write access must be rare and also should be fast.
+So, what is a `seqlock` synchronization primitive and how does it work? Let's try to answer on these questions in this paragraph. Actually `sequential locks` were introduced in the Linux kernel 2.6.x. Main point of this synchronization primitive is to provide fast and lock-free access to shared resources. Since the heart of `sequential lock` synchronization primitive is [spinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) synchronization primitive, `sequential locks` work in situations where the protected resources are small and simple. Additionally write access must be rare and also should be fast.
 
-Work of this synchronization primitive is based on the sequence of events counter. Actually a `sequential lock` allows free access to a resource for readers, but each reader must check existence of conflicts with a writer. This synchronization primitive introduces a special counter. The main algorithm of work of `sequential locks` is simple: Each writer which acquired a sequential lock increments this counter and additionally acquires a [spinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html). When this writer finishes, it will release the acquired spinlock to give access to other writers and increment the counter of a sequential lock again.
+Work of this synchronization primitive is based on the sequence of events counter. Actually a `sequential lock` allows free access to a resource for readers, but each reader must check existence of conflicts with a writer. This synchronization primitive introduces a special counter. The main algorithm of work of `sequential locks` is simple: Each writer which acquired a sequential lock increments this counter and additionally acquires a [spinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html). When this writer finishes, it will release the acquired spinlock to give access to other writers and increment the counter of a sequential lock again.
 
 Read only access works on the following principle, it gets the value of a `sequential lock` counter before it will enter into [critical section](https://en.wikipedia.org/wiki/Critical_section) and compares it with the value of the same `sequential lock` counter at the exit of critical section. If their values are equal, this means that there weren't writers for this period. If their values are not equal, this means that a writer has incremented the counter during the [critical section](https://en.wikipedia.org/wiki/Critical_section). This conflict means that reading of protected data must be repeated.
 
@@ -54,7 +54,7 @@ typedef struct {
 } seqlock_t;
 ```
 
-As we may see the `seqlock_t` provides two fields. These fields represent a sequential lock counter, description of which we saw above and also a [spinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) which will protect data from other writers. Note that the `seqcount` counter represented as `seqcount` type. The `seqcount` is structure:
+As we may see the `seqlock_t` provides two fields. These fields represent a sequential lock counter, description of which we saw above and also a [spinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) which will protect data from other writers. Note that the `seqcount` counter represented as `seqcount` type. The `seqcount` is structure:
 
 ```C
 typedef struct seqcount {
@@ -114,7 +114,7 @@ So we just initialize counter of the given sequential lock to zero and additiona
 #endif
 ```
 
-As I already wrote in previous parts of this [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/) we will not consider [debugging](https://en.wikipedia.org/wiki/Debugging) and [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related stuff in this part. So for now we just skip the `SEQCOUNT_DEP_MAP_INIT` macro. The second field of the given `seqlock_t` is `lock` initialized with the `__SPIN_LOCK_UNLOCKED` macro which is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file. We will not consider implementation of this macro here as it just initialize [rawspinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) with architecture-specific methods (More abot spinlocks you may read in first parts of this [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/)).
+As I already wrote in previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/) we will not consider [debugging](https://en.wikipedia.org/wiki/Debugging) and [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related stuff in this part. So for now we just skip the `SEQCOUNT_DEP_MAP_INIT` macro. The second field of the given `seqlock_t` is `lock` initialized with the `__SPIN_LOCK_UNLOCKED` macro which is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file. We will not consider implementation of this macro here as it just initialize [rawspinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) with architecture-specific methods (More abot spinlocks you may read in first parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/)).
 
 We have considered the first way to initialize a sequential lock. Let's consider second way to do the same, but do it dynamically. We can initialize a sequential lock with the `seqlock_init` macro which is defined in the same  [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/seqlock.h) header file.
 
@@ -149,7 +149,7 @@ static inline void __seqcount_init(seqcount_t *s, const char *name,
 }
 ```
 
-just initializes counter of the given `seqcount_t` with zero. The second call from the `seqlock_init` macro is the call of the `spin_lock_init` macro which we saw in the [first part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html) of this chapter.
+just initializes counter of the given `seqcount_t` with zero. The second call from the `seqlock_init` macro is the call of the `spin_lock_init` macro which we saw in the [first part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) of this chapter.
 
 So, now we know how to initialize a `sequential lock`, now let's look at how to use it. The Linux kernel provides following [API](https://en.wikipedia.org/wiki/Application_programming_interface) to manipulate `sequential locks`:
 
@@ -223,7 +223,7 @@ static inline int __read_seqcount_retry(const seqcount_t *s, unsigned start)
 
 which just compares value of the counter of the given `sequential lock` with the initial value of this counter. If the initial value of the counter which is obtained from `read_seqbegin()` function is odd, this means that a writer was in the middle of updating the data when our reader began to act. In this case the value of the data can be in inconsistent state, so we need to try to read it again.
 
-This is a common pattern in the Linux kernel. For example, you may remember the `jiffies` concept from the [first part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-1.html) of the [timers and time management in the Linux kernel](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/) chapter. The sequential lock is used to obtain value of `jiffies` at [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture:
+This is a common pattern in the Linux kernel. For example, you may remember the `jiffies` concept from the [first part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html) of the [timers and time management in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/Timers/) chapter. The sequential lock is used to obtain value of `jiffies` at [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture:
 
 ```C
 u64 get_jiffies_64(void)
@@ -337,9 +337,9 @@ If you have questions or suggestions, feel free to ping me in twitter [0xAX](htt
 Links
 --------------------------------------------------------------------------------
 
-* [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_(computer_science))
+* [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_\(computer_science\))
 * [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock)
-* [spinlock](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SyncPrim/sync-1.html)
+* [spinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html)
 * [critical section](https://en.wikipedia.org/wiki/Critical_section)
 * [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [debugging](https://en.wikipedia.org/wiki/Debugging)
@@ -349,4 +349,4 @@ Links
 * [interrupt handlers](https://en.wikipedia.org/wiki/Interrupt_handler)
 * [softirq](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-9.html)
 * [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_\(PC_architecture\))
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-5.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-5.html)

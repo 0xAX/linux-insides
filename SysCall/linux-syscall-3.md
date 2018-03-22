@@ -4,7 +4,7 @@ System calls in the Linux kernel. Part 3.
 vsyscalls and vDSO
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SysCall/index.html) that describes system calls in the Linux kernel and we saw preparations after a system call caused by an userspace application and process of handling of a system call in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SysCall/syscall-2.html). In this part we will look at two concepts that are very close to the system call concept, they are called `vsyscall` and `vdso`.
+This is the third part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) that describes system calls in the Linux kernel and we saw preparations after a system call caused by a userspace application and process of handling of a system call in the previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html). In this part we will look at two concepts that are very close to the system call concept, they are called `vsyscall` and `vdso`.
 
 We already know what `system call`s are. They are special routines in the Linux kernel which userspace applications ask to do privileged tasks, like to read or to write to a file, to open a socket, etc. As you may know, invoking a system call is an expensive operation in the Linux kernel, because the processor must interrupt the currently executing task and switch context to kernel mode, subsequently jumping again into userspace after the system call handler finishes its work. These two mechanisms - `vsyscall` and `vdso` are designed to speed up this process for certain system calls and in this part we will try to understand how these mechanisms work.
 
@@ -370,7 +370,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the third part about the system calls concept in the Linux kernel. In the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SysCall/syscall-2.html) we discussed the implementation of the preparation from the Linux kernel side, before a system call will be handled and implementation of the `exit` process from a system call handler. In this part we continued to dive into the stuff which is related to the system call concept and learned two new concepts that are very similar to the system call - the `vsyscall` and the `vDSO`.
+This is the end of the third part about the system calls concept in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html) we discussed the implementation of the preparation from the Linux kernel side, before a system call will be handled and implementation of the `exit` process from a system call handler. In this part we continued to dive into the stuff which is related to the system call concept and learned two new concepts that are very similar to the system call - the `vsyscall` and the `vDSO`.
 
 After all of these three parts, we know almost all things that are related to system calls, we know what system call is and why user applications need them.  We also know what occurs when a user application calls a system call and how the kernel handles system calls.
 
@@ -399,5 +399,5 @@ Links
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [stack pointer](https://en.wikipedia.org/wiki/Stack_register)
 * [uname](https://en.wikipedia.org/wiki/Uname)
-* [Linkers](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Misc/linkers.html)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/SysCall/syscall-2.html)
+* [Linkers](http://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html)

@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 3.
 The tick broadcast framework and dyntick
 --------------------------------------------------------------------------------
 
-This is third part of the [chapter](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel and we stopped on the `clocksource` framework in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-2.html). We have started to consider this framework because it is closely related to the special counters which are provided by the Linux kernel. One of these counters which we already saw in the first [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-1.html) of this chapter is - `jiffies`. As I already wrote in the first part of this chapter, we will consider time management related stuff step by step during the Linux kernel initialization. Previous step was call of the:
+This is third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel and we stopped on the `clocksource` framework in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-2.html). We have started to consider this framework because it is closely related to the special counters which are provided by the Linux kernel. One of these counters which we already saw in the first [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html) of this chapter is - `jiffies`. As I already wrote in the first part of this chapter, we will consider time management related stuff step by step during the Linux kernel initialization. Previous step was call of the:
 
 ```C
 register_refined_jiffies(CLOCK_TICK_RATE);
@@ -441,4 +441,4 @@ Links
 * [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [percpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
 * [context switches](https://en.wikipedia.org/wiki/Context_switch)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Timers/timers-2.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-2.html)
