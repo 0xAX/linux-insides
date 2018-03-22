@@ -4,7 +4,7 @@ Kernel initialization. Part 7.
 The End of the architecture-specific initialization, almost...
 ================================================================================
 
-This is the seventh part of the Linux Kernel initialization process which covers insides of the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861). As you can know from the previous [parts](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html), the `setup_arch` function does some architecture-specific (in our case it is [x86_64](http://en.wikipedia.org/wiki/X86-64)) initialization stuff like reserving memory for kernel code/data/bss, early scanning of the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface), early dump of the [PCI](http://en.wikipedia.org/wiki/PCI) device and many many more. If you have read the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/%20linux-initialization-6.html), you can remember that we've finished it at the `setup_real_mode` function. In the next step, as we set limit of the [memblock](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html) to the all mapped pages, we can see the call of the `setup_log_buf` function from the [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c).
+This is the seventh part of the Linux Kernel initialization process which covers insides of the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861). As you can know from the previous [parts](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html), the `setup_arch` function does some architecture-specific (in our case it is [x86_64](http://en.wikipedia.org/wiki/X86-64)) initialization stuff like reserving memory for kernel code/data/bss, early scanning of the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface), early dump of the [PCI](http://en.wikipedia.org/wiki/PCI) device and many many more. If you have read the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html), you can remember that we've finished it at the `setup_real_mode` function. In the next step, as we set limit of the [memblock](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html) to the all mapped pages, we can see the call of the `setup_log_buf` function from the [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c).
 
 The `setup_log_buf` function setups kernel cyclic buffer and its length depends on the `CONFIG_LOG_BUF_SHIFT` configuration option. As we can read from the documentation of the `CONFIG_LOG_BUF_SHIFT` it can be between `12` and `21`. In the insides, buffer defined as array of chars:
 
@@ -98,7 +98,7 @@ We can see `io_delay` command line parameter setup with the `early_param` macro 
 early_param("io_delay", io_delay_param);
 ```
 
-More about `early_param` you can read in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/%20linux-initialization-6.html). So the `io_delay_param` function which setups `io_delay_override` variable will be called in the [do_early_param](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L413) function. `io_delay_param` function gets the argument of the `io_delay` kernel command line parameter and sets `io_delay_type` depends on it:
+More about `early_param` you can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html). So the `io_delay_param` function which setups `io_delay_override` variable will be called in the [do_early_param](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L413) function. `io_delay_param` function gets the argument of the `io_delay` kernel command line parameter and sets `io_delay_type` depends on it:
 
 ```C
 static int __init io_delay_param(char *s)
@@ -301,14 +301,14 @@ Now `vsyscall` area is in the `fix-mapped` area. That's all about `map_vsyscall`
 Getting the SMP configuration
 --------------------------------------------------------------------------------
 
-You may remember how we made a search of the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing) configuration in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/%20linux-initialization-6.html). Now we need to get the `SMP` configuration if we found it. For this we check `smp_found_config` variable which we set in the `smp_scan_config` function (read about it the previous part) and call the `get_smp_config` function:
+You may remember how we made a search of the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing) configuration in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html). Now we need to get the `SMP` configuration if we found it. For this we check `smp_found_config` variable which we set in the `smp_scan_config` function (read about it the previous part) and call the `get_smp_config` function:
 
 ```C
 if (smp_found_config)
 	get_smp_config();
 ```
 
-The `get_smp_config` expands to the `x86_init.mpparse.default_get_smp_config` function which is defined in the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/mpparse.c). This function defines a pointer to the multiprocessor floating pointer structure - `mpf_intel` (you can read about it in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/%20linux-initialization-6.html)) and does some checks:
+The `get_smp_config` expands to the `x86_init.mpparse.default_get_smp_config` function which is defined in the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/mpparse.c). This function defines a pointer to the multiprocessor floating pointer structure - `mpf_intel` (you can read about it in the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html)) and does some checks:
 
 ```C
 struct mpf_intel *mpf = mpf_found;
@@ -479,4 +479,4 @@ Links
 * [vsyscalls](https://lwn.net/Articles/446528/)
 * [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)
 * [jiffy](http://en.wikipedia.org/wiki/Jiffy_%28time%29)
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/%20linux-initialization-6.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html)
