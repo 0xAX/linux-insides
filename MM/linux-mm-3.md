@@ -148,7 +148,7 @@ Ok, so we know that `kmemcheck` provides mechanism to check usage of `uninitiali
 struct my_struct *my_struct = kmalloc(sizeof(struct my_struct), GFP_KERNEL);
 ```
 
-or in other words somebody wants to access a [page](https://en.wikipedia.org/wiki/Page_%28computer_memory%29), a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception is generated. This is achieved by the fact that the `kmemcheck` marks memory pages as `non-present` (more about this you can read in the special part which is devoted to [paging](https://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)). If a `page fault` exception is occurred, the exception handler knows about it and in a case when the `kmemcheck` is enabled it transfers control to it. After the `kmemcheck` will finish its checks, the page will be marked as `present` and the interrupted code will be able to continue execution. There is little subtlety in this chain. When the first instruction of interrupted code will be executed, the `kmemcheck` will mark the page as `non-present` again. In this way next access to memory will be caught again.
+or in other words somebody wants to access a [page](https://en.wikipedia.org/wiki/Page_%28computer_memory%29), a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception is generated. This is achieved by the fact that the `kmemcheck` marks memory pages as `non-present` (more about this you can read in the special part which is devoted to [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html)). If a `page fault` exception is occurred, the exception handler knows about it and in a case when the `kmemcheck` is enabled it transfers control to it. After the `kmemcheck` will finish its checks, the page will be marked as `present` and the interrupted code will be able to continue execution. There is little subtlety in this chain. When the first instruction of interrupted code will be executed, the `kmemcheck` will mark the page as `non-present` again. In this way next access to memory will be caught again.
 
 We just considered the `kmemcheck` mechanism from theoretical side. Now let's consider how it is implemented in the Linux kernel.
 
@@ -190,7 +190,7 @@ early_param("kmemcheck", param_kmemcheck);
 
 As we already saw, the `param_kmemcheck` may have one of the following values: `0` (enabled), `1` (disabled) or `2` (one-shot). The implementation of the `param_kmemcheck` is pretty simple. We just convert string value of the `kmemcheck` command line option to integer representation and set it to the `kmemcheck_enabled` variable.
 
-The second stage will be executed during initialization of the Linux kernel, rather during initialization of early [initcalls](https://0xax.gitbooks.io/linux-insides/content/Concepts/initcall.html). The second stage is represented by the `kmemcheck_init`:
+The second stage will be executed during initialization of the Linux kernel, rather during initialization of early [initcalls](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-3.html). The second stage is represented by the `kmemcheck_init`:
 
 ```C
 int __init kmemcheck_init(void)
@@ -296,7 +296,7 @@ __do_page_fault(struct pt_regs *regs, unsigned long error_code,
 }
 ```
 
-The `kmemcheck_active` gets `kmemcheck_context` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) structure and return the result of comparison of the `balance` field of this structure with zero:
+The `kmemcheck_active` gets `kmemcheck_context` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) structure and return the result of comparison of the `balance` field of this structure with zero:
 
 ```
 bool kmemcheck_active(struct pt_regs *regs)
@@ -422,13 +422,12 @@ Links
 * [memory leaks](https://en.wikipedia.org/wiki/Memory_leak)
 * [kmemcheck documentation](https://www.kernel.org/doc/Documentation/kmemcheck.txt)
 * [valgrind](https://en.wikipedia.org/wiki/Valgrind)
-* [paging](https://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
+* [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html)
 * [page fault](https://en.wikipedia.org/wiki/Page_fault)
-* [initcalls](https://0xax.gitbooks.io/linux-insides/content/Concepts/initcall.html)
+* [initcalls](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-3.html)
 * [opcode](https://en.wikipedia.org/wiki/Opcode)
 * [translation lookaside buffer](https://en.wikipedia.org/wiki/Translation_lookaside_buffer)
-* [per-cpu variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
+* [per-cpu variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [tasklet](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-9.html)
-* [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html)

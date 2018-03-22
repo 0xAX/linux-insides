@@ -535,5 +535,5 @@ Links
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit)
 * [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer)
-* [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
+* [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html)
 * [Linux kernel memory management Part 1.](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html)
