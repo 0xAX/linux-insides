@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 6.
 x86_64 related clock sources
 --------------------------------------------------------------------------------
 
-This is sixth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-5.html) we saw `clockevents` framework and now we will continue to dive into time management related stuff in the Linux kernel. This part will describe implementation of [x86](https://en.wikipedia.org/wiki/X86) architecture related clock sources (more about `clocksource` concept you can read in the [second part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-2.html) of this chapter).
+This is sixth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-5.html) we saw `clockevents` framework and now we will continue to dive into time management related stuff in the Linux kernel. This part will describe implementation of [x86](https://en.wikipedia.org/wiki/X86) architecture related clock sources (more about `clocksource` concept you can read in the [second part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-2.html) of this chapter).
 
 First of all we must know what clock sources may be used at `x86` architecture. It is easy to know from the [sysfs](https://en.wikipedia.org/wiki/Sysfs) or from content of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. The `/sys/devices/system/clocksource/clocksourceN` provides two special files to achieve this:
 
@@ -31,7 +31,7 @@ $ cat /sys/devices/system/clocksource/clocksource0/current_clocksource
 tsc
 ```
 
-For me it is [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). As we may know from the [second part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-2.html) of this chapter, which describes internals of the `clocksource` framework in the Linux kernel, the best clock source in a system is a clock source with the best (highest) rating or in other words with the highest [frequency](https://en.wikipedia.org/wiki/Frequency).
+For me it is [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). As we may know from the [second part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-2.html) of this chapter, which describes internals of the `clocksource` framework in the Linux kernel, the best clock source in a system is a clock source with the best (highest) rating or in other words with the highest [frequency](https://en.wikipedia.org/wiki/Frequency).
 
 Frequency of the [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) power management timer is `3.579545 MHz`. Frequency of the [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) is at least `10 MHz`. And the frequency of the [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) depends on processor. For example On older processors, the `Time Stamp Counter` was counting internal processor clock cycles. This means its frequency changed when the processor's frequency scaling changed. The situation has changed for newer processors. Newer processors have an `invariant Time Stamp counter` that increments at a constant rate in all operational states of processor. Actually we can get its frequency in the output of the `/proc/cpuinfo`. For example for the first processor in the system:
 
@@ -410,4 +410,4 @@ Links
 * [IRQ0](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29#Master_PIC)
 * [i8259](https://en.wikipedia.org/wiki/Intel_8259)
 * [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-5.html)
+* [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-5.html)
