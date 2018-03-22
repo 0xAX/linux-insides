@@ -260,7 +260,7 @@ Now let's look on the `do_nmi` exception handler. This function defined in the [
 * address of the `pt_regs`;
 * error code.
 
-as all exception handlers. The `do_nmi` starts from the call of the `nmi_nesting_preprocess` function and ends with the call of the `nmi_nesting_postprocess`. The `nmi_nesting_preprocess` function checks that we likely do not work with the debug stack and if we on the debug stack set the `update_debug_stack` [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) variable to `1` and call the `debug_stack_set_zero` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function increases the `debug_stack_use_ctr` per-cpu variable and loads new `Interrupt Descriptor Table`:
+as all exception handlers. The `do_nmi` starts from the call of the `nmi_nesting_preprocess` function and ends with the call of the `nmi_nesting_postprocess`. The `nmi_nesting_preprocess` function checks that we likely do not work with the debug stack and if we on the debug stack set the `update_debug_stack` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable to `1` and call the `debug_stack_set_zero` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function increases the `debug_stack_use_ctr` per-cpu variable and loads new `Interrupt Descriptor Table`:
 
 ```C
 static inline void nmi_nesting_preprocess(struct pt_regs *regs)
@@ -473,7 +473,7 @@ Links
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
 * [stack frame](https://en.wikipedia.org/wiki/Call_stack)
 * [Model Specific regiser](https://en.wikipedia.org/wiki/Model-specific_register)
-* [percpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
+* [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [RCU](https://en.wikipedia.org/wiki/Read-copy-update)
 * [MPX](https://en.wikipedia.org/wiki/Intel_MPX)
 * [x87 FPU](https://en.wikipedia.org/wiki/X87)

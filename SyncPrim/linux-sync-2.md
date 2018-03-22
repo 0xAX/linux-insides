@@ -101,7 +101,7 @@ In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/l
 
 The topic of this part is `queued spinlocks`. This approach may help to solve both of these problems. The `queued spinlocks` allows to each processor to use its own memory location to spin. The basic principle of a queue-based spinlock can best be understood by studying a classic queue-based spinlock implementation called the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) lock. Before we will look at implementation of the `queued spinlocks` in the Linux kernel, we will try to understand what is it `MCS` lock.
 
-The basic idea of the `MCS` lock is in that as I already wrote in the previous paragraph, a thread spins on a local variable and each processor in the system has its own copy of these variable. In other words this concept is built on top of the [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) variables concept in the Linux kernel.
+The basic idea of the `MCS` lock is in that as I already wrote in the previous paragraph, a thread spins on a local variable and each processor in the system has its own copy of these variable. In other words this concept is built on top of the [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variables concept in the Linux kernel.
 
 When the first thread wants to acquire a lock, it registers itself in the `queue` or in other words it will be added to the special `queue` and will acquire lock, because it is free for now. When the second thread will want to acquire the same lock before the first thread will release it, this thread adds its own copy of the lock variable into this `queue`. In this case the first thread will contain a `next` field which will point to the second thread. From this moment, the second thread will wait until the first thread will release its lock and notify `next` thread about this event. The first thread will be deleted from the `queue` and the second thread will be owner of a lock.
 
@@ -477,7 +477,7 @@ Links
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Test and Set](https://en.wikipedia.org/wiki/Test-and-set)
 * [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
-* [per-cpu variables](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
+* [per-cpu variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [atomic instruction](https://en.wikipedia.org/wiki/Linearizability)
 * [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)

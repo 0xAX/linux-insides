@@ -95,7 +95,7 @@ More about this will be in the another chapter about the `NUMA`. The next step a
 init_irq_default_affinity();
 ```
 
-function. The `init_irq_default_affinity` function defined in the same source code file and depends on the `CONFIG_SMP` kernel configuration option allocates a given [cpumask](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) structure (in our case it is the `irq_default_affinity`):
+function. The `init_irq_default_affinity` function defined in the same source code file and depends on the `CONFIG_SMP` kernel configuration option allocates a given [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) structure (in our case it is the `irq_default_affinity`):
 
 ```C
 #if defined(CONFIG_SMP)
@@ -207,7 +207,7 @@ for (i = 0; i < count; i++) {
 
 We are going through the all interrupt descriptors and do the following things:
 
-First of all we allocate [percpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) variable for the `irq` kernel statistic with the `alloc_percpu` macro. This macro allocates one instance of an object of the given type for every processor on the system. You can access kernel statistic from the userspace via `/proc/stat`:
+First of all we allocate [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable for the `irq` kernel statistic with the `alloc_percpu` macro. This macro allocates one instance of an object of the given type for every processor on the system. You can access kernel statistic from the userspace via `/proc/stat`:
 
 ```
 ~$ cat /proc/stat
@@ -221,7 +221,7 @@ cpu3 26648 8 6931 678891 414 0 244 0 0 0
 ...
 ```
 
-Where the sixth column is the servicing interrupts. After this we allocate [cpumask](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) for the given irq descriptor affinity and initialize the [spinlock](https://en.wikipedia.org/wiki/Spinlock) for the given interrupt descriptor. After this before the [critical section](https://en.wikipedia.org/wiki/Critical_section), the lock will be acquired with a call of the `raw_spin_lock` and unlocked with the call of the `raw_spin_unlock`. In the next step we call the `lockdep_set_class` macro which set the [Lock validator](https://lwn.net/Articles/185666/) `irq_desc_lock_class` class for the lock of the given interrupt descriptor. More about `lockdep`, `spinlock` and other synchronization primitives will be described in the separate chapter.
+Where the sixth column is the servicing interrupts. After this we allocate [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) for the given irq descriptor affinity and initialize the [spinlock](https://en.wikipedia.org/wiki/Spinlock) for the given interrupt descriptor. After this before the [critical section](https://en.wikipedia.org/wiki/Critical_section), the lock will be acquired with a call of the `raw_spin_lock` and unlocked with the call of the `raw_spin_unlock`. In the next step we call the `lockdep_set_class` macro which set the [Lock validator](https://lwn.net/Articles/185666/) `irq_desc_lock_class` class for the lock of the given interrupt descriptor. More about `lockdep`, `spinlock` and other synchronization primitives will be described in the separate chapter.
 
 In the end of the loop we call the `desc_set_defaults` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c). This function takes four parameters:
 
@@ -275,7 +275,7 @@ desc->owner = owner;
 ...
 ```
 
-After this we go through the all [possible](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) processor with the [for_each_possible_cpu](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/cpumask.h#L714) helper and set the `kstat_irqs` to zero for the given interrupt descriptor:
+After this we go through the all [possible](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) processor with the [for_each_possible_cpu](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/cpumask.h#L714) helper and set the `kstat_irqs` to zero for the given interrupt descriptor:
 
 ```C
 	for_each_possible_cpu(cpu)
@@ -413,7 +413,7 @@ if (WARN_ON(initcnt > IRQ_BITMAP_BITS))
     initcnt = IRQ_BITMAP_BITS;
 ```
 
-where `IRQ_BITMAP_BITS` is equal to the `NR_IRQS` if the `CONFIG_SPARSE_IRQ` is not set and `NR_IRQS + 8196` in other way. In the next step we are going over all interrupt descriptors which need to be allocated in the loop and allocate space for the descriptor and insert to the `irq_desc_tree` [radix tree](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/DataStructures/radix-tree.html):
+where `IRQ_BITMAP_BITS` is equal to the `NR_IRQS` if the `CONFIG_SPARSE_IRQ` is not set and `NR_IRQS + 8196` in other way. In the next step we are going over all interrupt descriptors which need to be allocated in the loop and allocate space for the descriptor and insert to the `irq_desc_tree` [radix tree](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-2.html):
 
 ```C
 for (i = 0; i < initcnt; i++) {
@@ -446,8 +446,8 @@ Links
 * [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [numa](https://en.wikipedia.org/wiki/Non-uniform_memory_access)
 * [Enum type](https://en.wikipedia.org/wiki/Enumerated_type)
-* [cpumask](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
-* [percpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
+* [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
+* [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [spinlock](https://en.wikipedia.org/wiki/Spinlock)
 * [critical section](https://en.wikipedia.org/wiki/Critical_section)
 * [Lock validator](https://lwn.net/Articles/185666/)
@@ -457,5 +457,5 @@ Links
 * [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259)
 * [PIC](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)
 * [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification)
-* [radix tree](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/DataStructures/radix-tree.html)
+* [radix tree](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-2.html)
 * [dmesg](https://en.wikipedia.org/wiki/Dmesg)

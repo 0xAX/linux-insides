@@ -252,7 +252,7 @@ Here we can see that [uname](https://en.wikipedia.org/wiki/Uname) util was linke
 * `libc.so.6`;
 * `ld-linux-x86-64.so.2`.
 
-The first provides `vDSO` functionality, the second is `C` [standard library](https://en.wikipedia.org/wiki/C_standard_library) and the third is the program interpreter (more about this you can read in the part that describes [linkers](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Misc/linkers.html)). So, the `vDSO` solves limitations of the `vsyscall`. Implementation of the `vDSO` is similar to `vsyscall`.
+The first provides `vDSO` functionality, the second is `C` [standard library](https://en.wikipedia.org/wiki/C_standard_library) and the third is the program interpreter (more about this you can read in the part that describes [linkers](https://0xax.gitbooks.io/linux-insides/content/Misc/linux-misc-3.html)). So, the `vDSO` solves limitations of the `vsyscall`. Implementation of the `vDSO` is similar to `vsyscall`.
 
 Initialization of the `vDSO` occurs in the `init_vdso` function that defined in the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vma.c) source code file. This function starts from the initialization of the `vDSO` images for 32-bits and 64-bits depends on the `CONFIG_X86_X32_ABI` kernel configuration option:
 
@@ -399,5 +399,5 @@ Links
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [stack pointer](https://en.wikipedia.org/wiki/Stack_register)
 * [uname](https://en.wikipedia.org/wiki/Uname)
-* [Linkers](http://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)
+* [Linkers](https://0xax.gitbooks.io/linux-insides/content/Misc/linux-misc-3.html)
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-2.html)

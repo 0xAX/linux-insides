@@ -300,7 +300,7 @@ In the next step we fill the `used_vectors` array which defined in the [arch/x86
 DECLARE_BITMAP(used_vectors, NR_VECTORS);
 ```
 
-of the first `32` interrupts (more about bitmaps in the Linux kernel you can read in the part which describes [cpumasks and bitmaps](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html))
+of the first `32` interrupts (more about bitmaps in the Linux kernel you can read in the part which describes [cpumasks and bitmaps](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html))
 
 ```C
 for (i = 0; i < FIRST_EXTERNAL_VECTOR; i++)
@@ -459,7 +459,7 @@ Links
 * [x87 FPU](https://en.wikipedia.org/wiki/X86_instruction_listings#x87_floating-point_instructions)
 * [MCE exception](https://en.wikipedia.org/wiki/Machine-check_exception)
 * [SIMD](https://en.wikipedia.org/?title=SIMD)
-* [cpumasks and bitmaps](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
+* [cpumasks and bitmaps](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
 * [NX](https://en.wikipedia.org/wiki/NX_bit)
 * [Task State Segment](https://en.wikipedia.org/wiki/Task_state_segment)
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-3.html)

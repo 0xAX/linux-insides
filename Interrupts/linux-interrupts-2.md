@@ -245,7 +245,7 @@ static inline void boot_init_stack_canary(void)
 #endif
 ```
 
-If the `CONFIG_CC_STACKPROTECTOR` kernel configuration option is set, the `boot_init_stack_canary` function starts from the check stat `irq_stack_union` that represents [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) interrupt stack has offset equal to forty bytes from the `stack_canary` value:
+If the `CONFIG_CC_STACKPROTECTOR` kernel configuration option is set, the `boot_init_stack_canary` function starts from the check stat `irq_stack_union` that represents [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) interrupt stack has offset equal to forty bytes from the `stack_canary` value:
 
 ```C
 #ifdef CONFIG_X86_64

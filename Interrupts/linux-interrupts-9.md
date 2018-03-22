@@ -227,7 +227,7 @@ void __init softirq_init(void)
 }
 ```
 
-We can see definition of the integer `cpu` variable at the beginning of the `softirq_init` function. Next we will use it as parameter for the `for_each_possible_cpu` macro that goes through the all possible processors in the system. If the `possible processor` is the new terminology for you, you can read more about it the [CPU masks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) chapter. In short words, `possible cpus` is the set of processors that can be plugged in anytime during the life of that system boot. All `possible processors` stored in the `cpu_possible_bits` bitmap, you can find its definition in the [kernel/cpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/cpu.c):
+We can see definition of the integer `cpu` variable at the beginning of the `softirq_init` function. Next we will use it as parameter for the `for_each_possible_cpu` macro that goes through the all possible processors in the system. If the `possible processor` is the new terminology for you, you can read more about it the [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) chapter. In short words, `possible cpus` is the set of processors that can be plugged in anytime during the life of that system boot. All `possible processors` stored in the `cpu_possible_bits` bitmap, you can find its definition in the [kernel/cpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/cpu.c):
 
 ```C
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
@@ -237,7 +237,7 @@ static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
 const struct cpumask *const cpu_possible_mask = to_cpumask(cpu_possible_bits);
 ```
 
-Ok, we defined the integer `cpu` variable and go through the all possible processors with the `for_each_possible_cpu` macro and makes initialization of the two following [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) variables:
+Ok, we defined the integer `cpu` variable and go through the all possible processors with the `for_each_possible_cpu` macro and makes initialization of the two following [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variables:
 
 * `tasklet_vec`;
 * `tasklet_hi_vec`;
@@ -520,7 +520,7 @@ Links
 * [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/index.html)
 * [IF](https://en.wikipedia.org/wiki/Interrupt_flag)
 * [eflags](https://en.wikipedia.org/wiki/FLAGS_register)
-* [CPU masks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
-* [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
+* [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
+* [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [Workqueue](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/workqueue.txt)
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-8.html)

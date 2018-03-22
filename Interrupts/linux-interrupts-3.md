@@ -516,7 +516,7 @@ Links
 * [system call](http://en.wikipedia.org/wiki/System_call)
 * [swapgs](http://www.felixcloutier.com/x86/SWAPGS.html)
 * [SIGTRAP](https://en.wikipedia.org/wiki/Unix_signal#SIGTRAP)
-* [Per-CPU variables](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
+* [Per-CPU variables](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [kgdb](https://en.wikipedia.org/wiki/KGDB)
 * [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)
 * [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html)

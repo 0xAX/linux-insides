@@ -130,7 +130,7 @@ The next two fields `shift` and `mult` are familiar to us. They will be used to 
 #define cpumask_of(cpu) (get_cpu_mask(cpu))
 ```
 
-Where the `get_cpu_mask` returns the cpumask containing just a given `cpu` number. More about `cpumasks` concept you may read in the [CPU masks in the Linux kernel](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) part. In the last four lines of code we set callbacks for the clock event device suspend/resume, device shutdown and update of the clock event device state.
+Where the `get_cpu_mask` returns the cpumask containing just a given `cpu` number. More about `cpumasks` concept you may read in the [CPU masks in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) part. In the last four lines of code we set callbacks for the clock event device suspend/resume, device shutdown and update of the clock event device state.
 
 After we finished with the initialization of the `at91sam926x` periodic timer, we can register it by the call of the following functions:
 
@@ -409,7 +409,7 @@ Links
 * [local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [C3 state](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface#Device_states)
 * [Periodic Interval Timer (PIT) for at91sam926x](http://www.atmel.com/Images/doc6062.pdf)
-* [CPU masks in the Linux kernel](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
+* [CPU masks in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
 * [deadlock](https://en.wikipedia.org/wiki/Deadlock)
 * [CPU hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
 * [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-3.html)

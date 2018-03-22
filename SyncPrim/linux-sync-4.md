@@ -114,7 +114,7 @@ macro. Let's consider implementation of this macro. As we may see, the `DEFINE_M
 }
 ```
 
-This macro is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and as we may understand it initializes fields of the `mutex` structure the initial values. The `count` field get initialized with the `1` which represents `unlocked` state of a mutex. The `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) get initialized to the unlocked state and the last field `wait_list` to empty [doubly linked list](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/DataStructures/dlist.html).
+This macro is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and as we may understand it initializes fields of the `mutex` structure the initial values. The `count` field get initialized with the `1` which represents `unlocked` state of a mutex. The `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) get initialized to the unlocked state and the last field `wait_list` to empty [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html).
 
 The second approach allows us to initialize a `mutex` dynamically. To do this we need to call the `__mutex_init` function from the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/mutex.c) source code file. Actually, the `__mutex_init` function rarely called directly. Instead of the `__mutex_init`, the:
 
@@ -176,7 +176,7 @@ We may see the call of the `might_sleep` macro from the [include/linux/kernel.h]
 
 After the `might_sleep` macro, we may see the call of the `__mutex_fastpath_lock` function. This function is architecture-specific and as we consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture in this book, the implementation of the `__mutex_fastpath_lock` is located in the [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/mutex_64.h) header file. As we may understand from the name of the `__mutex_fastpath_lock` function, this function will try to acquire lock in a fast path or in other words this function will try to decrement the value of the `count` of the given mutex.
 
-Implementation of the `__mutex_fastpath_lock` function consists from two parts. The first part is [inline assembly](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/asm.html) statement. Let's look at it:
+Implementation of the `__mutex_fastpath_lock` function consists from two parts. The first part is [inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-3.html) statement. Let's look at it:
 
 ```C
 asm_volatile_goto(LOCK_PREFIX "   decl %0\n"
@@ -429,9 +429,9 @@ Links
 * [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [Atomic](https://en.wikipedia.org/wiki/Linearizability)
 * [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
-* [Doubly linked list](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/DataStructures/dlist.html)
+* [Doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [Inline assembly](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/asm.html)
+* [Inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-3.html)
 * [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
 * [Lock instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [JNS instruction](http://unixwiz.net/techtips/x86-jumps.html)

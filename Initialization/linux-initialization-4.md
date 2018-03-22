@@ -241,7 +241,7 @@ For now it is just zero. If the `CONFIG_DEBUG_PREEMPT` configuration option is d
 #define raw_smp_processor_id() (this_cpu_read(cpu_number))
 ```
 
-`this_cpu_read` as many other function like this (`this_cpu_write`, `this_cpu_add` and etc...) defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/percpu-defs.h) and presents `this_cpu` operation. These operations provide a way of optimizing access to the [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/per-cpu.html) variables which are associated with the current processor. In our case it is `this_cpu_read`:
+`this_cpu_read` as many other function like this (`this_cpu_write`, `this_cpu_add` and etc...) defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/percpu-defs.h) and presents `this_cpu` operation. These operations provide a way of optimizing access to the [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variables which are associated with the current processor. In our case it is `this_cpu_read`:
 
 ```
 __pcpu_size_call_return(this_cpu_read_, pcp)
@@ -346,7 +346,7 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 
 Yeah, it just returns `1` every time. Actually we need in it here only for one purpose: at compile time it checks that the given `bitmap` is a bitmap, or in other words it checks that the given `bitmap` has a type of `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting the array of `unsigned long` to the `struct cpumask *`. Now we can call `cpumask_set_cpu` function with the `cpu` - 0 and `struct cpumask *cpu_possible_bits`. This function makes only one call of the `set_bit` function which sets the given `cpu` in the cpumask. All of these `set_cpu_*` functions work on the same principle.
 
-If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear for you, don't worry about it. You can get more info by reading the special part about it - [cpumask](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).
+If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear for you, don't worry about it. You can get more info by reading the special part about it - [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).
 
 As we activated the bootstrap processor, it's time to go to the next function in the `start_kernel.` Now it is `page_address_init`, but this function does nothing in our case, because it executes only when all `RAM` can't be mapped directly.
 

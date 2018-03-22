@@ -76,7 +76,7 @@ The `__SEMAPHORE_INITIALIZER` macro takes the name of the future `semaphore` str
 #define __ARCH_SPIN_LOCK_UNLOCKED       { { 0 } }
 ```
 
-The last two fields of the `semaphore` structure `count` and `wait_list` are initialized with the given value which represents count of available resources and empty [list](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/DataStructures/dlist.html).
+The last two fields of the `semaphore` structure `count` and `wait_list` are initialized with the given value which represents count of available resources and empty [list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html).
 
 The second way to initialize a `semaphore` structure is to pass the `semaphore` and number of available resources to the `sema_init` function which is defined in the [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/semaphore.h) header file:
 
@@ -184,7 +184,7 @@ The first represents current task for the local processor which wants to acquire
 #define current get_current()
 ```
 
-Where the `get_current` function returns value of the `current_task` [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) variable:
+Where the `get_current` function returns value of the `current_task` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable:
 
 ```C
 DECLARE_PER_CPU(struct task_struct *, current_task);
@@ -342,10 +342,10 @@ Links
 * [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [deadlocks](https://en.wikipedia.org/wiki/Deadlock)
 * [scheduler](https://en.wikipedia.org/wiki/Scheduling_%28computing%29)
-* [Doubly linked list in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html)
+* [Doubly linked list in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html)
 * [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html)
 * [interrupts](https://en.wikipedia.org/wiki/Interrupt)
-* [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
+* [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29)
 * [SIGKILL](https://en.wikipedia.org/wiki/Unix_signal#SIGKILL)
 * [errno](https://en.wikipedia.org/wiki/Errno.h)

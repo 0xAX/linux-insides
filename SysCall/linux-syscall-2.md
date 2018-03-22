@@ -210,7 +210,7 @@ This macro is defined in the [arch/x86/include/asm/irqflags.h](https://github.co
 #define SWAPGS_UNSAFE_STACK	swapgs
 ```
 
-which exchanges the current GS base register value with the value contained in the `MSR_KERNEL_GS_BASE ` model specific register. In other words we moved it on to the kernel stack. After this we point the old stack pointer to the `rsp_scratch` [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) variable and setup the stack pointer to point to the top of stack for the current processor:
+which exchanges the current GS base register value with the value contained in the `MSR_KERNEL_GS_BASE ` model specific register. In other words we moved it on to the kernel stack. After this we point the old stack pointer to the `rsp_scratch` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable and setup the stack pointer to point to the top of stack for the current processor:
 
 ```assembly
 movq	%rsp, PER_CPU_VAR(rsp_scratch)
@@ -402,7 +402,7 @@ Links
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
-* [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html)
+* [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [general purpose registers](https://en.wikipedia.org/wiki/Processor_register)
 * [ABI](https://en.wikipedia.org/wiki/Application_binary_interface)
 * [x86_64 C ABI](http://www.x86-64.org/documentation/abi.pdf)

@@ -75,7 +75,7 @@ static void __init init_timer_cpus(void)
 }
 ```
 
-If you do not know or do not remember what is it a `possible` cpu, you can read the special [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) of this book which describes `cpumask` concept in the Linux kernel. In short words, a `possible` processor is a processor which can be plugged in anytime during the life of the system.
+If you do not know or do not remember what is it a `possible` cpu, you can read the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) of this book which describes `cpumask` concept in the Linux kernel. In short words, a `possible` processor is a processor which can be plugged in anytime during the life of the system.
 
 The `init_timer_cpu` function does main work for us, namely it executes initialization of the `tvec_base` structure for each processor. This structure defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/timer.c) source code file and stores data related to a `dynamic` timer for a certain processor. Let's look on the definition of this structure:
 
@@ -136,7 +136,7 @@ static void __init init_timer_cpu(int cpu)
 }
 ```
 
-The `tvec_bases` represents [per-cpu](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/per-cpu.html) variable which represents main data structure for a dynamic timer for a given processor. This `per-cpu` variable defined in the same source code file:
+The `tvec_bases` represents [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable which represents main data structure for a dynamic timer for a given processor. This `per-cpu` variable defined in the same source code file:
 
 ```C
 static DEFINE_PER_CPU(struct tvec_base, tvec_bases);
@@ -418,10 +418,10 @@ Links
 * [IP](https://en.wikipedia.org/wiki/Internet_Protocol)
 * [netfilter](https://en.wikipedia.org/wiki/Netfilter)
 * [network](https://en.wikipedia.org/wiki/Computer_network)
-* [cpumask](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
+* [cpumask](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
 * [interrupt](https://en.wikipedia.org/wiki/Interrupt)
 * [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html)
-* [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
+* [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [spinlock](https://en.wikipedia.org/wiki/Spinlock)
 * [procfs](https://en.wikipedia.org/wiki/Procfs)
 * [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-3.html)

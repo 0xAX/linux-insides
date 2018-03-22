@@ -9,11 +9,11 @@ Besides different [linked](https://en.wikipedia.org/wiki/Linked_data_structure) 
 * [lib/bitmap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/bitmap.c)
 * [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/bitmap.h)
 
-Besides these two files, there is also architecture-specific header file which provides optimized bit operations for certain architecture. We consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, so in our case it will be: 
+Besides these two files, there is also architecture-specific header file which provides optimized bit operations for certain architecture. We consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, so in our case it will be:
 
 * [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h)
 
-header file. As I just wrote above, the `bitmap` is heavily used in the Linux kernel. For example a `bit array` is used to store set of online/offline processors for systems which support [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) cpu (more about this you can read in the [cpumasks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html) part), a `bit array` stores set of allocated [irqs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) during initialization of the Linux kernel and etc.
+header file. As I just wrote above, the `bitmap` is heavily used in the Linux kernel. For example a `bit array` is used to store set of online/offline processors for systems which support [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) cpu (more about this you can read in the [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) part), a `bit array` stores set of allocated [irqs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) during initialization of the Linux kernel and etc.
 
 So, the main goal of this part is to see how `bit arrays` are implemented in the Linux kernel. Let's start.
 
@@ -363,9 +363,9 @@ Links
 
 * [bitmap](https://en.wikipedia.org/wiki/Bit_array)
 * [linked data structures](https://en.wikipedia.org/wiki/Linked_data_structure)
-* [tree data structures](https://en.wikipedia.org/wiki/Tree_%28data_structure%29) 
+* [tree data structures](https://en.wikipedia.org/wiki/Tree_%28data_structure%29)
 * [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
-* [cpumasks](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Concepts/cpumask.html)
+* [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [atomic operations](https://en.wikipedia.org/wiki/Linearizability)
@@ -377,7 +377,7 @@ Links
 * [bt instruction](http://x86.renejeschke.de/html/file_module_x86_id_22.html)
 * [sbb instruction](http://x86.renejeschke.de/html/file_module_x86_id_286.html)
 * [btc instruction](http://x86.renejeschke.de/html/file_module_x86_id_23.html)
-* [man memcpy](http://man7.org/linux/man-pages/man3/memcpy.3.html) 
+* [man memcpy](http://man7.org/linux/man-pages/man3/memcpy.3.html)
 * [man memset](http://man7.org/linux/man-pages/man3/memset.3.html)
 * [CF](https://en.wikipedia.org/wiki/FLAGS_register)
 * [inline assembler](https://en.wikipedia.org/wiki/Inline_assembler)

@@ -59,7 +59,7 @@ config RWSEM_GENERIC_SPINLOCK
 
 So, as this [book](https://proninyaroslav.gitbooks.io/linux-insides-ru/content) describes only [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture related stuff, we will skip the case when the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration is enabled and consider definition of the `rw_semaphore` structure only from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/rwsem.h) header file.
 
-If we will take a look at the definition of the `rw_semaphore` structure, we will notice that first three fields are the same that in the `semaphore` structure. It contains `count` field which represents amount of available resources, the `wait_list` field which represents [doubly linked list](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/DataStructures/dlist.html) of processes which are waiting to acquire a lock and `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) for protection of this list. Notice that `rw_semaphore.count` field is `long` type unlike the same field in the `semaphore` structure.
+If we will take a look at the definition of the `rw_semaphore` structure, we will notice that first three fields are the same that in the `semaphore` structure. It contains `count` field which represents amount of available resources, the `wait_list` field which represents [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html) of processes which are waiting to acquire a lock and `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) for protection of this list. Notice that `rw_semaphore.count` field is `long` type unlike the same field in the `semaphore` structure.
 
 The `count` field of a `rw_semaphore` structure may have following values:
 
@@ -240,7 +240,7 @@ static inline void __down_write_nested(struct rw_semaphore *sem, int subclass)
 }
 ```
 
-As for other synchronization primitives which we saw in this chapter, usually `lock/unlock` functions consists only from an [inline assembly](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/asm.html) statement. As we may see, in our case the same for `__down_write_nested` function. Let's try to understand what does this function do. The first line of our assembly statement is just a comment, let's skip it. The second like contains `LOCK_PREFIX` which will be expanded to the [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction as we already know. The next [xadd](http://x86.renejeschke.de/html/file_module_x86_id_327.html) instruction executes `add` and `exchange` operations. In other words, `xadd` instruction adds value of the `RWSEM_ACTIVE_WRITE_BIAS`:
+As for other synchronization primitives which we saw in this chapter, usually `lock/unlock` functions consists only from an [inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-3.html) statement. As we may see, in our case the same for `__down_write_nested` function. Let's try to understand what does this function do. The first line of our assembly statement is just a comment, let's skip it. The second like contains `LOCK_PREFIX` which will be expanded to the [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction as we already know. The next [xadd](http://x86.renejeschke.de/html/file_module_x86_id_327.html) instruction executes `add` and `exchange` operations. In other words, `xadd` instruction adds value of the `RWSEM_ACTIVE_WRITE_BIAS`:
 
 ```C
 #define RWSEM_ACTIVE_WRITE_BIAS         (RWSEM_WAITING_BIAS + RWSEM_ACTIVE_BIAS)
@@ -422,12 +422,12 @@ Links
 * [Semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)
 * [Mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
 * [x86_64 architecture](https://en.wikipedia.org/wiki/X86-64)
-* [Doubly linked list](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/DataStructures/dlist.html)
+* [Doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html)
 * [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Linux kernel lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [Atomic operations](https://en.wikipedia.org/wiki/Linearizability)
-* [Inline assembly](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Theory/asm.html)
+* [Inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-3.html)
 * [XADD instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-4.html)
