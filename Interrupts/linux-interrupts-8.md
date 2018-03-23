@@ -6,7 +6,7 @@ Non-early initialization of the IRQs
 
 This is the eighth part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-7.html) we started to dive into the external hardware [interrupts](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). We looked on the implementation of the `early_irq_init` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c) source code file and saw the initialization of the `irq_desc` structure in this function. Remind that `irq_desc` structure (defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqdesc.h#L46) is the foundation of interrupt management code in the Linux kernel and represents an interrupt descriptor. In this part we will continue to dive into the initialization stuff which is related to the external hardware interrupts.
 
-Right after the call of the `early_irq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) we can see the call of the `init_IRQ` function. This function is architecture-specific and defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c). The `init_IRQ` function makes initialization of the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable that defined in the same [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c) source code file:
+Right after the call of the `early_irq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) we can see the call of the `init_IRQ` function. This function is architecture-specific and defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c). The `init_IRQ` function makes initialization of the `vector_irq` [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable that defined in the same [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c) source code file:
 
 ```C
 ...
@@ -28,7 +28,7 @@ where `NR_VECTORS` is count of the vector number and as you can remember from th
 #define NR_VECTORS                       256
 ```
 
-So, in the start of the `init_IRQ` function we fill the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) array with the vector number of the `legacy` interrupts:
+So, in the start of the `init_IRQ` function we fill the `vector_irq` [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) array with the vector number of the `legacy` interrupts:
 
 ```C
 void __init init_IRQ(void)
@@ -521,7 +521,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
-* [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
+* [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259)
 * [Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)

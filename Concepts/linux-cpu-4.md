@@ -366,4 +366,4 @@ Links
 * [system call](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html)
 * [init_module system call](http://man7.org/linux/man-pages/man2/init_module.2.html)
 * [delete_module](http://man7.org/linux/man-pages/man2/delete_module.2.html)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Concepts/initcall.html)
+* [previous part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-3.html)

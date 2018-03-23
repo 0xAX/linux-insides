@@ -88,7 +88,7 @@ After we got the address of the `startup_64`, we need to do a check that this ad
 	jnz	bad_address
 ```
 
-Here we just compare low part of the `rbp` register with the complemented value of the `PMD_PAGE_MASK`. The `PMD_PAGE_MASK` indicates the mask for `Page middle directory` (read [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) about it) and defined as:
+Here we just compare low part of the `rbp` register with the complemented value of the `PMD_PAGE_MASK`. The `PMD_PAGE_MASK` indicates the mask for `Page middle directory` (read [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html) about it) and defined as:
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
@@ -163,7 +163,7 @@ Looks hard, but it isn't. First of all let's look at the `early_level4_pgt`. It 
                          _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-You can read more about it in the [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) part.
+You can read more about it in the [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html) part.
 
 The `level3_kernel_pgt` - stores two entries which map kernel space. At the start of it's definition, we can see that it is filled with zeros `L3_START_KERNEL` or `510` times. Here the `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After this, we can see the definition of the two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
 
@@ -485,7 +485,7 @@ INIT_PER_CPU(gdt_page);
 
 As we got `init_per_cpu__gdt_page` in `INIT_PER_CPU_VAR` and `INIT_PER_CPU` macro from linker script will be expanded we will get offset from the `__per_cpu_load`. After this calculations, we will have correct base address of the new GDT.
 
-Generally per-CPU variables is a 2.6 kernel feature. You can understand what it is from its name. When we create `per-CPU` variable, each CPU will have its own copy of this variable. Here we creating `gdt_page` per-CPU variable. There are many advantages for variables of this type, like there are no locks, because each CPU works with its own copy of variable and etc... So every core on multiprocessor will have its own `GDT` table and every entry in the table will represent a memory segment which can be accessed from the thread which ran on the core. You can read in details about `per-CPU` variables in the [Theory/per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) post.
+Generally per-CPU variables is a 2.6 kernel feature. You can understand what it is from its name. When we create `per-CPU` variable, each CPU will have its own copy of this variable. Here we creating `gdt_page` per-CPU variable. There are many advantages for variables of this type, like there are no locks, because each CPU works with its own copy of variable and etc... So every core on multiprocessor will have its own `GDT` table and every entry in the table will represent a memory segment which can be accessed from the thread which ran on the core. You can read in details about `per-CPU` variables in the [Theory/per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) post.
 
 As we loaded new Global Descriptor Table, we reload segments as we did it every time:
 
@@ -614,7 +614,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [Model Specific Register](http://en.wikipedia.org/wiki/Model-specific_register)
-* [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
+* [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html)
 * [Previous part - Kernel decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html)
 * [NX](http://en.wikipedia.org/wiki/NX_bit)
 * [ASLR](http://en.wikipedia.org/wiki/Address_space_layout_randomization)
