@@ -4,7 +4,7 @@ Linux kernel development
 Introduction
 --------------------------------------------------------------------------------
 
-As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things. I understood that I can write programs, but didn't actually understand how my program is arranged.
+As you already may know, I've started a series of [blog posts](https://0xax.github.io/categories/assembler/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things. I understood that I can write programs, but didn't actually understand how my program is arranged.
 
 After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many other things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work or how can my program talk with other computers via network. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers to my questions and I decided to go deeper in my research. I started to learn from the source code of the Linux kernel and tried to understand the things that I'm interested in. The source code of the Linux kernel didn't give me the answers to **all** of my questions, but now my knowledge about the Linux kernel and the processes around it is much better.
 
@@ -467,7 +467,7 @@ Please note that English is not my first language, and I am really sorry for any
 Links
 --------------------------------------------------------------------------------
 
-* [blog posts about assembly programming for x86_64](http://0xax.github.io/categories/assembly/)
+* [blog posts about assembly programming for x86_64](https://0xax.github.io/categories/assembler/)
 * [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler)
 * [distro](https://en.wikipedia.org/wiki/Linux_distribution)
 * [package manager](https://en.wikipedia.org/wiki/Package_manager)

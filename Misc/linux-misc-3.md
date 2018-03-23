@@ -638,5 +638,5 @@ Links
 * [opcode](https://en.wikipedia.org/wiki/Opcode)
 * [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)
 * [GNU linker](https://en.wikipedia.org/wiki/GNU_linker)
-* [My posts about assembly programming for x86_64](http://0xax.github.io/categories/assembly/)
+* [My posts about assembly programming for x86_64](https://0xax.github.io/categories/assembler/)
 * [readelf](https://sourceware.org/binutils/docs/binutils/readelf.html)
