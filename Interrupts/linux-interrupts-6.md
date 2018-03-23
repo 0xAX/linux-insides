@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 6.
 Non-maskable interrupt handler
 --------------------------------------------------------------------------------
 
-It is sixth part of the [Interrupts and Interrupt Handling in the Linux kernel](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) chapter and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-5.html) we saw implementation of some exception handlers for the [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault) exception, divide exception, invalid [opcode](https://en.wikipedia.org/wiki/Opcode) exceptions and etc. As I wrote in the previous part we will see implementations of the rest exceptions in this part. We will see implementation of the following handlers:
+It is sixth part of the [Interrupts and Interrupt Handling in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) chapter and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-5.html) we saw implementation of some exception handlers for the [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault) exception, divide exception, invalid [opcode](https://en.wikipedia.org/wiki/Opcode) exceptions and etc. As I wrote in the previous part we will see implementations of the rest exceptions in this part. We will see implementation of the following handlers:
 
 * [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt;
 * [BOUND](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm) Range Exceeded Exception;
@@ -27,7 +27,7 @@ When the processor receives a `NMI` from one of these sources, the processor han
 set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
 ```
 
-in the `trap_init` function which defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) source code file. In the previous [parts](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) we saw that entry points of the all interrupt handlers are defined with the:
+in the `trap_init` function which defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) source code file. In the previous [parts](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) we saw that entry points of the all interrupt handlers are defined with the:
 
 ```assembly
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
@@ -75,7 +75,7 @@ The `__KERNEL_CS` macro defined in the [arch/x86/include/asm/segment.h](https://
 #define __KERNEL_CS	(GDT_ENTRY_KERNEL_CS*8)
 ```
 
-more about `GDT` you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) of the Linux kernel booting process chapter. If `cs` is not kernel segment, it means that it is not nested `NMI` and we jump on the `first_nmi` label. Let's consider this case. First of all we put address of the current stack pointer to the `rdx` and pushes `1` to the stack in the `first_nmi` label:
+more about `GDT` you can read in the second [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) of the Linux kernel booting process chapter. If `cs` is not kernel segment, it means that it is not nested `NMI` and we jump on the `first_nmi` label. Let's consider this case. First of all we put address of the current stack pointer to the `rdx` and pushes `1` to the stack in the `first_nmi` label:
 
 ```assembly
 first_nmi:
@@ -260,7 +260,7 @@ Now let's look on the `do_nmi` exception handler. This function defined in the [
 * address of the `pt_regs`;
 * error code.
 
-as all exception handlers. The `do_nmi` starts from the call of the `nmi_nesting_preprocess` function and ends with the call of the `nmi_nesting_postprocess`. The `nmi_nesting_preprocess` function checks that we likely do not work with the debug stack and if we on the debug stack set the `update_debug_stack` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable to `1` and call the `debug_stack_set_zero` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function increases the `debug_stack_use_ctr` per-cpu variable and loads new `Interrupt Descriptor Table`:
+as all exception handlers. The `do_nmi` starts from the call of the `nmi_nesting_preprocess` function and ends with the call of the `nmi_nesting_postprocess`. The `nmi_nesting_preprocess` function checks that we likely do not work with the debug stack and if we on the debug stack set the `update_debug_stack` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable to `1` and call the `debug_stack_set_zero` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function increases the `debug_stack_use_ctr` per-cpu variable and loads new `Interrupt Descriptor Table`:
  
 ```C
 static inline void nmi_nesting_preprocess(struct pt_regs *regs)
@@ -446,7 +446,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the sixth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally we have finsihed with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c).
+It is the end of the sixth part of the [Interrupts and Interrupt Handling](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally we have finsihed with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c).
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
@@ -473,7 +473,7 @@ Links
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
 * [stack frame](https://en.wikipedia.org/wiki/Call_stack)
 * [Model Specific regiser](https://en.wikipedia.org/wiki/Model-specific_register)
-* [percpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
+* [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [RCU](https://en.wikipedia.org/wiki/Read-copy-update) 
 * [MPX](https://en.wikipedia.org/wiki/Intel_MPX)
 * [x87 FPU](https://en.wikipedia.org/wiki/X87)

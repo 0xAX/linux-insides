@@ -114,7 +114,7 @@ asmlinkage const sys_call_ptr_t sys_call_table[__NR_syscall_max+1] = {
 
 After this all elements that point to the non-implemented system calls will contain the address of the `sys_ni_syscall` function that just returns `-ENOSYS` as we saw above, and other elements will point to the `sys_syscall_name` functions.
 
-At this point, we have filled the system call table and the Linux kernel knows where each system call handler is. But the Linux kernel does not call a `sys_syscall_name` function immediately after it is instructed to handle a system call from a user space application. Remember the [chapter](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) about interrupts and interrupt handling. When the Linux kernel gets the control to handle an interrupt, it had to do some preparations like save user space registers, switch to a new stack and many more tasks before it will call an interrupt handler. There is the same situation with the system call handling. The preparation for handling a system call is the first thing, but before the Linux kernel will start these preparations, the entry point of a system call must be initialized and only the Linux kernel knows how to perform this preparation. In the next paragraph we will see the process of the initialization of the system call entry in the Linux kernel.
+At this point, we have filled the system call table and the Linux kernel knows where each system call handler is. But the Linux kernel does not call a `sys_syscall_name` function immediately after it is instructed to handle a system call from a user space application. Remember the [chapter](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) about interrupts and interrupt handling. When the Linux kernel gets the control to handle an interrupt, it had to do some preparations like save user space registers, switch to a new stack and many more tasks before it will call an interrupt handler. There is the same situation with the system call handling. The preparation for handling a system call is the first thing, but before the Linux kernel will start these preparations, the entry point of a system call must be initialized and only the Linux kernel knows how to perform this preparation. In the next paragraph we will see the process of the initialization of the system call entry in the Linux kernel.
 
 Initialization of the system call entry
 --------------------------------------------------------------------------------
@@ -181,7 +181,7 @@ wrmsrl_safe(MSR_IA32_SYSENTER_ESP, 0ULL);
 wrmsrl_safe(MSR_IA32_SYSENTER_EIP, 0ULL);
 ```
 
-You can read more about the `Global Descriptor Table` in the second [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) of the chapter that describes the booting process of the Linux kernel.
+You can read more about the `Global Descriptor Table` in the second [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) of the chapter that describes the booting process of the Linux kernel.
 
 At the end of the `syscall_init` function, we just mask flags in the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) by writing the set of flags to the `MSR_SYSCALL_MASK` model specific register:
 
@@ -210,7 +210,7 @@ This macro is defined in the [arch/x86/include/asm/irqflags.h](https://github.co
 #define SWAPGS_UNSAFE_STACK	swapgs
 ```
 
-which exchanges the current GS base register value with the value contained in the `MSR_KERNEL_GS_BASE ` model specific register. In other words we moved it on to the kernel stack. After this we point the old stack pointer to the `rsp_scratch` [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable and setup the stack pointer to point to the top of stack for the current processor:
+which exchanges the current GS base register value with the value contained in the `MSR_KERNEL_GS_BASE ` model specific register. In other words we moved it on to the kernel stack. After this we point the old stack pointer to the `rsp_scratch` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable and setup the stack pointer to point to the top of stack for the current processor:
 
 ```assembly
 movq	%rsp, PER_CPU_VAR(rsp_scratch)
@@ -402,7 +402,7 @@ Links
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
-* [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
+* [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [general purpose registers](https://en.wikipedia.org/wiki/Processor_register)
 * [ABI](https://en.wikipedia.org/wiki/Application_binary_interface)
 * [x86_64 C ABI](http://www.x86-64.org/documentation/abi.pdf)
