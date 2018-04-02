@@ -406,24 +406,28 @@ The result, as expected:
 All of these constraints may be combined (so long as they do not conflict). In this case the compiler will choose the best one for a certain situation. For example:
 
 ```C
-#include <stdio.h>
+unsigned long a = 10;
+unsigned long b = 20;
 
-unsigned long a = 1;
-
-int main(void)
+void main(void)
 {
-        unsigned long b;
-        __asm__ ("movq %1,%0" : "=r"(b) : "r"(a));
-        return b;
+    __asm__ ("movq %1,%0" : "=mr"(b) : "rm"(a));
 }
 ```
 
 will use a memory operand:
 
 ```assembly
-0000000000400400 <main>:
-  4004aa:       48 8b 05 6f 0b 20 00    mov    0x200b6f(%rip),%rax        # 601020 <a>
+main:
+        movq a(%rip),b(%rip)
+        ret
+b:
+        .quad   20
+a:
+        .quad   10
 ```
+
+instead of direct usage of general purpose registers.
 
 That's about all of the commonly used constraints in inline assembly statements. You can find more in the official [documentation](https://gcc.gnu.org/onlinedocs/gcc/Simple-Constraints.html#Simple-Constraints).
 
