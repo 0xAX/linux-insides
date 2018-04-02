@@ -66,7 +66,6 @@ In the next step we can see setup of the stack pointer and resetting of the flag
 
 ```assembly
 	leaq	boot_stack_end(%rbx), %rsp
-
 	pushq	$0
 	popfq
 ```
