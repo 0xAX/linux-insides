@@ -134,9 +134,13 @@ kASLR is disabled by default. When kASLR is enabled,
 hibernation will be disabled.
 ```
 
-Let's assume that we didn't pass `nokaslr` to the kernel command line and the `CONFIG_RANDOMIZE_BASE` kernel configuration option is enabled.
+Let's assume that we didn't pass `nokaslr` to the kernel command line and the `CONFIG_RANDOMIZE_BASE` kernel configuration option is enabled. In this case we add `kASLR` flag to kernel load flags:
 
-The next step is the call of the:
+```C
+boot_params->hdr.loadflags |= KASLR_FLAG;
+```
+
+and the next step is the call of the:
 
 ```C
 initialize_identity_maps();
