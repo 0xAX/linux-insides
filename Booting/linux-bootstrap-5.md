@@ -62,13 +62,20 @@ The next step is computation of difference between where the kernel was compiled
 
 The `rbp` contains the decompressed kernel start address and after this code executes `rbx` register will contain address to relocate the kernel code for decompression. We already saw code like this in the `startup_32` ( you can read about it in the previous part - [Calculate relocation address](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#calculate-relocation-address)), but we need to do this calculation again because the bootloader can use 64-bit boot protocol and `startup_32` just will not be executed in this case.
 
-In the next step we can see setup of the stack pointer and resetting of the flags register:
+In the next step we can see setup of the stack pointer, resetting of the flags register and setup `GDT` again because of in a case of `64-bit` protocol `32-bit` code segment can be omitted by bootloader:
 
 ```assembly
-	leaq	boot_stack_end(%rbx), %rsp
+    leaq	boot_stack_end(%rbx), %rsp
+
+	leaq	gdt(%rip), %rax
+	movq	%rax, gdt64+2(%rip)
+	lgdt	gdt64(%rip)
+
 	pushq	$0
 	popfq
 ```
+
+If you look at the Linux kernel source code after `lgdt gdt64(%rip)` instruction, you will see that there is some additional code. This code builds trampoline to enable [5-level pagging](https://lwn.net/Articles/708526/) if need. We will consider only 4-level paging in this books, so this code will be omitted.
 
 As you can see above, the `rbx` register contains the start address of the kernel decompressor code and we just put this address with `boot_stack_end` offset to the `rsp` register which represents pointer to the top of the stack. After this step, the stack will be correct. You can find definition of the `boot_stack_end` in the end of [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
