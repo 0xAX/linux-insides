@@ -35,9 +35,9 @@ In the [previous part](https://github.com/0xAX/linux-insides/blob/master/Booting
 ```C
 void choose_random_location(unsigned long input,
                             unsigned long input_size,
-			                unsigned long *output,
+                            unsigned long *output,
                             unsigned long output_size,
-			                unsigned long *virt_addr)
+                            unsigned long *virt_addr)
 {}
 ```
 
@@ -146,13 +146,13 @@ and the next step is the call of the:
 initialize_identity_maps();
 ```
 
-function which is defined in the [arch/x86/boot/compressed/pagetable.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/pagetable.c) source code file. This function starts from initialization of `mapping_info` an instance of the `x86_mapping_info` structure:
+function which is defined in the [arch/x86/boot/compressed/kaslr_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr_64.c) source code file. This function starts from initialization of `mapping_info` an instance of the `x86_mapping_info` structure:
 
 ```C
 mapping_info.alloc_pgt_page = alloc_pgt_page;
 mapping_info.context = &pgt_data;
 mapping_info.page_flag = __PAGE_KERNEL_LARGE_EXEC | sev_me_mask;
-mapping_info.kernpg_flag = _KERNPG_TABLE | sev_me_mask;
+mapping_info.kernpg_flag = _KERNPG_TABLE;
 ```
 
 The `x86_mapping_info` structure is defined in the [arch/x86/include/asm/init.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/init.h) header file and looks:
@@ -254,7 +254,7 @@ add_identity_map(mem_avoid[MEM_AVOID_ZO_RANGE].start,
 		 mem_avoid[MEM_AVOID_ZO_RANGE].size);
 ```
 
-At the beginning of the `mem_avoid_init` function tries to avoid memory region that is used for current kernel decompression. We fill an entry from the `mem_avoid` array with the start and size of such region and call the `add_identity_map` function which should build identity mapped pages for this region. The `add_identity_map` function is defined in the [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c) source code file and looks:
+At the beginning of the `mem_avoid_init` function tries to avoid memory region that is used for current kernel decompression. We fill an entry from the `mem_avoid` array with the start and size of such region and call the `add_identity_map` function which should build identity mapped pages for this region. The `add_identity_map` function is defined in the [arch/x86/boot/compressed/kaslr_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr_64.c) source code file and looks:
 
 ```C
 void add_identity_map(unsigned long start, unsigned long size)
