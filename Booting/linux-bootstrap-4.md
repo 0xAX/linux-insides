@@ -151,7 +151,7 @@ Bit 6 (write): KEEP_SEGMENTS
 So, if the `KEEP_SEGMENTS` bit is not set in the `loadflags`, we need to set `ds`, `ss` and `es` segment registers to the index of data segment with base `0`. That we do:
 
 ```C
-	testb $(1 << 6), BP_loadflags(%esi)
+	testb $KEEP_SEGMENTS, BP_loadflags(%esi)
 	jnz 1f
 
 	cli
@@ -337,8 +337,6 @@ When we are using position-independent code an address is obtained by adding the
 	jge	1f
 #endif
 	movl	$LOAD_PHYSICAL_ADDR, %ebx
-1:
-	addl	$z_extract_offset, %ebx
 ```
 
 Remember that the value of the `ebp` register is the physical address of the `startup_32` label. If the `CONFIG_RELOCATABLE` kernel configuration option is enabled during kernel configuration, we put this address in the `ebx` register, align it to a multiple of `2MB` and compare it with the `LOAD_PHYSICAL_ADDR` value. The `LOAD_PHYSICAL_ADDR` macro is defined in the [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/boot.h) header file and it looks like this:
@@ -354,9 +352,10 @@ As we can see it just expands to the aligned `CONFIG_PHYSICAL_ALIGN` value which
 After all of these calculations, we will have `ebp` which contains the address where we loaded it and `ebx` set to the address of where kernel will be moved after decompression. But that is not the end. The compressed kernel image should be moved to the end of the decompression buffer to simplify calculations where kernel will be located later. For this:
 
 ```assembly
-movl	BP_init_size(%esi), %eax
-subl	$_end, %eax
-addl	%eax, %ebx
+1:
+    movl	BP_init_size(%esi), %eax
+    subl	$_end, %eax
+    addl	%eax, %ebx
 ```
 
 we put value from the `boot_params.BP_init_size` (or kernel setup header value from the `hdr.init_size`) to the `eax` register. The `BP_init_size` contains larger value between compressed and uncompressed [vmlinux](https://en.wikipedia.org/wiki/Vmlinux). Next we subtract address of the `_end` symbol from this value and add the result of subtraction to `ebx` register which will stores base address for kernel decompression.
@@ -377,6 +376,11 @@ To understand the magic with `gdt` offsets we need to look at the definition of 
 
 ```assembly
 	.data
+gdt64:
+	.word	gdt_end - gdt
+	.long	0
+	.word	0
+	.quad   0
 gdt:
 	.word	gdt_end - gdt
 	.long	gdt
@@ -507,7 +511,7 @@ We put the base address of the page directory pointer which is `4096` or `0x1000
 	leal	pgtable + 0x2000(%ebx), %edi
 	movl	$0x00000183, %eax
 	movl	$2048, %ecx
-1:     movl	%eax, 0(%edi)
+1:  movl	%eax, 0(%edi)
 	addl	$0x00200000, %eax
 	addl	$8, %edi
 	decl	%ecx
@@ -555,7 +559,7 @@ After this we push this address to the stack and enable paging by setting `PG` a
 
 ```assembly
 	pushl	%eax
-        movl	$(X86_CR0_PG | X86_CR0_PE), %eax
+    movl	$(X86_CR0_PG | X86_CR0_PE), %eax
 	movl	%eax, %cr0
 ```
 

@@ -5,6 +5,6 @@ Linux kernel provides different implementations of data structures like doubly l
 
 This part considers the following data structures and algorithms:
 
-  * [Doubly linked list](dlist.md)
-  * [Radix tree](radix-tree.md)
-  * [Bit arrays](bitmap.md)
+  * [Doubly linked list](linux-datastructures-1.md)
+  * [Radix tree](linux-datastructures-2.md)
+  * [Bit arrays](linux-datastructures-3.md)

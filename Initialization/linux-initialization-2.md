@@ -4,9 +4,9 @@ Kernel initialization. Part 2.
 Early interrupt and exception handling
 --------------------------------------------------------------------------------
 
-In the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) we stopped before setting of early interrupt handlers. At this moment we are in the decompressed Linux kernel, we have basic [paging](https://en.wikipedia.org/wiki/Page_table) structure for early boot and our current goal is to finish early preparation before the main kernel code will start to work.
+In the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) we stopped before setting of early interrupt handlers. At this moment we are in the decompressed Linux kernel, we have basic [paging](https://en.wikipedia.org/wiki/Page_table) structure for early boot and our current goal is to finish early preparation before the main kernel code will start to work.
 
-We already started to do this preparation in the previous [first](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) part of this [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). We continue in this part and will know more about interrupt and exception handling.
+We already started to do this preparation in the previous [first](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) part of this [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). We continue in this part and will know more about interrupt and exception handling.
 
 Remember that we stopped before following loop:
 
@@ -492,4 +492,4 @@ Links
 * [Page table](https://en.wikipedia.org/wiki/Page_table)
 * [Interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler)
 * [Page Fault](https://en.wikipedia.org/wiki/Page_fault),
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)
