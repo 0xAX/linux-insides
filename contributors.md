@@ -113,3 +113,8 @@ Thank you to all contributors:
 * [Beomsu Kim](https://github.com/0xF0D0)
 * [Firo Yang](https://github.com/firogh)
 * [Edward Hu](https://github.com/BDHU)
+* [WarpspeedSCP](https://github.com/WarpspeedSCP)
+* [Gabriela Moldovan](https://github.com/gabi-250)
+* [kuritonasu](https://github.com/kuritonasu/)
+* [Miles Frain](https://github.com/milesfrain)
+* [Horace Heaven](https://github.com/horaceheaven)

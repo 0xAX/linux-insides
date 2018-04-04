@@ -4,9 +4,9 @@ Kernel initialization. Part 1.
 First steps in the kernel code
 --------------------------------------------------------------------------------
 
-The previous [post](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) was a last part of the Linux kernel [booting process](https://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter and now we are starting to dive into initialization process of the Linux kernel. After the image of the Linux kernel is decompressed and placed in a correct place in memory, it starts to work. All previous parts describe the work of the Linux kernel setup code which does preparation before the first bytes of the Linux kernel code will be executed. From now we are in the kernel and all parts of this chapter will be devoted to the initialization process of the kernel before it will launch process with [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. There are many things to do before the kernel will start first `init` process. Hope we will see all of the preparations before kernel will start in this big chapter. We will start from the kernel entry point, which is located in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) and will move further and further. We will see first preparations like early page tables initialization, switch to a new descriptor in kernel space and many many more, before we will see the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L489) will be called.
+The previous [post](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-6.html) was a last part of the Linux kernel [booting process](https://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter and now we are starting to dive into initialization process of the Linux kernel. After the image of the Linux kernel is decompressed and placed in a correct place in memory, it starts to work. All previous parts describe the work of the Linux kernel setup code which does preparation before the first bytes of the Linux kernel code will be executed. From now we are in the kernel and all parts of this chapter will be devoted to the initialization process of the kernel before it will launch process with [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. There are many things to do before the kernel will start first `init` process. Hope we will see all of the preparations before kernel will start in this big chapter. We will start from the kernel entry point, which is located in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) and will move further and further. We will see first preparations like early page tables initialization, switch to a new descriptor in kernel space and many many more, before we will see the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L489) will be called.
 
-In the last [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) of the previous [chapter](https://0xax.gitbooks.io/linux-insides/content/Booting/index.html) we stopped at the [jmp](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) instruction from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly source code file:
+In the last [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-6.html) of the previous [chapter](https://0xax.gitbooks.io/linux-insides/content/Booting/index.html) we stopped at the [jmp](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) instruction from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
 ```assembly
 jmp	*%rax
@@ -88,7 +88,7 @@ After we got the address of the `startup_64`, we need to do a check that this ad
 	jnz	bad_address
 ```
 
-Here we just compare low part of the `rbp` register with the complemented value of the `PMD_PAGE_MASK`. The `PMD_PAGE_MASK` indicates the mask for `Page middle directory` (read [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) about it) and defined as:
+Here we just compare low part of the `rbp` register with the complemented value of the `PMD_PAGE_MASK`. The `PMD_PAGE_MASK` indicates the mask for `Page middle directory` (read [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html) about it) and defined as:
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
@@ -163,7 +163,7 @@ Looks hard, but it isn't. First of all let's look at the `early_level4_pgt`. It 
                          _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-You can read more about it in the [paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html) part.
+You can read more about it in the [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html) part.
 
 The `level3_kernel_pgt` - stores two entries which map kernel space. At the start of it's definition, we can see that it is filled with zeros `L3_START_KERNEL` or `510` times. Here the `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After this, we can see the definition of the two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
 
@@ -485,7 +485,7 @@ INIT_PER_CPU(gdt_page);
 
 As we got `init_per_cpu__gdt_page` in `INIT_PER_CPU_VAR` and `INIT_PER_CPU` macro from linker script will be expanded we will get offset from the `__per_cpu_load`. After this calculations, we will have correct base address of the new GDT.
 
-Generally per-CPU variables is a 2.6 kernel feature. You can understand what it is from its name. When we create `per-CPU` variable, each CPU will have its own copy of this variable. Here we creating `gdt_page` per-CPU variable. There are many advantages for variables of this type, like there are no locks, because each CPU works with its own copy of variable and etc... So every core on multiprocessor will have its own `GDT` table and every entry in the table will represent a memory segment which can be accessed from the thread which ran on the core. You can read in details about `per-CPU` variables in the [Theory/per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) post.
+Generally per-CPU variables is a 2.6 kernel feature. You can understand what it is from its name. When we create `per-CPU` variable, each CPU will have its own copy of this variable. Here we creating `gdt_page` per-CPU variable. There are many advantages for variables of this type, like there are no locks, because each CPU works with its own copy of variable and etc... So every core on multiprocessor will have its own `GDT` table and every entry in the table will represent a memory segment which can be accessed from the thread which ran on the core. You can read in details about `per-CPU` variables in the [Theory/per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) post.
 
 As we loaded new Global Descriptor Table, we reload segments as we did it every time:
 
@@ -614,7 +614,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [Model Specific Register](http://en.wikipedia.org/wiki/Model-specific_register)
-* [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
-* [Previous part - Kernel decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html)
+* [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html)
+* [Previous part - kernel load address randomization](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-6.html)
 * [NX](http://en.wikipedia.org/wiki/NX_bit)
 * [ASLR](http://en.wikipedia.org/wiki/Address_space_layout_randomization)

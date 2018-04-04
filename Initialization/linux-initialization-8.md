@@ -4,9 +4,9 @@ Kernel initialization. Part 8.
 Scheduler initialization
 ================================================================================
 
-This is the eighth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) of the Linux kernel initialization process chapter and we stopped on the `setup_nr_cpu_ids` function in the [previous part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-7.md).
+This is the eighth [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) of the Linux kernel initialization process chapter and we stopped on the `setup_nr_cpu_ids` function in the [previous part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-7.md).
 
-The main point of this part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) is the `setup_per_cpu_areas` function. This function setups memory areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function.
+The main point of this part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) is the `setup_per_cpu_areas` function. This function setups memory areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function.
 
 This function does some preparations for [symmetric multiprocessing](http://en.wikipedia.org/wiki/Symmetric_multiprocessing). Since this function is architecture specific, it is located in the [arch/x86/include/asm/smp.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/smp.h#L78) Linux kernel header file. Let's look at the definition of this function:
 
@@ -44,7 +44,7 @@ void __init native_smp_prepare_boot_cpu(void)
 }
 ```
 
-and executes following things: first of all it gets the `id` of the current CPU (which is Bootstrap processor and its `id` is zero for this moment) with the `smp_processor_id` function. I will not explain how the `smp_processor_id` works, because we already saw it in the [Kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) part. After we've got processor `id` number we reload [Global Descriptor Table](http://en.wikipedia.org/wiki/Global_Descriptor_Table) for the given CPU with the `switch_to_new_gdt` function:
+and executes following things: first of all it gets the `id` of the current CPU (which is Bootstrap processor and its `id` is zero for this moment) with the `smp_processor_id` function. I will not explain how the `smp_processor_id` works, because we already saw it in the [Kernel entry point](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) part. After we've got processor `id` number we reload [Global Descriptor Table](http://en.wikipedia.org/wiki/Global_Descriptor_Table) for the given CPU with the `switch_to_new_gdt` function:
 
 ```C
 void switch_to_new_gdt(int cpu)
@@ -58,7 +58,7 @@ void switch_to_new_gdt(int cpu)
 }
 ```
 
-The `gdt_descr` variable represents pointer to the `GDT` descriptor here (we already saw definition of a `desc_ptr` structure in the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) part). We get the address and the size of the `GDT` descriptor for the `CPU` with the given `id`. The `GDT_SIZE` is `256` or:
+The `gdt_descr` variable represents pointer to the `GDT` descriptor here (we already saw definition of a `desc_ptr` structure in the [Early interrupt and exception handling](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) part). We get the address and the size of the `GDT` descriptor for the `CPU` with the given `id`. The `GDT_SIZE` is `256` or:
 
 ```C
 #define GDT_SIZE (GDT_ENTRIES * 8)
@@ -75,7 +75,7 @@ static inline struct desc_struct *get_cpu_gdt_table(unsigned int cpu)
 
 The `get_cpu_gdt_table` uses `per_cpu` macro for getting value of a `gdt_page` percpu variable for the given CPU number (bootstrap processor with `id` - 0 in our case).
 
-You may ask the following question: so, if we can access `gdt_page` percpu variable, where it was defined? Actually we already saw it in this book. If you have read the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/kernel/head_64.S):
+You may ask the following question: so, if we can access `gdt_page` percpu variable, where it was defined? Actually we already saw it in this book. If you have read the first [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/kernel/head_64.S):
 
 ```assembly
 early_gdt_descr:
@@ -107,7 +107,7 @@ DEFINE_PER_CPU_PAGE_ALIGNED(struct gdt_page, gdt_page) = { .gdt = {
     ...
 ```
 
-more about `percpu` variables you can read in the [Per-CPU variables](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) part. As we got address and size of the `GDT` descriptor we reload `GDT` with the `load_gdt` which just execute `lgdt` instruct and load `percpu_segment` with the following function:
+more about `percpu` variables you can read in the [Per-CPU variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) part. As we got address and size of the `GDT` descriptor we reload `GDT` with the `load_gdt` which just execute `lgdt` instruct and load `percpu_segment` with the following function:
 
 ```C
 void load_percpu_segment(int cpu) {
@@ -205,11 +205,11 @@ After this function we can see the kernel command line in the initialization out
 
 ![kernel command line](http://oi58.tinypic.com/2m7vz10.jpg)
 
-And a couple of functions such as `parse_early_param` and `parse_args` which handles linux kernel command line. You may remember that we already saw the call of the `parse_early_param` function in the sixth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html) of the kernel initialization chapter, so why we call it again? Answer is simple: we call this function in the architecture-specific code (`x86_64` in our case), but not all architecture calls this function. And we need to call the second function `parse_args` to parse and handle non-early command line arguments.
+And a couple of functions such as `parse_early_param` and `parse_args` which handles linux kernel command line. You may remember that we already saw the call of the `parse_early_param` function in the sixth [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html) of the kernel initialization chapter, so why we call it again? Answer is simple: we call this function in the architecture-specific code (`x86_64` in our case), but not all architecture calls this function. And we need to call the second function `parse_args` to parse and handle non-early command line arguments.
 
 In the next step we can see the call of the `jump_label_init` from the [kernel/jump_label.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/jump_label.c). and initializes [jump label](https://lwn.net/Articles/412072/).
 
-After this we can see the call of the `setup_log_buf` function which setups the [printk](http://www.makelinux.net/books/lkd2/ch18lev1sec3) log buffer. We already saw this function in the seventh [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-7.html) of the linux kernel initialization process chapter.
+After this we can see the call of the `setup_log_buf` function which setups the [printk](http://www.makelinux.net/books/lkd2/ch18lev1sec3) log buffer. We already saw this function in the seventh [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-7.html) of the linux kernel initialization process chapter.
 
 PID hash initialization
 --------------------------------------------------------------------------------
@@ -230,7 +230,7 @@ pid_hash = alloc_large_system_hash("PID", sizeof(*pid_hash), 0, 18,
 ```
 
 The number of elements of the `pid_hash` depends on the `RAM` configuration, but it can be between `2^4` and `2^12`. The `pidhash_init` computes the size
-and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](http://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h)]. The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
+and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h)]. The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
 
 The result we can see in the `dmesg` output:
 
@@ -255,7 +255,7 @@ pgtable_init();
 vmalloc_init();
 ```
 
-The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernel memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html) chapter.
+The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernel memory manager](https://0xax.gitbooks.io/linux-insides/content/MM/index.html) chapter.
 
 That's all. Now we can look on the `scheduler`.
 
@@ -533,7 +533,7 @@ __init void init_sched_fair_class(void)
 }
 ```
 
-Here we register a [soft irq](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-9.html) that will call the `run_rebalance_domains` handler. After the `SCHED_SOFTIRQ` will be triggered, the `run_rebalance` will be called to rebalance a run queue on the current CPU.
+Here we register a [soft irq](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-9.html) that will call the `run_rebalance_domains` handler. After the `SCHED_SOFTIRQ` will be triggered, the `run_rebalance` will be called to rebalance a run queue on the current CPU.
 
 The last two steps of the `sched_init` function is to initialization of scheduler statistics and setting `scheeduler_running` variable:
 
@@ -555,19 +555,19 @@ If you have any questions or suggestions write me a comment or ping me at [twitt
 Links
 --------------------------------------------------------------------------------
 
-* [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [CPU masks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
 * [high-resolution kernel timer](https://www.kernel.org/doc/Documentation/timers/hrtimers.txt)
 * [spinlock](http://en.wikipedia.org/wiki/Spinlock)
 * [Run queue](http://en.wikipedia.org/wiki/Run_queue)
-* [Linux kernel memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
+* [Linux kernel memory manager](https://0xax.gitbooks.io/linux-insides/content/MM/index.html)
 * [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29)
 * [virtual file system](http://en.wikipedia.org/wiki/Virtual_file_system)
 * [Linux kernel hotplug documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
 * [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [Global Descriptor Table](http://en.wikipedia.org/wiki/Global_Descriptor_Table)
-* [Per-CPU variables](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
+* [Per-CPU variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
 * [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)
 * [RCU](http://en.wikipedia.org/wiki/Read-copy-update)
 * [CFS Scheduler documentation](https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt)
 * [Real-Time group scheduling](https://www.kernel.org/doc/Documentation/scheduler/sched-rt-group.txt)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-7.html)
+* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-7.html)
