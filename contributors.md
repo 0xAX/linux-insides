@@ -118,3 +118,4 @@ Thank you to all contributors:
 * [kuritonasu](https://github.com/kuritonasu/)
 * [Miles Frain](https://github.com/milesfrain)
 * [Horace Heaven](https://github.com/horaceheaven)
+* [Miha Zidar](https://github.com/zidarsk8)
