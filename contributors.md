@@ -119,3 +119,4 @@ Thank you to all contributors:
 * [Miles Frain](https://github.com/milesfrain)
 * [Horace Heaven](https://github.com/horaceheaven)
 * [Miha Zidar](https://github.com/zidarsk8)
+* [Ivan Kovnatsky](https://github.com/sevenfourk)
