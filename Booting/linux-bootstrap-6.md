@@ -353,7 +353,7 @@ struct slot_area {
 static struct slot_area slot_areas[MAX_SLOT_AREA];
 ```
 
-array. The kernel decompressor should select random index of this array and it will be random place where kernel will be decompressed. This selection will be executed by the `slots_fetch_random` function. The main goal of the `slots_fetch_random` function is to select random memory range from the `slot_areas` array via `kaslr_get_random_long` function:
+array. The kernel will select a random index of this array for kernel to be decompressed. This selection will be executed by the `slots_fetch_random` function. The main goal of the `slots_fetch_random` function is to select random memory range from the `slot_areas` array via `kaslr_get_random_long` function:
 
 ```C
 slot = kaslr_get_random_long("Physical") % slot_max;
