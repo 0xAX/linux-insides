@@ -329,14 +329,12 @@ state.gs = state.fs = state.es = state.ds = state.ss = segment;
 state.cs = segment + 0x20;
 ```
 
-This means that segment registers will have the following values after kernel setup starts:
+In my case, the kernel is loaded at `0x10000` address. This means that segment registers will have the following values after kernel setup starts:
 
 ```
 gs = fs = es = ds = ss = 0x10000
 cs = 0x10200
 ```
-
-In my case, the kernel is loaded at `0x10000` address.
 
 After the jump to `start_of_setup`, the kernel needs to do the following:
 
