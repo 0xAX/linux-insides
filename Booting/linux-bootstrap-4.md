@@ -323,7 +323,7 @@ In simple terms, this means that the Linux kernel with the same configuration ca
 KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 ```
 
-When we are using position-independent code an address is obtained by adding the address field of the command and the value of the program counter. We can load code which uses such addressing from any address. That's why we had to get the real physical address of `startup_32`. Now let's get back to the Linux kernel code. Our current goal is to calculate an address where we can relocate the kernel for decompression. Calculation of this address depends on `CONFIG_RELOCATABLE` kernel configuration option. Let's look at the code:
+When we are using position-independent code an address is obtained by adding the address field of the instruction and the value of the program counter. We can load code which uses such addressing from any address. That's why we had to get the real physical address of `startup_32`. Now let's get back to the Linux kernel code. Our current goal is to calculate an address where we can relocate the kernel for decompression. Calculation of this address depends on `CONFIG_RELOCATABLE` kernel configuration option. Let's look at the code:
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
