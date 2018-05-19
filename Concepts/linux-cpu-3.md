@@ -215,7 +215,7 @@ If you are interested, you can find these sections in the `arch/x86/kernel/vmlin
 
 If you are not familiar with this then you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbooks.io/linux-insides/content/Misc/linux-misc-3.html) of this book.
 
-As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` and does following two things: First of all this function parses the `initcall_command_line` which is copy of usual kernel [command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/params.c) source code file and call the `do_on_initcall` function for each level:
+As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` and does following two things: First of all this function parses the `initcall_command_line` which is copy of usual kernel [command line](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/params.c) source code file and call the `do_on_initcall` function for each level:
 
 ```C
 for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
@@ -285,7 +285,7 @@ Depends on the value of the `initcall_debug` variable, the `do_one_initcall_debu
 bool initcall_debug;
 ```
 
-and provides ability to print some information to the kernel [log buffer](https://en.wikipedia.org/wiki/Dmesg). The value of the variable can be set from the kernel commands via the `initcall_debug` parameter. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) of the Linux kernel command line:
+and provides ability to print some information to the kernel [log buffer](https://en.wikipedia.org/wiki/Dmesg). The value of the variable can be set from the kernel commands via the `initcall_debug` parameter. As we can read from the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst) of the Linux kernel command line:
 
 ```
 initcall_debug	[KNL] Trace initcalls as they are executed.  Useful
@@ -388,7 +388,7 @@ Links
 * [GCC](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)
 * [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization)
 * [Introduction to linkers](https://0xax.gitbooks.io/linux-insides/content/Misc/linux-misc-3.html)
-* [Linux kernel command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)
+* [Linux kernel command line](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst)
 * [Process identifier](https://en.wikipedia.org/wiki/Process_identifier)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [rootfs](https://en.wikipedia.org/wiki/Initramfs)
