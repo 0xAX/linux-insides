@@ -78,7 +78,7 @@ void __init io_delay_init(void)
 }
 ```
 
-This function check `io_delay_override` variable and overrides I/O delay port if `io_delay_override` is set. We can set `io_delay_override` variably by passing `io_delay` option to the kernel command line. As we can read from the [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt), `io_delay` option is:
+This function check `io_delay_override` variable and overrides I/O delay port if `io_delay_override` is set. We can set `io_delay_override` variably by passing `io_delay` option to the kernel command line. As we can read from the [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst), `io_delay` option is:
 
 ```
 io_delay=	[X86] I/O delay method
@@ -471,7 +471,7 @@ Links
 * [x86_64](http://en.wikipedia.org/wiki/X86-64)
 * [initrd](http://en.wikipedia.org/wiki/Initrd)
 * [Kernel panic](http://en.wikipedia.org/wiki/Kernel_panic)
-* [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt)
+* [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst)
 * [ACPI](http://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)
 * [Direct memory access](http://en.wikipedia.org/wiki/Direct_memory_access)
 * [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access)
