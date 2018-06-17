@@ -67,12 +67,12 @@ In the next step we can see setup of the stack pointer, resetting of the flags r
 ```assembly
     leaq	boot_stack_end(%rbx), %rsp
 
-	leaq	gdt(%rip), %rax
-	movq	%rax, gdt64+2(%rip)
-	lgdt	gdt64(%rip)
+    leaq	gdt(%rip), %rax
+    movq	%rax, gdt64+2(%rip)
+    lgdt	gdt64(%rip)
 
-	pushq	$0
-	popfq
+    pushq	$0
+    popfq
 ```
 
 If you look at the Linux kernel source code after `lgdt gdt64(%rip)` instruction, you will see that there is some additional code. This code builds trampoline to enable [5-level pagging](https://lwn.net/Articles/708526/) if need. We will consider only 4-level paging in this books, so this code will be omitted.
