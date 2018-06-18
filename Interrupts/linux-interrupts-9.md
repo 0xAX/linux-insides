@@ -164,7 +164,7 @@ static void wakeup_softirqd(void)
 }
 ```
 
-Each `ksoftirqd` kernel thread runs the `run_ksoftirqd` function that checks existence of deferred interrupts and calls the `__do_softirq` function depends on result. This function reads the `__softirq_pending` softirq bit mask of the local processor and executes the deferrable functions corresponding to every bit set. During execution of a deferred function, new pending `softirqs` might occur. The main problem here that execution of the userspace code can be delayed for a long time while the `__do_softirq` function will handle deferred interrupts. For this purpose, it has the limit of the time when it must be finished:
+Each `ksoftirqd` kernel thread runs the `run_ksoftirqd` function that checks existence of deferred interrupts and calls the `__do_softirq` function depending on the result of the check. This function reads the `__softirq_pending` softirq bit mask of the local processor and executes the deferrable functions corresponding to every bit set. During execution of a deferred function, new pending `softirqs` might occur. The main problem here that execution of the userspace code can be delayed for a long time while the `__do_softirq` function will handle deferred interrupts. For this purpose, it has the limit of the time when it must be finished:
 
 ```C
 unsigned long end = jiffies + MAX_SOFTIRQ_TIME;
@@ -189,14 +189,18 @@ if (pending) {
 ...			
 ```
 
-Checks of the existence of the deferred interrupts performed periodically and there are some points where this check occurs. The main point where this situation occurs is the call of the `do_IRQ` function that defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irq.c) and provides main possibilities for actual interrupt processing in the Linux kernel. When this function will finish to handle an interrupt, it calls the `exiting_irq` function from the [arch/x86/include/asm/apic.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/apic.h) that expands to the call of the `irq_exit` function. The `irq_exit` checks deferred interrupts, current context and calls the `invoke_softirq` function:
+Checks of the existence of the deferred interrupts are performed periodically. There are several points where these checks occur. The main point is the call of the `do_IRQ` function defined in [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irq.c), which provides the main means for actual interrupt processing in the Linux kernel. When `do_IRQ` finishes handling an interrupt, it calls the `exiting_irq` function from the [arch/x86/include/asm/apic.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/apic.h) that expands to the call of the `irq_exit` function. `irq_exit` checks for deferred interrupts and the current context and calls the `invoke_softirq` function:
 
 ```C
 if (!in_interrupt() && local_softirq_pending())
     invoke_softirq();
 ```
 
-that executes the `__do_softirq` too. So what do we have in summary. Each `softirq` goes through the following stages: Registration of a `softirq` with the `open_softirq` function. Activation of a `softirq` by marking it as deferred with the `raise_softirq` function. After this, all marked `softirqs` will be triggered in the next time the Linux kernel schedules a round of executions of deferrable functions. And execution of the deferred functions that have the same type.
+that also executes `__do_softirq`. To summarize, each `softirq` goes through the following stages:
+ * Registration of a `softirq` with the `open_softirq` function.
+ * Activation of a `softirq` by marking it as deferred with the `raise_softirq` function.
+ * After this, all marked `softirqs` will be triggered in the next time the Linux kernel schedules a round of executions of deferrable functions.
+ * And execution of the deferred functions that have the same type.
 
 As I already wrote, the `softirqs` are statically allocated and it is a problem for a kernel module that can be loaded. The second concept that built on top of `softirq` -- the `tasklets` solves this problem.
 
