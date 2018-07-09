@@ -184,7 +184,7 @@ We will start from the `main` routine in "main.c". The first function which is c
 
 The `boot_params` structure contains the `struct setup_header hdr` field. This structure contains the same fields as defined in the [linux boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) and is filled by the boot loader and also at kernel compile/build time. `copy_boot_params` does two things:
 
-1. It copies `hdr` from [header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L280) to the `boot_params` structure in `setup_header` field
+1. It copies `hdr` from [header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L280) to the `setup_header` field in `boot_params` structure.
 
 2. It updates the pointer to the kernel command line if the kernel was loaded with the old command line protocol.
 
