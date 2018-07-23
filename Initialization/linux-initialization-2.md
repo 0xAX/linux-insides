@@ -1,4 +1,4 @@
-Kernel initialization. Part 2.
+Инициализация ядра. Часть 2.
 ================================================================================
 
 Начальная обработка прерываний и исключений
@@ -42,13 +42,13 @@ CPU использует номер вектора как индекс в `та�
 |------------------------------------------------------------------------------------------------------
 |1     | #DB     |Зарезервировано       |О/Л    |Нет       |                                           |
 |------------------------------------------------------------------------------------------------------
-|2     | ---     |Немаск. прервания     |Прерыв.|Нет       |Внешние NMI                                |
+|2     | ---     |Немаск. прерывания    |Прерыв.|Нет       |Внешние NMI                                |
 |------------------------------------------------------------------------------------------------------
 |3     | #BP     |Исключение отладки    |Ловушка|Нет       |INT 3                                      |
 |------------------------------------------------------------------------------------------------------
-|4     | #OF     |Переполнение          |Ловушка|Нет       |Иснтрукция INTO                            |
+|4     | #OF     |Переполнение          |Ловушка|Нет       |Инструкция INTO                            |
 |------------------------------------------------------------------------------------------------------
-|5     | #BR     |Вызод за границы      |Ошибка |Нет       |Инструкция BOUND                           |
+|5     | #BR     |Выход за границы      |Ошибка |Нет       |Инструкция BOUND                           |
 |------------------------------------------------------------------------------------------------------
 |6     | #UD     |Неверный опкод        |Ошибка |Нет       |Инструкция UD2                             |
 |------------------------------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ CPU использует номер вектора как индекс в `та�
 где:
 
 * `Смещение` - смещение к точки входа обработчика прерывания;
-* `DPL` - Уровень привилегий сегмента (Descriptor Privilege Level);
+* `DPL` - уровень привилегий сегмента (Descriptor Privilege Level);
 * `P` - флаг присутствия сегмента;
 * `Селектор сегмента` - селектор сегмента кода в GDT или LDT
 * `IST` - обеспечивает возможность переключения на новый стек для обработки прерываний.
@@ -149,19 +149,19 @@ CPU использует номер вектора как индекс в `та�
 Заполнение и загрузка IDT
 --------------------------------------------------------------------------------
 
-We stopped at the following point:
+Мы остановились на следующем моменте:
 
 ```C
 for (i = 0; i < NUM_EXCEPTION_VECTORS; i++)
 	set_intr_gate(i, early_idt_handler_array[i]);
 ```
 
-Here we call `set_intr_gate` in the loop, which takes two parameters:
+Здесь мы вызываем `set_intr_gate` в цикле, который принимает два параметра:
 
-* Number of an interrupt or `vector number`;
-* Address of the idt handler.
+* Номер прерывания или `номер вектора`;
+* Адрес обработчика idt.
 
-and inserts an interrupt gate to the `IDT` table which is represented by the `&idt_descr` array. First of all let's look on the `early_idt_handler_array` array. It is an array which is defined in the [arch/x86/include/asm/segment.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/segment.h) header file contains addresses of the first `32` exception handlers:
+и вставляет шлюз прерывания в таблицу `IDT`, которая представлена массивом `&idt_descr`. Прежде всего, давайте посмотрим на массив `early_idt_handler_array`. Это массив, который определён в заголовочном файле [arch/x86/include/asm/segment.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/segment.h) и содержит адреса первых `32` обработчиков исключений:
 
 ```C
 #define EARLY_IDT_HANDLER_SIZE   9
@@ -170,11 +170,11 @@ and inserts an interrupt gate to the `IDT` table which is represented by the `&i
 extern const char early_idt_handler_array[NUM_EXCEPTION_VECTORS][EARLY_IDT_HANDLER_SIZE];
 ```
 
-The `early_idt_handler_array` is `288` bytes array which contains address of exception entry points every nine bytes. Every nine bytes of this array consist of two bytes optional instruction for pushing dummy error code if an exception does not provide it, two bytes instruction for pushing vector number to the stack and five bytes of `jump` to the common exception handler code.
+The `early_idt_handler_array` - это `288` байтный массив, который содержит адреса точек входа обработчиков исключений каждые девять байт. Каждый девять байт этого массива состоят из двух байт необязательной инструкции для помещения фиктивного кода ошибки, если исключение не предоставляет его, двубайтовая инструкция для помещения номера вектора в стек и пять байт `jump` на общий код обработчика исключений.
 
-As we can see, We're filling only first 32 `IDT` entries in the loop, because all of the early setup runs with interrupts disabled, so there is no need to set up interrupt handlers for vectors greater than `32`. The `early_idt_handler_array` array contains generic idt handlers and we can find its definition in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) assembly file. For now we will skip it, but will look it soon. Before this we will look on the implementation of the `set_intr_gate` macro.
+Как можно видеть, в цикле мы заполняем только первые 32 элемента `IDT`, поскольку все начальные настройки запускаются с отключёнными прерываниями, поэтому нет необходимости настраивать обработчики прерываний для векторов, превышающих `32`. В массиве `early_idt_handler_array` содержатся общий обработчики idt и мы можем найти его определение в ассемблерном файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S). Пока что мы пропустим его, но вскоре вернёмся к нему. Перед этим мы рассмотрим реализацию макроса `set_intr_gate`.
 
-The `set_intr_gate` macro is defined in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h) header file and looks:
+Макрос `set_intr_gate` определён в заголовочном файле [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h):
 
 ```C
 #define set_intr_gate(n, addr)                         \
@@ -187,7 +187,7 @@ The `set_intr_gate` macro is defined in the [arch/x86/include/asm/desc.h](https:
          } while (0)
 ```
 
-First of all it checks with that passed interrupt number is not greater than `255` with `BUG_ON` macro. We need to do this check because we can have only `256` interrupts. After this, it make a call of the `_set_gate` function which writes address of an interrupt gate to the `IDT`:
+Прежде всего он проверяет, что переданный номер прерывания не больше чем `255` с помощью макроса `BUG_ON`. Нам нужно сделать эту проверку, поскольку максимально возможное количество прерываний - `256`. После этого он вызывает функцию `_set_gate`, которая записывает адрес шлюза прерывания в `IDT`:
 
 ```C
 static inline void _set_gate(int gate, unsigned type, void *addr,
@@ -200,7 +200,7 @@ static inline void _set_gate(int gate, unsigned type, void *addr,
 }
 ```
 
-At the start of `_set_gate` function we can see call of the `pack_gate` function which fills `gate_desc` structure with the given values:
+В начале `_set_gate` мы можем видеть вызов функции `pack_gate`, которая заполняет структуру `gate_desc` заданными значениями:
 
 ```C
 static inline void pack_gate(gate_desc *gate, unsigned type, unsigned long func,
@@ -219,7 +219,7 @@ static inline void pack_gate(gate_desc *gate, unsigned type, unsigned long func,
 }
 ```
 
-As I mentioned above, we fill gate descriptor in this function. We fill three parts of the address of the interrupt handler with the address which we got in the main loop (address of the interrupt handler entry point). We are using three following macros to split address on three parts:
+Как я уже упоминал выше, мы заполняем шлюз дескриптора в этой функции. Мы заполняем три части адреса обработчика прерываний адресом, который мы получили в основном цикле (адрес точки входа обработчика прерывания). Мы используем три следующих макроса для разделения адреса на три части:
 
 ```C
 #define PTR_LOW(x) ((unsigned long long)(x) & 0xFFFF)
@@ -227,9 +227,9 @@ As I mentioned above, we fill gate descriptor in this function. We fill three pa
 #define PTR_HIGH(x) ((unsigned long long)(x) >> 32)
 ```
 
-With the first `PTR_LOW` macro we get the first `2` bytes of the address, with the second `PTR_MIDDLE` we get the second `2` bytes of the address and with the third `PTR_HIGH` macro we get the last `4` bytes of the address. Next we setup the segment selector for interrupt handler, it will be our kernel code segment - `__KERNEL_CS`. In the next step we fill `Interrupt Stack Table` and `Descriptor Privilege Level` (highest privilege level) with zeros. And we set `GAT_INTERRUPT` type in the end.
+С помощью первого макроса `PTR_LOW` мы получаем первые `2` байта адреса, с помощью второго `PTR_MIDDLE` мы получаем вторые `2` байта адреса, а с третьим макросом `PTR_HIGH` мы получаем последние `4` байта адреса. Затем мы настраиваем селектор сегмента для обработчика прерываний, это будет наш сегмент кода ядра - `__KERNEL_CS`. На следующем шаге мы заполняем `таблицу стека прерываний (IST)` и `уровень привилегий дескриптора (DPL)` (самый высокий уровень привилегий) нулями. И в конце мы устанавливаем тип `GAT_INTERRUPT`.
 
-Now we have filled IDT entry and we can call `native_write_idt_entry` function which just copies filled `IDT` entry to the `IDT`:
+Теперь мы заполнили записи `IDT` и можем вызвать функцию `native_write_idt_entry`, которая скопирует записи в `IDT`:
 
 ```C
 static inline void native_write_idt_entry(gate_desc *idt, int entry, const gate_desc *gate)
@@ -238,32 +238,32 @@ static inline void native_write_idt_entry(gate_desc *idt, int entry, const gate_
 }
 ```
 
-After that main loop will finished, we will have filled `idt_table` array of `gate_desc` structures and we can load `Interrupt Descriptor table` with the call of the:
+После завершения основного цикла у нас в распоряжении будет заполненный массив `idt_table` структур `gate_desc` и теперь мы можем загрузить `таблицу векторов прерываний` вызовом:
 
 ```C
 load_idt((const struct desc_ptr *)&idt_descr);
 ```
 
-Where `idt_descr` is:
+Где `idt_descr`:
 
 ```C
 struct desc_ptr idt_descr = { NR_VECTORS * 16 - 1, (unsigned long) idt_table };
 ```
 
-and `load_idt` just executes `lidt` instruction:
+и `load_idt` просто выполняет инструкцию `lidt`:
 
 ```C
 asm volatile("lidt %0"::"m" (*dtr));
 ```
 
-You can note that there are calls of the `_trace_*` functions in the `_set_gate` and other functions. These functions fills `IDT` gates in the same manner that `_set_gate` but with one difference. These functions use `trace_idt_table` the `Interrupt Descriptor Table` instead of `idt_table` for tracepoints (we will cover this theme in the another part).
+Мы можем заметить, что вызовы функций `_trace_*` есть в `_set_gate` и в остальных функциях. Эти функции заполняют шлюзы `IDT` таким же образом, что и `_set_gate`, но с одним отличием. Эти функции используют `trace_idt_table` `таблицы векторов прерываний` вместо `idt_table` для контрольных точек (мы рассмотрим эту тему в другой части).
 
-Okay, now we have filled and loaded `Interrupt Descriptor Table`, we know how the CPU acts during an interrupt. So now time to deal with interrupts handlers.
+Итак, мы заполнили и загрузили `таблицу векторов прерываний` и мы знаем как ведёт себя CPU во время прерывания. Теперь самое время перейти к обработчикам прерываний.
 
-Early interrupts handlers
+Начальные обработчики прерываний
 --------------------------------------------------------------------------------
 
-As you can read above, we filled `IDT` with the address of the `early_idt_handler_array`. We can find it in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) assembly file:
+Как говорилось ранее, мы заполнили `IDT` адресом `early_idt_handler_array`. Мы можем найти его в [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
 
 ```assembly
 	.globl early_idt_handler_array
@@ -280,7 +280,7 @@ early_idt_handlers:
 	.endr
 ```
 
-We can see here, interrupt handlers generation for the first `32` exceptions. We check here, if exception has an error code then we do nothing, if exception does not return error code, we push zero to the stack. We do it for that would stack was uniform. After that we push exception number on the stack and jump on the `early_idt_handler_array` which is generic interrupt handler for now. As we may see above, every nine bytes of the `early_idt_handler_array` array consists from optional push of an error code, push of `vector number` and jump instruction. We can see it in the output of the `objdump` util:
+Здесь мы видим создание обработчиков прерываний для первых `32` исключений. Мы проверяем, содержит ли исключение код ошибки, и ничего не делаем, если исключение не возвращает код ошибки, тогда мы помещаем в стек ноль. Мы делаем это для того чтобы стек был однородным. После этого мы помещаем номер исключения в стек и переходим на `early_idt_handler_array`, который является общим обработчиком прерываний на данный момент. Каждый девятый байт массива `early_idt_handler_array` состоит из необязательного кода ошибок, `номера вектора` и инструкции перехода. Мы можем видеть это в выводе утилиты `objdump`:
 
 ```
 $ objdump -D vmlinux
@@ -301,25 +301,25 @@ ffffffff81fe5014:       6a 02                   pushq  $0x2
 ...
 ```
 
-As i wrote above, CPU pushes flag register, `CS` and `RIP` on the stack. So before `early_idt_handler` will be executed, stack will contain following data:
+Как я писал ранее, CPU помещает регистр флагов, `CS` и `RIP` в стек. Поэтому, прежде чем `early_idt_handler` будет выполнен, стек будет содержать следующие данные:
 
 ```
 |--------------------|
 | %rflags            |
 | %cs                |
 | %rip               |
-| rsp --> error code |
+| rsp --> код ошибки |
 |--------------------|
 ```
 
-Now let's look on the `early_idt_handler_common` implementation. It locates in the same [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S#L343) assembly file and first of all we can see check for [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). We don't need to handle it, so just ignore it in the `early_idt_handler_common`:
+Давайте посмотрим на реализацию `early_idt_handler_common`. Он находится в том же ассемблерном файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S#L343) и первое что мы можем видеть это проверка [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Нам не нужно обрабатывать их, поэтому просто игнорируем их в коде:
 
 ```assembly
 	cmpl $2,(%rsp)
 	je .Lis_nmi
 ```
 
-where `is_nmi`:
+где `is_nmi`:
 
 ```assembly
 is_nmi:
@@ -327,7 +327,7 @@ is_nmi:
 	INTERRUPT_RETURN
 ```
 
-drops an error code and vector number from the stack and call `INTERRUPT_RETURN` which is just expands to the `iretq` instruction. As we checked the vector number and it is not `NMI`, we check `early_recursion_flag` to prevent recursion in the `early_idt_handler_common` and if it's correct we save general registers on the stack:
+удаляет код ошибки и номер вектора из стека и вызывает макрос `INTERRUPT_RETURN`, который раскрывается до инструкции `iretq`. После проверки номера вектора (и это не `NMI`), мы проверяем `early_recursion_flag`, чтобы предотвратить рекурсию в `early_idt_handler_common`, и если он корректен, сохраняем регистры общего назначения в стек:
 
 ```assembly
 	pushq %rax
@@ -341,16 +341,16 @@ drops an error code and vector number from the stack and call `INTERRUPT_RETURN`
 	pushq %r11
 ```
 
-We need to do it to prevent wrong values of registers when we return from the interrupt handler. After this we check segment selector in the stack:
+Мы должны сделать это, чтобы предотвратить появление неверных значений регистров при возврате из обработчика прерываний. После этого мы проверяем селектор сегмента в стеке:
 
 ```assembly
 	cmpl $__KERNEL_CS,96(%rsp)
 	jne 11f
 ```
 
-which must be equal to the kernel code segment and if it is not we jump on label `11` which prints `PANIC` message and makes stack dump.
+который должен быть равен сегменту кода ядра, и если нет, мы переходим к метке `11`, которая печатает сообщение `PANIC` и выводит дамп стека.
 
-After the code segment was checked, we check the vector number, and if it is `#PF` or [Page Fault](https://en.wikipedia.org/wiki/Page_fault), we put value from the `cr2` to the `rdi` register and call `early_make_pgtable` (well see it soon):
+После проверки сегмента кода мы проверяем номер вектора, и если это `#PF` или [ошибка страницы (Page Fault)](https://en.wikipedia.org/wiki/Page_fault), мы помещаем значение `cr2` в регистр `rdi` и вызываем `early_make_pgtable` (мы скоро это увидим):
 
 ```assembly
 	cmpl $14,72(%rsp)
@@ -361,7 +361,7 @@ After the code segment was checked, we check the vector number, and if it is `#P
 	jz 20f
 ```
 
-If vector number is not `#PF`, we restore general purpose registers from the stack:
+Если номер вектора не равен `#PF`, мы восстанавливаем регистры общего назначения из стека:
 
 ```assembly
 	popq %r11
@@ -375,16 +375,16 @@ If vector number is not `#PF`, we restore general purpose registers from the sta
 	popq %rax
 ```
 
-and exit from the handler with `iret`.
+и выходим из обработчика с помощью `iret`.
 
-It is the end of the first interrupt handler. Note that it is very early interrupt handler, so it handles only Page Fault now. We will see handlers for the other interrupts, but now let's look on the page fault handler.
+Это конец первого обработчика прерываний. Обратите внимание, что это очень ранний обработчик прерываний, поэтому он обрабатывает только ошибку страницы. Мы увидим обработчики и для других прерываний, но пока давайте посмотрим на обработчик ошибки страницы.
 
-Page fault handling
+Обработка ошибки страницы
 --------------------------------------------------------------------------------
 
-In the previous paragraph we saw first early interrupt handler which checks interrupt number for page fault and calls `early_make_pgtable` for building new page tables if it is. We need to have `#PF` handler in this step because there are plans to add ability to load kernel above `4G` and make access to `boot_params` structure above the 4G.
+В предыдущем разделе мы увидели первый начальный обработчик прерываний, который проверяет, что номер прерывания относится к ошибке страницы и вызывает `early_make_pgtable` для создания новых таблиц страниц. На данном этапе нам необходим обработчик `#PF`, поскольку планируется добавить способность загружать ядро выше `4G` и сделать структуру `boot_params` доступной над 4G.
 
-You can find implementation of the `early_make_pgtable` in the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c) and takes one parameter - address from the `cr2` register, which caused Page Fault. Let's look on it:
+Вы можете найти реализацию `early_make_pgtable` в [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c) и он принимает только один параметр - адрес из регистра `cr2`, который вызывал ошибку страницы. Давайте посмотрим на неё более подробно:
 
 ```C
 int __init early_make_pgtable(unsigned long address)
@@ -400,60 +400,61 @@ int __init early_make_pgtable(unsigned long address)
 }
 ```
 
-It starts from the definition of some variables which have `*val_t` types. All of these types are just:
+Она начинается с определения некоторых переменных, которые имеют типы `*val_t`. Все эти типы всего-навсего:
 
 ```C
 typedef unsigned long   pgdval_t;
 ```
 
-Also we will operate with the `*_t` (not val) types, for example `pgd_t` and etc... All of these types defined in the [arch/x86/include/asm/pgtable_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/pgtable_types.h) and represent structures like this:
+Также мы будем работать с типами `*_t`, например `pgd_t` и т.д. Все эти типы определены в [arch/x86/include/asm/pgtable_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/pgtable_types.h) и представляют собой структуры:
 
 ```C
 typedef struct { pgdval_t pgd; } pgd_t;
 ```
 
-For example,
+
+Для примера,
 
 ```C
 extern pgd_t early_level4_pgt[PTRS_PER_PGD];
 ```
 
-Here `early_level4_pgt` presents early top-level page table directory which consists of an array of `pgd_t` types and `pgd` points to low-level page entries.
+Здесь `early_level4_pgt` представляет начальный каталог таблиц страниц верхнего уровня, который состоит из массива типа `pgd_t` и `pgd` указывает на записи страниц нижнего уровня.
 
-After we made the check that we have no invalid address, we're getting the address of the Page Global Directory entry which contains `#PF` address and put it's value to the `pgd` variable:
+После того как мы проверили, что у нас корректный адрес, мы получаем адрес записи глобального каталога страниц, который содержит адрес `#PF`, и присваиваем его значение переменной `pgd`:
 
 ```C
 pgd_p = &early_level4_pgt[pgd_index(address)].pgd;
 pgd = *pgd_p;
 ```
 
-In the next step we check `pgd`, if it contains correct page global directory entry we put physical address of the page global directory entry and put it to the `pud_p` with:
+На следующем шаге мы проверяем `pgd`, если он содержит верную запись в глобальном каталоге страниц, мы помещаем физический адрес записи в `pud_p`:
 
 ```C
 pud_p = (pudval_t *)((pgd & PTE_PFN_MASK) + __START_KERNEL_map - phys_base);
 ```
 
-where `PTE_PFN_MASK` is a macro:
+где `PTE_PFN_MASK` является макросом:
 
 ```C
 #define PTE_PFN_MASK            ((pteval_t)PHYSICAL_PAGE_MASK)
 ```
 
-which expands to:
+который раскрывается до:
 
 ```C
 (~(PAGE_SIZE-1)) & ((1 << 46) - 1)
 ```
 
-or
+или
 
 ```
 0b1111111111111111111111111111111111111111111111
 ```
 
-which is 46 bits to mask page frame.
+состоящий из 46 бит для маскирования страницы.
 
-If `pgd` does not contain correct address we check that `next_early_pgt` is not greater than `EARLY_DYNAMIC_PAGE_TABLES` which is `64` and present a fixed number of buffers to set up new page tables on demand. If `next_early_pgt` is greater than `EARLY_DYNAMIC_PAGE_TABLES` we reset page tables and start again. If `next_early_pgt` is less than `EARLY_DYNAMIC_PAGE_TABLES`, we create new page upper directory pointer which points to the current dynamic page table and writes it's physical address with the `_KERPG_TABLE` access rights to the page global directory:
+Если `pgd` не содержит верный адрес, мы проверяем что `next_early_pgt` не больше чем `EARLY_DYNAMIC_PAGE_TABLES`, который равен `64` и представляет фиксированное количество буферов для настройки новых таблиц страниц по требованию. Если `next_early_pgt` больше, чем `EARLY_DYNAMIC_PAGE_TABLES` мы сбрасываем таблицы страниц и начинаем всё заново. Если `next_early_pgt` меньше, чем `EARLY_DYNAMIC_PAGE_TABLES`, мы создаём новый указатель верхнего каталога страниц, который указывает на текущую динамическую таблицу страниц и записываем его физический адрес с правами доступа  `_KERPG_TABLE` в глобальный каталог страниц:
 
 ```C
 if (next_early_pgt >= EARLY_DYNAMIC_PAGE_TABLES) {
@@ -467,36 +468,36 @@ for (i = 0; i < PTRS_PER_PUD; i++)
 *pgd_p = (pgdval_t)pud_p - __START_KERNEL_map + phys_base + _KERNPG_TABLE;
 ```
 
-After this we fix up address of the page upper directory with:
+После этого мы исправляем адрес верхнего каталога страниц:
 
 ```C
 pud_p += pud_index(address);
 pud = *pud_p;
 ```
 
-In the next step we do the same actions as we did before, but with the page middle directory. In the end we fix address of the page middle directory which contains maps kernel text+data virtual addresses:
+На следующем шаге мы делаем те же действия что и ранее, но со средним каталогом страниц. В конце мы исправляем адрес среднего каталога страниц, который содержит отображения текста ядра+виртуальные адреса данных:
 
 ```C
 pmd = (physaddr & PMD_MASK) + early_pmd_flags;
 pmd_p[pmd_index(address)] = pmd;
 ```
 
-After page fault handler finished it's work and as result our `early_level4_pgt` contains entries which point to the valid addresses.
+После того как обработчик ошибки страницы завершён, `early_level4_pgt` содержит записи, которые указывают на корректные адреса.
 
-Conclusion
+Заключение
 --------------------------------------------------------------------------------
 
-This is the end of the second part about linux kernel insides. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part we will see all steps before kernel entry point - `start_kernel` function.
+Это конец второй части инициализации ядра Linux. В следующей части мы увидим все шаги перед точкой входа в ядро - функции `start_kernel`.
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**От переводчика: пожалуйста, имейте в виду, что английский - не мой родной язык, и я очень извиняюсь за возможные неудобства. Если вы найдёте какие-либо ошибки или неточности в переводе, пожалуйста, пришлите pull request в [linux-insides-ru](https://github.com/proninyaroslav/linux-insides-ru).**
 
-Links
+Ссылки
 --------------------------------------------------------------------------------
 
 * [GNU assembly .rept](https://sourceware.org/binutils/docs-2.23/as/Rept.html)
 * [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt)
-* [Page table](https://en.wikipedia.org/wiki/Page_table)
-* [Interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler)
-* [Page Fault](https://en.wikipedia.org/wiki/Page_fault),
-* [Previous part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-1.html)
+* [Таблица страниц](https://en.wikipedia.org/wiki/Page_table)
+* [Обработчик прерываний](https://en.wikipedia.org/wiki/Interrupt_handler)
+* [Ошибка страницы](https://en.wikipedia.org/wiki/Page_fault),
+* [Предыдущая часть](linux-initialization-1.md)
