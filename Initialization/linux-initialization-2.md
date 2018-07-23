@@ -499,5 +499,5 @@ pmd_p[pmd_index(address)] = pmd;
 * [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt)
 * [Таблица страниц](https://en.wikipedia.org/wiki/Page_table)
 * [Обработчик прерываний](https://en.wikipedia.org/wiki/Interrupt_handler)
-* [Ошибка страницы](https://en.wikipedia.org/wiki/Page_fault),
+* [Ошибка страницы](https://en.wikipedia.org/wiki/Page_fault)
 * [Предыдущая часть](linux-initialization-1.md)
