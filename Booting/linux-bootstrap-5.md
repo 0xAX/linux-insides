@@ -223,161 +223,31 @@ boot_heap:
 
 где `BOOT_HEAP_SIZE` - это макрос, который раскрывается в `0x10000` (`0x400000` в случае `bzip2` ядра) и представляет собой размер кучи.
 
-После инициализации указателей кучи, следующий шаг - вызов функции `choose_random_location` из [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/kaslr.c#L425). Как можно догадаться из названия функции, она выбирает ячейку памяти, в которой будет разархивирован образ ядра. Может показаться странным, что нам нужно найти или даже `выбрать` место для декомпрессии сжатого образа ядра, но ядро Linux поддерживает технологию [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization), которая позволяет загрузить распакованное ядро по случайному адресу из соображений безопасности. Давайте откроем файл [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/kaslr.c#L425) и посмотри на `choose_random_location`.
+После инициализации указателей кучи, следующий шаг - вызов функции `choose_random_location` из [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/kaslr.c#L425). Как можно догадаться из названия функции, она выбирает ячейку памяти, в которой будет разархивирован образ ядра. Может показаться странным, что нам нужно найти или даже `выбрать` место для декомпрессии сжатого образа ядра, но ядро Linux поддерживает технологию [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization), которая позволяет загрузить распакованное ядро по случайному адресу из соображений безопасности.
 
-Во-первых, если опция `CONFIG_HIBERNATION` установлена, `choose_random_location` пытается найти опцию `nokaslr` в коммандной строке ядра Linux:
+Мы не будем рассматривать рандомизацию адреса загрузки ядра Linux в этой части, но сделаем это в следующей части.
 
-```C
-if (cmdline_find_option_bool("nokaslr")) {
-        debug_putstr("KASLR disabled by cmdline...\n");
-        return;
-}
-```
-
-и выходим, если опция присутствует.
-
-На время предположим, что ядро сконфигурировано с включённой рандомизацией и попытаемся понять, что такое `kASLR`. Мы можем найти информацию об этом в [документации](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt):
-
-```
-kaslr/nokaslr [X86]
-
-Включение/выключение базового смещения ASLR ядра и модуля
-(рандомизация размещения адресного пространства), если оно встроено в ядро.
-Если выбран CONFIG_HIBERNATION, kASLR отключён по умолчанию.
-Если kASLR включён, спящий режим будет выключен.
-```
-
-Это означает, что мы можем передать опцию `kaslr` в командную строку ядра и получить случайный адрес для распаковки ядра (вы можете прочитать больше о ASLR [здесь](https://en.wikipedia.org/wiki/Address_space_layout_randomization)). Итак, наша текущая цель - найти случайный адрес, где мы сможем `безопасно` распаковать ядро Linux. Повторюсь: `безопасно`. Что это означает в данном контексте? Вы можете помнить, что помимо кода декомпрессора и непосредственно образа ядра в памяти есть несколько небезопасных мест. Например, образ [initrd](https://en.wikipedia.org/wiki/Initrd) также находится в памяти, и мы не должны перекрывать его распакованным ядро.
-
-Следующая функция поможет нам создать страницы отображений "один в один" (identity mapping), чтобы избежать небезопасных мест в ОЗУ и распаковывать ядро. И после этого мы должны найти безопасное место, где мы можем распаковать ядро. Это функция `mem_avoid_init`. Она определена в том же [файле](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/kaslr.c) исходного кода и принимает три аргумента, которые мы видели в функции `extract_kernel`:
-
-* `input_data` - указатель на начало сжатого ядра, или, другими словами, указатель на `arch/x86/boot/compressed/vmlinux.bin.bz2`;
-* `input_len` - размер сжатого ядра;
-* `output` - начальный адрес будущего распакованного ядра;
-
-Основной точкой этой функции является заполнение массива структур `mem_vector`:
+Теперь мы вернёмся к [misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c#L404). После получения адреса для образа ядра мы должны были совершить некоторые проверки и убедиться в том, что полученный случайный адрес правильно выровнен и является корректным:
 
 ```C
-#define MEM_AVOID_MAX 5
+if ((unsigned long)output & (MIN_KERNEL_ALIGN - 1))
+	error("Destination physical address inappropriately aligned");
 
-static struct mem_vector mem_avoid[MEM_AVOID_MAX];
+if (virt_addr & (MIN_KERNEL_ALIGN - 1))
+	error("Destination virtual address inappropriately aligned");
+
+if (heap > 0x3fffffffffffUL)
+	error("Destination address too large");
+
+if (virt_addr + max(output_len, kernel_total_size) > KERNEL_IMAGE_SIZE)
+	error("Destination virtual address is beyond the kernel mapping area");
+
+if ((unsigned long)output != LOAD_PHYSICAL_ADDR)
+    error("Destination address does not match LOAD_PHYSICAL_ADDR");
+
+if (virt_addr != LOAD_PHYSICAL_ADDR)
+	error("Destination virtual address changed when not relocatable");
 ```
-
-где структура `mem_vector` содержит информацию о небезопасных областях памяти:
-
-```C
-struct mem_vector {
-	unsigned long start;
-	unsigned long size;
-};
-```
-
-Реализация `mem_avoid_init` довольна проста. Давайте взглянем на часть этой функции:
-
-```C
-	...
-	...
-	...
-	initrd_start  = (u64)real_mode->ext_ramdisk_image << 32;
-	initrd_start |= real_mode->hdr.ramdisk_image;
-	initrd_size  = (u64)real_mode->ext_ramdisk_size << 32;
-	initrd_size |= real_mode->hdr.ramdisk_size;
-	mem_avoid[1].start = initrd_start;
-	mem_avoid[1].size = initrd_size;
-	...
-	...
-	...
-```
-
-Здесь мы видим расчёт начального адреса и размера [initrd](http://en.wikipedia.org/wiki/Initrd). `ext_ramdisk_image` - старшие `32 бита` поля `ramdisk_image` из заголовка настройки и `ext_ramdisk_size` - старшие 32 бита поля `ramdisk_size` из [протокола загрузки](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/boot.txt):
-
-```
-Offset	Proto	Name		Meaning
-/Size
-...
-...
-...
-0218/4	2.00+	ramdisk_image	адрес загрузки initrd (установлен загрузчиком)
-021C/4	2.00+	ramdisk_size	размер initrd (установлен загрузчиком)
-...
-```
-
-`ext_ramdisk_image` и `ext_ramdisk_size` могут быть найдены в [Documentation/x86/zero-page.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/zero-page.txt):
-
-```
-Offset	Proto	Name		Meaning
-/Size
-...
-...
-...
-0C0/004	ALL	ext_ramdisk_image старшие 32 бита ramdisk_image
-0C4/004	ALL	ext_ramdisk_size  старшие 32 бита ramdisk_size
-...
-```
-
-Итак, мы берём `ext_ramdisk_image` и `ext_ramdisk_size`, сдвигаем их влево на `32` (теперь они будут содержать младшие 32 бита в старших битах) и получаем начальный адрес и размер `initrd`. Далее мы сохраняем их в массиве `mem_avoid`.
-
-Следующим шагом после того как мы собрали все небезопасные области памяти в массиве `mem_avoid`, будет поиск случайного адреса, который не пересекается с небезопасными областями, используя функцию `find_random_phys_addr`.
-
-Прежде всего, мы можем видеть выравнивание выходного адреса в функции `find_random_addr`:
-
-```C
-minimum = ALIGN(minimum, CONFIG_PHYSICAL_ALIGN);
-```
-
-Вы можете помнить опцию конфигурации `CONFIG_PHYSICAL_ALIGN` из предыдущей части. Эта опция предоставляет значение, по которому ядро должно быть выровнено, и по умолчанию оно составляет `0x200000`. После получения выровненного выходного адреса, мы просматриваем области памяти, которые мы получили с помощью BIOS-сервиса [e820](https://en.wikipedia.org/wiki/E820) и собираем подходящие для распакованного образа ядра:
-
-```C
-process_e820_entry(&real_mode->e820_map[i], minimum, size);
-```
-
-Напомним, что мы собрали `e820_entries` во [второй части](https://github.com/proninyaroslav/linux-insides-ru/blob/master/Booting/linux-bootstrap-2.md#Обнаружение-памяти). Функция `process_e820_entries` совершает некоторые проверки: что область памяти `e820` не является `non-RAM`, что начальный адрес области памяти не больше максимального допустимого смещения `aslr` offset, и что область памяти находится выше минимальной локации загрузки:
-
-```C
-for (i = 0; i < boot_params->e820_entries; i++) {
-        ...
-        ...
-        ...
-  	    process_mem_region(&region, minimum, image_size);
-        ...
-        ...
-        ...
-}
-```
-
-и вызываем `process_mem_region` для допустимых областей памяти. Функция `process_mem_region` обрабатывает данные области памяти и сохраняет их в массив структур `slot_area` - `slot_areas`.
-
-```C
-#define MAX_SLOT_AREA 100
-
-static struct slot_area slot_areas[MAX_SLOT_AREA];
-
-struct slot_area {
-	unsigned long addr;
-	int num;
-};
-```
-
-После завершения `process_mem_region` у нас будет массив адресов, безопасных для распакованного ядра. Затем мы вызываем функцию `slots_fetch_random`, чтобы получить случайный элемент из этого массива:
-
-```C
-slot = kaslr_get_random_long("Physical") % slot_max;
-
-for (i = 0; i < slot_area_index; i++) {
-	if (slot >= slot_areas[i].num) {
-		slot -= slot_areas[i].num;
-		continue;
-	}
-	return slot_areas[i].addr + slot * CONFIG_PHYSICAL_ALIGN;
-}region.size -= region.start - entry->addr;
-
-if (region.start + region.size > CONFIG_RANDOMIZE_BASE_MAX_OFFSET)
-		region.size = CONFIG_RANDOMIZE_BASE_MAX_OFFSET - region.start;
-```
-
-где функция `kaslr_get_random_long` проверяет различные флаги CPU, такие как `X86_FEATURE_RDRAND` или `X86_FEATURE_TSC`, и выбирает метод для получения случайного числа (это может быть инструкция RDRAND, счётчик временных меток, программируемый интервальный таймер и т.д.). После извлечения случайного адреса, `choose_random_location` завершает свою работу.
-
-Теперь мы вернёмся к [misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c#L404). После получения адреса для образа ядра мы должны были совершить некоторые проверки и убедиться в том, что полученный случайный адрес правильно выровнен и является корректным.
 
 После этого мы увидим знакомое сообщение:
 
@@ -385,7 +255,13 @@ if (region.start + region.size > CONFIG_RANDOMIZE_BASE_MAX_OFFSET)
 Decompressing Linux...
 ```
 
-и вызываем функцию `__decompress`, которая будет распаковывать ядро. Функция `__decompress` зависит от того, какой алгоритм декомпрессии был выбран во время компиляции:
+и вызываем функцию `__decompress`:
+
+```C
+__decompress(input_data, input_len, NULL, NULL, output, output_len, NULL, error);
+```
+
+которая будет распаковывать ядро. Реализация функции `__decompress` зависит от того, какой алгоритм декомпрессии был выбран во время компиляции:
 
 ```C
 #ifdef CONFIG_KERNEL_GZIP
@@ -444,15 +320,16 @@ Elf64_Phdr *phdrs, *phdr;
 memcpy(&ehdr, output, sizeof(ehdr));
 
 if (ehdr.e_ident[EI_MAG0] != ELFMAG0 ||
-   ehdr.e_ident[EI_MAG1] != ELFMAG1 ||
-   ehdr.e_ident[EI_MAG2] != ELFMAG2 ||
-   ehdr.e_ident[EI_MAG3] != ELFMAG3) {
-   error("Kernel is not a valid ELF file");
-   return;
+    ehdr.e_ident[EI_MAG1] != ELFMAG1 ||
+    ehdr.e_ident[EI_MAG2] != ELFMAG2 ||
+    ehdr.e_ident[EI_MAG3] != ELFMAG3) {
+        error("Kernel is not a valid ELF file");
+        return;
 }
 ```
 
 и если файл некорректный, функция выводит сообщение об ошибке и останавливается. Если же `ELF` файл корректный, мы просматриваем все заголовки из указанного `ELF` файла и копируем все загружаемые сегменты с правильным адресом в выходной буфер:
+
 
 ```C
 	for (i = 0; i < ehdr.e_phnum; i++) {
@@ -466,18 +343,21 @@ if (ehdr.e_ident[EI_MAG0] != ELFMAG0 ||
 #else
 			dest = (void *)(phdr->p_paddr);
 #endif
-			memcpy(dest,
-			       output + phdr->p_offset,
-			       phdr->p_filesz);
+			memmove(dest, output + phdr->p_offset, phdr->p_filesz);
 			break;
-		default: /* Игнорируем остальные PT_* */ break;
+		default:
+			break;
 		}
 	}
 ```
 
-С этого момента все загружаемые сегменты находятся в правильном месте. Реализация последней функции - `handle_relocations` зависит от опции конфигурации ядра `CONFIG_X86_NEED_RELOCS` и если она включена, то эта функция корректирует адреса в образе ядра и вызывается только в том случае, если `kASLR` был включён во время конфигурации ядра.
+С этого момента все загружаемые сегменты находятся в правильном месте.
 
-После перемещения ядра мы возвращаемся из `extract_kernel` обратно в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S). Адрес ядра находится в регистре `rax` и мы совершаем переход по нему:
+Следующим шагом после функции `parse_elf` является вызов функции `handle_relocations`. Реализация этой функции зависит от опции конфигурации ядра `CONFIG_X86_NEED_RELOCS`, и если она включена, то эта функция корректирует адреса в образе ядра и вызывается только в том случае, если во время конфигурации ядра была включена опция конфигурации `CONFIG_RANDOMIZE_BASE`. Реализация функции `handle_relocations` достаточно проста. Эта функция вычитает значение `LOAD_PHYSICAL_ADDR` из значения базового адреса загрузки ядра и, таким образом, мы получаем разницу между тем, где ядро было слинковано для загрузки и тем, где оно было фактически загружено. После этого мы можем выполнить релокацию ядра, поскольку мы знаем фактический адрес, по которому было загружено ядро, адрес по которому оно было слинковано для запуска и таблицу релокации, которая находится в конце образа ядра.
+
+После перемещения ядра мы возвращаемся из `extract_kernel` обратно в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S).
+
+Адрес ядра находится в регистре `rax` и мы совершаем переход по нему:
 
 ```assembly
 jmp	*%rax
@@ -488,9 +368,9 @@ jmp	*%rax
 Заключение
 --------------------------------------------------------------------------------
 
-Это конец пятой и последней части процесса загрузки ядра Linux. Мы больше не увидим статей о загрузке ядра (возможны обновления этой и предыдущих статей), но будет много статей о других внутренних компонентах ядра.
+Это конец пятой части процесса загрузки ядра Linux. Мы больше не увидим статей о загрузке ядра (возможны обновления этой и предыдущих статей), но будет много статей о других внутренних компонентах ядра.
 
-Следующая глава посвящена инициализации ядра, и мы увидим первые шаги в коде инициализации ядра Linux.
+В следующей главе будут описаны более подробные сведения о процессе загрузки ядра Linux, например рандомизация адреса загрузки и т.д.
 
 **От переводчика: пожалуйста, имейте в виду, что английский - не мой родной язык, и я очень извиняюсь за возможные неудобства. Если вы найдёте какие-либо ошибки или неточности в переводе, пожалуйста, пришлите pull request в [linux-insides-ru](https://github.com/proninyaroslav/linux-insides-ru).**
 
