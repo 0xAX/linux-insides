@@ -4,7 +4,7 @@ Kernel booting process. Part 6.
 Introduction
 --------------------------------------------------------------------------------
 
-This is the sixth part of the `Kernel booting process` series. In the [previous part](https://github.com/0xAX/linux-insides/blob/v4.16/Booting/linux-bootstrap-5.md) we have seen the end of the kernel boot process. But we have skipped some important advanced parts.
+This is the sixth part of the `Kernel booting process` series. In the [previous part](linux-bootstrap-5.md) we have seen the end of the kernel boot process. But we have skipped some important advanced parts.
 
 As you may remember the entry point of the Linux kernel is the `start_kernel` function from the [main.c](https://github.com/torvalds/linux/blob/v4.16/init/main.c) source code file started to execute at `LOAD_PHYSICAL_ADDR` address. This address depends on the `CONFIG_PHYSICAL_START` kernel configuration option which is `0x1000000` by default:
 
@@ -30,7 +30,7 @@ Before the kernel decompressor will start to find random memory range where the 
 
 Yes, building of identity mapped page tables is the one of the first step during randomization of load address. But before we will consider it, let's try to remember where did we come from to this point.
 
-In the [previous part](https://github.com/0xAX/linux-insides/blob/v4.16/Booting/linux-bootstrap-5.md), we saw transition to [long mode](https://en.wikipedia.org/wiki/Long_mode) and jump to the kernel decompressor entry point - `extract_kernel` function. The randomization stuff starts here from the call of the:
+In the [previous part](linux-bootstrap-5.md), we saw transition to [long mode](https://en.wikipedia.org/wiki/Long_mode) and jump to the kernel decompressor entry point - `extract_kernel` function. The randomization stuff starts here from the call of the:
 
 ```C
 void choose_random_location(unsigned long input,
@@ -418,4 +418,4 @@ Links
 * [time stamp counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
 * [rdrand](https://en.wikipedia.org/wiki/RdRand)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [Previous part](https://github.com/0xAX/linux-insides/blob/v4.16/Booting/linux-bootstrap-5.md)
+* [Previous part](linux-bootstrap-5.md)
