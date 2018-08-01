@@ -17,11 +17,6 @@ linux-insides
 
 [![Помочь с помощью bitcoin](https://img.shields.io/badge/donate-bitcoin-green.svg)](https://www.coinbase.com/checkouts/0bfa452a41cf52c0b3f99500b4f31685) [![Присоединиться к чату https://gitter.im/0xAX/linux-insides](https://badges.gitter.im/0xAX/linux-insides.svg)](https://gitter.im/0xAX/linux-insides?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-Лицензия
--------------
-
-Распространяется на условиях лицензии [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
-
 Участие
 --------------
 
@@ -38,4 +33,10 @@ linux-insides
 
 Переводчик
 ---------------
+
 [proninyaroslav](https://github.com/proninyaroslav)
+
+Лицензия
+-------------
+
+Распространяется на условиях лицензии [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
