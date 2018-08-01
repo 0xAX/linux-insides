@@ -4,7 +4,9 @@ Kernel booting process. Part 3.
 Video mode initialization and transition to protected mode
 --------------------------------------------------------------------------------
 
-This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call to the `set_video` routine from [main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L181). In this part, we will look at:
+This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call to the `set_video` routine from [main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c).
+
+In this part, we will look at:
 
 * video mode initialization in the kernel setup code,
 * the preparations made before switching into protected mode,
@@ -12,7 +14,7 @@ This is the third part of the `Kernel booting process` series. In the previous [
 
 **NOTE** If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also, there are a couple of [links](linux-bootstrap-2.md#links) which can help you.
 
-As I wrote above, we will start from the `set_video` function which is defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/0e271fd59fe9e6d8c932309e7a42a4519c5aac6f/arch/x86/boot/video.c#L319) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
+As I wrote above, we will start from the `set_video` function which is defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/video.c) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
 
 ```C
 u16 mode = boot_params.hdr.vid_mode;
@@ -59,13 +61,17 @@ If you read the source code of the kernel, you'll see these very often and so it
 Heap API
 --------------------------------------------------------------------------------
 
-After we get `vid_mode` from `boot_params.hdr` in the `set_video` function, we can see the call to the `RESET_HEAP` function. `RESET_HEAP` is a macro which is defined in [boot.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/boot.h#L199). It is defined as:
+After we get `vid_mode` from `boot_params.hdr` in the `set_video` function, we can see the call to the `RESET_HEAP` function. `RESET_HEAP` is a macro which is defined in [arch/x86/boot/boot.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/boot.h) header file.
+
+This macro is defined as:
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-If you have read the second part, you will remember that we initialized the heap with the [`init_heap`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L116) function. We have a couple of utility functions for managing the heap which are defined in `boot.h`. They are:
+If you have read the second part, you will remember that we initialized the heap with the [`init_heap`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c) function. We have a couple of utility macros and functions for managing the heap which are defined in `arch/x86/boot/boot.h` header file.
+
+They are:
 
 ```C
 #define RESET_HEAP()
@@ -124,7 +130,7 @@ That's all. Now we have a simple API for heap and can setup video mode.
 Set up video mode
 --------------------------------------------------------------------------------
 
-Now we can move directly to video mode initialization. We stopped at the `RESET_HEAP()` call in the `set_video` function. Next is the call to  `store_mode_params` which stores video mode parameters in the `boot_params.screen_info` structure which is defined in [include/uapi/linux/screen_info.h](https://github.com/0xAX/linux/blob/0e271fd59fe9e6d8c932309e7a42a4519c5aac6f/include/uapi/linux/screen_info.h).
+Now we can move directly to video mode initialization. We stopped at the `RESET_HEAP()` call in the `set_video` function. Next is the call to  `store_mode_params` which stores video mode parameters in the `boot_params.screen_info` structure which is defined in [include/uapi/linux/screen_info.h](https://github.com/torvalds/linux/blob/v4.16/include/uapi/linux/screen_info.h) header file.
 
 If we look at the `store_mode_params` function, we can see that it starts with a call to the `store_cursor_position` function. As you can understand from the function name, it gets information about the cursor and stores it.
 
@@ -147,7 +153,7 @@ font_size = rdfs16(0x485);
 boot_params.screen_info.orig_video_points = font_size;
 ```
 
-First of all, we put 0 in the `FS` register with the `set_fs` function. We already saw functions like `set_fs` in the previous part. They are all defined in [boot.h](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/boot/boot.h). Next, we read the value which is located at address `0x485` (this memory location is used to get the font size) and save the font size in `boot_params.screen_info.orig_video_points`.
+First of all, we put 0 in the `FS` register with the `set_fs` function. We already saw functions like `set_fs` in the previous part. They are all defined in [arch/x86/boot/boot.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/boot.h). Next, we read the value which is located at address `0x485` (this memory location is used to get the font size) and save the font size in `boot_params.screen_info.orig_video_points`.
 
 ```C
 x = rdfs16(0x44a);
@@ -175,7 +181,7 @@ if (!heap_free(saved.x*saved.y*sizeof(u16)+512))
 
 and allocates space in the heap if it is enough and stores `saved_screen` in it.
 
-The next call is `probe_cards(0)` from [arch/x86/boot/video-mode.c](https://github.com/0xAX/linux/blob/0e271fd59fe9e6d8c932309e7a42a4519c5aac6f/arch/x86/boot/video-mode.c#L33). It goes over all video_cards and collects the number of modes provided by the cards. Here is the interesting part, we can see the loop:
+The next call is `probe_cards(0)` from [arch/x86/boot/video-mode.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/video-mode.c) source code file. It goes over all video_cards and collects the number of modes provided by the cards. Here is the interesting part, we can see the loop:
 
 ```C
 for (card = video_cards; card < video_cards_end; card++) {
@@ -214,7 +220,7 @@ struct card_info {
 };
 ```
 
-is in the `.videocards` segment. Let's look in the [arch/x86/boot/setup.ld](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/boot/setup.ld) linker script, where we can find:
+is in the `.videocards` segment. Let's look in the [arch/x86/boot/setup.ld](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/setup.ld) linker script, where we can find:
 
 ```
 	.videocards	: {
@@ -228,7 +234,7 @@ It means that `video_cards` is just a memory address and all `card_info` structu
 
 After the `probe_cards` function is done, we move to the main loop in the `set_video` function. There is an infinite loop which tries to set up the video mode with the `set_mode` function or prints a menu if we passed `vid_mode=ask` to the kernel command line or if video mode is undefined.
 
-The `set_mode` function is defined in [video-mode.c](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/boot/video-mode.c#L147) and gets only one parameter, `mode`, which is the number of video modes (we got this value from the menu or in the start of `setup_video`, from the kernel setup header).
+The `set_mode` function is defined in [video-mode.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/video-mode.c) and gets only one parameter, `mode`, which is the number of video modes (we got this value from the menu or in the start of `setup_video`, from the kernel setup header).
 
 The `set_mode` function checks the `mode` and calls the `raw_set_mode` function. The `raw_set_mode` calls the selected card's `set_mode` function, i.e. `card->set_mode(struct mode_info*)`. We can get access to this function from the `card_info` structure. Every video mode defines this structure with values filled depending upon the video mode (for example for `vga` it is the `video_vga.set_mode` function. See the above example of the `card_info` structure for `vga`). `video_vga.set_mode` is `vga_set_mode`, which checks the vga mode and calls the respective function:
 
@@ -277,9 +283,9 @@ Having done this, the video mode setup is complete and now we can switch to the 
 Last preparation before transition into protected mode
 --------------------------------------------------------------------------------
 
-We can see the last function call - `go_to_protected_mode` - in [main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L184). As the comment says: `Do the last things and invoke protected mode`, so let's see what these last things are and switch into protected mode.
+We can see the last function call - `go_to_protected_mode` - in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c). As the comment says: `Do the last things and invoke protected mode`, so let's see what these last things are and switch into protected mode.
 
-The `go_to_protected_mode` function is defined in [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c#L104). It contains some functions which make the last preparations before we can jump into protected mode, so let's look at it and try to understand what it does and how it works.
+The `go_to_protected_mode` function is defined in [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/pm.c). It contains some functions which make the last preparations before we can jump into protected mode, so let's look at it and try to understand what it does and how it works.
 
 First is the call to the `realmode_switch_hook` function in `go_to_protected_mode`. This function invokes the real mode switch hook if it is present and disables [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Hooks are used if the bootloader runs in a hostile environment. You can read more about hooks in the [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**).
 
@@ -307,7 +313,7 @@ static inline void io_delay(void)
 
 To output any byte to the port `0x80` should delay exactly 1 microsecond. So we can write any value (the value from `AL` in our case) to the `0x80` port. After this delay the `realmode_switch_hook` function has finished execution and we can move to the next function.
 
-The next function is `enable_a20`, which enables the [A20 line](http://en.wikipedia.org/wiki/A20_line). This function is defined in [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/a20.c) and it tries to enable the A20 gate with different methods. The first is the `a20_test_short` function which checks if A20 is already enabled or not with the `a20_test` function:
+The next function is `enable_a20`, which enables the [A20 line](http://en.wikipedia.org/wiki/A20_line). This function is defined in [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/a20.c) and it tries to enable the A20 gate with different methods. The first is the `a20_test_short` function which checks if A20 is already enabled or not with the `a20_test` function:
 
 ```C
 static int a20_test(int loops)
@@ -339,7 +345,7 @@ Next, we write an updated `ctr` value into `fs:A20_TEST_ADDR` or `fs:0x200` with
 
 If A20 is disabled, we try to enable it with a different method which you can find in `a20.c`. For example, it can be done with a call to the `0x15` BIOS interrupt with `AH=0x2041`.
 
-If the `enabled_a20` function finished with a failure, print an error message and call the function `die`. You can remember it from the first source code file where we started - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S):
+If the `enable_a20` function finished with a failure, print an error message and call the function `die`. You can remember it from the first source code file where we started - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S):
 
 ```assembly
 die:
@@ -500,7 +506,7 @@ This is the end of the `go_to_protected_mode` function. We loaded the IDT and GD
 protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
 ```
 
-which is defined in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S#L26).
+which is defined in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/pmjump.S).
 
 It takes two parameters:
 
@@ -509,7 +515,9 @@ It takes two parameters:
 
 Let's look inside `protected_mode_jump`. As I wrote above, you can find it in `arch/x86/boot/pmjump.S`. The first parameter will be in the `eax` register and the second one is in `edx`.
 
-First of all, we put the address of `boot_params` in the `esi` register and the address of the code segment register `cs` (0x1000) in `bx`. After this, we shift `bx` by 4 bits and add it to the memory location labeled `2` (which is `bx << 4 + in_pm32`, the physical address to jump after transitioned to 32-bit mode) and jump to label `1`. Next we put the data segment and the task state segment in the `cx` and `di` registers with:
+First of all, we put the address of `boot_params` in the `esi` register and the address of the code segment register `cs` in `bx`. After this, we shift `bx` by 4 bits and add it to the memory location labeled `2` (which is `(cs << 4) + in_pm32`, the physical address to jump after transitioned to 32-bit mode) and jump to label `1`. So after this `in_pm32` in label `2` will be overwritten with `(cs << 4) + in_pm32`.
+
+Next we put the data segment and the task state segment in the `cx` and `di` registers with:
 
 ```assembly
 movw	$__BOOT_DS, %cx
@@ -538,7 +546,7 @@ where:
 
 * `0x66` is the operand-size prefix which allows us to mix 16-bit and 32-bit code
 * `0xea` - is the jump opcode
-* `in_pm32` is the segment offset
+* `in_pm32` is the segment offset or `(cs << 4) + in_pm`
 * `__BOOT_CS` is the code segment we want to jump to.
 
 After this we are finally in protected mode:
