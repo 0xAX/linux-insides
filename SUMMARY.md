@@ -6,7 +6,7 @@
     * [Инициализация видеорежима и переход в защищённый режим](Booting/linux-bootstrap-3.md)
     * [Переход в 64-битный режим](Booting/linux-bootstrap-4.md)
     * [Декомпрессия ядра](Booting/linux-bootstrap-5.md)
-	* [Kernel load address randomization](Booting/linux-bootstrap-6.md)
+	* [Рандомизация адреса ядра](Booting/linux-bootstrap-6.md)
 * [Инициализация](Initialization/README.md)
     * [Первые шаги в ядре](Initialization/linux-initialization-1.md)
     * [Начальная обработка прерываний и исключений](Initialization/linux-initialization-2.md)
