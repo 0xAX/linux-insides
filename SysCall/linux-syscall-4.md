@@ -20,7 +20,7 @@ There are many different ways to launch an application from a user perspective. 
 
 In this part we will consider the way when we just launch an application from the shell. As you know, the standard way to launch an application from shell is the following: We just launch a [terminal emulator](https://en.wikipedia.org/wiki/Terminal_emulator) application and just write the name of the program and pass or not arguments to our program, for example:
 
-![ls shell](http://s14.postimg.org/d6jgidc7l/Screenshot_from_2015_09_07_17_31_55.png)
+![ls shell](http://i66.tinypic.com/214w6so.jpg)
 
 Let's consider what does occur when we launch an application from the shell, what does shell do when we write program name, what does Linux kernel do etc. But before we will start to consider these interesting things, I want to warn that this book is about the Linux kernel. That's why we will see Linux kernel insides related stuff mostly in this part. We will not consider in details what does shell do, we will not consider complex cases, for example subshells etc.
 
@@ -52,7 +52,7 @@ execve (command, args, env);
 The `execve` system call has the following signature:
 
 ```
-int execve(const char *filename, char *const argv [], char *const envp[]);   
+int execve(const char *filename, char *const argv [], char *const envp[]);
 ```
 
 and executes a program by the given filename, with the given arguments and [environment variables](https://en.wikipedia.org/wiki/Environment_variable). This system call is the first in our case and only, for example:
@@ -299,8 +299,8 @@ int search_binary_handler(struct linux_binprm *bprm)
 			return retval;
 		}
 	}
-	
-	return retval;	
+
+	return retval;
 ```
 
 Where the `load_binary` for example for the [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) checks the magic number (each `elf` binary file contains magic number in the header) in the `linux_bprm` buffer (remember that we read first `128` bytes from the executable binary file): and exit if it is not `elf` binary:
@@ -406,7 +406,7 @@ Links
 * [System call](https://en.wikipedia.org/wiki/System_call)
 * [shell](https://en.wikipedia.org/wiki/Unix_shell)
 * [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29)
-* [entry point](https://en.wikipedia.org/wiki/Entry_point) 
+* [entry point](https://en.wikipedia.org/wiki/Entry_point)
 * [C](https://en.wikipedia.org/wiki/C_%28programming_language%29)
 * [environment variables](https://en.wikipedia.org/wiki/Environment_variable)
 * [file descriptor](https://en.wikipedia.org/wiki/File_descriptor)
@@ -420,7 +420,7 @@ Links
 * [#!](https://en.wikipedia.org/wiki/Shebang_%28Unix%29)
 * [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)
 * [a.out](https://en.wikipedia.org/wiki/A.out)
-* [flat](https://en.wikipedia.org/wiki/Binary_file#Structure) 
+* [flat](https://en.wikipedia.org/wiki/Binary_file#Structure)
 * [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha)
 * [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF)
 * [segments](https://en.wikipedia.org/wiki/Memory_segmentation)
