@@ -60,14 +60,14 @@ where the `lgdt` instruction loads the base address and limit(size) of the globa
 As mentioned above the GDT contains `segment descriptors` which describe memory segments.  Each descriptor is 64-bits in size. The general scheme of a descriptor is:
 
 ```
- 63         56         51   48    45           39        32 
+ 63         56         51   48    45           39        32
 ------------------------------------------------------------
 |             | |B| |A|       | |   | |0|E|W|A|            |
 | BASE 31:24  |G|/|L|V| LIMIT |P|DPL|S|  TYPE | BASE 23:16 |
 |     |     | D   |     | L   | 19:16 |     |     |     | 1   | C   | R   | A   |     |
 | --- |
 
- 31                         16 15                         0 
+ 31                         16 15                         0
 ------------------------------------------------------------
 |                             |                            |
 |        BASE 15:0            |       LIMIT 15:0           |
