@@ -64,7 +64,6 @@ ENTRY(startup_64)
 
 ```assembly
 	leaq	boot_stack_end(%rbx), %rsp
-
 	pushq	$0
 	popfq
 ```
