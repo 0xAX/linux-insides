@@ -4,7 +4,7 @@
 Первые шаги в настройке ядра
 --------------------------------------------------------------------------------
 
-Мы начали изучение внутренностей Linux в предыдущей [части](linux-bootstrap-1.md) и увидели начальную часть кода настройки ядра. Мы остановились на вызове функции `main` (это первая функция, написанная на C) из [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c).
+Мы начали изучение внутренностей Linux в предыдущей [части](linux-bootstrap-1.md) и увидели начальную часть кода настройки ядра. Мы остановились на вызове функции `main` (это первая функция, написанная на C) из [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c).
 
 В этой части мы продолжим исследовать код установки ядра, а именно
 
@@ -177,20 +177,20 @@ lgdt gdt
 
 Полный переход в защищённый режим мы увидим в следующей части, но прежде чем мы сможем перейти в защищённый режим, нужно совершить ещё несколько приготовлений.
 
-Давайте посмотрим на [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c). Мы можем видеть некоторые подпрограммы, которые выполняют инициализацию клавиатуры, инициализацию кучи и т.д. Рассмотрим их.
+Давайте посмотрим на [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c). Мы можем видеть некоторые подпрограммы, которые выполняют инициализацию клавиатуры, инициализацию кучи и т.д. Рассмотрим их.
 
 Копирование параметров загрузки в "нулевую страницу" (zeropage)
 --------------------------------------------------------------------------------
 
-Мы стартуем из подпрограммы `main` в "main.c". Первая функция, которая вызывается в `main` - [`copy_boot_params(void)`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L30). Она копирует заголовок настройки ядра в поле структуры `boot_params`, которая определена в [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L113).
+Мы стартуем из подпрограммы `main` в "main.c". Первая функция, которая вызывается в `main` - [`copy_boot_params(void)`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c#L30). Она копирует заголовок настройки ядра в поле структуры `boot_params`, которая определена в [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/uapi/asm/bootparam.h#L113).
 
 Структура `boot_params` содержит поле `struct setup_header hdr`. Эта структура содержит те же поля, что и в [протоколе загрузки Linux](https://www.kernel.org/doc/Documentation/x86/boot.txt) и заполняется загрузчиком, а так же во время компиляции/сборки ядра. `copy_boot_params` делает две вещи:
 
-1.  Копирует `hdr` из [header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L281) в структуру `boot_params` в поле `setup_header`
+1.  Копирует `hdr` из [header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L281) в структуру `boot_params` в поле `setup_header`
 
 2. Обновляет указатель на командную строку ядра, если ядро было загружено со старым протоколом командной строки.
 
-Обратите внимание на то, что он копирует `hdr` с помощью функции `memcpy`, которая определена в [copy.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/copy.S). Взглянем на неё:
+Обратите внимание на то, что он копирует `hdr` с помощью функции `memcpy`, которая определена в [copy.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/copy.S). Взглянем на неё:
 
 ```assembly
 GLOBAL(memcpy)
@@ -210,7 +210,7 @@ GLOBAL(memcpy)
 ENDPROC(memcpy)
 ```
 
-Да, мы только что перешли в C-код и снова вернулись к ассемблеру :) Прежде всего мы видим, что `memcpy` и другие подпрограммы, расположенные здесь, начинаются и заканчиваются двумя макросами: `GLOBAL` и `ENDPROC`. Макрос `GLOBAL` описан в [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/linkage.h) и определяет директиву `globl`, а так же метку для него. `ENDPROC` описан в [include/linux/linkage.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/linkage.h); отмечает символ `name` в качестве имени функции и заканчивается размером символа `name`.
+Да, мы только что перешли в C-код и снова вернулись к ассемблеру :) Прежде всего мы видим, что `memcpy` и другие подпрограммы, расположенные здесь, начинаются и заканчиваются двумя макросами: `GLOBAL` и `ENDPROC`. Макрос `GLOBAL` описан в [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/asm/linkage.h) и определяет директиву `globl`, а так же метку для него. `ENDPROC` описан в [include/linux/linkage.h](https://github.com/torvalds/linux/blob/v4.16/include/linux/linkage.h); отмечает символ `name` в качестве имени функции и заканчивается размером символа `name`.
 
 Реализация `memcpy` достаточно проста. Во-первых, она помещает значения регистров `si` и `di` в стек для их сохранения, так как они будут меняться в течении работы. Как мы видим из `REALMODE_CFLAGS` в `arch/x86/Makefile` система сборки ядра использует параметр GCC `-mregparm = 3`, поэтому функции получают первые три параметра из регистров `ax`, `dx` и `cx`. Вызов `memcpy` выглядит следующим образом:
 
@@ -229,7 +229,7 @@ memcpy(&boot_params.hdr, &hdr, sizeof hdr);
 Инициализация консоли
 --------------------------------------------------------------------------------
 
-После того как `hdr` скопирован в `boot_params.hdr`, следующим шагом является инициализация консоли с помощью вызова функции `console_init`, определённой в [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/early_serial_console.c).
+После того как `hdr` скопирован в `boot_params.hdr`, следующим шагом является инициализация консоли с помощью вызова функции `console_init`, определённой в [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/early_serial_console.c).
 
 Функция пытается найти опцию `earlyprintk` в командной строке и, если поиск завершился успехом, парсит адрес порта, скорость передачи данных и инициализирует последовательный порт. Значение опции `earlyprintk` может быть одним из следующих:
 
@@ -244,7 +244,7 @@ if (cmdline_find_option_bool("debug"))
     puts("early console in setup code\n");
 ```
 
-Определение `puts` находится в [tty.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/tty.c). Как мы видим, она печатает символ за символом в цикле, вызывая функцию `putchar`. Давайте посмотрим на реализацию `putchar`:
+Определение `puts` находится в [tty.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/tty.c). Как мы видим, она печатает символ за символом в цикле, вызывая функцию `putchar`. Давайте посмотрим на реализацию `putchar`:
 
 ```C
 void __attribute__((section(".inittext"))) putchar(int ch)
@@ -258,7 +258,7 @@ void __attribute__((section(".inittext"))) putchar(int ch)
         serial_putchar(ch);
 }
 ```
-`__attribute__((section(".inittext")))` означает, что код будет находиться в секции `.inittext`. Мы можем найти его в файле компоновщика [setup.ld](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/setup.ld#L19).
+`__attribute__((section(".inittext")))` означает, что код будет находиться в секции `.inittext`. Мы можем найти его в файле компоновщика [setup.ld](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/setup.ld#L19).
 
 Прежде всего, `putchar` проверяет наличие символа `\n` и, если он найден, печатает перед ним `\r`. После этого она выводит символ на экране VGA, вызвав BIOS с прерыванием `0x10`:
 
@@ -286,7 +286,7 @@ static void __attribute__((section(".inittext"))) bios_putchar(int ch)
     reg->gs = gs();
 ```
 
-Давайте посмотри на реализацию [memset](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/copy.S#L36):
+Давайте посмотри на реализацию [memset](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/copy.S#L36):
 
 ```assembly
 GLOBAL(memset)
@@ -312,14 +312,14 @@ ENDPROC(memset)
 
 Остальная часть `memset` делает почти то же самое, что и `memcpy`.
 
-После того как структура `biosregs` заполнена с помощью `memset`, `bios_putchar` вызывает прерывание [0x10](http://www.ctyme.com/intr/rb-0106.htm) для вывода символа. Затем она проверяет, инициализирован ли последовательный порт, и в случае если он инициализирован, записывает в него символ с помощью инструкций [serial_putchar](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/tty.c#L30) и `inb/outb`.
+После того как структура `biosregs` заполнена с помощью `memset`, `bios_putchar` вызывает прерывание [0x10](http://www.ctyme.com/intr/rb-0106.htm) для вывода символа. Затем она проверяет, инициализирован ли последовательный порт, и в случае если он инициализирован, записывает в него символ с помощью инструкций [serial_putchar](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/tty.c#L30) и `inb/outb`.
 
 Инициализация кучи
 --------------------------------------------------------------------------------
 
-После подготовки стека и BSS в [header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S) (смотрите предыдущую [часть](linux-bootstrap-1.md)), ядро должно инициализировать [кучу](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L116) с помощью функции [`init_heap`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L116).
+После подготовки стека и BSS в [header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S) (смотрите предыдущую [часть](linux-bootstrap-1.md)), ядро должно инициализировать [кучу](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c#L116) с помощью функции [`init_heap`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c#L116).
 
-В первую очередь `init_heap` проверяет флаг [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L22) в [`loadflags`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L321) в заголовке настройки ядра и если флаг был установлен, вычисляет конец стека:
+В первую очередь `init_heap` проверяет флаг [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/uapi/asm/bootparam.h#L22) в [`loadflags`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L321) в заголовке настройки ядра и если флаг был установлен, вычисляет конец стека:
 
 ```C
     char *stack_end;
@@ -343,9 +343,9 @@ ENDPROC(memset)
 Проверка CPU
 --------------------------------------------------------------------------------
 
-Следующим шагом является проверка CPU с помощью функции `validate_cpu` из [arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/cpu.c).
+Следующим шагом является проверка CPU с помощью функции `validate_cpu` из [arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/cpu.c).
 
-Она вызывает функцию [`check_cpu`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/cpucheck.c#L112) и передаёт ей два параметра: уровень CPU и необходимый уровень CPU; `check_cpu` проверяет, запущено ли ядро на нужном уровне CPU.
+Она вызывает функцию [`check_cpu`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/cpucheck.c#L112) и передаёт ей два параметра: уровень CPU и необходимый уровень CPU; `check_cpu` проверяет, запущено ли ядро на нужном уровне CPU.
 
 ```c
 check_cpu(&cpu_level, &req_level, &err_flags);
@@ -362,7 +362,7 @@ if (cpu_level < req_level) {
 
 Следующим шагом является обнаружение памяти с помощью функции `detect_memory`. `detect_memory` в основном предоставляет карту доступной оперативной памяти для CPU. Она использует различные программные интерфейсы для обнаружения памяти, такие как `0xe820`, `0xe801` и `0x88`. Здесь мы будем рассматривать только реализацию **0xE820**.
 
-Давайте посмотрим на реализацию фуцнкции `detect_memory_e820` в [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/memory.c). Прежде всего, функция `detect_memory_e820` инициализирует структуру `biosregs`, как мы видели выше, и заполняет регистры специальными значениями для вызова `0xe820`:
+Давайте посмотрим на реализацию фуцнкции `detect_memory_e820` в [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/memory.c). Прежде всего, функция `detect_memory_e820` инициализирует структуру `biosregs`, как мы видели выше, и заполняет регистры специальными значениями для вызова `0xe820`:
 
 ```assembly
     initregs(&ireg);
@@ -424,7 +424,7 @@ static void set_bios_mode(void)
 Инициализация клавиатуры
 --------------------------------------------------------------------------------
 
-Следующим шагом является инициализация клавиатуры с помощью вызова функции [`keyboard_init()`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/main.c#L65). Вначале `keyboard_init` инициализирует регистры с помощью функции `initregs`. Затем он вызывает прерывание [0x16](http://www.ctyme.com/intr/rb-1756.htm) для получения статуса клавиатуры.
+Следующим шагом является инициализация клавиатуры с помощью вызова функции [`keyboard_init()`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c#L65). Вначале `keyboard_init` инициализирует регистры с помощью функции `initregs`. Затем он вызывает прерывание [0x16](http://www.ctyme.com/intr/rb-1756.htm) для получения статуса клавиатуры.
 
 ```c
     initregs(&ireg);
@@ -446,7 +446,7 @@ static void set_bios_mode(void)
 
 Первым шагом является получение информации [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep) с помощью вызова функции `query_ist`. Она проверяет уровень CPU, и если он верный, вызывает прерывание `0x15` для получения информации и сохраняет результат в `boot_params`.
 
-Следующая функция - [query_apm_bios](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/apm.c#L21) получает из BIOS информацию об [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management). `query_apm_bios` также вызывает BIOS прерывание `0x15`, но с `ah = 0x53` для проверки поддержки `APM`. После выполнения `0x15`, функция `query_apm_bios` проверяет сигнатуру `PM` (она должна быть равна `0x504d`), флаг переноса (он должен быть равен 0, если есть поддержка `APM`) и значение регистра `cx` (оно должено быть равным 0x02, если имеется поддержка защищённого режима).
+Следующая функция - [query_apm_bios](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/apm.c#L21) получает из BIOS информацию об [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management). `query_apm_bios` также вызывает BIOS прерывание `0x15`, но с `ah = 0x53` для проверки поддержки `APM`. После выполнения `0x15`, функция `query_apm_bios` проверяет сигнатуру `PM` (она должна быть равна `0x504d`), флаг переноса (он должен быть равен 0, если есть поддержка `APM`) и значение регистра `cx` (оно должено быть равным 0x02, если имеется поддержка защищённого режима).
 
 Далее она снова вызывает `0x15`, но с `ax = 0x5304` для отсоединения от интерфейса `APM` и подключению к интерфейсу 32-битного защищённого режима. В итоге она заполняет `boot_params.apm_bios_info` значениями, полученными из BIOS.
 
@@ -458,9 +458,9 @@ static void set_bios_mode(void)
 #endif
 ```
 
-Последняя функция - [`query_edd`](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/edd.c#L122), запрашивает из BIOS информацию об `Enhanced Disk Drive`. Давайте взглянем на реализацию `query_edd`.
+Последняя функция - [`query_edd`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/edd.c#L122), запрашивает из BIOS информацию об `Enhanced Disk Drive`. Давайте взглянем на реализацию `query_edd`.
 
-В первую очередь она читает опцию [edd](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt#L1023) из командной строки ядра и если она установлена в `off`, то `query_edd` завершает свою работу.
+В первую очередь она читает опцию [edd](https://github.com/torvalds/linux/blob/v4.16/Documentation/kernel-parameters.txt#L1023) из командной строки ядра и если она установлена в `off`, то `query_edd` завершает свою работу.
 
 Если EDD включён, `query_edd` сканирует поддерживаемые BIOS жёсткие диски и запрашивает информацию о EDD в следующем цикле:
 
@@ -477,7 +477,7 @@ for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
 }
 ```
 
-где `0x80` - первый жёсткий диск, а значение макроса `EDD_MBR_SIG_MAX` равно 16. Она собирает данные в массив структур [edd_info](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/edd.h#L172). `get_edd_info` проверяет наличие EDD путём вызова прерывания `0x13` с `ah = 0x41` и если EDD присутствует, `get_edd_info` снова вызывает `0x13`, но с `ah = 0x48` и `si`, содержащим адрес буфера, где будет храниться информация о EDD.
+где `0x80` - первый жёсткий диск, а значение макроса `EDD_MBR_SIG_MAX` равно 16. Она собирает данные в массив структур [edd_info](https://github.com/torvalds/linux/blob/v4.16/include/uapi/linux/edd.h#L172). `get_edd_info` проверяет наличие EDD путём вызова прерывания `0x13` с `ah = 0x41` и если EDD присутствует, `get_edd_info` снова вызывает `0x13`, но с `ah = 0x48` и `si`, содержащим адрес буфера, где будет храниться информация о EDD.
 
 Заключение
 --------------------------------------------------------------------------------
@@ -495,8 +495,8 @@ for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
 * [Неплохое объяснение режимов CPU с кодом](http://www.codeproject.com/Articles/45788/The-Real-Protected-Long-mode-assembly-tutorial-for)
 * [Как использовать сегменты с ростом вниз на CPU Intel 386 и более поздних](http://www.sudleyplace.com/dpmione/expanddown.html)
 * [Документация по earlyprintk](http://lxr.free-electrons.com/source/Documentation/x86/earlyprintk.txt)
-* [Параметры ядра](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt)
-* [Последовательная консоль](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/serial-console.txt)
+* [Параметры ядра](https://github.com/torvalds/linux/blob/v4.16/Documentation/kernel-parameters.txt)
+* [Последовательная консоль](https://github.com/torvalds/linux/blob/v4.16/Documentation/serial-console.txt)
 * [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
 * [APM](https://en.wikipedia.org/wiki/Advanced_Power_Management)
 * [Спецификация EDD](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)

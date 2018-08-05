@@ -8,7 +8,7 @@
 
 **ЗАМЕЧАНИЕ: данная часть содержит много ассемблерного кода, так что если вы не знакомы с ним, вы можете прочитать соответствующую литературу**
 
-В предыдущей [части](linux-bootstrap-3.md) мы остановились на переходе к 32-битной точке входа в [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S):
+В предыдущей [части](linux-bootstrap-3.md) мы остановились на переходе к 32-битной точке входа в [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/pmjump.S):
 
 ```assembly
 jmpl	*%eax
@@ -46,7 +46,7 @@ gs             0x18	24
 32-битная точка входа
 --------------------------------------------------------------------------------
 
-Мы можем найти определение 32-битной точки входа в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S):
+Мы можем найти определение 32-битной точки входа в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 	__HEAD
@@ -62,10 +62,10 @@ ENDPROC(startup_32)
 
 В директории `arch/x86/boot/compressed` содержится два файла:
 
-* [head_32.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_32.S)
-* [head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S)
+* [head_32.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_32.S)
+* [head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S)
 
-но мы будем рассматривать только `head_64.S`, потому что, как вы помните, эта книга только о `x86_64`; `head_32.S` в нашем случае не используется. Давайте посмотрим на [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile). Здесь мы можем увидить следующую цель сборки:
+но мы будем рассматривать только `head_64.S`, потому что, как вы помните, эта книга только о `x86_64`; `head_32.S` в нашем случае не используется. Давайте посмотрим на [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/Makefile). Здесь мы можем увидить следующую цель сборки:
 
 ```Makefile
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
@@ -73,7 +73,7 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
 
-Обратите внимание на `$(obj)/head_$(BITS).o`. Это означает, что выбор файла (head_32.o или head_64.o) для линковки будет зависеть от значения `$(BITS)`. `$(BITS)` определён в [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile), основанном на .config файле:
+Обратите внимание на `$(obj)/head_$(BITS).o`. Это означает, что выбор файла (head_32.o или head_64.o) для линковки будет зависеть от значения `$(BITS)`. `$(BITS)` определён в [arch/x86/Makefile](https://github.com/torvalds/linux/blob/v4.16/arch/x86/Makefile), основанном на .config файле:
 
 ```Makefile
 ifeq ($(CONFIG_X86_32),y)
@@ -90,7 +90,7 @@ endif
 Перезагрузка сегментов, если это необходимо
 --------------------------------------------------------------------------------
 
-Как было отмечено выше, мы начинаем с ассемблерного файла [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S). Во-первых, мы видим определение специального атрибута секции перед определением `startup_32`:
+Как было отмечено выше, мы начинаем с ассемблерного файла [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S). Во-первых, мы видим определение специального атрибута секции перед определением `startup_32`:
 
 ```assembly
     __HEAD
@@ -98,13 +98,13 @@ endif
 ENTRY(startup_32)
 ```
 
-`__HEAD` является макросом, определённым в [include/linux/init.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init.h) и представляет собой следующую секцию:
+`__HEAD` является макросом, определённым в [include/linux/init.h](https://github.com/torvalds/linux/blob/v4.16/include/linux/init.h) и представляет собой следующую секцию:
 
 ```C
 #define __HEAD		.section	".head.text","ax"
 ```
 
-с именем `.head.text` и флагами `ax`. В нашем случае эти флаги означают, что секция является [исполняемой](https://en.wikipedia.org/wiki/Executable) или, другими словами, содержит код. Мы можем найти определение этой секции в скрипте компоновщика [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/vmlinux.lds.S):
+с именем `.head.text` и флагами `ax`. В нашем случае эти флаги означают, что секция является [исполняемой](https://en.wikipedia.org/wiki/Executable) или, другими словами, содержит код. Мы можем найти определение этой секции в скрипте компоновщика [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/vmlinux.lds.S):
 
 ```
 SECTIONS
@@ -155,7 +155,7 @@ Be careful parts of head_64.S assume startup_32 is at address 0.
 	movl	%eax, %ss
 ```
 
-Вы помните, что `__BOOT_DS` равен `0x18` (индекс сегмента данных в [глобальной таблице дескрипторов](https://en.wikipedia.org/wiki/Global_Descriptor_Table)). Если `KEEP_SEGMENTS` установлен, мы переходим на ближайшую метку `1f`, иначе обновляем сегментные регистры значением `__BOOT_DS`. Сделать это довольно легко, но есть один интересный момент. Если вы читали предыдущую [часть](linux-bootstrap-3.md), то помните, что мы уже обновили сегментные регистры сразу после перехода в [защищённый режим](https://en.wikipedia.org/wiki/Protected_mode) в [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S). Так почему же нам снова нужно обновить значения в сегментных регистрах? Ответ прост. Ядро Linux также имеет 32-битный протокол загрузки и если загрузчик использует его для загрузки ядра, то весь код до `startup_32` будет пропущен. В этом случае `startup_32` будет первой точкой входа в ядро, и нет никаких гарантий, что сегментные регистры будут находиться в ожидаемом состоянии.
+Вы помните, что `__BOOT_DS` равен `0x18` (индекс сегмента данных в [глобальной таблице дескрипторов](https://en.wikipedia.org/wiki/Global_Descriptor_Table)). Если `KEEP_SEGMENTS` установлен, мы переходим на ближайшую метку `1f`, иначе обновляем сегментные регистры значением `__BOOT_DS`. Сделать это довольно легко, но есть один интересный момент. Если вы читали предыдущую [часть](linux-bootstrap-3.md), то помните, что мы уже обновили сегментные регистры сразу после перехода в [защищённый режим](https://en.wikipedia.org/wiki/Protected_mode) в [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/pmjump.S). Так почему же нам снова нужно обновить значения в сегментных регистрах? Ответ прост. Ядро Linux также имеет 32-битный протокол загрузки и если загрузчик использует его для загрузки ядра, то весь код до `startup_32` будет пропущен. В этом случае `startup_32` будет первой точкой входа в ядро, и нет никаких гарантий, что сегментные регистры будут находиться в ожидаемом состоянии.
 
 После того как мы проверили флаг `KEEP_SEGMENTS` и установили правильное значение в сегментные регистры, следующим шагом будет вычисление разницы между адресом, по которому мы загружены, и адресом, который был указан во время компиляции. Вы помните, что `setup.ld.S` содержит следующее определение в начале секции: `.head.text`: `. = 0`. Это значит, что код в этой секции скомпилирован для запуска по адресу `0`. Мы можем видеть это в выводе `objdump`:
 
@@ -186,7 +186,7 @@ label: pop %reg
         subl	$1b, %ebp
 ```
 
-Как вы помните из предыдущей части, регистр `esi` содержит адрес структуры [boot_params](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L113), которая была заполнена до перехода в защищённый режим. Структура `boot_params` содержит специальное поле `scratch` со смещением `0x1e4`. Это 4 байтное поле будет временным стеком для инструкции `call`. Мы получаем адрес поля `scratch` + `4` байта и помещаем его в регистр `esp`. Мы добавили `4` байта к базовому адресу поля `BP_scratch`, поскольку поле является временным стеком, а стек на архитектуре `x86_64` растёт сверху вниз. Таким образом, наш указатель стека будет указывать на вершину стека. Далее мы видим наш шаблон, который я описал ранее. Мы переходим на метку `1f` и помещаем её адрес в регистр `ebp`, потому что после выполнения инструкции `call` на вершине стека находится адрес возврата. Теперь у нас есть адрес метки `1f` и мы легко сможем получить адрес `startup_32`. Нам просто нужно вычесть адрес метки из адреса, который мы получили из стека:
+Как вы помните из предыдущей части, регистр `esi` содержит адрес структуры [boot_params](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/uapi/asm/bootparam.h#L113), которая была заполнена до перехода в защищённый режим. Структура `boot_params` содержит специальное поле `scratch` со смещением `0x1e4`. Это 4 байтное поле будет временным стеком для инструкции `call`. Мы получаем адрес поля `scratch` + `4` байта и помещаем его в регистр `esp`. Мы добавили `4` байта к базовому адресу поля `BP_scratch`, поскольку поле является временным стеком, а стек на архитектуре `x86_64` растёт сверху вниз. Таким образом, наш указатель стека будет указывать на вершину стека. Далее мы видим наш шаблон, который я описал ранее. Мы переходим на метку `1f` и помещаем её адрес в регистр `ebp`, потому что после выполнения инструкции `call` на вершине стека находится адрес возврата. Теперь у нас есть адрес метки `1f` и мы легко сможем получить адрес `startup_32`. Нам просто нужно вычесть адрес метки из адреса, который мы получили из стека:
 
 ```
 startup_32 (0x0)       +-----------------------+
@@ -262,7 +262,7 @@ ebp            0x100000	0x100000
 	movl	%eax, %esp
 ```
 
-Метка `boot_stack_end` определена в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) и расположена в секции [.bss](https://en.wikipedia.org/wiki/.bss):
+Метка `boot_stack_end` определена в [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S) и расположена в секции [.bss](https://en.wikipedia.org/wiki/.bss):
 
 ```assembly
 	.bss
@@ -284,7 +284,7 @@ boot_stack_end:
 	jnz	no_longmode
 ```
 
-Она определена в [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/verify_cpu.S) и содержит пару вызовов инструкции [CPUID](https://en.wikipedia.org/wiki/CPUID). Данная инструкция
+Она определена в [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/kernel/verify_cpu.S) и содержит пару вызовов инструкции [CPUID](https://en.wikipedia.org/wiki/CPUID). Данная инструкция
 используется для получения информации о процессоре. В нашем случае она проверяет поддержку `long mode` и `SSE` и с помощью регистра `eax` возвращает `0` в случае успеха или `1` в случае неудачи.
 
 Если значение `eax` не равно нулю, то мы переходим на метку `no_longmode`, которая останавливает CPU вызовом инструкции `hlt` до тех пор, пока не произойдёт аппаратное прерывание:
@@ -313,7 +313,7 @@ no_longmode:
 (CONFIG_PHYSICAL_START) используется как минимальная локация.
 ```
 
-Проще говоря, это означает, что ядро с той же конфигурацией может загружаться с разных адресов. С технической точки зрения это делается путём компиляции декомпрессора как [адресно-независимого кода](https://en.wikipedia.org/wiki/Position-independent_code). Если мы посмотрим на [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile), то мы увидим, что декомпрессор действительно скомпилирован с флагом `-fPIC`:
+Проще говоря, это означает, что ядро с той же конфигурацией может загружаться с разных адресов. С технической точки зрения это делается путём компиляции декомпрессора как [адресно-независимого кода](https://en.wikipedia.org/wiki/Position-independent_code). Если мы посмотрим на [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/Makefile), то мы увидим, что декомпрессор действительно скомпилирован с флагом `-fPIC`:
 
 ```Makefile
 KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
@@ -335,7 +335,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 	movl	$LOAD_PHYSICAL_ADDR, %ebx
 ```
 
-Следует помнить, что регистр `ebp` содержит физический адрес метки `startup_32`. Если параметр `CONFIG_RELOCATABLE` включён во время конфигурации ядра, то мы помещаем этот адрес в регистр `ebx`, выравниваем по границе, кратной `2 Мб` и сравниваем его со значением `LOAD_PHYSICAL_ADDR`. `LOAD_PHYSICAL_ADDR` является макросом, определённым в [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/boot.h) и выглядит следующим образом:
+Следует помнить, что регистр `ebp` содержит физический адрес метки `startup_32`. Если параметр `CONFIG_RELOCATABLE` включён во время конфигурации ядра, то мы помещаем этот адрес в регистр `ebx`, выравниваем по границе, кратной `2 Мб` и сравниваем его со значением `LOAD_PHYSICAL_ADDR`. `LOAD_PHYSICAL_ADDR` является макросом, определённым в [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/asm/boot.h) и выглядит следующим образом:
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -368,7 +368,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 
 Здесь мы настраиваем базовый адрес `глобальной таблицы дескрипторов` на адрес, где мы фактически загружены, и загружаем таблицу с помощью инструкции `lgdt`.
 
-Чтобы понять магию смещений `gdt`, нам нужно взглянуть на определение `глобальной таблицы дескрипторов`. Мы можем найти его определение в том же [файле](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) исходного кода:
+Чтобы понять магию смещений `gdt`, нам нужно взглянуть на определение `глобальной таблицы дескрипторов`. Мы можем найти его определение в том же [файле](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S) исходного кода:
 
 ```assembly
 	.data
@@ -456,7 +456,7 @@ Long mode является расширением унаследованного
 
 Инструкция `rep stosl` записывает значение `eax` в `edi`, увеличивает значение в регистре `edi` на `4` и уменьшает значение в регистре `ecx` на `1`. Эта операция будет повторятся до тех пор, пока значение регистра `ecx` больше нуля. Вот почему мы установили `ecx` в `6144` (или `BOOT_INIT_PGT_SIZE/4`).
 
-Структура `pgtable` определена в конце файла [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S):
+Структура `pgtable` определена в конце файла [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S):
 
 ```assembly
 	.section ".pgtable","a",@nobits
@@ -542,7 +542,7 @@ pgtable:
 	wrmsr
 ```
 
-Здесь мы помещаем флаг `MSR_EFER` (который определён в [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/msr-index.h#L7)) в регистр `ecx` и вызываем инструкцию `rdmsr`, которая считывает регистр [MSR](http://en.wikipedia.org/wiki/Model-specific_register). После выполнения `rdmsr`, полученные данные будут находится в `edx:eax`, которые будут зависеть от значения `ecx`. Далее мы проверяем бит `EFER_LME` инструкцией `btsl` и с помощью инструкции `wrmsr` записываем данные из `eax` в регистр `MSR`.
+Здесь мы помещаем флаг `MSR_EFER` (который определён в [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/uapi/asm/msr-index.h#L7)) в регистр `ecx` и вызываем инструкцию `rdmsr`, которая считывает регистр [MSR](http://en.wikipedia.org/wiki/Model-specific_register). После выполнения `rdmsr`, полученные данные будут находится в `edx:eax`, которые будут зависеть от значения `ecx`. Далее мы проверяем бит `EFER_LME` инструкцией `btsl` и с помощью инструкции `wrmsr` записываем данные из `eax` в регистр `MSR`.
 
 На следующем шаге мы помещаем адрес сегмента кода ядра в стек (мы определили его в GDT) и помещаем адрес функции `startup_64` в `eax`.
 
