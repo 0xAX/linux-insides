@@ -145,7 +145,7 @@ Be careful parts of head_64.S assume startup_32 is at address 0.
 Таким образом, если бит `KEEP_SEGMENTS` в `loadflags` не установлен, то сегментные регистры `ds`, `ss` и `es` должны быть установлены в индекс сегмента данных с базовым адресом `0`. Что мы и делаем:
 
 ```C
-	testb $(1 << 6), BP_loadflags(%esi)
+	testb $KEEP_SEGMENTS, BP_loadflags(%esi)
 	jnz 1f
 
 	cli
@@ -333,8 +333,6 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 	jge	1f
 #endif
 	movl	$LOAD_PHYSICAL_ADDR, %ebx
-1:
-	addl	$z_extract_offset, %ebx
 ```
 
 Следует помнить, что регистр `ebp` содержит физический адрес метки `startup_32`. Если параметр `CONFIG_RELOCATABLE` включён во время конфигурации ядра, то мы помещаем этот адрес в регистр `ebx`, выравниваем по границе, кратной `2 Мб` и сравниваем его со значением `LOAD_PHYSICAL_ADDR`. `LOAD_PHYSICAL_ADDR` является макросом, определённым в [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/boot.h) и выглядит следующим образом:
@@ -350,9 +348,10 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 После всех расчётов у нас в распоряжении `ebp`, содержащий адрес, по которому будет происходить загрузка, и `ebx`, содержащий адрес, по которому ядро будет перемещено после декомпрессии. Но это еще не конец. Сжатый образ ядра должен быть перемещён в конец буфера декомпрессии, чтобы упростить вычисления местоположения, по которому ядро будет расположено позже:
 
 ```assembly
-movl	BP_init_size(%esi), %eax
-subl	$_end, %eax
-addl	%eax, %ebx
+1:
+    movl	BP_init_size(%esi), %eax
+    subl	$_end, %eax
+    addl	%eax, %ebx
 ```
 
 мы помещаем значение из `boot_params.BP_init_size` (или значение заголовка настройки ядра из `hdr.init_size`) в регистр `eax`. `BP_init_size` содержит наибольшее значение между сжатым и распакованным [vmlinux](https://en.wikipedia.org/wiki/Vmlinux). Затем мы вычитаем адрес символа `_end` из этого значения и добавляем результат вычитания в регистр `ebx`, который хранит базовый адрес для декомпрессии ядра.
@@ -373,6 +372,11 @@ addl	%eax, %ebx
 
 ```assembly
 	.data
+gdt64:
+	.word	gdt_end - gdt
+	.long	0
+	.word	0
+	.quad   0
 gdt:
 	.word	gdt_end - gdt
 	.long	gdt
@@ -490,7 +494,7 @@ pgtable:
 	leal	pgtable + 0x1000(%ebx), %edi
 	leal	0x1007(%edi), %eax
 	movl	$4, %ecx
-1:  movl	%eax, 0x00(%edi)
+1:  movl	%eax, 0(%edi)
 	addl	$0x00001000, %eax
 	addl	$8, %edi
 	decl	%ecx
