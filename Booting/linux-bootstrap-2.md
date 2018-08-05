@@ -186,7 +186,7 @@ lgdt gdt
 
 Структура `boot_params` содержит поле `struct setup_header hdr`. Эта структура содержит те же поля, что и в [протоколе загрузки Linux](https://www.kernel.org/doc/Documentation/x86/boot.txt) и заполняется загрузчиком, а так же во время компиляции/сборки ядра. `copy_boot_params` делает две вещи:
 
-1.  Копирует `hdr` из [header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L281) в структуру `boot_params` в поле `setup_header`
+1.  Копирует `hdr` из [header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L281) в поле `setup_header` в структуре `boot_params`
 
 2. Обновляет указатель на командную строку ядра, если ядро было загружено со старым протоколом командной строки.
 
