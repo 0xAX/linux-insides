@@ -1,4 +1,4 @@
-linux-insides
+Linux Indside на русском
 ===============
 
 **[Оригинальный проект](https://github.com/0xAX/linux-insides)**
@@ -9,15 +9,16 @@ linux-insides
 
 **Вопросы/Предложения по переводу**: Не стесняйтесь задавать любые вопросы и предложения мне на [email](mailto:proninyaroslav@mail.ru).
 
+**Электронные версии книги**: вы можете найти PDF/EPUB/MOBI в [GitBook](https://legacy.gitbook.com/book/proninyaroslav/linux-insides-ru/details) или в папке репозитория [Ebooks](https://github.com/proninyaroslav/linux-insides-ru/tree/master/Ebooks) (периодически обновляется).
+
 Поддержка
 ---------------
 
-Если вам нравится`linux-insides-ru`, вы можете поддержать **автора перевода** следующими способами. Если у вас возникли проблемы с оплатой или вы хотите пожертвовать иным способом, свяжитесь со мной: `proninyaroslav@mail.ru`. Спасибо!
+Если вам нравится `linux-insides-ru`, вы можете поддержать **автора перевода** следующими способами. Если у вас возникли проблемы с оплатой или вы хотите пожертвовать иным способом, свяжитесь со мной: `proninyaroslav@mail.ru`. Спасибо!
 
  - **Yandex Money**: `410011738561939`
  - **PayPal**: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=GWWYZSCKPAB2Q)
- - **Amazon.com eGift Cards**: просто выберите сумму и введите e-mail `proninyaroslav@mail.ru`
-в gift card details https://www.amazon.com/gp/product/B004LLIKVU/
+ - **Amazon.com eGift Cards**: просто выберите сумму и введите e-mail `proninyaroslav@mail.ru` в gift card details https://www.amazon.com/gp/product/B004LLIKVU/
 
 Таккже вы можете поддержать **оригинального автора** следующими способами:
 
