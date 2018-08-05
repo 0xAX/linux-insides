@@ -378,10 +378,10 @@ jmp	*%rax
 --------------------------------------------------------------------------------
 
 * [Рандомизация размещения адресного пространства](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
-* [initrd](http://en.wikipedia.org/wiki/Initrd)
-* [long mode](http://en.wikipedia.org/wiki/Long_mode)
+* [initrd](https://en.wikipedia.org/wiki/Initrd)
+* [long mode](https://en.wikipedia.org/wiki/Long_mode)
 * [bzip2](http://www.bzip.org/)
-* [Инструкция RDdRand](http://en.wikipedia.org/wiki/RdRand)
-* [Счётчик временных меток](http://en.wikipedia.org/wiki/Time_Stamp_Counter)
-* [Программируемый интервальный таймер](http://en.wikipedia.org/wiki/Intel_8253)
+* [Инструкция RDdRand](https://en.wikipedia.org/wiki/RdRand)
+* [Счётчик временных меток](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
+* [Программируемый интервальный таймер](https://en.wikipedia.org/wiki/Intel_8253)
 * [Предыдущий пост](linux-bootstrap-4.md)
