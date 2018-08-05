@@ -9,7 +9,7 @@ Linux Inside на русском
 
 **Вопросы/Предложения по переводу**: Не стесняйтесь задавать любые вопросы и предложения мне на [email](mailto:proninyaroslav@mail.ru).
 
-**Электронные версии книги**: вы можете найти PDF/EPUB/MOBI в [GitBook](https://legacy.gitbook.com/book/proninyaroslav/linux-insides-ru/details) или в папке репозитория [Ebooks](https://github.com/proninyaroslav/linux-insides-ru/tree/master/Ebooks) (периодически обновляется).
+**Электронные версии книги**: вы можете найти PDF/EPUB/MOBI в [GitBook](https://legacy.gitbook.com/book/proninyaroslav/linux-insides-ru/details) или в папке репозитория [Ebooks](https://github.com/proninyaroslav/linux-insides-ru/tree/master/Ebooks) (периодически обновляется). Также вы можете сгенерировать их [самостоятельно](https://github.com/proninyaroslav/linux-insides-ru/tree/master/Scripts).
 
 Поддержка
 ---------------
