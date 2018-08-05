@@ -1,4 +1,4 @@
-Linux Indside на русском
+Linux Inside на русском
 ===============
 
 **[Оригинальный проект](https://github.com/0xAX/linux-insides)**
