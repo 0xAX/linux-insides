@@ -357,6 +357,24 @@ if (cpu_level < req_level) {
 
 `check_cpu` проверяет флаги CPU, наличие [long mode](http://en.wikipedia.org/wiki/Long_mode) в случае x86_64 (64-битного) CPU, проверяет поставщика процессора и делает специальные подготовки для некоторых производителей, такие как отключение SSE+SSE2 для AMD в случае их отсутствия и т.д.
 
+На следующем этапе вы видим вызов функции `set_bios_mode`. Эта функция реализована только для режима `x86_64`:
+
+```C
+static void set_bios_mode(void)
+{
+#ifdef CONFIG_X86_64
+	struct biosregs ireg;
+
+	initregs(&ireg);
+	ireg.ax = 0xec00;
+	ireg.bx = 2;
+	intcall(0x15, &ireg, NULL);
+#endif
+}
+```
+
+Функция `set_bios_mode` выполняет прерывание `0x15`, чтобы сообщить BIOS, что будет использоваться [long mode](https://en.wikipedia.org/wiki/Long_mode) (если `bx == 2`).
+
 Обнаружение памяти
 --------------------------------------------------------------------------------
 
@@ -402,24 +420,6 @@ if (cpu_level < req_level) {
 [    0.000000] BIOS-e820: [mem 0x000000003ffe0000-0x000000003fffffff] reserved
 [    0.000000] BIOS-e820: [mem 0x00000000fffc0000-0x00000000ffffffff] reserved
 ```
-
-Затем вы видим вызов функции `set_bios_mode`. Эта функция реализована только для режима `x86_64`:
-
-```C
-static void set_bios_mode(void)
-{
-#ifdef CONFIG_X86_64
-	struct biosregs ireg;
-
-	initregs(&ireg);
-	ireg.ax = 0xec00;
-	ireg.bx = 2;
-	intcall(0x15, &ireg, NULL);
-#endif
-}
-```
-
-Функция `set_bios_mode` выполняет прерывание `0x15`, чтобы сообщить BIOS, что будет использоваться [long mode](https://en.wikipedia.org/wiki/Long_mode) (если `bx == 2`).
 
 Инициализация клавиатуры
 --------------------------------------------------------------------------------
