@@ -10,7 +10,7 @@ linux-insides
 **Вопросы/Предложения по переводу**: Не стесняйтесь задавать любые вопросы и предложения мне на [email](mailto:proninyaroslav@mail.ru).
 
 Поддержка
----
+---------------
 
 Если вам нравится`linux-insides-ru`, вы можете поддержать **автора перевода** следующими способами. Если у вас возникли проблемы с оплатой или вы хотите пожертвовать иным способом, свяжитесь со мной: `proninyaroslav@mail.ru`. Спасибо!
 
@@ -24,7 +24,7 @@ linux-insides
 [![Помочь с помощью bitcoin](https://img.shields.io/badge/donate-bitcoin-green.svg)](https://www.coinbase.com/checkouts/0bfa452a41cf52c0b3f99500b4f31685) [![Присоединиться к чату https://gitter.im/0xAX/linux-insides](https://badges.gitter.im/0xAX/linux-insides.svg)](https://gitter.im/0xAX/linux-insides?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Участие
---------------
+---------------
 
 Если у Вас возникнут какие-либо проблемы, не стесняйтесь создавать [issues](https://github.com/proninyaroslav/linux-insides-ru) или [pull-request](https://github.com/proninyaroslav/linux-insides-ru/pulls).
 
@@ -32,7 +32,8 @@ linux-insides
 
 ![image](http://oi58.tinypic.com/23upobq.jpg)
 
-# Список рассылки
+Список рассылки
+---------------
 
 Оригинальный проект имеет список рассылки Google Group для изучения исходного кода ядра. Вот несколько инструкций о том, как его использовать.
 
@@ -61,6 +62,6 @@ https://groups.google.com/forum/#!forum/kernelhacking
 [proninyaroslav](https://github.com/proninyaroslav)
 
 Лицензия
--------------
+---------------
 
 Распространяется на условиях лицензии [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
