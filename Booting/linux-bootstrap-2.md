@@ -60,19 +60,19 @@ where the `lgdt` instruction loads the base address and limit(size) of the globa
 As mentioned above the GDT contains `segment descriptors` which describe memory segments.  Each descriptor is 64-bits in size. The general scheme of a descriptor is:
 
 ```
- 63         56         51   48    45           39        32
+ 63         56         51   48    45           39        32 
 ------------------------------------------------------------
 |             | |B| |A|       | |   | |0|E|W|A|            |
 | BASE 31:24  |G|/|L|V| LIMIT |P|DPL|S|  TYPE | BASE 23:16 |
-|     |     | D   |     | L   | 19:16 |     |     |     | 1   | C   | R   | A   |     |
-| --- |
+|             | |D| |L| 19:16 | |   | |1|C|R|A|            |
+------------------------------------------------------------
 
- 31                         16 15                         0
+ 31                         16 15                         0 
 ------------------------------------------------------------
 |                             |                            |
 |        BASE 15:0            |       LIMIT 15:0           |
-|     |     |
-| --- |
+|                             |                            |
+------------------------------------------------------------
 ```
 
 Don't worry, I know it looks a little scary after real mode, but it's easy. For example LIMIT 15:0 means that bits 0-15 of Limit are located at the beginning of the Descriptor. The rest of it is in LIMIT 19:16, which is located at bits 48-51 of the Descriptor. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
@@ -98,10 +98,11 @@ To determine if the segment is a code or data segment, we can check its Ex(bit 4
 A segment can be of one of the following types:
 
 ```
-| Type Field                  | Descriptor Type | Description                        |
-| --------------------------- | --------------- | ---------------------------------- |
-| Decimal                     |                 |
-| 0    E    W   A             |                 |
+--------------------------------------------------------------------------------------
+|           Type Field        | Descriptor Type | Description                        |
+|-----------------------------|-----------------|------------------------------------|
+| Decimal                     |                 |                                    |
+|             0    E    W   A |                 |                                    |
 | 0           0    0    0   0 | Data            | Read-Only                          |
 | 1           0    0    0   1 | Data            | Read-Only, accessed                |
 | 2           0    0    1   0 | Data            | Read/Write                         |
@@ -110,7 +111,7 @@ A segment can be of one of the following types:
 | 5           0    1    0   1 | Data            | Read-Only, expand-down, accessed   |
 | 6           0    1    1   0 | Data            | Read/Write, expand-down            |
 | 7           0    1    1   1 | Data            | Read/Write, expand-down, accessed  |
-| C    R   A                  |                 |
+|                  C    R   A |                 |                                    |
 | 8           1    0    0   0 | Code            | Execute-Only                       |
 | 9           1    0    0   1 | Code            | Execute-Only, accessed             |
 | 10          1    0    1   0 | Code            | Execute/Read                       |
@@ -119,6 +120,7 @@ A segment can be of one of the following types:
 | 14          1    1    0   1 | Code            | Execute-Only, conforming, accessed |
 | 13          1    1    1   0 | Code            | Execute/Read, conforming           |
 | 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed |
+--------------------------------------------------------------------------------------
 ```
 
 As we can see the first bit(bit 43) is `0` for a _data_ segment and `1` for a _code_ segment. The next three bits (40, 41, 42) are either `EWA`(*E*xpansion *W*ritable *A*ccessible) or CRA(*C*onforming *R*eadable *A*ccessible).
@@ -143,8 +145,8 @@ Segment registers contain segment selectors as in real mode. However, in protect
 ```
  15             3 2  1     0
 -----------------------------
-| Index | TI  | RPL |
-| ----- |
+|      Index     | TI | RPL |
+-----------------------------
 ```
 
 Where,
