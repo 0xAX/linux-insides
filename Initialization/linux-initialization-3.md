@@ -1,21 +1,21 @@
-Kernel initialization. Part 3.
+Инициализация ядра. Часть 3.
 ================================================================================
 
-Last preparations before the kernel entry point
+Последние приготовления перед точкой входа ядра
 --------------------------------------------------------------------------------
 
-This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue to dive into the linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we call the `start_kernel` function, we must do some preparations. So let's continue.
+Это третья часть серии Инициализация ядра. В предыдущей [части](linux-initialization-2.md) мы увидели начальную обработку прерываний и исключений и продолжим погружение в процесс инициализации ядра Linux в текущей части. Наша следующая точка - "точка входа ядра" - функция `start_kernel` из файла [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). Да, технически это не точка входа ядра, а начало кода ядра, который не зависит от определенной архитектуры. Но прежде чем мы вызовем функцию `start_kernel`, мы должны совершить некоторые приготовления. Давайте продолжим.
 
-boot_params again
+Снова boot_params
 --------------------------------------------------------------------------------
 
-In the previous part we stopped at setting Interrupt Descriptor Table and loading it in the `IDTR` register. At the next step after this we can see a call of the `copy_bootdata` function:
+В предыдущей части мы остановились на настройке таблицы векторов прерываний и её загрузки в регистр `IDTR`. На следующем шаге мы можем видеть вызов функции `copy_bootdata`:
 
 ```C
 copy_bootdata(__va(real_mode_data));
 ```
 
-This function takes one argument - virtual address of the `real_mode_data`. Remember that we passed the address of the `boot_params` structure from [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L114)  to the `x86_64_start_kernel` function as first argument in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
+Эта функция принимает один аргумент - виртуальный адрес `real_mode_data`. Вы должны помнить, что мы передали адрес структуры  `boot_params` из [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L114) в функцию `x86_64_start_kernel` как первый параметр  [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
 
 ```
 	/* rsi is pointer to real mode structure with interesting info.
@@ -23,19 +23,19 @@ This function takes one argument - virtual address of the `real_mode_data`. Reme
 	movq	%rsi, %rdi
 ```
 
-Now let's look at `__va` macro. This macro defined in [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c):
+Взглянем на макрос `__va`. Этот макрос определён в [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c):
 
 ```C
 #define __va(x)                 ((void *)((unsigned long)(x)+PAGE_OFFSET))
 ```
 
-where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of the `boot_params` structure and pass it to the `copy_bootdata` function, where we copy `real_mod_data` to the `boot_params` which is declared in the [arch/x86/kernel/setup.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.h)
+где `PAGE_OFFSET` это `__PAGE_OFFSET` (`0xffff880000000000` и базовый виртуальный адрес прямого отображения всей физической памяти). Таким образом, мы получаем виртуальный адрес структуры `boot_params` и передаем его функции `copy_bootdata`, в которой мы копируем `real_mod_data` в ` boot_params`, объявленный в файле [arch/x86/include/asm/setup.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/setup.h)
 
 ```C
 extern struct boot_params boot_params;
 ```
 
-Let's look at the `copy_boot_data` implementation:
+Давайте посмотрим на реализацию `copy_boot_data`:
 
 ```C
 static void __init copy_bootdata(char *real_mode_data)
@@ -53,9 +53,9 @@ static void __init copy_bootdata(char *real_mode_data)
 }
 ```
 
-First of all, note that this function is declared with `__init` prefix. It means that this function will be used only during the initialization and used memory will be freed.
+Прежде всего, обратите внимание на то что эта функция объявлена с префиксом `__init`. Это означает, что эта функция будет использоваться только во время инициализации и используемая память будет освобождена.
 
-We can see declaration of two variables for the kernel command line and copying `real_mode_data` to the `boot_params` with the `memcpy` function. The next call of the `sanitize_boot_params` function which fills some fields of the `boot_params` structure like `ext_ramdisk_image` and etc... if bootloaders which fail to initialize unknown fields in `boot_params` to zero. After this we're getting address of the command line with the call of the `get_cmd_line_ptr` function:
+Мы можем видеть объявление двух переменных для командной строки ядра и копирование `real_mode_data` в `boot_params` функцией `memcpy`. Далее следует вызов функции `sanitize_boot_params`, который заполняет некоторые поля структуры `boot_params`, такие как `ext_ramdisk_image` и т.д, если загрузчики не инициализировал неизвестные поля в `boot_params` нулём. После этого мы получаем адрес командной строки вызовом функции `get_cmd_line_ptr`:
 
 ```C
 unsigned long cmd_line_ptr = boot_params.hdr.cmd_line_ptr;
@@ -63,26 +63,26 @@ cmd_line_ptr |= (u64)boot_params.ext_cmd_line_ptr << 32;
 return cmd_line_ptr;
 ```
 
-which gets the 64-bit address of the command line from the kernel boot header and returns it. In the last step we check `cmd_line_ptr`, getting its virtual address and copy it to the `boot_command_line` which is just an array of bytes:
+который получает 64-битный адрес командной строки из заголовочного файла загрузки ядра и возвращает его. На последнем шаге мы проверяем `cmd_line_ptr`, получаем его виртуальный адрес и копируем его в `boot_command_line`, который представляет собой всего лишь массив байтов:
 
 ```C
 extern char __initdata boot_command_line[];
 ```
 
-After this we will have copied kernel command line and `boot_params` structure. In the next step we can see call of the `load_ucode_bsp` function which loads processor microcode, but we will not see it here.
+После этого мы имеем скопированную командную строку ядра и структуру `boot_params`. На следующем шаге мы видим вызов функции `load_ucode_bsp`, которая загружает процессорный микрокод, его мы здесь не увидим.
 
-After microcode was loaded we can see the check of the `console_loglevel` and the `early_printk` function which prints `Kernel Alive` string. But you'll never see this output because `early_printk` is not initialized yet. It is a minor bug in the kernel and i sent the patch - [commit](http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=91d8f0416f3989e248d3a3d3efb821eda10a85d2) and you will see it in the mainline soon. So you can skip this code.
+После загрузки микрокода мы можем видеть проверку функции `console_loglevel` и` early_printk`, которая печатает строку `Kernel Alive`. Но вы никогда не увидите этот вывод, потому что `early_printk` еще не инициализирован. Это небольшая ошибка в ядре, и я (*[0xAX](https://github.com/0xAX), автор оригинальной книги - Прим. пер.*) отправил патч - [коммит](http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=91d8f0416f3989e248d3a3d3efb821eda10a85d2), чтобы исправить её.
 
-Move on init pages
+Перемещение по страницам инициализации
 --------------------------------------------------------------------------------
 
-In the next step, as we have copied `boot_params` structure, we need to move from the early page tables to the page tables for initialization process. We already set early page tables for switchover, you can read about it in the previous [part](https://proninyaroslav.gitbooks.io/linux-insides-ru/content/Initialization/linux-initialization-1.html) and dropped all it in the `reset_early_page_tables` function (you can read about it in the previous part too) and kept only kernel high mapping. After this we call:
+На следующем шаге, когда мы скопировали структуру `boot_params`, нам нужно перейти от ранних таблиц страницы к таблицам страниц для процесса инициализации. Мы уже настроили ранние таблицы страниц, вы можете прочитать об этом в предыдущей [части](linux-initialization-1.md) и сбросили это всё функцией `reset_early_page_tables` (вы тоже можете прочитать об этом в предыдущей части) и сохранили только отображение страниц ядра. После этого мы вызываем функцию `clear_page`:
 
 ```C
 	clear_page(init_level4_pgt);
 ```
 
-function and pass `init_level4_pgt` which also defined in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) and looks:
+с аргументом `init_level4_pgt`, который определён в файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) и выглядит следующим образом:
 
 ```assembly
 NEXT_PAGE(init_level4_pgt)
@@ -93,7 +93,7 @@ NEXT_PAGE(init_level4_pgt)
 	.quad   level3_kernel_pgt - __START_KERNEL_map + _PAGE_TABLE
 ```
 
-which maps first 2 gigabytes and 512 megabytes for the kernel code, data and bss. `clear_page` function defined in the [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/clear_page_64.S) let's look on this function:
+который отображает первые 2 гигабайта и 512 мегабайта для кода ядра, данных и bss. Функция `clear_page` определена в  [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/clear_page_64.S). Давайте взглянем на неё:
 
 ```assembly
 ENTRY(clear_page)
@@ -121,30 +121,30 @@ ENTRY(clear_page)
 	ENDPROC(clear_page)
 ```
 
-As you can understand from the function name it clears or fills with zeros page tables. First of all note that this function starts with the `CFI_STARTPROC` and `CFI_ENDPROC` which are expands to GNU assembly directives:
+Как вы можете понять из имени функции, она очищает или заполняет нулями таблицы страниц. Прежде всего обратите внимание, что эта функция начинается с макросов `CFI_STARTPROC` и `CFI_ENDPROC`, которые раскрываются до директив сборки GNU:
 
 ```C
 #define CFI_STARTPROC           .cfi_startproc
 #define CFI_ENDPROC             .cfi_endproc
 ```
 
-and used for debugging. After `CFI_STARTPROC` macro we zero out `eax` register and put 64 to the `ecx` (it will be a counter). Next we can see loop which starts with the `.Lloop` label and it starts from the `ecx` decrement. After it we put zero from the `rax` register to the `rdi` which contains the base address of the `init_level4_pgt` now and do the same procedure seven times but every time move `rdi` offset on 8. After this we will have first 64 bytes of the `init_level4_pgt` filled with zeros. In the next step we put the address of the `init_level4_pgt` with 64-bytes offset to the `rdi` again and repeat all operations until `ecx` reaches zero. In the end we will have `init_level4_pgt` filled with zeros.
+и использутся для отладки. После макроса `CFI_STARTPROC` мы обнуляем регистр `eax` и помещаем 64 в `ecx` (это будет счётчик). Далее мы видим цикл, который начинается с метки `.Lloop` и декремента `ecx`. После этого мы помещаем нуль из регистра `rax` в `rdi`, который теперь содержит базовый адрес `init_level4_pgt` и выполняем ту же процедуру семь раз, но каждый раз перемещаем смещение `rdi` на 8. После этого первые 64 байта `init_level4_pgt` будут заполнены нулями. На следующем шаге мы снова помещаем адрес `init_level4_pgt` со смещением 64 байта в `rdi` и повторяем все операции до тех пор, пока `ecx` не будет равен нулю. В итоге мы получим `init_level4_pgt`, заполненный нулями.
 
-As we have `init_level4_pgt` filled with zeros, we set the last `init_level4_pgt` entry to kernel high mapping with the:
+После заполнения нулями `init_level4_pgt`, мы помещяем последнюю запись в `init_level4_pgt`:
 
 ```C
 init_level4_pgt[511] = early_level4_pgt[511];
 ```
 
-Remember that we dropped all `early_level4_pgt` entries in the `reset_early_page_table` function and kept only kernel high mapping there.
+Вы должны помнить, что мы очистили все записи `early_level4_pgt` функцией `reset_early_page_table` и сохранили только отображение ядра.
 
-The last step in the `x86_64_start_kernel` function is the call of the:
+Последний шаг в функции `x86_64_start_kernel` заключается в вызове функции `x86_64_start_reservations`:
 
 ```C
 x86_64_start_reservations(real_mode_data);
 ```
 
-function with the `real_mode_data` as argument. The `x86_64_start_reservations` function defined in the same source code file as the `x86_64_start_kernel` function and looks:
+с аргументов `real_mode_data`. Функция `x86_64_start_reservations` определена в том же файле исходного кода что и `x86_64_start_kernel`:
 
 ```C
 void __init x86_64_start_reservations(char *real_mode_data)
@@ -158,9 +158,9 @@ void __init x86_64_start_reservations(char *real_mode_data)
 }
 ```
 
-You can see that it is the last function before we are in the kernel entry point - `start_kernel` function. Let's look what it does and how it works.
+Это последняя функция перед входом в точку ядра - `start_kernel`. Давайте посмотрим, что он делает и как это работает.
 
-Last step before kernel entry point
+Последний шаг перед точкой входа в ядро
 --------------------------------------------------------------------------------
 
 First of all we can see in the `x86_64_start_reservations` function the check for `boot_params.hdr.version`:
