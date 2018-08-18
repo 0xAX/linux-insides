@@ -358,7 +358,7 @@ The most interesting thing here is the `initial_stack`. This symbol is defined i
 
 ```assembly
 GLOBAL(initial_stack)
-    .quad  init_thread_union+THREAD_SIZE-8
+    .quad  init_thread_union + THREAD_SIZE - SIZEOF_PTREGS
 ```
 
 The `GLOBAL` is already familiar to us from. It defined in the [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/linkage.h) header file expands to the `global` symbol definition:
@@ -378,19 +378,13 @@ The `THREAD_SIZE` macro is defined in the [arch/x86/include/asm/page_64_types.h]
 
 We consider when the [kasan](http://lxr.free-electrons.com/source/Documentation/kasan.txt) is disabled and the `PAGE_SIZE` is `4096` bytes. So the `THREAD_SIZE` will expands to `16` kilobytes and represents size of the stack of a thread. Why is `thread`? You may already know that each [process](https://en.wikipedia.org/wiki/Process_%28computing%29) may have parent [processes](https://en.wikipedia.org/wiki/Parent_process) and [child](https://en.wikipedia.org/wiki/Child_process) processes. Actually, a parent process and child process differ in stack. A new kernel stack is allocated for a new process. In the Linux kernel this stack is represented by the [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with the `thread_info` structure.
 
-And as we can see the `init_thread_union` is represented by the `thread_union` [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B). Earlier this union looked like:
+The `init_thread_union` is represented by the `thread_union`. And the `thread_union` is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/0500871f21b237b2bea2d9db405eadf78e5aab05/include/linux/sched.h) file like the following:
 
 ```C
 union thread_union {
-         struct thread_info thread_info;
-         unsigned long stack[THREAD_SIZE/sizeof(long)];
-};
-```
-
-but from the Linux kernel `4.9-rc1` release, `thread_info` was moved to the `task_struct` structure which represents a thread. So, for now `thread_union` looks like:
-
-```C
-union thread_union {
+#ifndef CONFIG_ARCH_TASK_STRUCT_ON_STACK
+	struct task_struct task;
+#endif
 #ifndef CONFIG_THREAD_INFO_IN_TASK
 	struct thread_info thread_info;
 #endif
@@ -398,27 +392,36 @@ union thread_union {
 };
 ```
 
-where the `CONFIG_THREAD_INFO_IN_TASK` kernel configuration option is enabled for `x86_64` architecture. So, as we consider only `x86_64` architecture in this book, an instance of `thread_union` will contain only stack and `thread_info` structure will be placed in the `task_struct`.
+The `CONFIG_ARCH_TASK_STRUCT_ON_STACK` kernel configuration option is only enabled for `ia64` architecture, and the `CONFIG_THREAD_INFO_IN_TASK` kernel configuration option is enabled for `x86_64` architecture. Thus the `thread_info` structure will be placed in `task_struct` structure instead of the `thread_union` union. So, as we consider only `x86_64` architecture in this book, an instance of `thread_union` will contain only stack and task.
 
-The `init_thread_union` looks like:
+The `init_thread_union` is defined in the [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/blob/a6214385005333202c8cc1744c7075a9e1a26b9a/include/asm-generic/vmlinux.lds.h) file as part of the `INIT_TASK_DATA` macro like the following:
+
+```C
+#define INIT_TASK_DATA(align)  \
+	...                    \
+	init_thread_union = .; \
+	...
+```
+
+This macro is used in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/c62e43202e7cf50ca24bce58b255df7bf5de69d0/arch/x86/kernel/vmlinux.lds.S) file like the following:
 
 ```
-union thread_union init_thread_union __init_task_data = {
-#ifndef CONFIG_THREAD_INFO_IN_TASK
-	INIT_THREAD_INFO(init_task)
-#endif
-};
+.data : AT(ADDR(.data) - LOAD_OFFSET) {
+	...
+	/* init_task */
+	INIT_TASK_DATA(THREAD_SIZE)
+	...
+} :data
 ```
 
-which represents just thread stack. Now we may understand this expression:
+Now we may understand this expression:
 
 ```assembly
 GLOBAL(initial_stack)
-    .quad  init_thread_union+THREAD_SIZE-8
+    .quad  init_thread_union + THREAD_SIZE - SIZEOF_PTREGS
 ```
 
-
-that `initial_stack` symbol points to the start of the `thread_union.stack` array + `THREAD_SIZE` which is 16 killobytes and - 8 bytes. Here we need to subtract `8` bytes at the top of stack. This is necessary to guarantee illegal access of the next page memory.
+that `initial_stack` symbol points to the start of the `thread_union.stack` array + `THREAD_SIZE` which is 16 killobytes and - `SIZEOF_PTREGS` which is 168 bytes. Here we need to subtract `168` bytes at the top of stack. This is necessary to guarantee illegal access of the next page memory.
 
 After the early boot stack is set, to update the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table) with the `lgdt` instruction:
 
