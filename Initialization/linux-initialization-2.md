@@ -240,7 +240,10 @@ load_idt((const struct desc_ptr *)&idt_descr);
 Where `idt_descr` is:
 
 ```C
-struct desc_ptr idt_descr = { NR_VECTORS * 16 - 1, (unsigned long) idt_table };
+struct desc_ptr idt_descr __ro_after_init = {
+	.size		= (IDT_ENTRIES * 2 * sizeof(unsigned long)) - 1,
+	.address	= (unsigned long) idt_table,
+};
 ```
 
 and `load_idt` just executes `lidt` instruction:
