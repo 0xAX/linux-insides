@@ -357,7 +357,7 @@ popfq
 
 ```assembly
 GLOBAL(initial_stack)
-    .quad  init_thread_union+THREAD_SIZE-8
+    .quad  init_thread_union + THREAD_SIZE - SIZEOF_PTREGS
 ```
 
 Макрос `GLOBAL` нам уже знаком. Он определён в файле [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/linkage.h) и раскрывается до `глобального` определения символа:
@@ -377,7 +377,7 @@ GLOBAL(initial_stack)
 
 когда [kasan](http://lxr.free-electrons.com/source/Documentation/kasan.txt) отключён, а `PAGE_SIZE` равен `4096` байтам. Таким образом, `THREAD_SIZE` будет раскрыт до `16` килобайт и представляет собой размер стека потока. Почему `потока`? Возможно, вы уже знаете, что каждый [процесс](https://en.wikipedia.org/wiki/Process_%28computing%29) может иметь [родительские](https://en.wikipedia.org/wiki/Parent_process) и [дочерние](https://en.wikipedia.org/wiki/Child_process) процессы. На самом деле родительский и дочерний процесс различаются в стеке. Для нового процесса выделяется новый стек ядра. В ядре Linux этот стек представлен [объединением (union)](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) со структурой `thread_info`.
 
-Как мы видим, `init_thread_union` представлен [объединением](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) `thread_union`. Раньше это объединение выглядело следующим образом:
+`init_thread_union` представлен `thread_union` и определён в файле [include/linux/sched.h](https://github.com/torvalds/linux/blob/0500871f21b237b2bea2d9db405eadf78e5aab05/include/linux/sched.h):
 
 ```C
 union thread_union {
@@ -390,6 +390,9 @@ union thread_union {
 
 ```C
 union thread_union {
+#ifndef CONFIG_ARCH_TASK_STRUCT_ON_STACK
+	struct task_struct task;
+#endif
 #ifndef CONFIG_THREAD_INFO_IN_TASK
 	struct thread_info thread_info;
 #endif
@@ -397,27 +400,37 @@ union thread_union {
 };
 ```
 
-где `CONFIG_THREAD_INFO_IN_TASK` - параметр конфигурации ядра, включённый для архитектуры `x86_64`. Поскольку в этой книге мы рассматриваем только архитектуру `x86_64`, экземпляр `thread_union` будет содержать только стек, а структура `thread_info` будет помещена в `task_struct`.
+где `CONFIG_THREAD_INFO_IN_TASK` - параметр конфигурации ядра, включённый для архитектуры `ia64`, а `CONFIG_THREAD_INFO_IN_TASK` - параметр конфигурации ядра, включённый для архитектуры `x86_64`. Таким образом, структура `thread_info` будет помещена в структуру `task_struct` вместо объединения `thread_union`. Поскольку в этой книге мы рассматриваем только архитектуру `x86_64`, экземпляр `thread_union` будет содержать только стек и задачу
 
-`init_thread_union` выглядит следующим образом:
+`init_thread_union` определён в файле [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/blob/a6214385005333202c8cc1744c7075a9e1a26b9a/include/asm-generic/vmlinux.lds.h) как часть макроса `INIT_TASK_DATA`:
+
+```C
+#define INIT_TASK_DATA(align)  \
+	...                    \
+	init_thread_union = .; \
+	...
+```
+
+Данный макрос используется в [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/c62e43202e7cf50ca24bce58b255df7bf5de69d0/arch/x86/kernel/vmlinux.lds.S) следующим образом:
 
 ```
-union thread_union init_thread_union __init_task_data = {
-#ifndef CONFIG_THREAD_INFO_IN_TASK
-	INIT_THREAD_INFO(init_task)
-#endif
-};
+.data : AT(ADDR(.data) - LOAD_OFFSET) {
+	...
+	/* init_task */
+	INIT_TASK_DATA(THREAD_SIZE)
+	...
+} :data
 ```
 
-который представляет собой только стек потока. Теперь мы можем понять это выражение:
+Теперь мы можем понять это выражение:
 
 ```assembly
 GLOBAL(initial_stack)
-    .quad  init_thread_union+THREAD_SIZE-8
+    .quad  init_thread_union + THREAD_SIZE - SIZEOF_PTREGS
 ```
 
 
-где символ `initial_stack` указывает на начало массива `thread_union.stack` + `THREAD_SIZE`, который равен 16 килобайтам и - 8 байт. Здесь нам нужно вычесть `8` байт в верхней части стека. Это необходимо для обеспечения незаконного доступа следующей страницы памяти.
+где символ `initial_stack` указывает на начало массива `thread_union.stack` + `THREAD_SIZE`, который равен 16 килобайтам и - `SIZEOF_PTREGS` равный 168 байтам. Здесь нам нужно вычесть `168` байт в верхней части стека. Это необходимо для обеспечения незаконного доступа следующей страницы памяти.
 
 После настройки начального загрузочного стека, необходимо обновить [глобальную таблицу дескрипторов](https://en.wikipedia.org/wiki/Global_Descriptor_Table) с помощью инструкции `lgdt`:
 
