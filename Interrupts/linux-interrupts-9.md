@@ -43,7 +43,7 @@ $ systemd-cgls -k | grep ksoft
 ├─  43 [ksoftirqd/7]
 ```
 
-The `spawn_ksoftirqd` function starts this these threads. As we can see this function called as early [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/index.html):
+The `spawn_ksoftirqd` function starts this these threads. As we can see this function called as early [initcall](https://kernelnewbies.org/Documents/InitcallMechanism):
 
 ```C
 early_initcall(spawn_ksoftirqd);
@@ -521,7 +521,7 @@ If you have any questions or suggestions, write me a comment or ping me at [twit
 Links
 --------------------------------------------------------------------------------
 
-* [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/index.html)
+* [initcall](https://kernelnewbies.org/Documents/InitcallMechanism)
 * [IF](https://en.wikipedia.org/wiki/Interrupt_flag)
 * [eflags](https://en.wikipedia.org/wiki/FLAGS_register)
 * [CPU masks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
