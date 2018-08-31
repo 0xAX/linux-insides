@@ -10,7 +10,7 @@
 * [Инициализация](Initialization/README.md)
     * [Первые шаги в ядре](Initialization/linux-initialization-1.md)
     * [Начальная обработка прерываний и исключений](Initialization/linux-initialization-2.md)
-    * [Last preparations before the kernel entry point](Initialization/linux-initialization-3.md)
+    * [Последние приготовления перед точкой входа в ядро](Initialization/linux-initialization-3.md)
     * [Kernel entry point](Initialization/linux-initialization-4.md)
     * [Continue architecture-specific boot-time initializations](Initialization/linux-initialization-5.md)
     * [Architecture-specific initializations, again...](Initialization/linux-initialization-6.md)

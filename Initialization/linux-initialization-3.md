@@ -1,10 +1,10 @@
 Инициализация ядра. Часть 3.
 ================================================================================
 
-Последние приготовления перед точкой входа ядра
+Последние приготовления перед точкой входа в ядро
 --------------------------------------------------------------------------------
 
-Это третья часть серии Инициализация ядра. В предыдущей [части](linux-initialization-2.md) мы увидели начальную обработку прерываний и исключений и продолжим погружение в процесс инициализации ядра Linux в текущей части. Наша следующая точка - "точка входа ядра" - функция `start_kernel` из файла [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). Да, технически это не точка входа ядра, а начало кода ядра, который не зависит от определенной архитектуры. Но прежде чем мы вызовем функцию `start_kernel`, мы должны совершить некоторые приготовления. Давайте продолжим.
+Это третья часть серии Инициализация ядра. В предыдущей [части](linux-initialization-2.md) мы увидели начальную обработку прерываний и исключений и продолжим погружение в процесс инициализации ядра Linux в текущей части. Наша следующая точка - "точка входа в ядро" - функция `start_kernel` из файла [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). Да, технически это не точка входа в ядро, а начало кода ядра, который не зависит от определённой архитектуры. Но прежде чем мы вызовем функцию `start_kernel`, мы должны совершить некоторые приготовления. Давайте продолжим.
 
 Снова boot_params
 --------------------------------------------------------------------------------
@@ -15,7 +15,7 @@
 copy_bootdata(__va(real_mode_data));
 ```
 
-Эта функция принимает один аргумент - виртуальный адрес `real_mode_data`. Вы должны помнить, что мы передали адрес структуры  `boot_params` из [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L114) в функцию `x86_64_start_kernel` как первый параметр  [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
+Эта функция принимает один аргумент - виртуальный адрес `real_mode_data`. Вы должны помнить, что мы передали адрес структуры  `boot_params` из [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L114) в функцию `x86_64_start_kernel` как первый параметр в [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
 
 ```
 	/* rsi is pointer to real mode structure with interesting info.
@@ -29,7 +29,7 @@ copy_bootdata(__va(real_mode_data));
 #define __va(x)                 ((void *)((unsigned long)(x)+PAGE_OFFSET))
 ```
 
-где `PAGE_OFFSET` это `__PAGE_OFFSET` (`0xffff880000000000` и базовый виртуальный адрес прямого отображения всей физической памяти). Таким образом, мы получаем виртуальный адрес структуры `boot_params` и передаем его функции `copy_bootdata`, в которой мы копируем `real_mod_data` в ` boot_params`, объявленный в файле [arch/x86/include/asm/setup.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/setup.h)
+где `PAGE_OFFSET` это `__PAGE_OFFSET` (`0xffff880000000000` и базовый виртуальный адрес прямого отображения всей физической памяти). Таким образом, мы получаем виртуальный адрес структуры `boot_params` и передаём его функции `copy_bootdata`, в которой мы копируем `real_mod_data` в ` boot_params`, объявленный в файле [arch/x86/include/asm/setup.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/setup.h)
 
 ```C
 extern struct boot_params boot_params;
@@ -53,9 +53,9 @@ static void __init copy_bootdata(char *real_mode_data)
 }
 ```
 
-Прежде всего, обратите внимание на то что эта функция объявлена с префиксом `__init`. Это означает, что эта функция будет использоваться только во время инициализации и используемая память будет освобождена.
+Прежде всего, обратите внимание на то, что эта функция объявлена с префиксом `__init`. Это означает, что эта функция будет использоваться только во время инициализации и используемая память будет освобождена.
 
-Мы можем видеть объявление двух переменных для командной строки ядра и копирование `real_mode_data` в `boot_params` функцией `memcpy`. Далее следует вызов функции `sanitize_boot_params`, который заполняет некоторые поля структуры `boot_params`, такие как `ext_ramdisk_image` и т.д, если загрузчики не инициализировал неизвестные поля в `boot_params` нулём. После этого мы получаем адрес командной строки вызовом функции `get_cmd_line_ptr`:
+Мы можем видеть объявление двух переменных для командной строки ядра и копирование `real_mode_data` в `boot_params` функцией `memcpy`. Далее следует вызов функции `sanitize_boot_params`, которая заполняет некоторые поля структуры `boot_params`, такие как `ext_ramdisk_image` и т.д, если загрузчики не инициализировал неизвестные поля в `boot_params` нулём. После этого мы получаем адрес командной строки вызовом функции `get_cmd_line_ptr`:
 
 ```C
 unsigned long cmd_line_ptr = boot_params.hdr.cmd_line_ptr;
@@ -69,14 +69,14 @@ return cmd_line_ptr;
 extern char __initdata boot_command_line[];
 ```
 
-После этого мы имеем скопированную командную строку ядра и структуру `boot_params`. На следующем шаге мы видим вызов функции `load_ucode_bsp`, которая загружает процессорный микрокод, его мы здесь не увидим.
+После этого мы имеем скопированную командную строку ядра и структуру `boot_params`. На следующем шаге происходит вызов функции `load_ucode_bsp`, которая загружает процессорный микрокод, его мы здесь не увидим.
 
-После загрузки микрокода мы можем видеть проверку функции `console_loglevel` и` early_printk`, которая печатает строку `Kernel Alive`. Но вы никогда не увидите этот вывод, потому что `early_printk` еще не инициализирован. Это небольшая ошибка в ядре, и я (*[0xAX](https://github.com/0xAX), автор оригинальной книги - Прим. пер.*) отправил патч - [коммит](http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=91d8f0416f3989e248d3a3d3efb821eda10a85d2), чтобы исправить её.
+После загрузки микрокода мы можем видеть проверку функции `console_loglevel` и `early_printk`, которая печатает строку `Kernel Alive`. Но вы никогда не увидите этот вывод, потому что `early_printk` еще не инициализирован. Это небольшая ошибка в ядре, и я (*[0xAX](https://github.com/0xAX), автор оригинальной книги - Прим. пер.*) отправил патч - [коммит](http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=91d8f0416f3989e248d3a3d3efb821eda10a85d2), чтобы исправить её.
 
 Перемещение по страницам инициализации
 --------------------------------------------------------------------------------
 
-На следующем шаге, когда мы скопировали структуру `boot_params`, нам нужно перейти от ранних таблиц страницы к таблицам страниц для процесса инициализации. Мы уже настроили ранние таблицы страниц, вы можете прочитать об этом в предыдущей [части](linux-initialization-1.md) и сбросили это всё функцией `reset_early_page_tables` (вы тоже можете прочитать об этом в предыдущей части) и сохранили только отображение страниц ядра. После этого мы вызываем функцию `clear_page`:
+На следующем шаге, когда мы скопировали структуру `boot_params`, нам нужно перейти от начальных таблиц страниц к таблицам страниц для процесса инициализации. Мы уже настроили начальные таблицы страниц, вы можете прочитать об этом в предыдущей [части](linux-initialization-1.md) и сбросили это всё функцией `reset_early_page_tables` (вы тоже можете прочитать об этом в предыдущей части) и сохранили только отображение страниц ядра. После этого мы вызываем функцию `clear_page`:
 
 ```C
 	clear_page(init_level4_pgt);
@@ -93,7 +93,7 @@ NEXT_PAGE(init_level4_pgt)
 	.quad   level3_kernel_pgt - __START_KERNEL_map + _PAGE_TABLE
 ```
 
-который отображает первые 2 гигабайта и 512 мегабайта для кода ядра, данных и bss. Функция `clear_page` определена в  [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/clear_page_64.S). Давайте взглянем на неё:
+Он отображает первые 2 гигабайта и 512 мегабайта для кода ядра, данных и bss. Функция `clear_page` определена в  [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/clear_page_64.S). Давайте взглянем на неё:
 
 ```assembly
 ENTRY(clear_page)
@@ -128,9 +128,9 @@ ENTRY(clear_page)
 #define CFI_ENDPROC             .cfi_endproc
 ```
 
-и использутся для отладки. После макроса `CFI_STARTPROC` мы обнуляем регистр `eax` и помещаем 64 в `ecx` (это будет счётчик). Далее мы видим цикл, который начинается с метки `.Lloop` и декремента `ecx`. После этого мы помещаем нуль из регистра `rax` в `rdi`, который теперь содержит базовый адрес `init_level4_pgt` и выполняем ту же процедуру семь раз, но каждый раз перемещаем смещение `rdi` на 8. После этого первые 64 байта `init_level4_pgt` будут заполнены нулями. На следующем шаге мы снова помещаем адрес `init_level4_pgt` со смещением 64 байта в `rdi` и повторяем все операции до тех пор, пока `ecx` не будет равен нулю. В итоге мы получим `init_level4_pgt`, заполненный нулями.
+и используются для отладки. После макроса `CFI_STARTPROC` мы обнуляем регистр `eax` и помещаем 64 в `ecx` (это будет счётчик). Далее мы видим цикл, который начинается с метки `.Lloop` и декремента `ecx`. После этого мы помещаем нуль из регистра `rax` в `rdi`, который теперь содержит базовый адрес `init_level4_pgt` и выполняем ту же процедуру семь раз, но каждый раз перемещаем смещение `rdi` на 8. После этого первые 64 байта `init_level4_pgt` будут заполнены нулями. На следующем шаге мы снова помещаем адрес `init_level4_pgt` со смещением 64 байта в `rdi` и повторяем все операции до тех пор, пока `ecx` не будет равен нулю. В итоге мы получим `init_level4_pgt`, заполненный нулями.
 
-После заполнения нулями `init_level4_pgt`, мы помещяем последнюю запись в `init_level4_pgt`:
+После заполнения нулями `init_level4_pgt`, мы помещаем последнюю запись в `init_level4_pgt`:
 
 ```C
 init_level4_pgt[511] = early_level4_pgt[511];
@@ -163,38 +163,38 @@ void __init x86_64_start_reservations(char *real_mode_data)
 Последний шаг перед точкой входа в ядро
 --------------------------------------------------------------------------------
 
-First of all we can see in the `x86_64_start_reservations` function the check for `boot_params.hdr.version`:
+В первую очередь мы видим проверку `boot_params.hdr.version` в функции `x86_64_start_reservations`:
 
 ```C
 if (!boot_params.hdr.version)
 	copy_bootdata(__va(real_mode_data));
 ```
 
-and if it is zero we call `copy_bootdata` function again with the virtual address of the `real_mode_data` (read about its implementation).
+и если он равен нулю то снова вызывается функция `copy_bootdata` с виртуальным адресом `real_mode_data`.
 
-In the next step we can see the call of the `reserve_ebda_region` function which defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head.c). This function reserves memory block for the `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area located in the top of conventional memory and contains data about ports, disk parameters and etc...
+В следующем шаге мы видим вызов функции `reserve_ebda_region`, определённой в файле [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head.c). Эта функция резервирует блок памяти для `EBDA` или `Extended BIOS Data Area`. `Extended BIOS Data Area` расположена в верхних адресах основной области памяти (conventional memory) и содержит данные о портах, параметрах диска и т.д.
 
-Let's look on the `reserve_ebda_region` function. It starts from the checking is paravirtualization enabled or not:
+Давайте посмотрим на функцию `reserve_ebda_region`. Он начинается с проверки, включена ли паравиртуализация или нет:
 
 ```C
 if (paravirt_enabled())
 	return;
 ```
 
-we exit from the `reserve_ebda_region` function if paravirtualization is enabled because if it enabled the extended bios data area is absent. In the next step we need to get the end of the low memory:
+если паравиртуализация включена, мы выходим из функции `reserve_ebda_region`, потому что `EBDA` отсутствует. На следующем шаге нам нужно получить конец нижней области памяти:
 
 ```C
 lowmem = *(unsigned short *)__va(BIOS_LOWMEM_KILOBYTES);
 lowmem <<= 10;
 ```
 
-We're getting the virtual address of the BIOS low memory in kilobytes and convert it to bytes with shifting it on 10 (multiply on 1024 in other words). After this we need to get the address of the extended BIOS data are with the:
+Мы получаем виртуальный адрес нижней области памяти BIOS в килобайтах и преобразуем его в байты, сдвигая его на 10 (другими словами умножаем на 1024). После этого нам нужно получить адрес `EBDA`:
 
 ```C
 ebda_addr = get_bios_ebda();
 ```
 
-where `get_bios_ebda` function defined in the [arch/x86/include/asm/bios_ebda.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bios_ebda.h) and looks like:
+Функция `get_bios_ebda` определена в файле [arch/x86/include/asm/bios_ebda.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bios_ebda.h):
 
 ```C
 static inline unsigned int get_bios_ebda(void)
@@ -205,7 +205,7 @@ static inline unsigned int get_bios_ebda(void)
 }
 ```
 
-Let's try to understand how it works. Here we can see that we converting physical address `0x40E` to the virtual, where `0x0040:0x000e` is the segment which contains base address of the extended BIOS data area. Don't worry that we are using `phys_to_virt` function for converting a physical address to virtual address. You can note that previously we have used `__va` macro for the same point, but `phys_to_virt` is the same:
+Давайте попробуем понять, как это работает. Мы видим преобразование физического адреса `0x40E` в виртуальный, где `0x0040: 0x000e` - это сегмент, который содержит базовый адрес `EBDA`. Не беспокойтесь о том, что мы используем функцию `phys_to_virt` для преобразования физического адреса в виртуальный. Вы можете заметить, что ранее мы использовали макрос `__va`, но `phys_to_virt` - это то же самое:
 
 ```C
 static inline void *phys_to_virt(phys_addr_t address)
@@ -214,7 +214,7 @@ static inline void *phys_to_virt(phys_addr_t address)
 }
 ```
 
-only with one difference: we pass argument with the `phys_addr_t` which depends on `CONFIG_PHYS_ADDR_T_64BIT`:
+только с одним отличием: мы передаем аргумент `phys_addr_t`, который зависит от `CONFIG_PHYS_ADDR_T_64BIT`:
 
 ```C
 #ifdef CONFIG_PHYS_ADDR_T_64BIT
@@ -224,9 +224,9 @@ only with one difference: we pass argument with the `phys_addr_t` which depends 
 #endif
 ```
 
-This configuration option is enabled by `CONFIG_PHYS_ADDR_T_64BIT`. After that we got virtual address of the segment which stores the base address of the extended BIOS data area, we shift it on 4 and return. After this `ebda_addr` variables contains the base address of the extended BIOS data area.
+Мы получили виртуальный адрес сегмента, в котором хранится базовый адрес `EBDA`. Мы сдвигаем его на 4 и возвращаем как результат. После этого переменная `ebda_addr` содержит базовый адрес `EBDA`.
 
-In the next step we check that address of the extended BIOS data area and low memory is not less than `INSANE_CUTOFF` macro
+На следующем шаге мы проверяем, что адрес `EBDA` и нижняя область памяти не меньше, чем значение макроса `INSANE_CUTOFF`:
 
 ```C
 if (ebda_addr < INSANE_CUTOFF)
@@ -236,13 +236,13 @@ if (lowmem < INSANE_CUTOFF)
 	lowmem = LOWMEM_CAP;
 ```
 
-which is:
+где `INSANE_CUTOFF`:
 
 ```C
 #define INSANE_CUTOFF		0x20000U
 ```
 
-or 128 kilobytes. In the last step we get lower part in the low memory and extended bios data area and call `memblock_reserve` function which will reserve memory region for extended bios data between low memory and one megabyte mark:
+или 128 килобайт. На последнем шаге мы получаем нижнюю часть нижней области памяти и `EBDA` и вызываем функцию `memblock_reserve`, которая резервирует область памяти для `EBDA` между нижней областью памяти и одномегабайтной меткой:
 
 ```C
 lowmem = min(lowmem, ebda_addr);
@@ -250,36 +250,36 @@ lowmem = min(lowmem, LOWMEM_CAP);
 memblock_reserve(lowmem, 0x100000 - lowmem);
 ```
 
-`memblock_reserve` function is defined at [mm/block.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/block.c) and takes two parameters:
+функция `memblock_reserve` определена в [mm/block.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/block.c) и принимает два аргумента:
 
-* base physical address;
-* region size.
+* базовый физический адрес;
+* размер области памяти.
 
-and reserves memory region for the given base address and size. `memblock_reserve` is the first function in this book from linux kernel memory manager framework. We will take a closer look on memory manager soon, but now let's look at its implementation.
+и резервирует область памяти для заданного базового адреса и размера. `memblock_reserve` - первая функция в этой книге из фреймворка менеджера памяти ядра Linux. Мы скоро рассмотрим менеджер памяти, но пока что посмотрим на его реализацию.
 
-First touch of the linux kernel memory manager framework
+Первое знакомство с фреймворком менеджера памяти ядра Linux
 --------------------------------------------------------------------------------
 
-In the previous paragraph we stopped at the call of the `memblock_reserve` function and as i said before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function just calls:
+В предыдущем абзаце мы остановились на вызове функции `memblock_reserve` и, как я уже сказал, это первая функция из фреймворка менеджера памяти. Давайте попробуем понять, как это работает. `memblock_reserve` просто вызывает функцию:
 
 ```C
 memblock_reserve_region(base, size, MAX_NUMNODES, 0);
 ```
 
-function and passes 4 parameters there:
+и передаёт ей 4 аргумента:
 
-* physical base address of the memory region;
-* size of the memory region;
-* maximum number of numa nodes;
-* flags.
+* физический базовый адрес области памяти;
+* размер области памяти;
+* максимально число NUMA-узлов;
+* флаги.
 
-At the start of the `memblock_reserve_region` body we can see definition of the `memblock_type` structure:
+В начале тела функции `memblock_reserve_region` мы можем видеть определение структуры `memblock_type`:
 
 ```C
 struct memblock_type *_rgn = &memblock.reserved;
 ```
 
-which presents the type of the memory block and looks:
+которая представляет тип блока памяти:
 
 ```C
 struct memblock_type {
@@ -290,7 +290,7 @@ struct memblock_type {
 };
 ```
 
-As we need to reserve memory block for extended bios data area, the type of the current memory region is reserved where `memblock` structure is:
+Поскольку нам необходимо зарезервировать блок памяти для `EBDA`, тип текущей области памяти зарезервирован так же, где и структура `memblock`:
 
 ```C
 struct memblock {
@@ -304,7 +304,7 @@ struct memblock {
 };
 ```
 
-and describes generic memory block. You can see that we initialize `_rgn` by assigning it to the address of the `memblock.reserved`. `memblock` is the global variable which looks:
+и описывает общий блок памяти. Мы инициализируем `_rgn` адресом `memblock.reserved`. `memblock` - глобальная переменная:
 
 ```C
 struct memblock memblock __initdata_memblock = {
@@ -324,27 +324,27 @@ struct memblock memblock __initdata_memblock = {
 };
 ```
 
-We will not dive into detail of this variable, but we will see all details about it in the parts about memory manager. Just note that `memblock` variable defined with the `__initdata_memblock` which is:
+Мы не будем погружаться в детали этой переменной, но мы увидим все подробности об этом в частях о менеджере памяти. Просто отметьте, что переменная `memblock` определена с помощью` __initdata_memblock`:
 
 ```C
 #define __initdata_memblock __meminitdata
 ```
 
-and `__meminit_data` is:
+где `__meminit_data`:
 
 ```C
 #define __meminitdata    __section(.meminit.data)
 ```
 
-From this we can conclude that all memory blocks will be in the `.meminit.data` section. After we defined `_rgn` we print information about it with `memblock_dbg` macros. You can enable it by passing `memblock=debug` to the kernel command line.
+Из этого можно сделать вывод, что все блоки памяти будут в секции `.meminit.data`. После того как мы определили `_rgn`, мы печатаем информацию об этом с помощью макроса `memblock_dbg`. Вы можете включить его, передав `memblock = debug` в командную строку ядра.
 
-After debugging lines were printed next is the call of the following function:
+После печати строк отладки следует вызов функции `memblock_add_range`:
 
 ```C
 memblock_add_range(_rgn, base, size, nid, flags);
 ```
 
-which adds new memory block region into the `.meminit.data` section. As we do not initialize `_rgn` but it just contains `&memblock.reserved`, we just fill passed `_rgn` with the base address of the extended BIOS data area region, size of this region and flags:
+которая добавляет новую область блока памяти в секцию `.meminit.data`. Поскольку мы не инициализируем `_rgn` и он содержит `&memblock.reserved`, мы просто заполняем переданный `_rgn` базовым адресом `EBDA`, размером этой области  и флагами:
 
 ```C
 if (type->regions[0].size == 0) {
@@ -358,12 +358,12 @@ if (type->regions[0].size == 0) {
 }
 ```
 
-After we filled our region we can see the call of the `memblock_set_region_node` function with two parameters:
+После заполнения нашей области памяти мы видим вызов функции `memblock_set_region_node` с двумя аргументами:
 
-* address of the filled memory region;
-* NUMA node id.
+* адрес заполненной области памяти;
+* id NUMA-узла.
 
-where our regions represented by the `memblock_region` structure:
+где наши области памяти представлены структурой `memblock_region`:
 
 ```C
 struct memblock_region {
@@ -376,13 +376,13 @@ struct memblock_region {
 };
 ```
 
-NUMA node id depends on `MAX_NUMNODES` macro which is defined in the [include/linux/numa.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/numa.h):
+Id NUMA-узла зависит от макроса `MAX_NUMNODES`, определённого в файле [include/linux/numa.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/numa.h):
 
 ```C
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
 ```
 
-where `NODES_SHIFT` depends on `CONFIG_NODES_SHIFT` configuration parameter and defined as:
+где `NODES_SHIFT` зависит от параметра конфигурации `CONFIG_NODES_SHIFT`:
 
 ```C
 #ifdef CONFIG_NODES_SHIFT
@@ -392,7 +392,7 @@ where `NODES_SHIFT` depends on `CONFIG_NODES_SHIFT` configuration parameter and 
 #endif
 ```
 
-`memblick_set_region_node` function just fills `nid` field from `memblock_region` with the given value:
+Функция `memblick_set_region_node` просто заполняет поле `nid` из `memblock_region` заданным значением:
 
 ```C
 static inline void memblock_set_region_node(struct memblock_region *r, int nid)
@@ -401,30 +401,26 @@ static inline void memblock_set_region_node(struct memblock_region *r, int nid)
 }
 ```
 
-After this we will have first reserved `memblock` for the extended bios data area in the `.meminit.data` section. `reserve_ebda_region` function finished its work on this step and we can go back to the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c).
+После этого у нас будет первый зарезервированный `memblock` для `EBDA` в секции `.meminit.data`. Функция `reserve_ebda_region` завершила работу над этим шагом, и мы можем вернуться в [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c).
 
-We finished all preparations before the kernel entry point! The last step in the `x86_64_start_reservations` function is the call of the:
+Мы закончили все приготовления! Последним шагом в функции `x86_64_start_reservations` является вызов функции `start_kernel`:
 
 ```C
 start_kernel()
 ```
 
-function from [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) file.
+расположенной в [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c).
 
-That's all for this part.
-
-Conclusion
+Заключение
 --------------------------------------------------------------------------------
 
-It is the end of the third part about linux kernel insides. In next part we will see the first initialization steps in the kernel entry point - `start_kernel` function. It will be the first step before we will see launch of the first `init` process.
+Это конец третей части инициализации ядра Linux. В следующей части мы увидим первые шаги инициализации в точке входа в ядро - `start_kernel`. Это будет первый шаг, прежде чем мы увидим запуск первого процесса `init`.
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+**От переводчика: пожалуйста, имейте в виду, что английский - не мой родной язык, и я очень извиняюсь за возможные неудобства. Если вы найдёте какие-либо ошибки или неточности в переводе, пожалуйста, пришлите pull request в [linux-insides-ru](https://github.com/proninyaroslav/linux-insides-ru).**
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
-
-Links
+Ссылки
 --------------------------------------------------------------------------------
 
 * [BIOS data area](http://stanislavs.org/helppc/bios_data_area.html)
-* [What is in the extended BIOS data area on a PC?](http://www.kryslix.com/nsfaq/Q.6.html)
-* [Previous part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md)
+* [Что такое Extended BIOS Data Area](http://www.kryslix.com/nsfaq/Q.6.html)
+* [Предыдущая часть](linux-initialization-2.md)
