@@ -165,71 +165,51 @@ extern const char early_idt_handler_array[NUM_EXCEPTION_VECTORS][EARLY_IDT_HANDL
 
 The `early_idt_handler_array` is `288` bytes array which contains address of exception entry points every nine bytes. Every nine bytes of this array consist of two bytes optional instruction for pushing dummy error code if an exception does not provide it, two bytes instruction for pushing vector number to the stack and five bytes of `jump` to the common exception handler code.
 
-As we can see, We're filling only first 32 `IDT` entries in the loop, because all of the early setup runs with interrupts disabled, so there is no need to set up interrupt handlers for vectors greater than `32`. The `early_idt_handler_array` array contains generic idt handlers and we can find its definition in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) assembly file. For now we will skip it, but will look it soon. Before this we will look on the implementation of the `set_intr_gate` macro.
+As we can see, We're filling only first 32 `IDT` entries in the loop, because all of the early setup runs with interrupts disabled, so there is no need to set up interrupt handlers for vectors greater than `32`. The `early_idt_handler_array` array contains generic idt handlers and we can find its definition in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) assembly file. For now we will skip it, but will look it soon. Before this we will look on the implementation of the `set_intr_gate` function.
 
-The `set_intr_gate` macro is defined in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h) header file and looks:
-
-```C
-#define set_intr_gate(n, addr)                         \
-         do {                                                            \
-                 BUG_ON((unsigned)n > 0xFF);                             \
-                 _set_gate(n, GATE_INTERRUPT, (void *)addr, 0, 0,        \
-                           __KERNEL_CS);                                 \
-                 _trace_set_gate(n, GATE_INTERRUPT, (void *)trace_##addr,\
-                                 0, 0, __KERNEL_CS);                     \
-         } while (0)
-```
-
-First of all it checks with that passed interrupt number is not greater than `255` with `BUG_ON` macro. We need to do this check because we can have only `256` interrupts. After this, it make a call of the `_set_gate` function which writes address of an interrupt gate to the `IDT`:
+The `set_intr_gate` function is defined in the [arch/x86/kernel/idt.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/idt.c) source file and looks:
 
 ```C
-static inline void _set_gate(int gate, unsigned type, void *addr,
-	                         unsigned dpl, unsigned ist, unsigned seg)
+static void set_intr_gate(unsigned int n, const void *addr)
 {
-         gate_desc s;
-         pack_gate(&s, type, (unsigned long)addr, dpl, ist, seg);
-         write_idt_entry(idt_table, gate, &s);
-         write_trace_idt_entry(gate, &s);
+	struct idt_data data;
+
+	BUG_ON(n > 0xFF);
+
+	memset(&data, 0, sizeof(data));
+	data.vector	= n;
+	data.addr	= addr;
+	data.segment	= __KERNEL_CS;
+	data.bits.type	= GATE_INTERRUPT;
+	data.bits.p	= 1;
+
+        idt_setup_from_table(idt_table, &data, 1, false);
 }
 ```
 
-At the start of `_set_gate` function we can see call of the `pack_gate` function which fills `gate_desc` structure with the given values:
+First of all it checks with that passed interrupt number is not greater than `255` with `BUG_ON` macro. We need to do this check because we can have only `256` interrupts. After this, we setup the idt data with the given values. And then we call `idt_setup_from_table` function which looks like:
 
 ```C
-static inline void pack_gate(gate_desc *gate, unsigned type, unsigned long func,
-                             unsigned dpl, unsigned ist, unsigned seg)
+static void
+idt_setup_from_table(gate_desc *idt, const struct idt_data *t, int size, bool sys)
 {
-        gate->offset_low        = PTR_LOW(func);
-        gate->segment           = __KERNEL_CS;
-        gate->ist               = ist;
-        gate->p                 = 1;
-        gate->dpl               = dpl;
-        gate->zero0             = 0;
-        gate->zero1             = 0;
-        gate->type              = type;
-        gate->offset_middle     = PTR_MIDDLE(func);
-        gate->offset_high       = PTR_HIGH(func);
+	gate_desc desc;
+
+	for (; size > 0; t++, size--) {
+		desc.offset_low    = (u16) t->addr;
+		desc.segment	   = (u16) t->segment
+		desc.bits	   = t->bits;
+		desc.offset_middle = (u16) (t->addr >> 16);
+		desc.offset_high   = (u32) (t->addr >> 32);
+		desc.reserved	   = 0;
+		memcpy(&idt[t->vector], &desc, sizeof(desc));
+		if (sys)
+			set_bit(t->vector, system_vectors);
+	}
 }
 ```
 
-As I mentioned above, we fill gate descriptor in this function. We fill three parts of the address of the interrupt handler with the address which we got in the main loop (address of the interrupt handler entry point). We are using three following macros to split address on three parts:
-
-```C
-#define PTR_LOW(x) ((unsigned long long)(x) & 0xFFFF)
-#define PTR_MIDDLE(x) (((unsigned long long)(x) >> 16) & 0xFFFF)
-#define PTR_HIGH(x) ((unsigned long long)(x) >> 32)
-```
-
-With the first `PTR_LOW` macro we get the first `2` bytes of the address, with the second `PTR_MIDDLE` we get the second `2` bytes of the address and with the third `PTR_HIGH` macro we get the last `4` bytes of the address. Next we setup the segment selector for interrupt handler, it will be our kernel code segment - `__KERNEL_CS`. In the next step we fill `Interrupt Stack Table` and `Descriptor Privilege Level` (highest privilege level) with zeros. And we set `GAT_INTERRUPT` type in the end. 
-
-Now we have filled IDT entry and we can call `native_write_idt_entry` function which just copies filled `IDT` entry to the `IDT`:
-
-```C
-static inline void native_write_idt_entry(gate_desc *idt, int entry, const gate_desc *gate)
-{
-        memcpy(&idt[entry], gate, sizeof(*gate));
-}
-```
+which fill three parts of the address of the interrupt handler with the address which we got in the main loop (address of the interrupt handler entry point). And then we just copy the gate descriptor to the idt entry.
 
 After that main loop will finished, we will have filled `idt_table` array of `gate_desc` structures and we can load `Interrupt Descriptor table` with the call of the:
 
