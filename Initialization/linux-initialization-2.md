@@ -286,52 +286,42 @@ As i wrote above, CPU pushes flag register, `CS` and `RIP` on the stack. So befo
 | %rflags            |
 | %cs                |
 | %rip               |
-| rsp --> error code |
+| error code         | <-- %rsp
 |--------------------|
 ```
 
-Now let's look on the `early_idt_handler_common` implementation. It locates in the same [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S#L343) assembly file and first of all we can see check for [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). We don't need to handle it, so just ignore it in the `early_idt_handler_common`:
+Now let's look on the `early_idt_handler_common` implementation. It locates in the same [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) assembly file and first of all we increment `early_recursion_flag` to prevent recursion in the `early_idt_handler_common`:
 
 ```assembly
-	cmpl $2,(%rsp)
-	je .Lis_nmi
+	incl early_recursion_flag(%rip)
 ```
 
-where `is_nmi`:
+Next we save general registers on the stack:
 
 ```assembly
-is_nmi:
-	addq $16,%rsp
-	INTERRUPT_RETURN
-```
-
-drops an error code and vector number from the stack and call `INTERRUPT_RETURN` which is just expands to the `iretq` instruction. As we checked the vector number and it is not `NMI`, we check `early_recursion_flag` to prevent recursion in the `early_idt_handler_common` and if it's correct we save general registers on the stack:
-
-```assembly
-	pushq %rax
-	pushq %rcx
-	pushq %rdx
 	pushq %rsi
-	pushq %rdi
+	movq 8(%rsp), %rsi
+	movq %rdi, 8(%rsp)
+	pushq %rdx
+	pushq %rcx
+	pushq %rax
 	pushq %r8
 	pushq %r9
 	pushq %r10
 	pushq %r11
+	pushq %rbx
+	pushq %rbp
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
+	UNWIND_HINT_REGS
 ```
 
-We need to do it to prevent wrong values of registers when we return from the interrupt handler. After this we check segment selector in the stack:
+We need to do it to prevent wrong values of registers when we return from the interrupt handler. After this we check the vector number, and if it is `#PF` or [Page Fault](https://en.wikipedia.org/wiki/Page_fault), we put value from the `cr2` to the `rdi` register and call `early_make_pgtable` (we'll see it soon):
 
 ```assembly
-	cmpl $__KERNEL_CS,96(%rsp)
-	jne 11f
-```
-
-which must be equal to the kernel code segment and if it is not we jump on label `11` which prints `PANIC` message and makes stack dump.
-
-After the code segment was checked, we check the vector number, and if it is `#PF` or [Page Fault](https://en.wikipedia.org/wiki/Page_fault), we put value from the `cr2` to the `rdi` register and call `early_make_pgtable` (well see it soon):
-
-```assembly
-	cmpl $14,72(%rsp)
+	cmpq $14,%rsi
 	jnz 10f
 	GET_CR2_INTO(%rdi)
 	call early_make_pgtable
@@ -339,21 +329,23 @@ After the code segment was checked, we check the vector number, and if it is `#P
 	jz 20f
 ```
 
-If vector number is not `#PF`, we restore general purpose registers from the stack:
+If vector number is not `#PF`, we call `early_fixup_exception` function with passing kernel stack pointer. (refer to [x86-64 calling convention](https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions)):
 
 ```assembly
-	popq %r11
-	popq %r10
-	popq %r9
-	popq %r8
-	popq %rdi
-	popq %rsi
-	popq %rdx
-	popq %rcx
-	popq %rax
+10:
+	movq %rsp,%rdi
+	call early_fixup_exception
 ```
 
-and exit from the handler with `iret`.
+We'll see the implementaion of the `early_fixup_exception` function later.
+
+```assembly
+20:
+	decl early_recursion_flag(%rip)
+	jmp restore_regs_and_return_to_kernel
+```
+
+After we decrement the `early_recursion_flag`, we restore registers which we saved earlier from the stack and return from the handler with `iretq`.
 
 It is the end of the first interrupt handler. Note that it is very early interrupt handler, so it handles only Page Fault now. We will see handlers for the other interrupts, but now let's look on the page fault handler.
 
