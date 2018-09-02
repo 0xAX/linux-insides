@@ -208,7 +208,7 @@ function which just reads and returns atomic counter from the `Main Counter Regi
 ACPI PM timer
 --------------------------------------------------------------------------------
 
-The seconds clock source is [ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf). Implementation of this clock source is located in the [drivers/clocksource/acpi_pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/clocksource_acpi_pm.c) source code file and starts from the call of the `init_acpi_pm_clocksource` function during `fs` [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html).
+The seconds clock source is [ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf). Implementation of this clock source is located in the [drivers/clocksource/acpi_pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/clocksource_acpi_pm.c) source code file and starts from the call of the `init_acpi_pm_clocksource` function during `fs` [initcall](https://kernelnewbies.org/Documents/InitcallMechanism).
 
 If we will look at implementation of the `init_acpi_pm_clocksource` function, we will see that it starts from the check of the value of `pmtmr_ioport` variable:
 
@@ -368,7 +368,7 @@ static int __init init_tsc_clocksource(void)
 	}
 ```
 
-function. This function called during the `device` [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html). We do it to be sure that the `Time Stamp Counter` clock source will be registered after the  [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) clock source.
+function. This function called during the `device` [initcall](https://kernelnewbies.org/Documents/InitcallMechanism). We do it to be sure that the `Time Stamp Counter` clock source will be registered after the  [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) clock source.
 
 After these all three clock sources will be registered in the `clocksource` framework and the `Time Stamp Counter` clock source will be selected as active, because it has the highest rating among other clock sources:
 
@@ -409,5 +409,5 @@ Links
 * [IA-PC HPET (High Precision Event Timers) Specification](http://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/software-developers-hpet-spec-1-0a.pdf)
 * [IRQ0](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29#Master_PIC)
 * [i8259](https://en.wikipedia.org/wiki/Intel_8259)
-* [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html)
+* [initcall](https://kernelnewbies.org/Documents/InitcallMechanism)
 * [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-5.html)
