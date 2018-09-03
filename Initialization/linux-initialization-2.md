@@ -456,6 +456,97 @@ pmd_p[pmd_index(address)] = pmd;
 
 After page fault handler finished it's work and as result our `early_level4_pgt` contains entries which point to the valid addresses.
 
+Other exception handling
+--------------------------------------------------------------------------------
+
+In early interrupt phase, exceptions other than page fault are handled by `early_fixup_exception` function which is defined in [arch/x86/mm/extable.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/extable.c) and takes two parameters - pointer to kernel stack which consists of saved registers and interrupt number:
+
+```C
+void __init early_fixup_exception(struct pt_regs *regs, int trapnr)
+{
+	...
+	...
+	...
+}
+```
+
+First of all we need to pass some condition expressions.
+
+```C
+	if (trapnr == X86_TRAP_NMI)
+		return;
+
+	if (early_recursion_flag > 2)
+		goto halt_loop;
+
+	if (!xen_pv_domain() && regs->cs != __KERNEL_CS)
+		goto fail;
+```
+
+Here we just ignore [NMI](https://en.wikipedia.org/wiki/Non-maskable_interrupt). And we make sure that we are not in recursive situation. After that, we get into:
+
+```C
+	if (fixup_exception(regs, trapnr))
+		return;
+```
+
+The `fixup_exception` function is defined in the same file as `early_fixup_exception` function and looks like:
+
+```C
+int fixup_exception(struct pt_regs *regs, int trapnr)
+{
+	const struct exception_table_entry *e;
+	ex_handler_t handler;
+
+	e = search_exception_tables(regs->ip);
+	if (!e)
+		return 0;
+
+	handler = ex_fixup_handler(e);
+	return handler(e, regs, trapnr);
+}
+```
+
+The `ex_handler_t` is a type of function pointer, which is defined like:
+
+```C
+typedef bool (*ex_handler_t)(const struct exception_table_entry *,
+                            struct pt_regs *, int)
+```
+
+The `search_exception_tables` function looks up the given address in the exception table (i.e. the contents of the ELF section __ex_table). After that, we get the actual address by `ex_fixup_handler` function. At last we call actual handler. For more information about exception table, you can refer to [Documentation/x86/exception-tables.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/exception-tables.txt).
+
+Back to `early_fixup_exception` function, the next step is:
+
+```C
+	if (fixup_bug(regs, trapnr))
+		return;
+```
+
+The `fixup_bug` function is defined in [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c). Let's have a look on the function implementation.
+
+```C
+int fixup_bug(struct pt_regs *regs, int trapnr)
+{
+	if (trapnr != X86_TRAP_UD)
+		return 0;
+
+	switch (report_bug(regs->ip, regs)) {
+	case BUG_TRAP_TYPE_NONE:
+	case BUG_TRAP_TYPE_BUG:
+		break;
+
+	case BUG_TRAP_TYPE_WARN:
+		regs->ip += LEN_UD2;
+		return 1;
+	}
+
+	return 0;
+}
+```
+
+All what this funtion do is just return `1` if the exception is generated because `#UD` (or [Invalid Opcode](https://wiki.osdev.org/Exceptions#Invalid_Opcode)) occured and the `report_bug` function returns `BUG_TRAP_TYPE_WARN`, otherwise return `0`.
+
 Conclusion
 --------------------------------------------------------------------------------
 
