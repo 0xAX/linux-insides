@@ -357,16 +357,30 @@ Page fault handling
 
 In the previous paragraph we saw first early interrupt handler which checks interrupt number for page fault and calls `early_make_pgtable` for building new page tables if it is. We need to have `#PF` handler in this step because there are plans to add ability to load kernel above `4G` and make access to `boot_params` structure above the 4G.
 
-You can find implementation of the `early_make_pgtable` in the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c) and takes one parameter - address from the `cr2` register, which caused Page Fault. Let's look on it:
+You can find implementation of the `early_make_pgtable` in the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c) and takes one parameter - address from the `cr2` register, which caused Page Fault. Let's look on it:
 
 ```C
 int __init early_make_pgtable(unsigned long address)
 {
 	unsigned long physaddr = address - __PAGE_OFFSET;
-	unsigned long i;
+	pmdval_t pmd;
+
+	pmd = (physaddr & PMD_MASK) + early_pmd_flags;
+
+	return __early_make_pgtable(address, pmd);
+}
+```
+
+Next we call `__early_make_pgtable` function which is defined in the same file as `early_make_pgtable` function as following:
+
+```C
+int __init __early_make_pgtable(unsigned long address, pmdval_t pmd)
+{
+	unsigned long physaddr = address - __PAGE_OFFSET;
 	pgdval_t pgd, *pgd_p;
+	p4dval_t p4d, *p4d_p;
 	pudval_t pud, *pud_p;
-	pmdval_t pmd, *pmd_p;
+	pmdval_t *pmd_p;
 	...
 	...
 	...
@@ -379,7 +393,7 @@ It starts from the definition of some variables which have `*val_t` types. All o
 typedef unsigned long   pgdval_t;
 ```
 
-Also we will operate with the `*_t` (not val) types, for example `pgd_t` and etc... All of these types defined in the [arch/x86/include/asm/pgtable_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/pgtable_types.h) and represent structures like this:
+Also we will operate with the `*_t` (not val) types, for example `pgd_t` and etc... All of these types are defined in the [arch/x86/include/asm/pgtable_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/pgtable_types.h) and represent structures like this:
 
 ```C
 typedef struct { pgdval_t pgd; } pgd_t;
@@ -388,22 +402,38 @@ typedef struct { pgdval_t pgd; } pgd_t;
 For example,
 
 ```C
-extern pgd_t early_level4_pgt[PTRS_PER_PGD];
+extern pgd_t early_top_pgt[PTRS_PER_PGD];
 ```
 
-Here `early_level4_pgt` presents early top-level page table directory which consists of an array of `pgd_t` types and `pgd` points to low-level page entries.
+Here `early_top_pgt` presents early top-level page table directory which consists of an array of `pgd_t` types and `pgd` points to low-level page entries.
 
-After we made the check that we have no invalid address, we're getting the address of the Page Global Directory entry which contains `#PF` address and put it's value to the `pgd` variable:
+After we made the check that we have no invalid address, we're getting the address of the Page Global Directory entry which contains `#PF` address and put its value to the `pgd` variable:
 
 ```C
-pgd_p = &early_level4_pgt[pgd_index(address)].pgd;
+pgd_p = &early_top_pgt[pgd_index(address)].pgd;
 pgd = *pgd_p;
 ```
 
-In the next step we check `pgd`, if it contains correct page global directory entry we put physical address of the page global directory entry and put it to the `pud_p` with:
+Next we check if five-layer paging is enabled:
 
 ```C
-pud_p = (pudval_t *)((pgd & PTE_PFN_MASK) + __START_KERNEL_map - phys_base);
+if (!pgtable_l5_enabled())
+	p4d_p = pgd_p;
+```
+
+In most cases five-layer paging is not enabled, so `p4d_p` most likely equals to `pgd_p`.
+
+After this we fix up address of the p4d with:
+
+```C
+p4d_p += p4d_index(address);
+p4d = *p4d_p;
+```
+
+In the next step we check `p4d`, if it contains correct p4d entry we put physical address of the p4d entry and put it to the `pud_p` with:
+
+```C
+pud_p = (pudval_t *)((p4d & PTE_PFN_MASK) + __START_KERNEL_map - phys_base);
 ```
 
 where `PTE_PFN_MASK` is a macro:
@@ -415,18 +445,18 @@ where `PTE_PFN_MASK` is a macro:
 which expands to:
 
 ```C
-(~(PAGE_SIZE-1)) & ((1 << 46) - 1)
+(signed long)(~(PAGE_SIZE-1)) & ((1 << 52) - 1)
 ```
 
-or
+Here [sign-extension](https://en.wikipedia.org/wiki/Sign_extension) is used. To be more expanded:
 
 ```
-0b1111111111111111111111111111111111111111111111
+0b1111111111111111111111111111111111111111111111111111
 ```
 
-which is 46 bits to mask page frame.
+which is 52 bits to mask page frame.
 
-If `pgd` does not contain correct address we check that `next_early_pgt` is not greater than `EARLY_DYNAMIC_PAGE_TABLES` which is `64` and present a fixed number of buffers to set up new page tables on demand. If `next_early_pgt` is greater than `EARLY_DYNAMIC_PAGE_TABLES` we reset page tables and start again. If `next_early_pgt` is less than `EARLY_DYNAMIC_PAGE_TABLES`, we create new page upper directory pointer which points to the current dynamic page table and writes it's physical address with the `_KERPG_TABLE` access rights to the page global directory:
+If `p4d` does not contain correct address we check that `next_early_pgt` is not greater than `EARLY_DYNAMIC_PAGE_TABLES` which is `64` and present a fixed number of buffers to set up new page tables on demand. If `next_early_pgt` is greater than `EARLY_DYNAMIC_PAGE_TABLES` we reset page tables and start again. If `next_early_pgt` is less than `EARLY_DYNAMIC_PAGE_TABLES`, we create new page upper directory pointer which points to the current dynamic page table and writes its physical address with the `_KERNPG_TABLE` access rights to the p4d:
 
 ```C
 if (next_early_pgt >= EARLY_DYNAMIC_PAGE_TABLES) {
@@ -437,10 +467,10 @@ if (next_early_pgt >= EARLY_DYNAMIC_PAGE_TABLES) {
 pud_p = (pudval_t *)early_dynamic_pgts[next_early_pgt++];
 for (i = 0; i < PTRS_PER_PUD; i++)
 	pud_p[i] = 0;
-*pgd_p = (pgdval_t)pud_p - __START_KERNEL_map + phys_base + _KERNPG_TABLE;
+*p4d_p = (p4dval_t)pud_p - __START_KERNEL_map + phys_base + _KERNPG_TABLE;
 ```
 
-After this we fix up address of the page upper directory with:
+As we did above, we fix up address of the page upper directory with:
 
 ```C
 pud_p += pud_index(address);
@@ -450,11 +480,10 @@ pud = *pud_p;
 In the next step we do the same actions as we did before, but with the page middle directory. In the end we fix address of the page middle directory which contains maps kernel text+data virtual addresses:
 
 ```C
-pmd = (physaddr & PMD_MASK) + early_pmd_flags;
 pmd_p[pmd_index(address)] = pmd;
 ```
 
-After page fault handler finished it's work and as result our `early_level4_pgt` contains entries which point to the valid addresses.
+After page fault handler finished its work and as result our `early_top_pgt` contains entries which point to the valid addresses.
 
 Other exception handling
 --------------------------------------------------------------------------------
