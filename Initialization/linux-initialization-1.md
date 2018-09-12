@@ -125,16 +125,16 @@ Fix base addresses of page tables
 The first step before we start to setup identity paging is to fixup following addresses:
 
 ```assembly
-	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
+	addq	%rbp, early_top_pgt + (L4_START_KERNEL*8)(%rip)
 	addq	%rbp, level3_kernel_pgt + (510*8)(%rip)
 	addq	%rbp, level3_kernel_pgt + (511*8)(%rip)
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-All of `early_level4_pgt`, `level3_kernel_pgt` and other address may be wrong if the `startup_64` is not equal to default `0x1000000` address. The `rbp` register contains the delta address so we add to the certain entries of the `early_level4_pgt`, the `level3_kernel_pgt` and the `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
+All of `early_top_pgt`, `level3_kernel_pgt` and other address may be wrong if the `startup_64` is not equal to default `0x1000000` address. The `rbp` register contains the delta address so we add to the certain entries of the `early_top_pgt`, the `level3_kernel_pgt` and the `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
 
 ```assembly
-NEXT_PAGE(early_level4_pgt)
+NEXT_PAGE(early_top_pgt)
 	.fill	511,8,0
 	.quad	level3_kernel_pgt - __START_KERNEL_map + _PAGE_TABLE
 
@@ -156,7 +156,7 @@ NEXT_PAGE(level1_fixmap_pgt)
 	.fill	512,8,0
 ```
 
-Looks hard, but it isn't. First of all let's look at the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use the first `511` entries. And after this we can see one `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look at `_PAGE_TABLE`, it is just page entry access rights:
+Looks hard, but it isn't. First of all let's look at the `early_top_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use the first `511` entries. And after this we can see one `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look at `_PAGE_TABLE`, it is just page entry access rights:
 
 ```C
 #define _PAGE_TABLE     (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER | \
@@ -177,34 +177,34 @@ access rights. The second - `level2_fixmap_pgt` is a virtual addresses which can
 Now, after we saw definitions of these symbols, let's get back to the code which is described at the beginning of the section. Remember that the `rbp` register contains delta between the address of the `startup_64` symbol which was got during kernel [linking](https://en.wikipedia.org/wiki/Linker_%28computing%29) and the actual address. So, for this moment, we just need to add this delta to the base address of some page table entries, that they'll have correct addresses. In our case these entries are:
 
 ```assembly
-	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
+	addq	%rbp, early_top_pgt + (L4_START_KERNEL*8)(%rip)
 	addq	%rbp, level3_kernel_pgt + (510*8)(%rip)
 	addq	%rbp, level3_kernel_pgt + (511*8)(%rip)
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-or the last entry of the `early_level4_pgt` which is the `level3_kernel_pgt`, last two entries of the `level3_kernel_pgt` which are the `level2_kernel_pgt` and the `level2_fixmap_pgt` and five hundreds seventh entry of the `level2_fixmap_pgt` which is `level1_fixmap_pgt` page directory.
+or the last entry of the `early_top_pgt` which is the `level3_kernel_pgt`, last two entries of the `level3_kernel_pgt` which are the `level2_kernel_pgt` and the `level2_fixmap_pgt` and five hundreds seventh entry of the `level2_fixmap_pgt` which is `level1_fixmap_pgt` page directory.
 
 After all of this we will have:
 
 ```
-early_level4_pgt[511] -> level3_kernel_pgt[0]
+early_top_pgt[511] -> level3_kernel_pgt[0]
 level3_kernel_pgt[510] -> level2_kernel_pgt[0]
 level3_kernel_pgt[511] -> level2_fixmap_pgt[0]
 level2_kernel_pgt[0]   -> 512 MB kernel mapping
 level2_fixmap_pgt[507] -> level1_fixmap_pgt
 ```
 
-Note that we didn't fixup base address of the `early_level4_pgt` and some of other page table directories, because we will see this during of building/filling of structures for these page tables. As we corrected base addresses of the page tables, we can start to build it.
+Note that we didn't fixup base address of the `early_top_pgt` and some of other page table directories, because we will see this during of building/filling of structures for these page tables. As we corrected base addresses of the page tables, we can start to build it.
 
 Identity mapping setup
 --------------------------------------------------------------------------------
 
-Now we can see the set up of identity mapping of early page tables. In Identity Mapped Paging, virtual addresses are mapped to physical addresses that have the same value, `1 : 1`. Let's look at it in detail. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
+Now we can see the set up of identity mapping of early page tables. In Identity Mapped Paging, virtual addresses are mapped to physical addresses that have the same value, `1 : 1`. Let's look at it in detail. First of all we get the `rip-relative` address of the `_text` and `_early_top_pgt` and put they into `rdi` and `rbx` registers:
 
 ```assembly
 	leaq	_text(%rip), %rdi
-	leaq	early_level4_pgt(%rip), %rbx
+	leaq	early_top_pgt(%rip), %rbx
 ```
 
 After this we store address of the `_text` in the `rax` and get the index of the page global directory entry which stores `_text` address, by shifting `_text` address on the `PGDIR_SHIFT`:
@@ -222,7 +222,7 @@ where `PGDIR_SHIFT` is `39`. `PGDIR_SHFT` indicates the mask for page global dir
 #define PMD_SHIFT       21
 ```
 
-After this we put the address of the first entry of the `early_dynamic_pgts` page table to the `rdx` register with the `_KERNPG_TABLE` access rights (see above) and fill the `early_level4_pgt` with the 2 `early_dynamic_pgts` entries:
+After this we put the address of the first entry of the `early_dynamic_pgts` page table to the `rdx` register with the `_KERNPG_TABLE` access rights (see above) and fill the `early_top_pgt` with the 2 `early_dynamic_pgts` entries:
 
 ```assembly
 	leaq	(4096 + _KERNPG_TABLE)(%rbx), %rdx
@@ -230,7 +230,7 @@ After this we put the address of the first entry of the `early_dynamic_pgts` pag
 	movq	%rdx, 8(%rbx,%rax,8)
 ```
 
-The `rbx` register contains address of the `early_level4_pgt` and `%rax * 8` here is index of a page global directory occupied by the `_text` address. So here we fill two entries of the `early_level4_pgt` with address of two entries of the `early_dynamic_pgts` which is related to `_text`. The `early_dynamic_pgts` is array of arrays:
+The `rbx` register contains address of the `early_top_pgt` and `%rax * 8` here is index of a page global directory occupied by the `_text` address. So here we fill two entries of the `early_top_pgt` with address of two entries of the `early_dynamic_pgts` which is related to `_text`. The `early_dynamic_pgts` is array of arrays:
 
 ```C
 extern pmd_t early_dynamic_pgts[EARLY_DYNAMIC_PAGE_TABLES][PTRS_PER_PMD];
@@ -238,7 +238,7 @@ extern pmd_t early_dynamic_pgts[EARLY_DYNAMIC_PAGE_TABLES][PTRS_PER_PMD];
 
 which will store temporary page tables for early kernel which we will not move to the `init_level4_pgt`.
 
-After this we add `4096` (size of the `early_level4_pgt`) to the `rdx` (it now contains the address of the first entry of the `early_dynamic_pgts`) and put `rdi` (it now contains physical address of the `_text`)  to the `rax`. Now we shift address of the `_text` ot `PUD_SHIFT` to get index of an entry from page upper directory which contains this address and clears high bits to get only `pud` related part:
+After this we add `4096` (size of the `early_top_pgt`) to the `rdx` (it now contains the address of the first entry of the `early_dynamic_pgts`) and put `rdi` (it now contains physical address of the `_text`)  to the `rax`. Now we shift address of the `_text` ot `PUD_SHIFT` to get index of an entry from page upper directory which contains this address and clears high bits to get only `pud` related part:
 
 ```assembly
 	addq	$4096, %rdx
@@ -258,10 +258,10 @@ As we have index of a page upper directory we write two addresses of the second 
 
 In the next step we do the same operation for last page table directory, but filling not two entries, but all entries to cover full size of the kernel.
 
-After our early page table directories filled, we put physical address of the `early_level4_pgt` to the `rax` register and jump to label `1`:
+After our early page table directories filled, we put physical address of the `early_top_pgt` to the `rax` register and jump to label `1`:
 
 ```assembly
-	movq	$(early_level4_pgt - __START_KERNEL_map), %rax
+	movq	$(early_top_pgt - __START_KERNEL_map), %rax
 	jmp 1f
 ```
 
@@ -587,14 +587,14 @@ In the next step we can see call of the `cr4_init_shadow` function which stores 
 
 ```C
 for (i = 0; i < PTRS_PER_PGD-1; i++)
-	early_level4_pgt[i].pgd = 0;
+	early_top_pgt[i].pgd = 0;
 
 next_early_pgt = 0;
 
-write_cr3(__pa_nodebug(early_level4_pgt));
+write_cr3(__pa_nodebug(early_top_pgt));
 ```
 
-Soon we will build new page tables. Here we can see that we go through all Page Global Directory Entries (`PTRS_PER_PGD` is `512`) in the loop and make it zero. After this we set `next_early_pgt` to zero (we will see details about it in the next post) and write physical address of the `early_level4_pgt` to the `cr3`. `__pa_nodebug` is a macro which will be expanded to:
+Soon we will build new page tables. Here we can see that we go through all Page Global Directory Entries (`PTRS_PER_PGD` is `512`) in the loop and make it zero. After this we set `next_early_pgt` to zero (we will see details about it in the next post) and write physical address of the `early_top_pgt` to the `cr3`. `__pa_nodebug` is a macro which will be expanded to:
 
 ```C
 ((unsigned long)(x) - __START_KERNEL_map + phys_base)

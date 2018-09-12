@@ -133,10 +133,10 @@ and used for debugging. After `CFI_STARTPROC` macro we zero out `eax` register a
 As we have `init_level4_pgt` filled with zeros, we set the last `init_level4_pgt` entry to kernel high mapping with the:
 
 ```C
-init_level4_pgt[511] = early_level4_pgt[511];
+init_level4_pgt[511] = early_top_pgt[511];
 ```
 
-Remember that we dropped all `early_level4_pgt` entries in the `reset_early_page_table` function and kept only kernel high mapping there.
+Remember that we dropped all `early_top_pgt` entries in the `reset_early_page_table` function and kept only kernel high mapping there.
 
 The last step in the `x86_64_start_kernel` function is the call of the:
 
