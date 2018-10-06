@@ -37,6 +37,7 @@ On other languages
 
   * [Brazilian Portuguese](https://github.com/mauri870/linux-insides)
   * [Chinese](https://github.com/MintCN/linux-insides-zh)
+  * [Japanese](https://github.com/tkmru/linux-insides-ja)
   * [Russian](https://github.com/proninyaroslav/linux-insides-ru)
   * [Spanish](https://github.com/leolas95/linux-insides)
   * [Turkish](https://github.com/ayyucedemirbas/linux-insides_Turkish)
