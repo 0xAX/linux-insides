@@ -546,7 +546,7 @@ where:
 
 * `0x66` is the operand-size prefix which allows us to mix 16-bit and 32-bit code
 * `0xea` - is the jump opcode
-* `in_pm32` is the segment offset or `(cs << 4) + in_pm`
+* `in_pm32` is the segment offset under protect mode, which has value `(cs << 4) + in_pm32` derived from real mode
 * `__BOOT_CS` is the code segment we want to jump to.
 
 After this we are finally in protected mode:
