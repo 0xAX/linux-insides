@@ -18,7 +18,7 @@ If you want to contribute to [linux-insides](https://github.com/0xAX/linux-insid
     ```
     git checkout -b "linux-bootstrap-1-fix"
     ```
-    You can name it however you want.
+    You can name it whatever you want.
 
 4. Make your changes.
 
