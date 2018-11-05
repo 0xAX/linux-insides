@@ -172,71 +172,51 @@ extern const char early_idt_handler_array[NUM_EXCEPTION_VECTORS][EARLY_IDT_HANDL
 
 The `early_idt_handler_array` - это `288` байтный массив, который содержит адреса точек входа обработчиков исключений каждые девять байт. Каждый девять байт этого массива состоят из двух байт необязательной инструкции для помещения фиктивного кода ошибки, если исключение не предоставляет его, двубайтовая инструкция для помещения номера вектора в стек и пять байт `jump` на общий код обработчика исключений.
 
-Как можно видеть, в цикле мы заполняем только первые 32 элемента `IDT`, поскольку все начальные настройки запускаются с отключёнными прерываниями, поэтому нет необходимости настраивать обработчики прерываний для векторов, превышающих `32`. В массиве `early_idt_handler_array` содержатся общий обработчики idt и мы можем найти его определение в ассемблерном файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S). Пока что мы пропустим его, но вскоре вернёмся к нему. Перед этим мы рассмотрим реализацию макроса `set_intr_gate`.
+Как можно видеть, в цикле мы заполняем только первые 32 элемента `IDT`, поскольку все начальные настройки запускаются с отключёнными прерываниями, поэтому нет необходимости настраивать обработчики прерываний для векторов, превышающих `32`. В массиве `early_idt_handler_array` содержатся общий обработчики idt и мы можем найти его определение в ассемблерном файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S). Пока что мы пропустим его, но вскоре вернёмся к нему. Перед этим мы рассмотрим реализацию функции `set_intr_gate`.
 
-Макрос `set_intr_gate` определён в заголовочном файле [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h):
-
-```C
-#define set_intr_gate(n, addr)                         \
-         do {                                                            \
-                 BUG_ON((unsigned)n > 0xFF);                             \
-                 _set_gate(n, GATE_INTERRUPT, (void *)addr, 0, 0,        \
-                           __KERNEL_CS);                                 \
-                 _trace_set_gate(n, GATE_INTERRUPT, (void *)trace_##addr,\
-                                 0, 0, __KERNEL_CS);                     \
-         } while (0)
-```
-
-Прежде всего он проверяет, что переданный номер прерывания не больше чем `255` с помощью макроса `BUG_ON`. Нам нужно сделать эту проверку, поскольку максимально возможное количество прерываний - `256`. После этого он вызывает функцию `_set_gate`, которая записывает адрес шлюза прерывания в `IDT`:
+Функция `set_intr_gate` определена в файле [arch/x86/kernel/idt.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/idt.c):
 
 ```C
-static inline void _set_gate(int gate, unsigned type, void *addr,
-	                         unsigned dpl, unsigned ist, unsigned seg)
+static void set_intr_gate(unsigned int n, const void *addr)
 {
-         gate_desc s;
-         pack_gate(&s, type, (unsigned long)addr, dpl, ist, seg);
-         write_idt_entry(idt_table, gate, &s);
-         write_trace_idt_entry(gate, &s);
+	struct idt_data data;
+
+	BUG_ON(n > 0xFF);
+
+	memset(&data, 0, sizeof(data));
+	data.vector	= n;
+	data.addr	= addr;
+	data.segment	= __KERNEL_CS;
+	data.bits.type	= GATE_INTERRUPT;
+	data.bits.p	= 1;
+
+        idt_setup_from_table(idt_table, &data, 1, false);
 }
 ```
 
-В начале `_set_gate` мы можем видеть вызов функции `pack_gate`, которая заполняет структуру `gate_desc` заданными значениями:
+Прежде всего он проверяет, что переданный номер прерывания не больше чем `255` с помощью макроса `BUG_ON`. Нам нужно сделать эту проверку, поскольку максимально возможное количество прерываний - `256`. Далее мы устаналиваем данные IDT заданными значениями. И уже после этого мы вызываем функцию `idt_setup_from_table`:
 
 ```C
-static inline void pack_gate(gate_desc *gate, unsigned type, unsigned long func,
-                             unsigned dpl, unsigned ist, unsigned seg)
+static void
+idt_setup_from_table(gate_desc *idt, const struct idt_data *t, int size, bool sys)
 {
-        gate->offset_low        = PTR_LOW(func);
-        gate->segment           = __KERNEL_CS;
-        gate->ist               = ist;
-        gate->p                 = 1;
-        gate->dpl               = dpl;
-        gate->zero0             = 0;
-        gate->zero1             = 0;
-        gate->type              = type;
-        gate->offset_middle     = PTR_MIDDLE(func);
-        gate->offset_high       = PTR_HIGH(func);
+	gate_desc desc;
+
+	for (; size > 0; t++, size--) {
+		desc.offset_low    = (u16) t->addr;
+		desc.segment	   = (u16) t->segment
+		desc.bits	   = t->bits;
+		desc.offset_middle = (u16) (t->addr >> 16);
+		desc.offset_high   = (u32) (t->addr >> 32);
+		desc.reserved	   = 0;
+		memcpy(&idt[t->vector], &desc, sizeof(desc));
+		if (sys)
+			set_bit(t->vector, system_vectors);
+	}
 }
 ```
 
-Как я уже упоминал выше, мы заполняем шлюз дескриптора в этой функции. Мы заполняем три части адреса обработчика прерываний адресом, который мы получили в основном цикле (адрес точки входа обработчика прерывания). Мы используем три следующих макроса для разделения адреса на три части:
-
-```C
-#define PTR_LOW(x) ((unsigned long long)(x) & 0xFFFF)
-#define PTR_MIDDLE(x) (((unsigned long long)(x) >> 16) & 0xFFFF)
-#define PTR_HIGH(x) ((unsigned long long)(x) >> 32)
-```
-
-С помощью первого макроса `PTR_LOW` мы получаем первые `2` байта адреса, с помощью второго `PTR_MIDDLE` мы получаем вторые `2` байта адреса, а с третьим макросом `PTR_HIGH` мы получаем последние `4` байта адреса. Затем мы настраиваем селектор сегмента для обработчика прерываний, это будет наш сегмент кода ядра - `__KERNEL_CS`. На следующем шаге мы заполняем `таблицу стека прерываний (IST)` и `уровень привилегий дескриптора (DPL)` (самый высокий уровень привилегий) нулями. И в конце мы устанавливаем тип `GAT_INTERRUPT`.
-
-Теперь мы заполнили записи `IDT` и можем вызвать функцию `native_write_idt_entry`, которая скопирует записи в `IDT`:
-
-```C
-static inline void native_write_idt_entry(gate_desc *idt, int entry, const gate_desc *gate)
-{
-        memcpy(&idt[entry], gate, sizeof(*gate));
-}
-```
+которая заполняет три части адреса обработчика прерываний адресом, который мы получили в основном цикле (адрес точки входа обработчика прерывания). Далее мы просто копируем дескриптор шлюза в запись IDT.
 
 После завершения основного цикла у нас в распоряжении будет заполненный массив `idt_table` структур `gate_desc` и теперь мы можем загрузить `таблицу векторов прерываний` вызовом:
 
@@ -247,7 +227,10 @@ load_idt((const struct desc_ptr *)&idt_descr);
 Где `idt_descr`:
 
 ```C
-struct desc_ptr idt_descr = { NR_VECTORS * 16 - 1, (unsigned long) idt_table };
+struct desc_ptr idt_descr __ro_after_init = {
+	.size		= (IDT_ENTRIES * 2 * sizeof(unsigned long)) - 1,
+	.address	= (unsigned long) idt_table,
+};
 ```
 
 и `load_idt` просто выполняет инструкцию `lidt`:
