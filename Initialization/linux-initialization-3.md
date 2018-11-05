@@ -133,10 +133,10 @@ ENTRY(clear_page)
 После заполнения нулями `init_level4_pgt`, мы помещаем последнюю запись в `init_level4_pgt`:
 
 ```C
-init_level4_pgt[511] = early_level4_pgt[511];
+init_level4_pgt[511] = early_top_pgt[511];
 ```
 
-Вы должны помнить, что мы очистили все записи `early_level4_pgt` функцией `reset_early_page_table` и сохранили только отображение ядра.
+Вы должны помнить, что мы очистили все записи `early_top_pgt` функцией `reset_early_page_table` и сохранили только отображение ядра.
 
 Последний шаг в функции `x86_64_start_kernel` заключается в вызове функции `x86_64_start_reservations`:
 
