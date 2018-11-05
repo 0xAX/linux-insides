@@ -176,7 +176,7 @@ NEXT_PAGE(level2_fixmap_pgt)
 	.fill	5,8,0
 
 NEXT_PAGE(level1_fixmap_pgt)
-	.fill	512,8.0
+	.fill	512,8,0
 ```
 
 Looks hard, but it isn't. First of all let's look at the `early_top_pgt`. It starts with the `4096` bytes of zeros (or `8192` bytes if `CONFIG_PAGE_TABLE_ISOLATION` is enabled), it means that we don't use the first `512` entries. And after this we can see `level3_kernel_pgt` entry. At the start of its definition, we can see that it is filled with the `4080` bytes of zeros (`L3_START_KERNEL` equals `510`). Subsequently, it stores two entries which map kernel space. Note that we subtract `__START_KERNEL_map` from `level2_kernel_pgt` and `level2_fixmap_pgt`. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical addresses of the `level2_kernel_pgt` and `level2_fixmap_pgt`.
@@ -190,7 +190,7 @@ Next let's look at `_KERNPG_TABLE_NOENC` and `_PAGE_TABLE_NOENC`, these are just
 			       _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-The `level2_kernel_pgt` is page table entry which contains pointer to the page middle directory which maps kernel space. it calls the `PDMS` macro which creates `512` megabytes from the `__START_KERNEL_map` for kernel `.text` (after these `512` megabytes will be module memory space).
+The `level2_kernel_pgt` is page table entry which contains pointer to the page middle directory which maps kernel space. It calls the `PDMS` macro which creates `512` megabytes from the `__START_KERNEL_map` for kernel `.text` (after these `512` megabytes will be module memory space).
 
 The `level2_fixmap_pgt` is a virtual addresses which can refer to any physical addresses even under kernel space. They are represented by the `4048` bytes of zeros, the `level1_fixmap_pgt` entry, `8` megabytes reserved for [vsyscalls](https://lwn.net/Articles/446528/) mapping and `2` megabytes of hole.
 
