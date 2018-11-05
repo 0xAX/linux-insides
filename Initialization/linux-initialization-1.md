@@ -381,15 +381,6 @@ GLOBAL(initial_stack)
 
 ```C
 union thread_union {
-         struct thread_info thread_info;
-         unsigned long stack[THREAD_SIZE/sizeof(long)];
-};
-```
-
-но начиная с версии `4.9-rc1` `thread_info` была перемещена в структуру `task_struct`, представляющую потоки. На данный момент `thread_union` выглядит так:
-
-```C
-union thread_union {
 #ifndef CONFIG_ARCH_TASK_STRUCT_ON_STACK
 	struct task_struct task;
 #endif
