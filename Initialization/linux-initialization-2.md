@@ -194,7 +194,7 @@ static void set_intr_gate(unsigned int n, const void *addr)
 }
 ```
 
-Прежде всего он проверяет, что переданный номер прерывания не больше чем `255` с помощью макроса `BUG_ON`. Нам нужно сделать эту проверку, поскольку максимально возможное количество прерываний - `256`. Далее мы устаналиваем данные IDT заданными значениями. И уже после этого мы вызываем функцию `idt_setup_from_table`:
+Прежде всего она проверяет, что переданный номер прерывания не больше чем `255` с помощью макроса `BUG_ON`. Нам нужно сделать эту проверку, поскольку максимально возможное количество прерываний - `256`. Далее мы устаналиваем данные IDT заданными значениями. И уже после этого мы вызываем функцию `idt_setup_from_table`:
 
 ```C
 static void
@@ -249,21 +249,26 @@ asm volatile("lidt %0"::"m" (*dtr));
 Как говорилось ранее, мы заполнили `IDT` адресом `early_idt_handler_array`. Мы можем найти его в [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
 
 ```assembly
-	.globl early_idt_handler_array
-early_idt_handlers:
+ENTRY(early_idt_handler_array)
 	i = 0
 	.rept NUM_EXCEPTION_VECTORS
-	.if (EXCEPTION_ERRCODE_MASK >> i) & 1
-	pushq $0
+	.if ((EXCEPTION_ERRCODE_MASK >> i) & 1) == 0
+		UNWIND_HINT_IRET_REGS
+		pushq $0	# Dummy error code, to make stack frame uniform
+	.else
+		UNWIND_HINT_IRET_REGS offset=8
 	.endif
-	pushq $i
+	pushq $i		# 72(%rsp) Vector number
 	jmp early_idt_handler_common
+	UNWIND_HINT_IRET_REGS
 	i = i + 1
 	.fill early_idt_handler_array + i*EARLY_IDT_HANDLER_SIZE - ., 1, 0xcc
 	.endr
+	UNWIND_HINT_IRET_REGS offset=16
+END(early_idt_handler_array)
 ```
 
-Здесь мы видим создание обработчиков прерываний для первых `32` исключений. Мы проверяем, содержит ли исключение код ошибки, и ничего не делаем, если исключение не возвращает код ошибки, тогда мы помещаем в стек ноль. Мы делаем это для того чтобы стек был однородным. После этого мы помещаем номер исключения в стек и переходим на `early_idt_handler_array`, который является общим обработчиком прерываний на данный момент. Каждый девятый байт массива `early_idt_handler_array` состоит из необязательного кода ошибок, `номера вектора` и инструкции перехода. Мы можем видеть это в выводе утилиты `objdump`:
+Функции, которые, как правило, не вызываются напрямую другими функциями, такие как `syscall` и обработчики прерываний, часто имеют необычные вещи вроде функции не C-типа с указателем стека. Такой код необходимо аннотировать с помощью макроса `UNWIND_HINT_IRET_REGS`, чтобы `objtool` смог его понять. Здесь мы видим создание обработчиков прерываний для первых `32` исключений. Мы проверяем, содержит ли исключение код ошибки, и ничего не делаем, если исключение не возвращает код ошибки, тогда мы помещаем в стек ноль. Мы делаем это для того чтобы стек был однородным. После этого мы помещаем номер исключения в стек и переходим на `early_idt_handler_array`, который является общим обработчиком прерываний на данный момент. Каждый девятый байт массива `early_idt_handler_array` состоит из необязательного кода ошибок, `номера вектора` и инструкции перехода. Мы можем видеть это в выводе утилиты `objdump`:
 
 ```
 $ objdump -D vmlinux
@@ -291,52 +296,42 @@ ffffffff81fe5014:       6a 02                   pushq  $0x2
 | %rflags            |
 | %cs                |
 | %rip               |
-| rsp --> код ошибки |
+| код ошибки         | <-- %rsp
 |--------------------|
 ```
 
-Давайте посмотрим на реализацию `early_idt_handler_common`. Он находится в том же ассемблерном файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S#L343) и первое что мы можем видеть это проверка [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Нам не нужно обрабатывать их, поэтому просто игнорируем их в коде:
+Давайте посмотрим на реализацию `early_idt_handler_common`. Он находится в том же ассемблерном файле [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) и прежде всего инкрементирует `early_recursion_flag`, чтобы предотвратить рекурсию в `early_idt_handler_common`:
 
 ```assembly
-	cmpl $2,(%rsp)
-	je .Lis_nmi
+	incl early_recursion_flag(%rip)
 ```
 
-где `is_nmi`:
+Далее мы сохраняем регистры общего назначения в стек:
 
 ```assembly
-is_nmi:
-	addq $16,%rsp
-	INTERRUPT_RETURN
-```
-
-удаляет код ошибки и номер вектора из стека и вызывает макрос `INTERRUPT_RETURN`, который раскрывается до инструкции `iretq`. После проверки номера вектора (и это не `NMI`), мы проверяем `early_recursion_flag`, чтобы предотвратить рекурсию в `early_idt_handler_common`, и если он корректен, сохраняем регистры общего назначения в стек:
-
-```assembly
-	pushq %rax
-	pushq %rcx
-	pushq %rdx
 	pushq %rsi
-	pushq %rdi
+	movq 8(%rsp), %rsi
+	movq %rdi, 8(%rsp)
+	pushq %rdx
+	pushq %rcx
+	pushq %rax
 	pushq %r8
 	pushq %r9
 	pushq %r10
 	pushq %r11
+	pushq %rbx
+	pushq %rbp
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
+	UNWIND_HINT_REGS
 ```
 
-Мы должны сделать это, чтобы предотвратить появление неверных значений регистров при возврате из обработчика прерываний. После этого мы проверяем селектор сегмента в стеке:
+Мы должны сделать это, чтобы предотвратить появление неверных значений регистров при возврате из обработчика прерываний. После этого мы проверяем номер вектора, и если он `#PF` или [ошибка страницы (Page Fault)](https://en.wikipedia.org/wiki/Page_fault), мы помещаем значение регистра `cr2` в регистр `rdi` и вызываем `early_make_pgtable` (мы скоро это увидим):
 
 ```assembly
-	cmpl $__KERNEL_CS,96(%rsp)
-	jne 11f
-```
-
-который должен быть равен сегменту кода ядра, и если нет, мы переходим к метке `11`, которая печатает сообщение `PANIC` и выводит дамп стека.
-
-После проверки сегмента кода мы проверяем номер вектора, и если это `#PF` или [ошибка страницы (Page Fault)](https://en.wikipedia.org/wiki/Page_fault), мы помещаем значение `cr2` в регистр `rdi` и вызываем `early_make_pgtable` (мы скоро это увидим):
-
-```assembly
-	cmpl $14,72(%rsp)
+	cmpq $14,%rsi
 	jnz 10f
 	GET_CR2_INTO(%rdi)
 	call early_make_pgtable
@@ -344,21 +339,23 @@ is_nmi:
 	jz 20f
 ```
 
-Если номер вектора не равен `#PF`, мы восстанавливаем регистры общего назначения из стека:
+Если номер вектора не равен `#PF`, мы вызываем функцию `early_fixup_exception` с передачей указателя ядра (смотрите [соглашение о вызовах x86-64](https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions)):
 
 ```assembly
-	popq %r11
-	popq %r10
-	popq %r9
-	popq %r8
-	popq %rdi
-	popq %rsi
-	popq %rdx
-	popq %rcx
-	popq %rax
+10:
+	movq %rsp,%rdi
+	call early_fixup_exception
 ```
 
-и выходим из обработчика с помощью `iret`.
+Мы увидим реализацию функции `early_fixup_exception` позже.
+
+```assembly
+20:
+	decl early_recursion_flag(%rip)
+	jmp restore_regs_and_return_to_kernel
+```
+
+После того как мы уменьшим значение параметра `initial_recursion_flag`, мы восстанавливаем регистры из стека, которые мы сохранили ранее, и возвращаемся из обработчика с помощью `iretq`.
 
 Это конец первого обработчика прерываний. Обратите внимание, что это очень ранний обработчик прерываний, поэтому он обрабатывает только ошибку страницы. Мы увидим обработчики и для других прерываний, но пока давайте посмотрим на обработчик ошибки страницы.
 
@@ -367,16 +364,30 @@ is_nmi:
 
 В предыдущем разделе мы увидели первый начальный обработчик прерываний, который проверяет, что номер прерывания относится к ошибке страницы и вызывает `early_make_pgtable` для создания новых таблиц страниц. На данном этапе нам необходим обработчик `#PF`, поскольку планируется добавить способность загружать ядро выше `4G` и сделать структуру `boot_params` доступной над 4G.
 
-Вы можете найти реализацию `early_make_pgtable` в [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c) и он принимает только один параметр - адрес из регистра `cr2`, который вызывал ошибку страницы. Давайте посмотрим на неё более подробно:
+Вы можете найти реализацию `early_make_pgtable` в [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c) и он принимает только один параметр - адрес из регистра `cr2`, который вызывал ошибку страницы. Давайте посмотрим на неё более подробно:
 
 ```C
 int __init early_make_pgtable(unsigned long address)
 {
 	unsigned long physaddr = address - __PAGE_OFFSET;
-	unsigned long i;
+	pmdval_t pmd;
+
+	pmd = (physaddr & PMD_MASK) + early_pmd_flags;
+
+	return __early_make_pgtable(address, pmd);
+}
+```
+
+Затем мы вызываем функцию `__early_make_pgtable`, которая определена в том же файле, что и функция `early_make_pgtable`, как показано ниже:
+
+```C
+int __init __early_make_pgtable(unsigned long address, pmdval_t pmd)
+{
+	unsigned long physaddr = address - __PAGE_OFFSET;
 	pgdval_t pgd, *pgd_p;
+	p4dval_t p4d, *p4d_p;
 	pudval_t pud, *pud_p;
-	pmdval_t pmd, *pmd_p;
+	pmdval_t *pmd_p;
 	...
 	...
 	...
@@ -389,7 +400,7 @@ int __init early_make_pgtable(unsigned long address)
 typedef unsigned long   pgdval_t;
 ```
 
-Также мы будем работать с типами `*_t`, например `pgd_t` и т.д. Все эти типы определены в [arch/x86/include/asm/pgtable_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/pgtable_types.h) и представляют собой структуры:
+Также мы будем работать с типами `*_t`, например `pgd_t` и т.д. Все эти типы определены в [arch/x86/include/asm/pgtable_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/pgtable_types.h) и представляют собой структуры:
 
 ```C
 typedef struct { pgdval_t pgd; } pgd_t;
@@ -399,22 +410,38 @@ typedef struct { pgdval_t pgd; } pgd_t;
 Для примера,
 
 ```C
-extern pgd_t early_level4_pgt[PTRS_PER_PGD];
+extern pgd_t early_top_pgt[PTRS_PER_PGD];
 ```
 
-Здесь `early_level4_pgt` представляет начальный каталог таблиц страниц верхнего уровня, который состоит из массива типа `pgd_t` и `pgd` указывает на записи страниц нижнего уровня.
+Здесь `early_top_pgt` представляет начальный каталог таблиц страниц верхнего уровня, который состоит из массива типа `pgd_t` и `pgd` указывает на записи страниц нижнего уровня.
 
 После того как мы проверили, что у нас корректный адрес, мы получаем адрес записи глобального каталога страниц, который содержит адрес `#PF`, и присваиваем его значение переменной `pgd`:
 
 ```C
-pgd_p = &early_level4_pgt[pgd_index(address)].pgd;
+pgd_p = &early_top_pgt[pgd_index(address)].pgd;
 pgd = *pgd_p;
 ```
 
-На следующем шаге мы проверяем `pgd`, если он содержит верную запись в глобальном каталоге страниц, мы помещаем физический адрес записи в `pud_p`:
+Затем мы проверяем, включена ли пятиуровневая страничная организация памяти:
 
 ```C
-pud_p = (pudval_t *)((pgd & PTE_PFN_MASK) + __START_KERNEL_map - phys_base);
+if (!pgtable_l5_enabled())
+	p4d_p = pgd_p;
+```
+
+В большинстве случаев пятиуровневая страничная организация не включена, поэтому `p4d_p` скорее всего равен `pgd_p`.
+
+После этого мы исправляем адрес `p4d` с помощью:
+
+```C
+p4d_p += p4d_index(address);
+p4d = *p4d_p;
+```
+
+На следующем шаге мы проверяем `p4d`, если он содержит верную запись p4d, мы помещаем физический адрес записи p4d в `pud_p`:
+
+```C
+pud_p = (pudval_t *)((p4d & PTE_PFN_MASK) + __START_KERNEL_map - phys_base);
 ```
 
 где `PTE_PFN_MASK` является макросом:
@@ -426,18 +453,18 @@ pud_p = (pudval_t *)((pgd & PTE_PFN_MASK) + __START_KERNEL_map - phys_base);
 который раскрывается до:
 
 ```C
-(~(PAGE_SIZE-1)) & ((1 << 46) - 1)
+(signed long)(~(PAGE_SIZE-1)) & ((1 << 52) - 1)
 ```
 
-или
+Здесь используется [расширение знака](https://en.wikipedia.org/wiki/Sign_extension). Развёрнутая форма:
 
 ```
-0b1111111111111111111111111111111111111111111111
+0b1111111111111111111111111111111111111111111111111111
 ```
 
-состоящий из 46 бит для маскирования страницы.
+т.е макрос состоит из 52 бит для маскирования фрейма страниц.
 
-Если `pgd` не содержит верный адрес, мы проверяем что `next_early_pgt` не больше чем `EARLY_DYNAMIC_PAGE_TABLES`, который равен `64` и представляет фиксированное количество буферов для настройки новых таблиц страниц по требованию. Если `next_early_pgt` больше, чем `EARLY_DYNAMIC_PAGE_TABLES` мы сбрасываем таблицы страниц и начинаем всё заново. Если `next_early_pgt` меньше, чем `EARLY_DYNAMIC_PAGE_TABLES`, мы создаём новый указатель верхнего каталога страниц, который указывает на текущую динамическую таблицу страниц и записываем его физический адрес с правами доступа  `_KERPG_TABLE` в глобальный каталог страниц:
+Если `p4d` не содержит верный адрес, мы проверяем что `next_early_pgt` не больше чем `EARLY_DYNAMIC_PAGE_TABLES`, который равен `64` и представляет фиксированное количество буферов для настройки новых таблиц страниц по требованию. Если `next_early_pgt` больше, чем `EARLY_DYNAMIC_PAGE_TABLES` мы сбрасываем таблицы страниц и начинаем всё заново. Если `next_early_pgt` меньше, чем `EARLY_DYNAMIC_PAGE_TABLES`, мы создаём новый указатель верхнего каталога страниц, который указывает на текущую динамическую таблицу страниц и записываем его физический адрес с правами доступа `_KERNPG_TABLE` в p4d:
 
 ```C
 if (next_early_pgt >= EARLY_DYNAMIC_PAGE_TABLES) {
@@ -448,10 +475,10 @@ if (next_early_pgt >= EARLY_DYNAMIC_PAGE_TABLES) {
 pud_p = (pudval_t *)early_dynamic_pgts[next_early_pgt++];
 for (i = 0; i < PTRS_PER_PUD; i++)
 	pud_p[i] = 0;
-*pgd_p = (pgdval_t)pud_p - __START_KERNEL_map + phys_base + _KERNPG_TABLE;
+*p4d_p = (p4dval_t)pud_p - __START_KERNEL_map + phys_base + _KERNPG_TABLE;
 ```
 
-После этого мы исправляем адрес верхнего каталога страниц:
+Как уже говорили ранее, мы исправляем адрес верхнего каталога страниц:
 
 ```C
 pud_p += pud_index(address);
@@ -461,11 +488,96 @@ pud = *pud_p;
 На следующем шаге мы делаем те же действия что и ранее, но с промежуточным каталогом страниц. В конце мы исправляем адрес промежуточного каталога страниц, который содержит отображения текста ядра+виртуальные адреса данных:
 
 ```C
-pmd = (physaddr & PMD_MASK) + early_pmd_flags;
 pmd_p[pmd_index(address)] = pmd;
 ```
 
-После того как обработчик ошибки страницы завершён, `early_level4_pgt` содержит записи, которые указывают на корректные адреса.
+После того как обработчик ошибки страницы завершён, `early_top_pgt` содержит записи, которые указывают на корректные адреса.
+
+Другие обработчики исключений
+--------------------------------------------------------------------------------
+
+На раннем этапе прерывания, исключения, кроме ошибки страницы, обрабатываются функцией `early_fixup_exception`, которая определена в [arch/x86/mm/extable.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/extable.c) и принимает два аргумента - указатель на стек ядра, состоящий из сохраненных регистров, и номер прерывания:
+
+```C
+void __init early_fixup_exception(struct pt_regs *regs, int trapnr)
+{
+	...
+	...
+	...
+}
+```
+
+Прежде всего нам нужно проверить некоторые условия:
+
+```C
+	if (trapnr == X86_TRAP_NMI)
+		return;
+	if (early_recursion_flag > 2)
+		goto halt_loop;
+	if (!xen_pv_domain() && regs->cs != __KERNEL_CS)
+		goto fail;
+```
+
+Здесь мы просто игнорируем [NMI](https://en.wikipedia.org/wiki/Non-maskable_interrupt). Также мы убеждаемся, что мы не в рекурсивной ситуации.
+
+Далее:
+
+```C
+	if (fixup_exception(regs, trapnr))
+		return;
+```
+
+Функция `fixup_exception` определена в том же файле, что и `early_fixup_exception`:
+
+```C
+int fixup_exception(struct pt_regs *regs, int trapnr)
+{
+	const struct exception_table_entry *e;
+	ex_handler_t handler;
+	e = search_exception_tables(regs->ip);
+	if (!e)
+		return 0;
+	handler = ex_fixup_handler(e);
+	return handler(e, regs, trapnr);
+}
+```
+
+`ex_handler_t` - тип указателя функции, определённый следующий образом:
+
+```C
+typedef bool (*ex_handler_t)(const struct exception_table_entry *,
+                            struct pt_regs *, int)
+```
+
+Функция `search_exception_tables` ищет данный адрес в таблице исключений (т.е содержимое ELF-секции `__ex_table`). После этого мы получаем фактический адрес с помощью функции `ex_fixup_handler`. Наконец, мы вызываем фактический обработчик. Для получения дополнительной информации о таблице исключений смотрите [Documentation/x86/exception-tables.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/exception-tables.txt).
+
+Вернёмся к функции `early_fixup_exception`. Следующий шаг:
+
+```C
+	if (fixup_bug(regs, trapnr))
+		return;
+```
+
+Функция `fixup_bug` определена в [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c). Давайте посмотрим на реализацию этой функции.
+
+```C
+int fixup_bug(struct pt_regs *regs, int trapnr)
+{
+	if (trapnr != X86_TRAP_UD)
+		return 0;
+	switch (report_bug(regs->ip, regs)) {
+	case BUG_TRAP_TYPE_NONE:
+	case BUG_TRAP_TYPE_BUG:
+		break;
+	case BUG_TRAP_TYPE_WARN:
+		regs->ip += LEN_UD2;
+		return 1;
+	}
+	return 0;
+}
+```
+
+Всё что делает эта функция - возвращает `1`, если генерируется исключение `#UD` (или [неверный опкод (Invalid Opcode)](https://wiki.osdev.org/Exceptions#Invalid_Opcode)) и функция `report_bug` вернула `BUG_TRAP_TYPE_WARN`, иначе возвращает `0`.
 
 Заключение
 --------------------------------------------------------------------------------
