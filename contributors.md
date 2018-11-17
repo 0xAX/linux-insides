@@ -121,3 +121,4 @@ Thank you to all contributors:
 * [Miha Zidar](https://github.com/zidarsk8)
 * [Ivan Kovnatsky](https://github.com/sevenfourk)
 * [Takuya Yamamoto](https://github.com/tkyymmt)
+* [Dragonly](https://github.com/dragonly)

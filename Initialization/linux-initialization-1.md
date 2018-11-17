@@ -125,7 +125,7 @@ where `PMD_PAGE_SIZE` macro is defined as:
 
 As we can easily calculate, `PMD_PAGE_SIZE` is `2` megabytes.
 
-If [SME](https://en.wikipedia.org/wiki/Zen_(microarchitecture)#Enhanced_security_and_virtualization_support) is supported and enabled, we activate it and include the SME encryption mask in `load_delta`:
+If [SME](https://en.wikipedia.org/wiki/Zen_%28microarchitecture%29#Enhanced_security_and_virtualization_support) is supported and enabled, we activate it and include the SME encryption mask in `load_delta`:
 
 ```C
 	sme_enable(bp);
