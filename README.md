@@ -3,9 +3,27 @@ linux-insides
 
 A book-in-progress about the linux kernel and its insides.
 
-**The goal is simple** - to share my modest knowledge about the insides of the linux kernel and help people who are interested in linux kernel insides, and other low-level subject matter.
+**The goal is simple** - to share my modest knowledge about the insides of the linux kernel and help people who are interested in linux kernel insides, and other low-level subject matter. Feel free to go through the book [Start here](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md)
 
 **Questions/Suggestions**: Feel free about any questions or suggestions by pinging me at twitter [@0xAX](https://twitter.com/0xAX), adding an [issue](https://github.com/0xAX/linux-insides/issues/new) or just drop me an [email](mailto:anotherworldofworld@gmail.com).
+
+# Mailing List
+
+We have a Google Group mailing list for learning the kernel source code. Here are some instructions about how to use it.
+
+#### Join
+
+Send an email with any subject/content to `kernelhacking+subscribe@googlegroups.com`. Then you will receive a confirmation email. Reply it with any content and then you are done.
+
+> If you have Google account, you can also open the [archive page](https://groups.google.com/forum/#!forum/kernelhacking) and click **Apply to join group**. You will be approved automatically.
+
+#### Send emails to mailing list
+
+Just send emails to `kernelhacking@googlegroups.com`. The basic usage is the same as other mailing lists powered by mailman.
+
+#### Archives
+
+https://groups.google.com/forum/#!forum/kernelhacking
 
 Support
 -------
@@ -19,14 +37,10 @@ On other languages
 
   * [Brazilian Portuguese](https://github.com/mauri870/linux-insides)
   * [Chinese](https://github.com/MintCN/linux-insides-zh)
+  * [Japanese](https://github.com/tkmru/linux-insides-ja)
   * [Russian](https://github.com/proninyaroslav/linux-insides-ru)
   * [Spanish](https://github.com/leolas95/linux-insides)
   * [Turkish](https://github.com/ayyucedemirbas/linux-insides_Turkish)
-  
-LICENSE
--------------
-
-Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
 
 Contributions 
 --------------
@@ -41,3 +55,8 @@ Author
 ---------------
 
 [@0xAX](https://twitter.com/0xAX)
+
+LICENSE
+-------------
+
+Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
