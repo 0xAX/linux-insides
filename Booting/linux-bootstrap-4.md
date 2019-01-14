@@ -127,7 +127,7 @@ SECTIONS
 }
 ```
 
-If you are not familiar with the syntax of `GNU LD` linker scripting language, you can find more information in the [documentation](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts). In short, the `.` symbol is a special variable of linker - location counter. The value assigned to it is an offset relative to the offset of the segment. In our case, we assign zero to location counter. This means that our code is linked to run from the `0` offset in memory. Moreover, we can find this information in comments:
+If you are not familiar with the syntax of `GNU LD` linker scripting language, you can find more information in the [documentation](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts). In short, the `.` symbol is a special variable of linker - location counter. The value assigned to it is an offset relative to the segment. In our case, we assign zero to location counter. This means that our code is linked to run from the `0` offset in memory. Moreover, we can find this information in comments:
 
 ```
 Be careful parts of head_64.S assume startup_32 is at address 0.
@@ -323,7 +323,7 @@ In simple terms, this means that the Linux kernel with the same configuration ca
 KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 ```
 
-When we are using position-independent code an address is obtained by adding the address field of the instruction and the value of the program counter. We can load code which uses such addressing from any address. That's why we had to get the real physical address of `startup_32`. Now let's get back to the Linux kernel code. Our current goal is to calculate an address where we can relocate the kernel for decompression. Calculation of this address depends on `CONFIG_RELOCATABLE` kernel configuration option. Let's look at the code:
+When we are using position-independent code an address is obtained by adding the address field of the instruction to the value of the program counter. We can load code which uses such addressing from any address. That's why we had to get the real physical address of `startup_32`. Now let's get back to the Linux kernel code. Our current goal is to calculate an address where we can relocate the kernel for decompression. Calculation of this address depends on `CONFIG_RELOCATABLE` kernel configuration option. Let's look at the code:
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
@@ -397,7 +397,7 @@ We can see that it is located in the `.data` section and contains five descripto
 
 We already loaded the `Global Descriptor Table` in the previous [part](https://github.com/0xAX/linux-insides/blob/v4.16/Booting/linux-bootstrap-3.md), and now we're doing almost the same here, but descriptors with `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode. As we can see, the definition of the `gdt` starts from two bytes: `gdt_end - gdt` which represents the last byte in the `gdt` table or table limit. The next four bytes contains base address of the `gdt`.
 
-After we have loaded the `Global Descriptor Table` with `lgdt` instruction, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) mode by putting the value of the `cr4` register into `eax`, setting 5 bit in it and loading it again into `cr4`:
+After we have loaded the `Global Descriptor Table` with `lgdt` instruction, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) by putting the value of `cr4` register into `eax`, setting the 5th bit and loading it back into `cr4`:
 
 ```assembly
 	movl	%cr4, %eax
