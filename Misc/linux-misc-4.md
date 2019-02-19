@@ -325,7 +325,7 @@ popq %rsi
 mov %RSP_LP, %RDX_LP
 ```
 
-From this moment we have `argc`cand `argv`. We still need to put pointers to the construtor, destructor in appropriate registers and pass pointer to the stack. At the first following three lines we align stack to `16` bytes boundary as suggested in [ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf) and push `rax` which contains garbage:
+From this moment we have `argc` and `argv`. We still need to put pointers to the construtor, destructor in appropriate registers and pass pointer to the stack. At the first following three lines we align stack to `16` bytes boundary as suggested in [ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf) and push `rax` which contains garbage:
 
 ```assembly
 and  $~15, %RSP_LP
