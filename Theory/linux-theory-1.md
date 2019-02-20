@@ -80,7 +80,7 @@ These fields have the following meanings:
 
 * Bits 63:52 - reserved must be 0.
 * Bits 51:12 - stores the address of the top level paging structure;
-* Reserved   - reserved must be 0;
+* Bits 11: 5 - reserved must be 0;
 * Bits 4 : 3 - PWT or Page-Level Writethrough and PCD or Page-level cache disable indicate. These bits control the way the page or Page Table is handled by the hardware cache;
 * Bits 2 : 0 - ignored;
 
@@ -95,7 +95,7 @@ schematically, we can imagine it like this:
 
 ![4-level paging](http://oi58.tinypic.com/207mb0x.jpg)
 
-Every access to a linear address is either a supervisor-mode access or a user-mode access. This access is determined by the `CPL` (current privilege level). If `CPL < 3` it is a supervisor mode access level, otherwise it is a user mode access level. For example, the top level page table entry contains access bits and has the following structure:
+Every access to a linear address is either a supervisor-mode access or a user-mode access. This access is determined by the `CPL` (current privilege level). If `CPL < 3` it is a supervisor mode access level, otherwise it is a user mode access level. For example, the top level page table entry contains access bits and has the following structure (See [arch/x86/include/asm/pgtable_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/pgtable_types.h) for the bit offset definitions):
 
 ```
 63  62                  52 51                                                    32
