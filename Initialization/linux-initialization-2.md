@@ -299,7 +299,8 @@ As we may know, CPU pushes flag register, `CS` and `RIP` on the stack before cal
 | %rflags            |
 | %cs                |
 | %rip               |
-| error code         | <-- %rsp
+| error code         |
+| vector number      |<-- %rsp
 |--------------------|
 ```
 
