@@ -392,7 +392,7 @@ where `NODES_SHIFT` depends on `CONFIG_NODES_SHIFT` configuration parameter and 
 #endif
 ```
 
-`memblick_set_region_node` function just fills `nid` field from `memblock_region` with the given value:
+`memblock_set_region_node` function just fills `nid` field from `memblock_region` with the given value:
 
 ```C
 static inline void memblock_set_region_node(struct memblock_region *r, int nid)
