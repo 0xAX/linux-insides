@@ -43,7 +43,7 @@ _set_gate(n, GATE_INTERRUPT, addr, 0, ist, __KERNEL_CS);
 
 as `set_intr_gate` does this. But `set_intr_gate` calls `_set_gate` with [dpl](http://en.wikipedia.org/wiki/Privilege_level) - 0, and ist - 0, but `set_intr_gate_ist` and `set_system_intr_gate_ist` sets `ist` as `DEBUG_STACK` and `set_system_intr_gate_ist` sets `dpl` as `0x3` which is the lowest privilege. When an interrupt occurs and the hardware loads such a descriptor, then hardware automatically sets the new stack pointer based on the IST value, then invokes the interrupt handler. All of the special kernel stacks will be set in the `cpu_init` function (we will see it later).
 
-As `#DB` and `#BP` gates written to the `idt_descr`, we reload `IDT` table with `load_idt` which just calss `ldtr` instruction. Now let's look on interrupt handlers and will try to understand how they works. Of course, I can't cover all interrupt handlers in this book and I do not see the point in this. It is very interesting to delve in the linux kernel source code, so we will see how `debug` handler implemented in this part, and understand how other interrupt handlers are implemented will be your task.
+As `#DB` and `#BP` gates written to the `idt_descr`, we reload `IDT` table with `load_idt` which just call `ldtr` instruction. Now let's look on interrupt handlers and will try to understand how they works. Of course, I can't cover all interrupt handlers in this book and I do not see the point in this. It is very interesting to delve in the linux kernel source code, so we will see how `debug` handler implemented in this part, and understand how other interrupt handlers are implemented will be your task.
 
 #DB handler
 --------------------------------------------------------------------------------
