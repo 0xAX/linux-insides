@@ -144,7 +144,7 @@ Let's go step by step through this line. The first `c` letter represents type of
 crw-rw-rw- 1 root tty 5, 0 Dec  3 22:48 /dev/tty
 ```
 
-see the first `c` letter in a permissions list. The second part is `5:0` is minor and major numbers of the device. You can see these numbers in the output of `ls` too. And the last `w` letter forbids tasks to write to the specified device. So let's start the `cgroup_test_script.sh` script:
+see the first `c` letter in a permissions list. The second part is `5:0` is major and minor numbers of the device. You can see these numbers in the output of `ls` too. And the last `w` letter forbids tasks to write to the specified device. So let's start the `cgroup_test_script.sh` script:
 
 ```
 ~$ ./cgroup_test_script.sh 
@@ -213,7 +213,7 @@ Control group /:
 │   └─6404 /bin/bash
 ```
 
-Now we know a little about `control groups` mechanism, how to use it manually and what's purpose of this mechanism. Time to look inside of the Linux kernel source code and start to dive into implementation of this mechanism.
+Now we know a little about `control groups` mechanism, how to use it manually and what's purpose of this mechanism. It's time to look inside of the Linux kernel source code and start to dive into implementation of this mechanism.
 
 Early initialization of control groups
 --------------------------------------------------------------------------------
