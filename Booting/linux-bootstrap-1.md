@@ -377,7 +377,7 @@ which pushes the value of `ds` to the stack, followed by the address of the [6](
 Stack Setup
 --------------------------------------------------------------------------------
 
-Almost all of the setup code is for ppreparing the C language environment in real mode. The next [step](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L575) is checking the `ss` register's value and setting up a correct stack if `ss` is wrong:
+Almost all of the setup code is for preparing the C language environment in real mode. The next [step](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L575) is checking the `ss` register's value and setting up a correct stack if `ss` is wrong:
 
 ```assembly
     movw    %ss, %dx
