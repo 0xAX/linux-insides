@@ -392,7 +392,7 @@ Id NUMA-узла зависит от макроса `MAX_NUMNODES`, опреде
 #endif
 ```
 
-Функция `memblick_set_region_node` просто заполняет поле `nid` из `memblock_region` заданным значением:
+Функция `memblock_set_region_node` просто заполняет поле `nid` из `memblock_region` заданным значением:
 
 ```C
 static inline void memblock_set_region_node(struct memblock_region *r, int nid)
