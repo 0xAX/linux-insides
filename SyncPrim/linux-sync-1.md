@@ -198,7 +198,7 @@ static __always_inline void spin_lock(spinlock_t *lock)
 }
 ```
 
-function which allows us to `acquire` a `spinlock`. The `raw_spin_lock` macro is defined in the same header file and expnads to the call of `_raw_spin_lock`:
+function which allows us to `acquire` a `spinlock`. The `raw_spin_lock` macro is defined in the same header file and expands to the call of `_raw_spin_lock`:
 
 ```C
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)
