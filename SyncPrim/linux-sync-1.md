@@ -122,7 +122,7 @@ typedef struct qspinlock {
 } arch_spinlock_t;
 ```
 
-We will not stop on this structures for now. Let's look at the operations on a spinlock. The Linux kernel provides following main operations on a `spinlock`:
+We will not stop on this structures for now. Let's look at the operations on a `spinlock`. The Linux kernel provides following main operations on a `spinlock`:
 
 * `spin_lock_init` - produces initialization of the given `spinlock`;
 * `spin_lock` - acquires given `spinlock`;
