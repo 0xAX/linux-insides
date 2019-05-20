@@ -126,8 +126,8 @@ We will not stop on this structures for now. Let's look at the operations on a `
 
 * `spin_lock_init` - produces initialization of the given `spinlock`;
 * `spin_lock` - acquires given `spinlock`;
-* `spin_lock_bh` - disables software [interrupts](https://en.wikipedia.org/wiki/Interrupt) and acquire given `spinlock`.
-* `spin_lock_irqsave` and `spin_lock_irq` - disable interrupts on local processor and preserve/not preserve previous interrupt state in the `flags`;
+* `spin_lock_bh` - disables software [interrupts](https://en.wikipedia.org/wiki/Interrupt) and acquire given `spinlock`;
+* `spin_lock_irqsave` and `spin_lock_irq` - disable interrupts on local processor, preserve/not preserve previous interrupt state in the `flags` and acquire given `spinlock`;
 * `spin_unlock` - releases given `spinlock`;
 * `spin_unlock_bh` - releases given `spinlock` and enables software interrupts;
 * `spin_is_locked` - returns the state of the given `spinlock`;
