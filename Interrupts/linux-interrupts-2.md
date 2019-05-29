@@ -201,7 +201,7 @@ for (i = 0; i < NUM_EXCEPTION_VECTORS; i++)
 load_idt((const struct desc_ptr *)&idt_descr);
 ```
 
-AS you can see it has only one difference in the name of the array of the interrupts handlers entry points. Now it is `early_idt_handler_arry`:
+AS you can see it has only one difference in the name of the array of the interrupts handlers entry points. Now it is `early_idt_handler_array`:
 
 ```C
 extern const char early_idt_handler_array[NUM_EXCEPTION_VECTORS][EARLY_IDT_HANDLER_SIZE];
@@ -224,7 +224,7 @@ ENTRY(early_idt_handler_array)
 ENDPROC(early_idt_handler_common)
 ```
 
-It fills `early_idt_handler_arry` with the `.rept NUM_EXCEPTION_VECTORS` and contains entry of the `early_make_pgtable` interrupt handler (more about its implementation you can read in the part about [Early interrupt and exception handling](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)). For now we come to the end of the `x86_64` architecture-specific code and the next part is the generic kernel code. Of course you already can know that we will return to the architecture-specific code in the `setup_arch` function and other places, but this is the end of the `x86_64` early code.
+It fills `early_idt_handler_array` with the `.rept NUM_EXCEPTION_VECTORS` and contains entry of the `early_make_pgtable` interrupt handler (more about its implementation you can read in the part about [Early interrupt and exception handling](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)). For now we come to the end of the `x86_64` architecture-specific code and the next part is the generic kernel code. Of course you already can know that we will return to the architecture-specific code in the `setup_arch` function and other places, but this is the end of the `x86_64` early code.
 
 Setting stack canary for the interrupt stack
 -------------------------------------------------------------------------------
