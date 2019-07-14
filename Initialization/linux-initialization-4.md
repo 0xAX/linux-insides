@@ -1,65 +1,66 @@
-Kernel initialization. Part 4.
+Инициализация ядра. Часть 4.
 ================================================================================
 
-Kernel entry point
+Точка входа в ядро
 ================================================================================
 
-If you have read the previous part - [Last preparations before the kernel entry point](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-3.md), you can remember that we finished all pre-initialization stuff and stopped right before the call to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). The `start_kernel` is the entry of the generic and architecture independent kernel code, although we will return to the `arch/` folder many times. If you look inside of the `start_kernel` function, you will see that this function is very big. For this moment it contains about `86` calls of functions. Yes, it's very big and of course this part will not cover all the processes that occur in this function. In the current part we will only start to do it. This part and all the next which will be in the [Kernel initialization process](https://github.com/0xAX/linux-insides/blob/master/Initialization/README.md) chapter will cover it.
+Если вы читали предыдущую часть - [Последние приготовления перед точкой входа в ядро](linux-initialization-3.md), вы можете помнить, что мы завершили все действия по предварительной инициализации и остановились прямо перед вызовом функции `start_kernel` из [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). `start_kernel` это точка входа общего и независимого от архитектуры кода ядра, хотя мы будем возвращаться в папку `arch/` много раз. Если вы заглянете внутрь функции `start_kernel`, то увидите, что эта функция очень большая. На данный момент она содержит около 86 вызовов функций. Да, она очень большая и, конечно, эта часть не будет охватывать все процессы, которые происходят в этой функции. В текущей части мы только начнем это делать. Эта часть и все последующие, которые будут описаны в главе [Процесс инициализации ядра](README.md), охватят её.
 
-The main purpose of the `start_kernel` to finish kernel initialization process and launch the first `init` process. Before the first process will be started, the `start_kernel` must do many things such as: to enable [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), to initialize processor id, to enable early [cgroups](http://en.wikipedia.org/wiki/Cgroups) subsystem, to setup per-cpu areas, to initialize different caches in [vfs](http://en.wikipedia.org/wiki/Virtual_file_system), to initialize memory manager, rcu, vmalloc, scheduler, IRQs, ACPI and many many more. Only after these steps will we see the launch of the first `init` process in the last part of this chapter. So much kernel code awaits us, let's start.
 
-**NOTE: All parts from this big chapter `Linux Kernel initialization process` will not cover anything about debugging. There will be a separate chapter about kernel debugging tips.**
+Основная цель `start_kernel` - завершить процесс инициализации ядра и запустить первый процесс `init`. Перед запуском первого процесса `start_kernel` должен сделать много вещей, такие как: включить [блокировщик валидатора](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), инициализировать идентификатор процессора, включить начальную подсистему [cgroups](http://en.wikipedia.org/wiki/Cgroups), настроить области для каждого CPU, инициализировать различные кэши в [vfs](http://en.wikipedia.org/wiki/Virtual_file_system), инициализировать менеджер памяти, rcu, vmalloc, планировщик, IRQ, ACPI и многое другое. Только после этих шагов мы увидим запуск первого процесса `init` в последней части этой главы. Так много кода ядра ждет нас, давайте начнем.
 
-A little about function attributes
+**ПРИМЕЧАНИЕ: Все части этой большой главы `Процесс инициализации ядра Linux` не будут касаться отладки. Для этого будет отдельная глава.**
+
+Немного об атрибутах функции
 ---------------------------------------------------------------------------------
 
-As I wrote above, the `start_kernel` function is defined in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). This function defined with the `__init` attribute and as you already may know from other parts, all functions which are defined with this attribute are necessary during kernel initialization.
+Как я писал выше, функция `start_kernel` определена в [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). Эта функция определена с атрибутом `__init` и, как вы уже знаете из других частей, все функции, которые определены с этим атрибутом, необходимы во время инициализации ядра.
 
 ```C
 #define __init      __section(.init.text) __cold notrace
 ```
 
-After the initialization process have finished, the kernel will release these sections with a call to the `free_initmem` function. Note also that `__init` is defined with two attributes: `__cold` and `notrace`. The purpose of the first `cold` attribute is to mark that the function is rarely used and the compiler must optimize this function for size. The second `notrace` is defined as:
+После завершения процесса инициализации, ядро осободит эти секции вызовом функции `free_initmem`. Также обратите внимание, что `__init` определена двумя атрибутами:` __cold` и `notrace`. Цель первого атрибута - отметить, что функция используется редко, и компилятор должен оптимизировать размер этой функции. Второй атрибут определён следующий образом:
 
 ```C
 #define notrace __attribute__((no_instrument_function))
 ```
 
-where `no_instrument_function` says to the compiler not to generate profiling function calls.
+где `no_instrument_function` говорит компилятору не генерировать вызовы функции профилирования.
 
-In the definition of the `start_kernel` function, you can also see the `__visible` attribute which expands to the:
+В определении функции `start_kernel` вы также можете увидеть атрибут `__visible`, который раскрывается в следующее выражение:
 
 ```
 #define __visible __attribute__((externally_visible))
 ```
 
-where `externally_visible` tells to the compiler that something uses this function or variable, to prevent marking this function/variable as `unusable`. You can find the definition of this and other macro attributes in [include/linux/init.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init.h).
+где `externally_visible` сообщает компилятору, что кто-то использует эту функцию или переменную, чтобы предотвратить маркировку этой функции/переменной как `unusable`. Вы можете найти определение этого и других макро-атрибутов в [include/linux/init.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init.h).
 
-First steps in the start_kernel
+Первые шаги в start_kernel
 --------------------------------------------------------------------------------
 
-At the beginning of the `start_kernel` you can see the definition of these two variables:
+В начале `start_kernel` вы можете увидеть определение этих двух переменных:
 
 ```C
 char *command_line;
 char *after_dashes;
 ```
 
-The first represents a pointer to the kernel command line and the second will contain the result of the `parse_args` function which parses an input string with parameters in the form `name=value`, looking for specific keywords and invoking the right handlers. We will not go into the details related with these two variables at this time, but will see it in the next parts. In the next step we can see a call to the `set_task_stack_end_magic` function. This function takes address of the `init_task` and sets `STACK_END_MAGIC` (`0x57AC6E9D`) as canary for it. `init_task` represents the initial task structure:
+Первая представляет собой указатель на командную строку ядра, а вторая будет содержать результат функции `parse_args`, которая анализирует входную строку с параметрами в форме `name = value`, ищет конкретные ключевые слова и вызывает верные обработчики. Мы не будем сейчас вдаваться в детали, связанные с этими двумя переменными, но увидим это в следующих частях. На следующем шаге мы видим вызов функции `set_task_stack_end_magic`. Эта функция берет адрес `init_task` и устанавливает для нее `STACK_END_MAGIC` (`0x57AC6E9D`). `init_task` представляет собой начальную структуру задачи:
 
 ```C
 struct task_struct init_task = INIT_TASK(init_task);
 ```
 
-where `task_struct` stores all the information about a process. I will not explain this structure in this book because it's very big. You can find its definition in [include/linux/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/sched.h#L1278). At this moment `task_struct` contains more than `100` fields! Although you will not see the explanation of the `task_struct` in this book, we will use it very often since it is the fundamental structure which describes the `process` in the Linux kernel. I will describe the meaning of the fields of this structure as we meet them in practice.
+где `task_struct` хранит всю информацию о процессе. Я не буду объяснять эту структуру в данной книге, потому что она очень большая. Вы можете найти её определение в [include/linux/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/sched.h#L1278). На данный момент `task_struct` содержит более 100 полей! Хотя вы не увидите объяснения `task_struct` в этой книге, мы будем использовать её очень часто, поскольку это фундаментальная структура, которая описывает `процесс` в ядре Linux. Я буду описывать значение полей этой структуры по мере того как мы будем встречать их на практике.
 
-You can see the definition of the `init_task` and it initialized by the `INIT_TASK` macro. This macro is from [include/linux/init_task.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init_task.h) and it just fills the `init_task` with the values for the first process. For example it sets:
+Вы можете видеть определение `init_task` и она инициализирована макросом `INIT_TASK`. Этот макрос взят из [include/linux/init_task.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init_task.h) и просто заполняет `init_task` значениями для первого процесса. Например, он устанавливает:
 
-* init process state to zero or `runnable`. A runnable process is one which is waiting only for a CPU to run on;
-* init process flags - `PF_KTHREAD` which means - kernel thread;
-* a list of runnable task;
-* process address space;
-* init process stack to the `&init_thread_info` which is `init_thread_union.thread_info` and `initthread_union` has type - `thread_union` which contains `thread_info` and process stack:
+* начальное состояние процесса в ноль или `runnable`. Runnable процесс - это процесс, который ожидает запуска на CPU;
+* начальные флаги процесса - `PF_KTHREAD`, что означает поток ядра;
+* список выполняемых задач;
+* адресное пространство процесса;
+* начальный стек процесса в `&init_thread_info`, который является `init_thread_union.thread_info`, и `initthread_union` имеет тип `thread_union`, который содержит `thread_info` и стек процесса:
 
 ```C
 union thread_union {
@@ -68,7 +69,7 @@ union thread_union {
 };
 ```
 
-Every process has its own stack and it is 16 kilobytes or 4 page frames. in `x86_64`. We can note that it is defined as array of `unsigned long`. The next field of the `thread_union` is - `thread_info` defined as:
+Каждый процесс имеет свой собственный стек и он составляет 16 килобайт или 4 страницы в `x86_64`. Мы можем заметить, что он определён как массив `unsigned long`. Следующее поле `thread_union` - это структура `thread_info`, которая занимает 52 байта:
 
 ```C
 struct thread_info {
@@ -86,15 +87,15 @@ struct thread_info {
 };
 ```
 
-and occupies 52 bytes. The `thread_info` structure contains architecture-specific information on the thread. We know that on `x86_64` the stack grows down and `thread_union.thread_info` is stored at the bottom of the stack in our case. So the process stack is 16 kilobytes and `thread_info` is at the bottom. The remaining thread_size will be `16 kilobytes - 62 bytes = 16332 bytes`. Note that `thread_union` represented as the [union](http://en.wikipedia.org/wiki/Union_type) and not structure, it means that `thread_info` and stack share the memory space.
+`thread_info` содержит специфичную для архитектуры информацию о потоке. Мы знаем, что в `x86_64` стек уменьшается и в нашем случае `thread_union.thread_info` размещена в нижней части стека. Таким образом, стек процесса составляет 16 килобайт и `thread_info` находится внизу. Оставшийся размер потока будет составлять `16 килобайт - 62 байта = 16332 байта`. Обратите внимание, что `thread_union` представлен как [union](http://en.wikipedia.org/wiki/Union_type), а не как структура, это означает, что `thread_info` и стек совместно используют одно и то же пространство памяти.
 
-Schematically it can be represented as follows:
+Схематически это можно представить следующим образом:
 
 ```C
 +-----------------------+
 |                       |
 |                       |
-|        stack          |
+|         стек          |
 |                       |
 |_______________________|
 |          |            |
@@ -109,32 +110,32 @@ Schematically it can be represented as follows:
 
 http://www.quora.com/In-Linux-kernel-Why-thread_info-structure-and-the-kernel-stack-of-a-process-binds-in-union-construct
 
-So the `INIT_TASK` macro fills these `task_struct's` fields and many many more. As I already wrote above, I will not describe all the fields and values in the `INIT_TASK` macro but we will see them soon.
+Таким образом, макрос `INIT_TASK` заполняет эти поля в `task_struct`, а также многие другие. Как я уже писал выше, я не буду описывать все поля и значения в макросе `INIT_TASK`, но скоро мы их увидим.
 
-Now let's go back to the `set_task_stack_end_magic` function. This function defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/fork.c#L297) and sets a [canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow) to the `init` process stack to prevent stack overflow.
+Теперь вернёмся к функции `set_task_stack_end_magic`. Эта функция определена в [kernel/fork.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/fork.c#L297) и устанавливает [стековый индикатор ("канарейка")](http://en.wikipedia.org/wiki/Stack_buffer_overflow) в стек процесса `init` для предотвращения его переполнения.
 
 ```C
 void set_task_stack_end_magic(struct task_struct *tsk)
 {
 	unsigned long *stackend;
 	stackend = end_of_stack(tsk);
-	*stackend = STACK_END_MAGIC; /* for overflow detection */
+	*stackend = STACK_END_MAGIC; /* для обнаружения переполнения */
 }
 ```
 
-Its implementation is simple. `set_task_stack_end_magic` gets the end of the stack for the given `task_struct` with the `end_of_stack` function. Earlier (and now for all architectures besides `x86_64`) stack was located in the `thread_info` structure. So the end of a process stack depends on the `CONFIG_STACK_GROWSUP` configuration option. As we learn in `x86_64` architecture, the stack grows down. So the end of the process stack will be:
+Его реализация проста. `set_task_stack_end_magic` получает конец стека для заданной `task_struct` с помощью функции `end_of_stack`. Ранее (теперь для всех архитектур, кроме `x86_64`) стек был расположен в структуре `thread_info`. Таким образом, конец стека процессов зависит от параметра конфигурации `CONFIG_STACK_GROWSUP`. Как мы знаем, в `x86_64` стек растёт вниз. Таким образом, конец стека процесса будет следующим:
 
 ```C
 (unsigned long *)(task_thread_info(p) + 1);
 ```
 
-where `task_thread_info` just returns the stack which we filled with the `INIT_TASK` macro:
+где `task_thread_info` просто возвращает стек, который мы заполнили с помощью мароса `INIT_TASK`:
 
 ```C
 #define task_thread_info(task)  ((struct thread_info *)(task)->stack)
 ```
 
-From the Linux kernel `v4.9-rc1` release, `thread_info` structure may contains only flags and stack pointer resides in `task_struct` structure which represents a thread in the Linux kernel. This depends on `CONFIG_THREAD_INFO_IN_TASK` kernel configuration option which is enabled by default for `x86_64`. You can be sure in this if you will look in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) configuration build file:
+Начиная с релиза ядра Linux `v4.9-rc1` структура `thread_info` может содержать только флаги, а указатель стека находится в структуре `task_struct`, которая представляет поток в ядре Linux. Это зависит от параметра конфигурации ядра `CONFIG_THREAD_INFO_IN_TASK`, который по умолчанию включен для `x86_64`. Вы можете быть убедиться в этом, если загляните в файл конфигурации сборки [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) :
 
 ```
 config THREAD_INFO_IN_TASK
@@ -148,7 +149,7 @@ config THREAD_INFO_IN_TASK
 	  and put_task_stack() in save_thread_stack_tsk() and get_wchan().
 ```
 
-and [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Kconfig):
+и в [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Kconfig):
 
 ```
 config X86
@@ -162,7 +163,7 @@ config X86
         ...
 ```
 
-So, in this way we may just get end of a thread stack from the given `task_struct` structure:
+Поэтому мы можем просто получить конец стека потока из заданной структуры `task_struct`:
 
 ```C
 #ifdef CONFIG_THREAD_INFO_IN_TASK
@@ -173,17 +174,17 @@ static inline unsigned long *end_of_stack(const struct task_struct *task)
 #endif
 ```
 
-As we got the end of the init process stack, we write `STACK_END_MAGIC` there. After `canary` is set, we can check it like this:
+Когда мы получили конец стека `init` процесса, мы записываем туда `STACK_END_MAGIC`. После того, как `"канарейка"` установлена, мы можем проверить это следующим образом:
 
 ```C
 if (*end_of_stack(task) != STACK_END_MAGIC) {
         //
-        // handle stack overflow here
+        //  здесь обрабатываем переполнение стека
 	//
 }
 ```
 
-The next function after the `set_task_stack_end_magic` is `smp_setup_processor_id`. This function has an empty body for `x86_64`:
+Следующая функция после `set_task_stack_end_magic` - `smp_setup_processor_id`. Эта функция имеет пустое тело для `x86_64`:
 
 ```C
 void __init __weak smp_setup_processor_id(void)
@@ -191,11 +192,11 @@ void __init __weak smp_setup_processor_id(void)
 }
 ```
 
-as it not implemented for all architectures, but some such as [s390](http://en.wikipedia.org/wiki/IBM_ESA/390) and [arm64](http://en.wikipedia.org/wiki/ARM_architecture#64.2F32-bit_architecture).
+так как она реализована только для некоторых архитектур, таких как [s390](http://en.wikipedia.org/wiki/IBM_ESA/390) и [arm64](http://en.wikipedia.org/wiki/ARM_architecture#64.2F32-bit_architecture).
 
-The next function in `start_kernel` is `debug_objects_early_init`. Implementation of this function is almost the same as `lockdep_init`, but fills hashes for object debugging. As I wrote above, we will not see the explanation of this and other functions which are for debugging purposes in this chapter.
+Следующая функция в `start_kernel` - это `debug_objects_early_init`. Реализация данной функции почти такая же, как у `lockdep_init`, но в отличии от неё заполняет хеши для отладки объектов. Как я писал выше в этой главе мы не увидим объяснения этой и других функций, предназначенных для отладки.
 
-After the `debug_object_early_init` function we can see the call of the `boot_init_stack_canary` function which fills `task_struct->canary` with the canary value for the `-fstack-protector` gcc feature. This function depends on the `CONFIG_CC_STACKPROTECTOR` configuration option and if this option is disabled, `boot_init_stack_canary` does nothing, otherwise it generates random numbers based on random pool and the [TSC](http://en.wikipedia.org/wiki/Time_Stamp_Counter):
+После функции `debug_object_early_init` мы можем видеть вызов функции `boot_init_stack_canary`, которая заполняет `task_struct-> canary` значением `"канарейки"` для опции gcc `-fstack-protector`. Эта опция зависит от параметра конфигурации `CONFIG_CC_STACKPROTECTOR` и, если этот параметр отключён, функция `boot_init_stack_canary` ничего не делает, в противном случае она генерирует случайные числа на основе пула энтропии и [TSC](http://en.wikipedia.org/wiki/Time_Stamp_Counter):
 
 ```C
 get_random_bytes(&canary, sizeof(canary));
@@ -203,19 +204,19 @@ tsc = __native_read_tsc();
 canary += tsc + (tsc << 32UL);
 ```
 
-After we got a random number, we fill the `stack_canary` field of `task_struct` with it:
+После того как мы получили случайное число, мы заполняем поле `stack_canary` в` task_struct`:
 
 ```C
 current->stack_canary = canary;
 ```
 
-and write this value to the top of the IRQ stack with the:
+и запишите это значение в верхнюю часть стека IRQ:
 
 ```C
-this_cpu_write(irq_stack_union.stack_canary, canary); // read below about this_cpu_write
+this_cpu_write(irq_stack_union.stack_canary, canary); // читайте ниже об this_cpu_write
 ```
 
-Again, we will not dive into details here, we will cover it in the part about [IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). As canary is set, we disable local and early boot IRQs and register the bootstrap CPU in the CPU maps. We disable local IRQs (interrupts for current CPU) with the `local_irq_disable` macro which expands to the call of the `arch_local_irq_disable` function from [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/percpu-defs.h):
+Опять же, здесь мы не будем вдаваться в подробности, мы расскажем об этом в части о [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). Когда `"канарейка"` установлена, мы отключаем локальные и начальные загрузочные IRQ и регистрируем загрузочный CPU в картах CPU. Мы отключаем локальные IRQ (прерывания для текущего процессора) с помощью макроса `local_irq_disable`, который раскрывается в вызов функции `arch_local_irq_disable` из [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/percpu-defs.h):
 
 ```C
 static inline notrace void arch_local_irq_disable(void)
@@ -224,9 +225,9 @@ static inline notrace void arch_local_irq_disable(void)
 }
 ```
 
-Where `native_irq_disable` is `cli` instruction for `x86_64`. As interrupts are disabled we can register the current CPU with the given ID in the CPU bitmap.
+Где `native_irq_disable` - это инструкция `cli` для `x86_64`. Поскольку прерывания отключены, мы можем зарегистрировать текущий CPU с заданным идентификатором в битовой карте CPU.
 
-The first processor activation
+Первая активация процессора
 ---------------------------------------------------------------------------------
 
 The current function from the `start_kernel` is `boot_cpu_init`. This function initializes various CPU masks for the bootstrap processor. First of all it gets the bootstrap processor id with a call to:
