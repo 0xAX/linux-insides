@@ -19,6 +19,8 @@ Linux Inside на русском
  - **Yandex Money**: `410011738561939`
  - **PayPal**: [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=EJUYSU8Q8E822)
  - **Amazon.com eGift Cards**: просто выберите сумму и введите e-mail `proninyaroslav@mail.ru` в gift card details https://www.amazon.com/gp/product/B004LLIKVU/
+ - **Liberapay**: [![liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/proninyaroslav/donate)
+ - **Bitcoin**: `1Af9DgxtWvVp6bFiYQw2MeWtRzTXshRYpB`
 
 Таккже вы можете поддержать **оригинального автора** следующими способами:
 
