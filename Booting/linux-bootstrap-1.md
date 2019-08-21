@@ -491,6 +491,7 @@ Links
 
   * [Intel 80386 programmer's reference manual 1986](http://css.csail.mit.edu/6.858/2014/readings/i386.pdf)
   * [Minimal Boot Loader for Intel® Architecture](https://www.cs.cmu.edu/~410/doc/minimal_boot.pdf)
+  * [Minimal Boot Loader in Assembler with comments](https://github.com/Stefan20162016/linux-insides-code/blob/master/bootloader.asm)
   * [8086](https://en.wikipedia.org/wiki/Intel_8086)
   * [80386](https://en.wikipedia.org/wiki/Intel_80386)
   * [Reset vector](https://en.wikipedia.org/wiki/Reset_vector)
