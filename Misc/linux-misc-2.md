@@ -666,3 +666,4 @@ Links
 * [Documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/makefiles.txt)
 * [System.map](https://en.wikipedia.org/wiki/System.map)
 * [Relocation](https://en.wikipedia.org/wiki/Relocation_%28computing%29)
+* [The Linux Kernel](https://www.kernel.org/doc/html/latest/driver-api/device_link.html)
