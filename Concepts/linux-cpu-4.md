@@ -4,14 +4,14 @@ Notification Chains in Linux Kernel
 Introduction
 --------------------------------------------------------------------------------
 
-The Linux kernel is huge piece of [C](https://en.wikipedia.org/wiki/C_(programming_language)) code which consists from many different subsystems. Each subsystem has its own purpose which is independent of other subsystems. But often one subsystem wants to know something from other subsystem(s). There is special mechanism in the Linux kernel which allows to solve this problem partly. The name of this mechanism is - `notification chains` and its main purpose to provide a way for different subsystems to subscribe on asynchronous events from other subsystems. Note that this mechanism is only for communication inside kernel, but there are other mechanisms for communication between kernel and userspace. 
+The Linux kernel is huge piece of [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code which consists from many different subsystems. Each subsystem has its own purpose which is independent of other subsystems. But often one subsystem wants to know something from other subsystem(s). There is special mechanism in the Linux kernel which allows to solve this problem partly. The name of this mechanism is - `notification chains` and its main purpose to provide a way for different subsystems to subscribe on asynchronous events from other subsystems. Note that this mechanism is only for communication inside kernel, but there are other mechanisms for communication between kernel and userspace.
 
 Before we will consider `notification chains` [API](https://en.wikipedia.org/wiki/Application_programming_interface) and implementation of this API, let's look at `Notification chains` mechanism from theoretical side as we did it in other parts of this book. Everything which is related to `notification chains` mechanism is located in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file and [kernel/notifier.c](https://github.com/torvalds/linux/blob/master/kernel/notifier.c) source code file. So let's open them and start to dive.
 
 Notification Chains related data structures
 --------------------------------------------------------------------------------
 
-Let's start to consider `notification chains` mechanism from related data structures. As I wrote above, main data structures should be located in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file, so the Linux kernel provides generic API which does not depend on certain architecture. In general, the `notification chains` mechanism represents a list (that's why it named `chains`) of [callback](https://en.wikipedia.org/wiki/Callback_(computer_programming)) functions which are will be executed when an event will be occurred.
+Let's start to consider `notification chains` mechanism from related data structures. As I wrote above, main data structures should be located in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file, so the Linux kernel provides generic API which does not depend on certain architecture. In general, the `notification chains` mechanism represents a list (that's why it named `chains`) of [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) functions which are will be executed when an event will be occurred.
 
 All of these callback functions are represented as `notifier_fn_t` type in the Linux kernel:
 
@@ -355,9 +355,9 @@ That's all.
 Links
 --------------------------------------------------------------------------------
 
-* [C programming langauge](https://en.wikipedia.org/wiki/C_(programming_language))
+* [C programming language](https://en.wikipedia.org/wiki/C_%28programming_language%29)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
-* [callback](https://en.wikipedia.org/wiki/Callback_(computer_programming))
+* [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29)
 * [RCU](https://en.wikipedia.org/wiki/Read-copy-update)
 * [spinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html)
 * [loadable modules](https://en.wikipedia.org/wiki/Loadable_kernel_module)
