@@ -125,7 +125,7 @@ Kernel hacking
   
 menu of the Linux kernel configuration:
 
-![kernel configuration menu](http://oi63.tinypic.com/2pzbog7.jpg)
+![kernel configuration menu](images/kernel_configuration_menu1.png)
 
 We may not only enable support of the `kmemcheck` mechanism in the Linux kernel, but it also provides some configuration options for us. We will see all of these options in the next paragraph of this part. Last note before we will consider how does the `kmemcheck` check memory. Now this mechanism is implemented only for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. You can be sure if you will look in the [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Kconfig) `x86` related kernel configuration file, you will see following lines:
 
@@ -165,7 +165,7 @@ Let's start from the initialization of this mechanism. We already know that to e
 
 to the Linux kernel command line. The first two are clear, but the last needs a little explanation. This option switches the `kmemcheck` in a special mode when it will be turned off after detecting the first use of uninitialized memory. Actually this mode is enabled by default in the Linux kernel:
 
-![kernel configuration menu](http://oi66.tinypic.com/y2eeh.jpg)
+![kernel configuration menu](images/kernel_configuration_menu2.png)
 
 We know from the seventh [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-7.html) of the chapter which describes initialization of the Linux kernel that the kernel command line is parsed during initialization of the Linux kernel in `do_initcall_level`, `do_early_param` functions. Actually the `kmemcheck` subsystem consists from two stages. The first stage is early. If we will look at the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/kmemcheck.c) source code file, we will see the `param_kmemcheck` function which is will be called during early command line parsing:
 

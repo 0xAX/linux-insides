@@ -397,7 +397,7 @@ memblock_dbg("memblock_reserve: [%#016llx-%#016llx] flags %#02lx %pF\n",
 
 And you will see something like this:
 
-![Memblock](http://oi57.tinypic.com/1zoj589.jpg)
+![Memblock](images/memblock.png)
 
 Memblock also has support in [debugfs](http://en.wikipedia.org/wiki/Debugfs). If you run the kernel on another architecture than `X86` you can access:
 
