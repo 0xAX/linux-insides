@@ -166,7 +166,7 @@ The following steps are needed to get a physical address in protected mode:
 
 Schematically it will look like this:
 
-![linear address](http://oi62.tinypic.com/2yo369v.jpg)
+![linear address](images/linear_address.png)
 
 The algorithm for the transition from real mode into protected mode is:
 

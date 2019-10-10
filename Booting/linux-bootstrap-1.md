@@ -138,7 +138,7 @@ This will instruct [QEMU](https://www.qemu.org/) to use the `boot` binary that w
 
 You will see:
 
-![Simple bootloader which prints only `!`](http://oi60.tinypic.com/2qbwup0.jpg)
+![Simple bootloader which prints only `!`](images/simple_bootloader.png)
 
 In this example, we can see that the code will be executed in `16-bit` real mode and will start at `0x7c00` in memory. After starting, it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt, which just prints the `!` symbol. It fills the remaining `510` bytes with zeros and finishes with the two magic bytes `0xaa` and `0x55`.
 
@@ -250,7 +250,7 @@ X + sizeof(KernelBootSector) + 1
 
 where `X` is the address of the kernel boot sector being loaded. In my case, `X` is `0x10000`, as we can see in a memory dump:
 
-![kernel first address](http://oi57.tinypic.com/16bkco2.jpg)
+![kernel first address](images/kernel_first_address.png)
 
 The bootloader has now loaded the Linux kernel into memory, filled the header fields, and then jumped to the corresponding memory address. We now move directly to the kernel setup code.
 
@@ -267,7 +267,7 @@ qemu-system-x86_64 vmlinuz-3.18-generic
 
 then you will see:
 
-![Try vmlinuz in qemu](http://oi60.tinypic.com/r02xkz.jpg)
+![Try vmlinuz in qemu](images/try_vmlinuz_in_qemu.png)
 
 Actually, the file `header.S` starts with the magic number [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) (see image above), the error message that displays and, following that, the [PE](https://en.wikipedia.org/wiki/Portable_Executable) header:
 
@@ -407,7 +407,7 @@ Let's look at all three of these scenarios in turn:
 
 Here we set the alignment of `dx` (which contains the value of `sp` as given by the bootloader) to `4` bytes and check if it is zero. If it is, we set `dx` to `0xfffc` (The last 4-byte aligned address in a 64KB segment). If it is not zero, we continue to use the value of `sp` given by the bootloader (`0xf7f4` in my case). Afterwards, we put the value of `ax` (`0x1000`) into `ss`. We now have a correct stack:
 
-![stack](http://oi58.tinypic.com/16iwcis.jpg)
+![stack](images/stack1.png)
 
 * The second scenario, (`ss` != `ds`). First, we put the value of [_end](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/setup.ld) (the address of the end of the setup code) into `dx` and check the `loadflags` header field using the `testb` instruction to see whether we can use the heap. [loadflags](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L320) is a bitmask header defined as:
 
@@ -433,11 +433,11 @@ Field name: loadflags
 
 If the `CAN_USE_HEAP` bit is set, we put `heap_end_ptr` into `dx` (which points to `_end`) and add `STACK_SIZE` (the minimum stack size, `1024` bytes) to it. After this, if `dx` is not carried (it will not be carried, `dx = _end + 1024`), jump to label `2` (as in the previous case) and make a correct stack.
 
-![stack](http://oi62.tinypic.com/dr7b5w.jpg)
+![stack](images/stack2.png)
 
 * When `CAN_USE_HEAP` is not set, we just use a minimal stack from `_end` to `_end + STACK_SIZE`:
 
-![minimal stack](http://oi60.tinypic.com/28w051y.jpg)
+![minimal stack](images/minimal_stack.png)
 
 BSS Setup
 --------------------------------------------------------------------------------
@@ -466,7 +466,7 @@ The BSS section is used to store statically allocated, uninitialized data. Linux
 
 First, the [__bss_start](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/setup.ld) address is moved into `di`. Next, the `_end + 3` address (+3 - aligns to 4 bytes) is moved into `cx`. The `eax` register is cleared (using the `xor` instruction), and the bss section size (`cx - di`) is calculated and put into `cx`. Then, `cx` is divided by four (the size of a 'word'), and the `stosl` instruction is used repeatedly, storing the value of `eax` (zero) into the address pointed to by `di`, automatically increasing `di` by four, repeating until `cx` reaches zero. The net effect of this code is that zeros are written through all words in memory from `__bss_start` to `_end`:
 
-![bss](http://oi59.tinypic.com/29m2eyr.jpg)
+![bss](images/bss.png)
 
 Jump to main
 --------------------------------------------------------------------------------

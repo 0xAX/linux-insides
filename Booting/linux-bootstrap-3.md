@@ -42,7 +42,7 @@ vga=<mode>
 
 So we can add the `vga` option to the grub (or another bootloader's) configuration file and it will pass this option to the kernel command line. This option can have different values as mentioned in the description. For example, it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you will see a menu like this:
 
-![video mode setup menu](http://oi59.tinypic.com/ejcz81.jpg)
+![video mode setup menu](images/video_mode_setup_menu.png)
 
 which will ask to select a video mode. We will look at its implementation, but before diving into the implementation we have to look at some other things.
 
