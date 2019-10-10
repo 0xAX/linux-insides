@@ -259,7 +259,7 @@ The `jiffies` clock source uses the `NSEC_PER_JIFFY` multiplier conversion to sp
 
 Where `CONFIG_HZ` can be one of the following values:
 
-![HZ](http://i63.tinypic.com/v8d6ph.png)
+![HZ](images/HZ.png)
 
 This means that in our case the timer interrupt frequency is `250 HZ` or occurs `250` times per second or one timer interrupt each `4ms`.
 
