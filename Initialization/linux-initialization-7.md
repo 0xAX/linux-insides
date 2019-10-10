@@ -390,7 +390,7 @@ void __init setup_nr_cpu_ids(void)
 
 Here `nr_cpu_ids` represents number of CPUs, `NR_CPUS` represents the maximum number of CPUs which we can set in configuration time:
 
-![CONFIG_NR_CPUS](http://oi59.tinypic.com/28mh45h.jpg)
+![CONFIG_NR_CPUS](images/CONFIG_NR_CPUS.png)
 
 Actually we need to call this function, because `NR_CPUS` can be greater than actual amount of the CPUs in the your computer. Here we can see that we call `find_last_bit` function and pass two parameters to it:
 
