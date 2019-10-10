@@ -159,7 +159,7 @@ In other way, when the `CONFIG_X86_IO_APIC` kernel configuration option is set, 
 
 We remember from the previous parts, that the amount of processors we can set during Linux kernel configuration process with the `CONFIG_NR_CPUS` configuration option:
 
-![kernel](http://oi60.tinypic.com/1zdm1dt.jpg)
+![kernel](images/kernel.png)
 
 In the first case (`CPU_VECTOR_LIMIT > IO_APIC_VECTOR_LIMIT`), the `NR_IRQS` will be `4352`, in the second case (`CPU_VECTOR_LIMIT < IO_APIC_VECTOR_LIMIT`), the `NR_IRQS` will be `768`. In my case the `NR_CPUS` is `8` as you can see in the my configuration, the `CPU_VECTOR_LIMIT` is `512` and the `IO_APIC_VECTOR_LIMIT` is `4096`. So `NR_IRQS` for my configuration is `4352`:
 
