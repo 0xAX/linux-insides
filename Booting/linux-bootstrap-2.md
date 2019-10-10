@@ -13,7 +13,7 @@ In this part, we will continue to research the kernel setup code and go over
 * memory detection, CPU validation and keyboard initialization
 * and much much more.
 
-So, Let's go ahead.
+So, let's go ahead.
 
 Protected mode
 --------------------------------------------------------------------------------
@@ -22,9 +22,9 @@ Before we can move to the native Intel64 [Long Mode](http://en.wikipedia.org/wik
 
 What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from the [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode came.
 
-The main reason to move away from [Real mode](http://wiki.osdev.org/Real_Mode) is that there is very limited access to the RAM. As you may remember from the previous part, there are only 2<sup>20</sup> bytes or 1 Megabyte, sometimes even only 640 Kilobytes of RAM available in the Real mode.
+The main reason to move away from [Real mode](http://wiki.osdev.org/Real_Mode) is that there is very limited access to the RAM. As you may remember from the previous part, there are only 2<sup>20</sup> bytes or 1 Megabyte, sometimes even only 640 Kilobytes of RAM available in Real mode.
 
-Protected mode brought many changes, but the main one is the difference in memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs the 1 Megabyte in real mode. Also, [paging](http://en.wikipedia.org/wiki/Paging) support was added, which you can read about in the next sections.
+Protected mode brought many changes, but the main one is the difference in memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs the 1 Megabyte in Real mode. Also, [paging](http://en.wikipedia.org/wiki/Paging) support was added, which you can read about in the next sections.
 
 Memory management in Protected mode is divided into two, almost independent parts:
 
@@ -33,7 +33,7 @@ Memory management in Protected mode is divided into two, almost independent part
 
 Here we will only talk about segmentation. Paging will be discussed in the next sections.
 
-As you can read in the previous part, addresses consist of two parts in real mode:
+As you can read in the previous part, addresses consist of two parts in Real mode:
 
 * Base address of the segment
 * Offset from the segment base
@@ -41,12 +41,12 @@ As you can read in the previous part, addresses consist of two parts in real mod
 And we can get the physical address if we know these two parts by:
 
 ```
-PhysicalAddress = Segment Selector * 16 + Offset
+PhysicalAddress = Segment Base * 16 + Offset
 ```
 
-Memory segmentation was completely redone in protected mode. There are no 64 Kilobyte fixed-size segments. Instead, the size and location of each segment is described by an associated data structure called the _Segment Descriptor_. The segment descriptors are stored in a data structure called the `Global Descriptor Table` (GDT).
+Memory segmentation was completely redone in protected mode. There are no 64 Kilobyte fixed-size segments. Instead, the size and location of each segment is described by an associated data structure called the _Segment Descriptor_. These segment descriptors are stored in a data structure called the `Global Descriptor Table` (GDT).
 
-The GDT is a structure which resides in memory. It has no fixed place in the memory so, its address is stored in the special `GDTR` register. Later we will see how the GDT is loaded in the Linux kernel code. There will be an operation for loading it into memory, something like:
+The GDT is a structure which resides in memory. It has no fixed place in the memory, so its address is stored in the special `GDTR` register. Later we will see how the GDT is loaded in the Linux kernel code. There will be an operation for loading it from memory, something like:
 
 ```assembly
 lgdt gdt
@@ -57,7 +57,7 @@ where the `lgdt` instruction loads the base address and limit(size) of the globa
  * the size(16-bit) of the global descriptor table;
  * the address(32-bit) of the global descriptor table.
 
-As mentioned above the GDT contains `segment descriptors` which describe memory segments.  Each descriptor is 64-bits in size. The general scheme of a descriptor is:
+As mentioned above, the GDT contains `segment descriptors` which describe memory segments.  Each descriptor is 64-bits in size. The general scheme of a descriptor is:
 
 ```
  63         56         51   48    45           39        32 
@@ -75,7 +75,7 @@ As mentioned above the GDT contains `segment descriptors` which describe memory 
 ------------------------------------------------------------
 ```
 
-Don't worry, I know it looks a little scary after real mode, but it's easy. For example LIMIT 15:0 means that bits 0-15 of Limit are located at the beginning of the Descriptor. The rest of it is in LIMIT 19:16, which is located at bits 48-51 of the Descriptor. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
+Don't worry, I know it looks a little scary after Real mode, but it's easy. For example LIMIT 15:0 means that bits 0-15 of the segment limit are located at the beginning of the Descriptor. The rest of it is in LIMIT 19:16, which is located at bits 48-51 of the Descriptor. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
 
 1. Limit[20-bits] is split between bits 0-15 and 48-51. It defines the `length_of_segment - 1`. It depends on the `G`(Granularity) bit.
 
