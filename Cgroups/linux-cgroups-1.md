@@ -25,7 +25,7 @@ One `control group subsystem` represents one kind of resources like a processor 
 
 Each of these control group subsystems depends on related configuration option. For example the `cpuset` subsystem should be enabled via `CONFIG_CPUSETS` kernel configuration option, the `io` subsystem via `CONFIG_BLK_CGROUP` kernel configuration option and etc. All of these kernel configuration options may be found in the `General setup → Control Group support` menu:
 
-![menuconfig](http://oi66.tinypic.com/2rc2a9e.jpg)
+![menuconfig](images/menuconfig.png)
 
 You may see enabled control groups on your computer via [proc](https://en.wikipedia.org/wiki/Procfs) filesystem:
 
