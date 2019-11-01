@@ -10,11 +10,11 @@ After writing some assembler code I began to understand how my program looks aft
 
 I'm writing this part nine and a half months after I've started to learn from the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
 
-![github](http://i63.tinypic.com/2lbgc9f.png)
+![github](images/github.png)
 
 It seems that people are interested in the insides of the Linux kernel. Besides this, in all the time that I have been writing `linux-insides`, I have received many questions from different people about how to begin contributing to the Linux kernel. Generally people are interested in contributing to open source projects and the Linux kernel is not an exception:
 
-![google-linux](http://i64.tinypic.com/2j4ot5e.png)
+![google-linux](images/google_linux.png)
 
 So, it seems that people are interested in the Linux kernel development process. I thought it would be strange if a book about the Linux kernel would not contain a part describing how to take a part in the Linux kernel development and that's why I decided to write it. You will not find information about why you should be interested in contributing to the Linux kernel in this part. But if you are interested how to start with Linux kernel development, this part is for you.
 
@@ -102,7 +102,7 @@ $ cat /proc/config.gz | gunzip > ~/dev/linux/.config
 
 If you are not satisfied with the standard kernel configuration that is provided by the maintainers of your distro, you can configure the Linux kernel manually. There are a couple of ways to do it. The Linux kernel root [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) provides a set of targets that allows you to configure it. For example `menuconfig` provides a menu-driven interface for the kernel configuration:
 
-![menuconfig](http://i64.tinypic.com/zn5zbq.png)
+![menuconfig](images/menuconfig.png)
 
 The `defconfig` argument generates the default kernel configuration file for the current architecture, for example [x86_64 defconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/configs/x86_64_defconfig). You can pass the `ARCH` command line argument to `make` to build `defconfig` for the given architecture:
 
@@ -112,7 +112,7 @@ $ make ARCH=arm64 defconfig
 
 The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to generate a new configuration file where all options will be disabled, enabled, and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
 
-![nconfig](http://i68.tinypic.com/jjmlfn.png)
+![nconfig](images/nconfig.png)
 
 And even `randconfig` to generate random Linux kernel configuration file. I will not write about how to configure the Linux kernel or which options to enable because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
 
@@ -273,7 +273,7 @@ We can now run our kernel in the virtual machine. As I already wrote I prefer [q
 $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86_64/boot/bzImage -initrd ~/dev/initrd_x86_64.gz -append "root=/dev/sda1 ignore_loglevel"
 ```
 
-![qemu](http://i67.tinypic.com/15i6law.png)
+![qemu](images/qemu.png)
 
 From now we can run the Linux kernel in the virtual machine and this means that we can begin to change and test the kernel.
 
@@ -330,7 +330,7 @@ Device Drivers
 ----> Digi EPCA PCI products
 ```
 
-![dgap menu](http://i65.tinypic.com/v8o5rs.png)
+![dgap menu](images/dgap_menu.png)
 
 Now is time to make commit. I'm using following combination for this:
 
@@ -424,7 +424,7 @@ CHECK: spaces preferred around that '|' (ctx:VxV)
 
 Also you can see problematic places with the help of the `git diff`:
 
-![git diff](http://oi60.tinypic.com/2u91rgn.jpg)
+![git diff](images/git_diff.png)
 
 * [Linus doesn't accept github pull requests](https://github.com/torvalds/linux/pull/17#issuecomment-5654674)
 
