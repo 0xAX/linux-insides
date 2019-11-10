@@ -483,6 +483,7 @@ _start:
 
   * [Справочник программиста Intel 80386 1986](https://css.csail.mit.edu/6.858/2014/readings/i386.pdf)
   * [Минимальный загрузчик для архитектуры Intel®](https://www.cs.cmu.edu/~410/doc/minimal_boot.pdf)
+  * [Минимальный загрузчик на ассемблере с комментариями](https://github.com/Stefan20162016/linux-insides-code/blob/master/bootloader.asm)
   * [8086](https://en.wikipedia.org/wiki/Intel_8086)
   * [80386](https://en.wikipedia.org/wiki/Intel_80386)
   * [Вектор прерываний](https://en.wikipedia.org/wiki/Reset_vector)
