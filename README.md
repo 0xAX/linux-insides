@@ -33,7 +33,7 @@ Linux Inside на русском
 
 **Пожалуйста, прочтите [CONTRIBUTING.md](https://github.com/proninyaroslav/linux-insides-ru/blob/master/CONTRIBUTING.md), прежде чем внести изменения.**
 
-![image](http://oi58.tinypic.com/23upobq.jpg)
+![linux-kernel](Assets/linux-kernel.png)
 
 Список рассылки
 ---------------
