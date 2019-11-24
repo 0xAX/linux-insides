@@ -50,7 +50,7 @@ Feel free to create issues or pull-requests if you have any problems.
 
 **Please read [CONTRIBUTING.md](https://github.com/0xAX/linux-insides/blob/master/CONTRIBUTING.md) before pushing any changes.**
 
-![image](http://oi58.tinypic.com/23upobq.jpg)
+![linux-kernel](Assets/linux-kernel.png)
 
 Author
 ---------------
