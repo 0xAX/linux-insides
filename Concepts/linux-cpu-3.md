@@ -381,6 +381,20 @@ Besides the `rootfs_initcall` level, there are additional `console_initcall`, `s
 
 The main goal of these additional levels is to wait for completion of all modules related initialization routines for a certain level.
 
+Another point worthy of mention is the `module_init(x)` macro, defined at [include/linux/module.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/module.h) as:
+
+```C
+#define module_init(x)   __initcall(x);
+```
+
+If we follow and check what's the definition of `__initcall(x)` at [include/linux/init.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init.h) we can see that it's being set as an `device_initcall`:
+
+```C
+#define __initcall(fn) device_initcall(fn)
+```
+
+With that we can conclude that when a function set as `__init` of certain module isn't explicitly added to a specific initcall category, but using `module_init()` macro, it is added to device initcall list by default.
+
 That's all.
 
 Conclusion
