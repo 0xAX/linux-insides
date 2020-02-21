@@ -127,3 +127,4 @@ Thank you to all contributors:
 * [SeongJae Park](https://github.com/sjp38)
 * [Stefan20162016](https://github.com/stefan20162016)
 * [Marco Torsello](https://github.com/md1512)
+* [Bruno Meneguele](https://github.com/bmeneguele)
