@@ -52,7 +52,7 @@ In order to run own copy of the book with gitook using within container:
    ```bash
    docker image build \
        --rm --squash \
-       --label linux-insides \\
+       --label linux-insides \
        --tag linux-insides-book:latest \
        -f Dockerfile
    ```
