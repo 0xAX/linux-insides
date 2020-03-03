@@ -46,7 +46,7 @@ On other languages
 Docker
 ------
 
-In order to run own copy of the book with gitook using within container:
+In order to run own copy of the book with gitook within local container:
 
 1. Build container image
    ```bash
