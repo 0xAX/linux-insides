@@ -568,7 +568,7 @@ First of all we need to set the `EFER.LME` flag in the [MSR](http://en.wikipedia
 	wrmsr
 ```
 
-Here we put the `MSR_EFER` flag (which is defined in [arch/x86/include/asm/msr-index.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/asm/msr-index.h)) in the `ecx` register and execute the `rdmsr` instruction which reads the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executes, the resulting data is stored in `edx:eax` according to the `MSR` register specified in `ecx`. We check the `EFER_LME` bit with the `btsl` instruction and write data from `edx:eax` back to the `MSR` register with the `wrmsr` instruction.
+Here we put the `MSR_EFER` flag (which is defined in [arch/x86/include/asm/msr-index.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/asm/msr-index.h)) in the `ecx` register and execute the `rdmsr` instruction which reads the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executes, the resulting data is stored in `edx:eax` according to the `MSR` register specified in `ecx`. We check the current `EFER_LME` bit, transfer it into the carry flag and update the bit, all with the `btsl` instruction. Then we write data from `edx:eax` back to the `MSR` register with the `wrmsr` instruction.
 
 In the next step, we push the address of the kernel segment code to the stack (we defined it in the GDT) and put the address of the `startup_64` routine in `eax`.
 
