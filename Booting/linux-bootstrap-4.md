@@ -480,7 +480,7 @@ Let's look at how this is implemented. First, we clear the buffer for the page t
 
 We put the address of `pgtable` with an offset of `ebx` (remember that `ebx` points to the location in memory where the kernel will be decompressed later) into the `edi` register, clear the `eax` register and set the `ecx` register to `6144`.
 
-The `rep stosl` instruction will write the value of `eax` to `edi`, add `4` to `edi` and decrement `ecx` by `1`. This operation will be repeated while the value of the `ecx` register is greater than zero. That's why we put `6144` or `BOOT_INIT_PGT_SIZE/4` in `ecx`.
+The `rep stosl` instruction will write the value of `eax` to the memory location where `edi` points to, increment `edi` by `4`, and decrement `ecx` by `1`. This operation will be repeated while the value of the `ecx` register is greater than zero. That's why we put `6144` or `BOOT_INIT_PGT_SIZE/4` in `ecx`.
 
 `pgtable` is defined at the end of the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S) assembly file:
 
