@@ -231,11 +231,13 @@ The `IST` or `Interrupt Stack Table` is a new mechanism in the `x86_64`. It is u
 
 The `Interrupt Descriptor Table` represented by the array of the `gate_desc` structures:
 
+
 ```C
-gate_desc idt_table[IDT_ENTRIES] __page_aligned_bss;
+extern gate_desc idt_table[];
 ```
 
 where `gate_struct` is defined as:
+[/arch/x86/include/asm/desc\_defs.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc_defs.h)
 
 ```C
 struct gate_struct {
