@@ -281,22 +281,35 @@ The `PAGE_SIZE` is `4096`-bytes and the `THREAD_SIZE_ORDER` depends on the `KASA
 #define IRQ_STACK_SIZE (PAGE_SIZE << IRQ_STACK_ORDER)
 ```
 
-Or `16384` bytes. The per-cpu interrupt stack represented by the `irq_stack_union` union in the Linux kernel for `x86_64`:
+Or `16384` bytes. The per-cpu interrupt stack is represented by the `irq_stack` struct and the `fixed_percpu_data` struct  
+in the Linux kernel for `x86_64`:
 
 ```C
-union irq_stack_union {
-	char irq_stack[IRQ_STACK_SIZE];
-
-    struct {
-		char gs_base[40];
-		unsigned long stack_canary;
-	};
-};
+/* Per CPU interrupt stacks */
+struct irq_stack {
+	char		stack[IRQ_STACK_SIZE];
+} __aligned(IRQ_STACK_SIZE);
 ```
 
-The first `irq_stack` field is a 16 kilobytes array. Also you can see that `irq_stack_union` contains a structure with the two fields:
+```C
+#ifdef CONFIG_X86_64
+struct fixed_percpu_data {
+	/*
+	 * GCC hardcodes the stack canary as %gs:40.  Since the
+	 * irq_stack is the object at %gs:0, we reserve the bottom
+	 * 48 bytes of the irq stack for the canary.
+	 */
+	char		gs_base[40];
+	unsigned long	stack_canary;
+};
+...
+#endif
+```
 
-* `gs_base` - The `gs` register always points to the bottom of the `irqstack` union. On the `x86_64`, the `gs` register is shared by per-cpu area and stack canary (more about `per-cpu` variables you can read in the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)).  All per-cpu symbols are zero-based and the `gs` points to the base of the per-cpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) is abolished in the long mode, but we can set the base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still be used as address registers. If you remember the first [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of the Linux kernel initialization process, you can remember that we have set the `gs` register:
+The `irq_stack` struct contains 16 kilobytes array.  
+Also, you can see that the fixed\_percpu\_data contains two fields:
+
+* `gs_base` - The `gs` register always points to the bottom of the `fixed_percpu_data`. On the `x86_64`, the `gs` register is shared by per-cpu area and stack canary (more about `per-cpu` variables you can read in the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)).  All per-cpu symbols are zero-based and the `gs` points to the base of the per-cpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) is abolished in the long mode, but we can set the base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still be used as address registers. If you remember the first [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of the Linux kernel initialization process, you can remember that we have set the `gs` register:
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
