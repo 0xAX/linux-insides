@@ -306,7 +306,7 @@ struct fixed_percpu_data {
 #endif
 ```
 
-The `irq_stack` struct contains 16 kilobytes array.  
+The `irq_stack` struct contains a 16 kilobytes array.  
 Also, you can see that the fixed\_percpu\_data contains two fields:
 
 * `gs_base` - The `gs` register always points to the bottom of the `fixed_percpu_data`. On the `x86_64`, the `gs` register is shared by per-cpu area and stack canary (more about `per-cpu` variables you can read in the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)).  All per-cpu symbols are zero-based and the `gs` points to the base of the per-cpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) is abolished in the long mode, but we can set the base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still be used as address registers. If you remember the first [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of the Linux kernel initialization process, you can remember that we have set the `gs` register:
@@ -318,11 +318,10 @@ Also, you can see that the fixed\_percpu\_data contains two fields:
 	wrmsr
 ```
 
-where `initial_gs` points to the `irq_stack_union`:
+where `initial_gs` points to the `fixed_percpu_data`:
 
 ```assembly
-GLOBAL(initial_gs)
-.quad	INIT_PER_CPU_VAR(irq_stack_union)
+SYM_DATA(initial_gs,	.quad INIT_PER_CPU_VAR(fixed_percpu_data))
 ```
 
 * `stack_canary` - [Stack canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries) for the interrupt stack is a `stack protector`
