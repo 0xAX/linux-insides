@@ -37,7 +37,7 @@ Addresses of each of the interrupt handlers are maintained in a special location
 BUG_ON((unsigned)n > 0xFF);
 ```
 
-You can find this check within the Linux kernel source code related to interrupt setup (e.g. The `set_intr_gate`, `void set_system_intr_gate` in [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h)). The first 32 vector numbers from `0` to `31` are reserved by the processor and used for the processing of architecture-defined exceptions and interrupts. You can find the table with the description of these vector numbers in the second part of the Linux kernel initialization process - [Early interrupt and exception handling](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html). Vector numbers from `32` to `255` are designated as user-defined interrupts and are not reserved by the processor. These interrupts are generally assigned to external I/O devices to enable those devices to send interrupts to the processor.
+You can find this check within the Linux kernel source code related to interrupt setup (e.g. The `set_intr_gate` in [arch/x86/kernel/idt.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/ldt.c)). The first 32 vector numbers from `0` to `31` are reserved by the processor and used for the processing of architecture-defined exceptions and interrupts. You can find the table with the description of these vector numbers in the second part of the Linux kernel initialization process - [Early interrupt and exception handling](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html). Vector numbers from `32` to `255` are designated as user-defined interrupts and are not reserved by the processor. These interrupts are generally assigned to external I/O devices to enable those devices to send interrupts to the processor.
 
 Now let's talk about the types of interrupts. Broadly speaking, we can split interrupts into 2 major classes:
 
@@ -231,34 +231,24 @@ The `IST` or `Interrupt Stack Table` is a new mechanism in the `x86_64`. It is u
 
 The `Interrupt Descriptor Table` represented by the array of the `gate_desc` structures:
 
+
 ```C
 extern gate_desc idt_table[];
 ```
 
-where `gate_desc` is:
+where `gate_struct` is defined as:
+[/arch/x86/include/asm/desc\_defs.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc_defs.h)
 
 ```C
+struct gate_struct {
+	u16		offset_low;
+	u16		segment;
+	struct idt_bits	bits;
+	u16		offset_middle;
 #ifdef CONFIG_X86_64
-...
-...
-...
-typedef struct gate_struct64 gate_desc;
-...
-...
-...
+	u32		offset_high;
+	u32		reserved;
 #endif
-```
-
-and `gate_struct64` defined as:
-
-```C
-struct gate_struct64 {
-        u16 offset_low;
-        u16 segment;
-        unsigned ist : 3, zero0 : 5, type : 5, dpl : 2, p : 1;
-        u16 offset_middle;
-        u32 offset_high;
-        u32 zero1;
 } __attribute__((packed));
 ```
 
@@ -291,22 +281,35 @@ The `PAGE_SIZE` is `4096`-bytes and the `THREAD_SIZE_ORDER` depends on the `KASA
 #define IRQ_STACK_SIZE (PAGE_SIZE << IRQ_STACK_ORDER)
 ```
 
-Or `16384` bytes. The per-cpu interrupt stack represented by the `irq_stack_union` union in the Linux kernel for `x86_64`:
+Or `16384` bytes. The per-cpu interrupt stack is represented by the `irq_stack` struct and the `fixed_percpu_data` struct  
+in the Linux kernel for `x86_64`:
 
 ```C
-union irq_stack_union {
-	char irq_stack[IRQ_STACK_SIZE];
-
-    struct {
-		char gs_base[40];
-		unsigned long stack_canary;
-	};
-};
+/* Per CPU interrupt stacks */
+struct irq_stack {
+	char		stack[IRQ_STACK_SIZE];
+} __aligned(IRQ_STACK_SIZE);
 ```
 
-The first `irq_stack` field is a 16 kilobytes array. Also you can see that `irq_stack_union` contains a structure with the two fields:
+```C
+#ifdef CONFIG_X86_64
+struct fixed_percpu_data {
+	/*
+	 * GCC hardcodes the stack canary as %gs:40.  Since the
+	 * irq_stack is the object at %gs:0, we reserve the bottom
+	 * 48 bytes of the irq stack for the canary.
+	 */
+	char		gs_base[40];
+	unsigned long	stack_canary;
+};
+...
+#endif
+```
 
-* `gs_base` - The `gs` register always points to the bottom of the `irqstack` union. On the `x86_64`, the `gs` register is shared by per-cpu area and stack canary (more about `per-cpu` variables you can read in the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)).  All per-cpu symbols are zero-based and the `gs` points to the base of the per-cpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) is abolished in the long mode, but we can set the base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still be used as address registers. If you remember the first [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of the Linux kernel initialization process, you can remember that we have set the `gs` register:
+The `irq_stack` struct contains a 16 kilobytes array.  
+Also, you can see that the fixed\_percpu\_data contains two fields:
+
+* `gs_base` - The `gs` register always points to the bottom of the `fixed_percpu_data`. On the `x86_64`, the `gs` register is shared by per-cpu area and stack canary (more about `per-cpu` variables you can read in the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)).  All per-cpu symbols are zero-based and the `gs` points to the base of the per-cpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) is abolished in the long mode, but we can set the base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still be used as address registers. If you remember the first [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of the Linux kernel initialization process, you can remember that we have set the `gs` register:
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -315,23 +318,26 @@ The first `irq_stack` field is a 16 kilobytes array. Also you can see that `irq_
 	wrmsr
 ```
 
-where `initial_gs` points to the `irq_stack_union`:
+where `initial_gs` points to the `fixed_percpu_data`:
 
 ```assembly
-GLOBAL(initial_gs)
-.quad	INIT_PER_CPU_VAR(irq_stack_union)
+SYM_DATA(initial_gs,	.quad INIT_PER_CPU_VAR(fixed_percpu_data))
 ```
 
 * `stack_canary` - [Stack canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries) for the interrupt stack is a `stack protector`
 to verify that the stack hasn't been overwritten. Note that `gs_base` is a 40 bytes array. `GCC` requires that stack canary will be on the fixed offset from the base of the `gs` and its value must be `40` for the `x86_64` and `20` for the `x86`.
 
-The `irq_stack_union` is the first datum in the `percpu` area, we can see it in the `System.map`:
+The `fixed_percpu_data` is the first datum in the `percpu` area, we can see it in the `System.map`:
 
 ```
 0000000000000000 D __per_cpu_start
-0000000000000000 D irq_stack_union
-0000000000004000 d exception_stacks
+0000000000000000 D fixed_percpu_data
+00000000000001e0 A kexec_control_code_size
+0000000000001000 D cpu_debug_store
+0000000000002000 D irq_stack_backing_store
+0000000000006000 D cpu_tss_rw
 0000000000009000 D gdt_page
+000000000000a000 d exception_stacks
 ...
 ...
 ...
@@ -340,41 +346,38 @@ The `irq_stack_union` is the first datum in the `percpu` area, we can see it in 
 We can see its definition in the code:
 
 ```C
-DECLARE_PER_CPU_FIRST(union irq_stack_union, irq_stack_union) __visible;
+DECLARE_PER_CPU_FIRST(struct fixed_percpu_data, fixed_percpu_data) __visible;
 ```
 
-Now, it's time to look at the initialization of the `irq_stack_union`. Besides the `irq_stack_union` definition, we can see the definition of the following per-cpu variables in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h):
+Now, it's time to look at the initialization of the `fixed_percpu_data`. Besides the `fixed_percpu_data` definition, we can see the definition of the following per-cpu variables in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h):
 
 ```C
-DECLARE_PER_CPU(char *, irq_stack_ptr);
+DECLARE_PER_CPU(struct irq_stack *, hardirq_stack_ptr);
+...
 DECLARE_PER_CPU(unsigned int, irq_count);
+...
+/* Per CPU softirq stack pointer */
+DECLARE_PER_CPU(struct irq_stack *, softirq_stack_ptr);
 ```
 
-The first is the `irq_stack_ptr`. From the variable's name, it is obvious that this is a pointer to the top of the stack. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function in [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup_percpu.c):
+The first and third are the stack pointers for hardware and software interrupts. It is obvious from the name of the variables, that these point to the top of stacks. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `hardirq_stack_ptr` is located in the `irq_init_percpu_irqstack` function in [arch/x86/kernel/irq\_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq_64.c):
 
 ```C
-void __init setup_per_cpu_areas(void)
+int irq_init_percpu_irqstack(unsigned int cpu)
 {
-...
-...
-#ifdef CONFIG_X86_64
-for_each_possible_cpu(cpu) {
-    ...
-    ...
-    ...
-    per_cpu(irq_stack_ptr, cpu) =
-            per_cpu(irq_stack_union.irq_stack, cpu) +
-            IRQ_STACK_SIZE - 64;
-    ...
-    ...
-    ...
-#endif
-...
-...
+	if (per_cpu(hardirq_stack_ptr, cpu))
+		return 0;
+	return map_irq_stack(cpu);
 }
 ```
 
-Here we go over all the CPUs one-by-one and setup `irq_stack_ptr`. This turns out to be equal to the top of the interrupt stack minus `64`. Why `64`?TODO  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c) source code file is following:
+Here we go over all the CPUs one-by-one and setup the `hardirq_stack_ptr`.  
+Where `map_irq_stack` is called to initialize the `hardirq_stack_ptr`,  
+to point onto the `irq_backing_store` of the current CPU with an offset of IRQ\_STACK\_SIZE,   
+either with guard pages or without when KASan is enabled.  
+
+
+[arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c) source code file is following:
 
 ```C
 void load_percpu_segment(int cpu)
