@@ -360,31 +360,24 @@ DECLARE_PER_CPU(unsigned int, irq_count);
 DECLARE_PER_CPU(struct irq_stack *, softirq_stack_ptr);
 ```
 
-The first and third are the stack pointers for hardware and software interrupts. It is obvious from the name of the variables, that these point to the top of stacks. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function in [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup_percpu.c):
+The first and third are the stack pointers for hardware and software interrupts. It is obvious from the name of the variables, that these point to the top of stacks. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `hardirq_stack_ptr` is located in the `irq_init_percpu_irqstack` function in [arch/x86/kernel/irq\_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq_64.c):
 
 ```C
-void __init setup_per_cpu_areas(void)
+int irq_init_percpu_irqstack(unsigned int cpu)
 {
-...
-...
-#ifdef CONFIG_X86_64
-for_each_possible_cpu(cpu) {
-    ...
-    ...
-    ...
-    per_cpu(irq_stack_ptr, cpu) =
-            per_cpu(irq_stack_union.irq_stack, cpu) +
-            IRQ_STACK_SIZE - 64;
-    ...
-    ...
-    ...
-#endif
-...
-...
+	if (per_cpu(hardirq_stack_ptr, cpu))
+		return 0;
+	return map_irq_stack(cpu);
 }
 ```
 
-Here we go over all the CPUs one-by-one and setup `irq_stack_ptr`. This turns out to be equal to the top of the interrupt stack minus `64`. Why `64`?TODO  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c) source code file is following:
+Here we go over all the CPUs one-by-one and setup the `hardirq_stack_ptr`.  
+Where `map_irq_stack` is called to initialize the `hardirq_stack_ptr`,  
+to point onto the `irq_backing_store` of the current CPU with an offset of IRQ\_STACK\_SIZE,   
+either with guard pages or without when KASan is enabled.  
+
+
+[arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c) source code file is following:
 
 ```C
 void load_percpu_segment(int cpu)
