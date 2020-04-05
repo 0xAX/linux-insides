@@ -210,7 +210,7 @@ startup_32 (0x0)     +-----------------------+
                      +-----------------------+
 ```
 
-The `startup_32` function is linked to run at the address `0x0` and this means that `1f` has the address `0x0 + offset to 1f`, which is approximately `0x21` bytes. The `ebp` register contains the real physical address of the `1f` label. So, if we subtract `1f` from the `ebp` register, we will get the real physical address of the `startup_32` function. The Linux kernel [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) saysthe base of the protected mode kernel is `0x100000`. We can verify this with [gdb](https://en.wikipedia.org/wiki/GNU_Debugger). Let's start the debugger and add a breakpoint at the address of `1f`, which is `0x100021`. If this is correct we will see the value `0x100021` in the `ebp` register:
+The `startup_32` function is linked to run at the address `0x0` and this means that `1f` has the address `0x0 + offset to 1f`, which is approximately `0x21` bytes. The `ebp` register contains the real physical address of the `1f` label. So, if we subtract `1f` from the `ebp` register, we will get the real physical address of the `startup_32` function. The Linux kernel [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) says the base of the protected mode kernel is `0x100000`. We can verify this with [gdb](https://en.wikipedia.org/wiki/GNU_Debugger). Let's start the debugger and add a breakpoint at the address of `1f`, which is `0x100021`. If this is correct we will see the value `0x100021` in the `ebp` register:
 
 ```
 $ gdb
