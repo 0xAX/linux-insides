@@ -327,13 +327,17 @@ SYM_DATA(initial_gs,	.quad INIT_PER_CPU_VAR(fixed_percpu_data))
 * `stack_canary` - [Stack canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries) for the interrupt stack is a `stack protector`
 to verify that the stack hasn't been overwritten. Note that `gs_base` is a 40 bytes array. `GCC` requires that stack canary will be on the fixed offset from the base of the `gs` and its value must be `40` for the `x86_64` and `20` for the `x86`.
 
-The `irq_stack_union` is the first datum in the `percpu` area, we can see it in the `System.map`:
+The `fixed_percpu_data` is the first datum in the `percpu` area, we can see it in the `System.map`:
 
 ```
 0000000000000000 D __per_cpu_start
-0000000000000000 D irq_stack_union
-0000000000004000 d exception_stacks
+0000000000000000 D fixed_percpu_data
+00000000000001e0 A kexec_control_code_size
+0000000000001000 D cpu_debug_store
+0000000000002000 D irq_stack_backing_store
+0000000000006000 D cpu_tss_rw
 0000000000009000 D gdt_page
+000000000000a000 d exception_stacks
 ...
 ...
 ...
@@ -342,17 +346,21 @@ The `irq_stack_union` is the first datum in the `percpu` area, we can see it in 
 We can see its definition in the code:
 
 ```C
-DECLARE_PER_CPU_FIRST(union irq_stack_union, irq_stack_union) __visible;
+DECLARE_PER_CPU_FIRST(struct fixed_percpu_data, fixed_percpu_data) __visible;
 ```
 
-Now, it's time to look at the initialization of the `irq_stack_union`. Besides the `irq_stack_union` definition, we can see the definition of the following per-cpu variables in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h):
+Now, it's time to look at the initialization of the `fixed_percpu_data`. Besides the `fixed_percpu_data` definition, we can see the definition of the following per-cpu variables in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h):
 
 ```C
-DECLARE_PER_CPU(char *, irq_stack_ptr);
+DECLARE_PER_CPU(struct irq_stack *, hardirq_stack_ptr);
+...
 DECLARE_PER_CPU(unsigned int, irq_count);
+...
+/* Per CPU softirq stack pointer */
+DECLARE_PER_CPU(struct irq_stack *, softirq_stack_ptr);
 ```
 
-The first is the `irq_stack_ptr`. From the variable's name, it is obvious that this is a pointer to the top of the stack. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function in [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup_percpu.c):
+The first and third are the stack pointers for hardware and software interrupts. It is obvious from the name of the variables, that these point to the top of stacks. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function in [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup_percpu.c):
 
 ```C
 void __init setup_per_cpu_areas(void)
