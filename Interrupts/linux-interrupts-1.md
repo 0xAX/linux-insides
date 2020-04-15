@@ -214,7 +214,7 @@ As we can see, `IDT` entry on the diagram consists of the following fields:
 
 * `0-15` bits  - offset from the segment selector which is used by the processor as the base address of the entry point of the interrupt handler;
 * `16-31` bits - base address of the segment select which contains the entry point of the interrupt handler;
-* `IST` - a new special mechanism in the `x86_64`, will see it later;
+* `IST` - a new special mechanism in the `x86_64`, which is described below;
 * `DPL` - Descriptor Privilege Level;
 * `P` - Segment Present flag;
 * `48-63` bits - the second part of the handler base address;
