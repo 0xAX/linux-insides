@@ -52,7 +52,7 @@ As mentioned earlier, an interrupt can occur at any time for a reason which the 
 * `Traps`
 * `Aborts`
 
-A `fault` is an exception reported before the execution of a "faulty" instruction (which can then be corrected). If correct, it allows the interrupted program to be resume.
+A `fault` is an exception reported before the execution of a "faulty" instruction (which can then be corrected). If correct, it allows the interrupted program to resume.
 
 Next a `trap` is an exception which is reported immediately following the execution of the `trap` instruction. Traps also allow the interrupted program to be continued just as a `fault` does.
 
