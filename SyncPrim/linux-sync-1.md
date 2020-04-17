@@ -4,9 +4,9 @@ Synchronization primitives in the Linux kernel. Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-This part opens a new chapter in the [linux-insides](https://0xax.gitbooks.io/linux-insides/content/) book. Timers and time management related stuff was described in the previous [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html). Now time to go next. As you may understand from the part's title, this chapter will describe [synchronization](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) primitives in the Linux kernel.
+This part opens a new chapter in the [linux-insides](https://0xax.gitbooks.io/linux-insides/content/) book. Timers and time management related stuff was described in the previous [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html). Now it's time to move on to the next topic. As you probably recognized from the title, this chapter will describe the [synchronization](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) primitives in the Linux kernel.
 
-As always, before we will consider something synchronization related, we will try to know what `synchronization primitive` is in general. Actually, synchronization primitive is a software mechanism which provides the ability to two or more [parallel](https://en.wikipedia.org/wiki/Parallel_computing) processes or threads to not execute simultaneously on the same segment of a code. For example, let's look on the following piece of code:
+As always, we will try to know what a `synchronization primitive` in general is before we deal with any synchronization-related issues. Actually, a synchronization primitive is a software mechanism, that ensures that two or more [parallel](https://en.wikipedia.org/wiki/Parallel_computing) processes or threads are not running simultaneously on the same code segment. For example, let's look at the following piece of code:
 
 ```C
 mutex_lock(&clocksource_mutex);
