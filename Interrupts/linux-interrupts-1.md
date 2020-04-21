@@ -422,35 +422,35 @@ or
 #define MCE_STACK 4
 ```
 
-All interrupt-gate descriptors which switch to a new stack with the `IST` are initialized with the `set_intr_gate_ist` function. For example:
+All interrupt-gate descriptors, which switch to a new stack with the `IST`, are initialized within the `idt_setup_from_table` function. That function initializes every gate descriptor within the `struct idt_data def_idts[]` array.
+For example:
 
 ```C
-set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
-...
-...
-...
-set_intr_gate_ist(X86_TRAP_DF, &double_fault, DOUBLEFAULT_STACK);
+static const __initconst struct idt_data def_idts[] = {
+    ...
+	INTG(X86_TRAP_NMI,		nmi),
+    ...
+	INTG(X86_TRAP_DF,		double_fault),
 ```
 
-where `&nmi` and `&double_fault` are addresses of the entries to the given interrupt handlers:
+where `nmi` and `double_fault` are entry points created at [arch/x86/kernel/entry\_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S): 
+
+```assembly
+idtentry double_fault			do_double_fault			has_error_code=1 paranoid=2 read_cr2=1
+...
+...
+...
+SYM_CODE_START(nmi)
+...
+...
+...
+SYM_CODE_END(nmi)
+```
+for the the given interrupt handlers declared at [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/traps.h):
 
 ```C
 asmlinkage void nmi(void);
 asmlinkage void double_fault(void);
-```
-
-defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S)
-
-```assembly
-idtentry double_fault do_double_fault has_error_code=1 paranoid=2
-...
-...
-...
-ENTRY(nmi)
-...
-...
-...
-END(nmi)
 ```
 
 When an interrupt or an exception occurs, the new `ss` selector is forced to `NULL` and the `ss` selector’s `rpl` field is set to the new `cpl`. The old `ss`, `rsp`, register flags, `cs`, `rip` are pushed onto the new stack. In 64-bit mode, the size of interrupt stack-frame pushes is fixed at 8-bytes, so that we will get the following stack:
