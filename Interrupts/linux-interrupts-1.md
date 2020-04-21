@@ -404,9 +404,9 @@ and as we already know the `gs` register points to the bottom of the interrupt s
     .quad INIT_PER_CPU_VAR(fixed_percpu_data))
 ```
 
-Here we can see the `wrmsr` instruction which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case the model specific register is `MSR_GS_BASE` which contains the base address of the memory segment pointed by the `gs` register. `edx:eax` points to the address of the `initial_gs` which is the base address of our `irq_stack_union`.
+Here we can see the `wrmsr` instruction, which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case the model specific register is `MSR_GS_BASE`, which contains the base address of the memory segment pointed to by the `gs` register. `edx:eax` points to the address of the `initial_gs,` which is the base address of our `fixed_percpu_data`.
 
-We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides the ability to switch to a new stack for events non-maskable interrupt, double fault etc. There can be up to seven `IST` entries per-cpu. Some of them are:
+We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides the ability to switch to a new stack for events like a non-maskable interrupt, double fault etc. There can be up to seven `IST` entries per-cpu. Some of them are:
 
 * `DOUBLEFAULT_STACK`
 * `NMI_STACK`
