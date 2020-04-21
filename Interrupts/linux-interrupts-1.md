@@ -377,7 +377,7 @@ to point onto the `irq_backing_store` of the current CPU with an offset of IRQ\_
 either with guard pages or without when KASan is enabled.  
 
 
-[arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c) source code file is following:
+After the initialization of the interrupt stack, we need to initialize the gs register within [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c):  
 
 ```C
 void load_percpu_segment(int cpu)
@@ -385,8 +385,10 @@ void load_percpu_segment(int cpu)
         ...
         ...
         ...
-        loadsegment(gs, 0);
-        wrmsrl(MSR_GS_BASE, (unsigned long)per_cpu(irq_stack_union.gs_base, cpu));
+        __loadsegment_simple(gs, 0);
+        wrmsrl(MSR_GS_BASE, cpu_kernelmode_gs_base(cpu));
+        ...
+        load_stack_canary_segment();
 }
 ```
 
@@ -398,8 +400,8 @@ and as we already know the `gs` register points to the bottom of the interrupt s
 	movl	initial_gs+4(%rip),%edx
 	wrmsr
 
-	GLOBAL(initial_gs)
-	.quad	INIT_PER_CPU_VAR(irq_stack_union)
+    SYM_DATA(initial_gs,
+    .quad INIT_PER_CPU_VAR(fixed_percpu_data))
 ```
 
 Here we can see the `wrmsr` instruction which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case the model specific register is `MSR_GS_BASE` which contains the base address of the memory segment pointed by the `gs` register. `edx:eax` points to the address of the `initial_gs` which is the base address of our `irq_stack_union`.
