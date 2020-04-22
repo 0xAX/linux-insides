@@ -52,13 +52,13 @@ As mentioned earlier, an interrupt can occur at any time for a reason which the 
 * `Traps`
 * `Aborts`
 
-A `fault` is an exception reported before the execution of a "faulty" instruction (which can then be corrected). If correct, it allows the interrupted program to be resume.
+A `fault` is an exception reported before the execution of a "faulty" instruction (which can then be corrected). If correct, it allows the interrupted program to resume.
 
-Next a `trap` is an exception which is reported immediately following the execution of the `trap` instruction. Traps also allow the interrupted program to be continued just as a `fault` does.
+Next a `trap` is an exception, which is reported immediately following the execution of the `trap` instruction. Traps also allow the interrupted program to be continued just as a `fault` does.
 
-Finally an `abort` is an exception that does not always report the exact instruction which caused the exception and does not allow the interrupted program to be resumed.
+Finally, an `abort` is an exception that does not always report the exact instruction which caused the exception and does not allow the interrupted program to be resumed.
 
-Also we already know from the previous [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) that interrupts can be classified as `maskable` and `non-maskable`. Maskable interrupts are interrupts which can be blocked with the two following instructions for `x86_64` - `sti` and `cli`. We can find them in the Linux kernel source code:
+Also, we already know from the previous [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) that interrupts can be classified as `maskable` and `non-maskable`. Maskable interrupts are interrupts which can be blocked with the two following instructions for `x86_64` - `sti` and `cli`. We can find them in the Linux kernel source code:
 
 ```C
 static inline void native_irq_disable(void)
@@ -214,7 +214,7 @@ As we can see, `IDT` entry on the diagram consists of the following fields:
 
 * `0-15` bits  - offset from the segment selector which is used by the processor as the base address of the entry point of the interrupt handler;
 * `16-31` bits - base address of the segment select which contains the entry point of the interrupt handler;
-* `IST` - a new special mechanism in the `x86_64`, will see it later;
+* `IST` - a new special mechanism in the `x86_64`, which is described below;
 * `DPL` - Descriptor Privilege Level;
 * `P` - Segment Present flag;
 * `48-63` bits - the second part of the handler base address;
@@ -466,7 +466,7 @@ When an interrupt or an exception occurs, the new `ss` selector is forced to `NU
 +---------------+
 ```
 
-If the `IST` field in the interrupt gate is not `0`, we read the `IST` pointer into `rsp`. If the interrupt vector number has an error code associated with it, we then push the error code onto the stack. If the interrupt vector number has no error code, we go ahead and push the dummy error code on to the stack. We need to do this to ensure stack consistency. Next, we load the segment-selector field from the gate descriptor into the CS register and must verify that the target code-segment is a 64-bit mode code segment by the checking bit `21` i.e. the `L` bit in the `Global Descriptor Table`. Finally we load the offset field from the gate descriptor into `rip` which will be the entry-point of the interrupt handler. After this the interrupt handler begins to execute and when the interrupt handler finishes its execution, it must return control to the interrupted process with the `iret` instruction. The `iret` instruction unconditionally pops the stack pointer (`ss:rsp`) to restore the stack of the interrupted process and does not depend on the `cpl` change.
+If the `IST` field in the interrupt gate is not `0`, we read the `IST` pointer into `rsp`. If the interrupt vector number has an error code associated with it, we then push the error code onto the stack. If the interrupt vector number has no error code, we go ahead and push the dummy error code on to the stack. We need to do this to ensure stack consistency. Next, we load the segment-selector field from the gate descriptor into the CS register and must verify that the target code-segment is a 64-bit mode code segment by the checking bit `21` i.e. the `L` bit in the `Global Descriptor Table`. Finally, we load the offset field from the gate descriptor into `rip` which will be the entry-point of the interrupt handler. After this the interrupt handler begins to execute and when the interrupt handler finishes its execution, it must return control to the interrupted process with the `iret` instruction. The `iret` instruction unconditionally pops the stack pointer (`ss:rsp`) to restore the stack of the interrupted process and does not depend on the `cpl` change.
 
 That's all.
 

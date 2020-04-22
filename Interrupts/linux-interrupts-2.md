@@ -224,7 +224,7 @@ ENTRY(early_idt_handler_array)
 ENDPROC(early_idt_handler_common)
 ```
 
-It fills `early_idt_handler_array` with the `.rept NUM_EXCEPTION_VECTORS` and contains entry of the `early_make_pgtable` interrupt handler (more about its implementation you can read in the part about [Early interrupt and exception handling](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)). For now we come to the end of the `x86_64` architecture-specific code and the next part is the generic kernel code. Of course you already can know that we will return to the architecture-specific code in the `setup_arch` function and other places, but this is the end of the `x86_64` early code.
+It fills `early_idt_handler_array` with the `.rept NUM_EXCEPTION_VECTORS` and contains entry of the `early_make_pgtable` interrupt handler (you can read more about its implementation in the part about [Early interrupt and exception handling](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)). For now, we have reached the end of the x86_64 architecture-specific code and the next part is the generic kernel code. You probably already know, that we will return to the architecture-specific code in the `setup_arch` function and other places, but this is the end of the `x86_64` early code.
 
 Setting stack canary for the interrupt stack
 -------------------------------------------------------------------------------
