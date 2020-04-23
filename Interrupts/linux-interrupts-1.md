@@ -237,7 +237,7 @@ extern gate_desc idt_table[];
 ```
 
 where `gate_struct` is defined as:
-[/arch/x86/include/asm/desc\_defs.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc_defs.h)
+[/arch/x86/include/asm/desc_defs.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc_defs.h)
 
 ```C
 struct gate_struct {
@@ -360,7 +360,7 @@ DECLARE_PER_CPU(unsigned int, irq_count);
 DECLARE_PER_CPU(struct irq_stack *, softirq_stack_ptr);
 ```
 
-The first and third are the stack pointers for hardware and software interrupts. It is obvious from the name of the variables, that these point to the top of stacks. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `hardirq_stack_ptr` is located in the `irq_init_percpu_irqstack` function in [arch/x86/kernel/irq\_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq_64.c):
+The first and third are the stack pointers for hardware and software interrupts. It is obvious from the name of the variables, that these point to the top of stacks. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `hardirq_stack_ptr` is located in the `irq_init_percpu_irqstack` function in [arch/x86/kernel/irq_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq_64.c):
 
 ```C
 int irq_init_percpu_irqstack(unsigned int cpu)
@@ -433,7 +433,7 @@ static const __initconst struct idt_data def_idts[] = {
 	INTG(X86_TRAP_DF,		double_fault),
 ```
 
-where `nmi` and `double_fault` are entry points created at [arch/x86/kernel/entry\_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S): 
+where `nmi` and `double_fault` are entry points created at [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S): 
 
 ```assembly
 idtentry double_fault			do_double_fault			has_error_code=1 paranoid=2 read_cr2=1
