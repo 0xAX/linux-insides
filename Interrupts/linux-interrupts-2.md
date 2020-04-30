@@ -17,7 +17,7 @@ void go_to_protected_mode(void)
 }
 ```
 
-The `setup_idt` function is defined in the same source code file as the `go_to_protected_mode` function and just loads the address of the `NULL` interrupts descriptor table:
+The `setup_idt` function is defined in the same source code file as the `go_to_protected_mode` function and just loads the address of the `NULL` interrupt descriptor table:
 
 ```C
 static void setup_idt(void)
