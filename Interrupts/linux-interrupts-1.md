@@ -237,7 +237,7 @@ extern gate_desc idt_table[];
 ```
 
 where `gate_struct` is defined as:
-[/arch/x86/include/asm/desc\_defs.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc_defs.h)
+[/arch/x86/include/asm/desc_defs.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc_defs.h)
 
 ```C
 struct gate_struct {
@@ -360,7 +360,7 @@ DECLARE_PER_CPU(unsigned int, irq_count);
 DECLARE_PER_CPU(struct irq_stack *, softirq_stack_ptr);
 ```
 
-The first and third are the stack pointers for hardware and software interrupts. It is obvious from the name of the variables, that these point to the top of stacks. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `hardirq_stack_ptr` is located in the `irq_init_percpu_irqstack` function in [arch/x86/kernel/irq\_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq_64.c):
+The first and third are the stack pointers for hardware and software interrupts. It is obvious from the name of the variables, that these point to the top of stacks. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `hardirq_stack_ptr` is located in the `irq_init_percpu_irqstack` function in [arch/x86/kernel/irq_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq_64.c):
 
 ```C
 int irq_init_percpu_irqstack(unsigned int cpu)
@@ -377,7 +377,7 @@ to point onto the `irq_backing_store` of the current CPU with an offset of IRQ\_
 either with guard pages or without when KASan is enabled.  
 
 
-[arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c) source code file is following:
+After the initialization of the interrupt stack, we need to initialize the gs register within [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c):  
 
 ```C
 void load_percpu_segment(int cpu)
@@ -385,8 +385,10 @@ void load_percpu_segment(int cpu)
         ...
         ...
         ...
-        loadsegment(gs, 0);
-        wrmsrl(MSR_GS_BASE, (unsigned long)per_cpu(irq_stack_union.gs_base, cpu));
+        __loadsegment_simple(gs, 0);
+        wrmsrl(MSR_GS_BASE, cpu_kernelmode_gs_base(cpu));
+        ...
+        load_stack_canary_segment();
 }
 ```
 
@@ -398,13 +400,13 @@ and as we already know the `gs` register points to the bottom of the interrupt s
 	movl	initial_gs+4(%rip),%edx
 	wrmsr
 
-	GLOBAL(initial_gs)
-	.quad	INIT_PER_CPU_VAR(irq_stack_union)
+    SYM_DATA(initial_gs,
+    .quad INIT_PER_CPU_VAR(fixed_percpu_data))
 ```
 
-Here we can see the `wrmsr` instruction which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case the model specific register is `MSR_GS_BASE` which contains the base address of the memory segment pointed by the `gs` register. `edx:eax` points to the address of the `initial_gs` which is the base address of our `irq_stack_union`.
+Here we can see the `wrmsr` instruction, which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case the model specific register is `MSR_GS_BASE`, which contains the base address of the memory segment pointed to by the `gs` register. `edx:eax` points to the address of the `initial_gs,` which is the base address of our `fixed_percpu_data`.
 
-We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides the ability to switch to a new stack for events non-maskable interrupt, double fault etc. There can be up to seven `IST` entries per-cpu. Some of them are:
+We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides the ability to switch to a new stack for events like a non-maskable interrupt, double fault etc. There can be up to seven `IST` entries per-cpu. Some of them are:
 
 * `DOUBLEFAULT_STACK`
 * `NMI_STACK`
@@ -420,35 +422,35 @@ or
 #define MCE_STACK 4
 ```
 
-All interrupt-gate descriptors which switch to a new stack with the `IST` are initialized with the `set_intr_gate_ist` function. For example:
+All interrupt-gate descriptors, which switch to a new stack with the `IST`, are initialized within the `idt_setup_from_table` function. That function initializes every gate descriptor within the `struct idt_data def_idts[]` array.
+For example:
 
 ```C
-set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
-...
-...
-...
-set_intr_gate_ist(X86_TRAP_DF, &double_fault, DOUBLEFAULT_STACK);
+static const __initconst struct idt_data def_idts[] = {
+    ...
+	INTG(X86_TRAP_NMI,		nmi),
+    ...
+	INTG(X86_TRAP_DF,		double_fault),
 ```
 
-where `&nmi` and `&double_fault` are addresses of the entries to the given interrupt handlers:
+where `nmi` and `double_fault` are entry points created at [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S): 
+
+```assembly
+idtentry double_fault			do_double_fault			has_error_code=1 paranoid=2 read_cr2=1
+...
+...
+...
+SYM_CODE_START(nmi)
+...
+...
+...
+SYM_CODE_END(nmi)
+```
+for the the given interrupt handlers declared at [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/traps.h):
 
 ```C
 asmlinkage void nmi(void);
 asmlinkage void double_fault(void);
-```
-
-defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S)
-
-```assembly
-idtentry double_fault do_double_fault has_error_code=1 paranoid=2
-...
-...
-...
-ENTRY(nmi)
-...
-...
-...
-END(nmi)
 ```
 
 When an interrupt or an exception occurs, the new `ss` selector is forced to `NULL` and the `ss` selector’s `rpl` field is set to the new `cpl`. The old `ss`, `rsp`, register flags, `cs`, `rip` are pushed onto the new stack. In 64-bit mode, the size of interrupt stack-frame pushes is fixed at 8-bytes, so that we will get the following stack:
