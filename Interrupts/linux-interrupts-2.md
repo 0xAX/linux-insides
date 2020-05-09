@@ -4,9 +4,9 @@ Interrupts and Interrupt Handling. Part 2.
 Start to dive into interrupt and exceptions handling in the Linux kernel
 --------------------------------------------------------------------------------
 
-We saw some theory about interrupts and exception handling in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-1.html) and as I already wrote in that part, we will start to dive into interrupts and exceptions in the Linux kernel source code in this part. As you already can note, the previous part mostly described theoretical aspects and in this part we will start to dive directly into the Linux kernel source code. We will start to do it as we did it in other chapters, from the very early places. We will not see the Linux kernel source code from the earliest [code lines](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292) as we saw it for example in the [Linux kernel booting process](https://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter, but we will start from the earliest code which is related to the interrupts and exceptions. In this part we will try to go through the all interrupts and exceptions related stuff which we can find in the Linux kernel source code.
+We saw some theory about interrupts and exception handling in the [introduction](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-1.html) and as I mentioned in that part, we will now start to dive into interrupts and exceptions within the Linux kernel source code. We'll commence by initializing the basic components as we did in the other chapters. But, we will not see the Linux kernel source code from the very early [code lines](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292), as this was presented in the example within the [Linux kernel booting process](https://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter. In the beginning we will deal with the first sections of the Linux kernel source code, which are related to interrupts and exceptions.
 
-If you've read the previous parts, you can remember that the earliest place in the Linux kernel `x86_64` architecture-specific source code which is related to the interrupt is located in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c) source code file and represents the first setup of the [Interrupt Descriptor Table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table). It occurs right before the transition into the [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the `go_to_protected_mode` function by the call of the `setup_idt`:
+If you've read the previous parts, you can remember that the earliest place in the Linux kernel `x86_64` architecture-specific source code, which is related to the interrupt is located in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c) source code file and represents the first setup of the [Interrupt Descriptor Table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table). It occurs right before the transition into the [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the `go_to_protected_mode` function by calling `setup_idt`:
 
 ```C
 void go_to_protected_mode(void)
@@ -17,7 +17,7 @@ void go_to_protected_mode(void)
 }
 ```
 
-The `setup_idt` function is defined in the same source code file as the `go_to_protected_mode` function and just loads the address of the `NULL` interrupts descriptor table:
+The `setup_idt` function is defined in the same source code file as the `go_to_protected_mode` function and just loads the address of the `NULL` interrupt descriptor table:
 
 ```C
 static void setup_idt(void)
@@ -27,7 +27,7 @@ static void setup_idt(void)
 }
 ```
 
-where `gdt_ptr` represents a special 48-bit `GDTR` register which must contain the base address of the `Global Descriptor Table`:
+where `gdt_ptr` represents a special 48-bit `GDTR` register, which must contain the base address of the `Global Descriptor Table`:
 
 ```C
 struct gdt_ptr {
@@ -36,43 +36,38 @@ struct gdt_ptr {
 } __attribute__((packed));
 ```
 
-Of course in our case the `gdt_ptr` does not represent the `GDTR` register, but `IDTR` since we set `Interrupt Descriptor Table`. You will not find an `idt_ptr` structure, because if it had been in the Linux kernel source code, it would have been the same as `gdt_ptr` but with different name. So, as you can understand there is no sense to have two similar structures which differ only by name. You can note here, that we do not fill the `Interrupt Descriptor Table` with entries, because it is too early to handle any interrupts or exceptions at this point. That's why we just fill the `IDT` with `NULL`.
+Of course in our case the `gdt_ptr` does not represent the `GDTR` register, but `IDTR` since we set the `Interrupt Descriptor Table`. You will not find an `idt_ptr` structure, because if it had been in the Linux kernel source code, it would have been the same as a `gdt_ptr` but with a different name. It would make no sense to create two structures that only differ in their names. Note here that we do not fill the `Interrupt Descriptor Table` with entries, because it is too early to handle any interrupts or exceptions at this point. That's why we just fill the `IDT` with `NULL`.
 
-After the setup of the [Interrupt descriptor table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table), [Global Descriptor Table](http://en.wikipedia.org/wiki/GDT) and other stuff we jump into [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the - [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S). You can read more about it in the [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) which describes the transition to protected mode.
+After the setup of the [Interrupt descriptor table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table), [Global Descriptor Table](http://en.wikipedia.org/wiki/GDT) and other stuff we jump into [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the - [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S) file. You can read more about it in the [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html), which describes the transition to protected mode.
 
-We already know from the earliest parts that entry to protected mode is located in the `boot_params.hdr.code32_start` and you can see that we pass the entry of the protected mode and `boot_params` to the `protected_mode_jump` in the end of the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c):
+The entry to protected mode is located in the `boot_params.hdr.code32_start` and passed together with the `boot_params` to the `protected_mode_jump` function at the end of [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c):
 
 ```C
 protected_mode_jump(boot_params.hdr.code32_start,
 			    (u32)&boot_params + (ds() << 4));
 ```
 
-The `protected_mode_jump` is defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S) and gets these two parameters in the `ax` and `dx` registers using one of the [8086](http://en.wikipedia.org/wiki/Intel_8086) calling  [conventions](http://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions):
+The `protected_mode_jump` function is defined at [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S) and receives these two parameters within the `ax` and `dx` registers, using one of the [8086](http://en.wikipedia.org/wiki/Intel_8086) calling  [conventions](http://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions):
 
 ```assembly
-GLOBAL(protected_mode_jump)
+SYM_FUNC_START_NOALIGN(protected_mode_jump)
 	...
 	...
 	...
 	.byte	0x66, 0xea		# ljmpl opcode
-2:	.long	in_pm32			# offset
+2:	.long	.Lin_pm32		# offset
 	.word	__BOOT_CS		# segment
-...
-...
-...
-ENDPROC(protected_mode_jump)
+SYM_FUNC_END(protected_mode_jump)
 ```
 
 where `in_pm32` contains a jump to the 32-bit entry point:
 
 ```assembly
-GLOBAL(in_pm32)
+SYM_FUNC_START_LOCAL_NOALIGN(.Lin_pm32)
 	...
 	...
-	jmpl	*%eax // %eax contains address of the `startup_32`
-	...
-	...
-ENDPROC(in_pm32)
+	jmpl	*%eax			# Jump to the 32-bit entrypoint
+SYM_FUNC_END(.Lin_pm32)
 ```
 
 As you can remember the 32-bit entry point is in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly file, although it contains `_64` in its name. We can see the two similar files in the `arch/x86/boot/compressed` directory:
