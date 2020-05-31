@@ -4,7 +4,7 @@ Linux kernel memory management Part 2.
 Fix-Mapped Addresses and ioremap
 --------------------------------------------------------------------------------
 
-`Fix-Mapped` addresses are a set of special compile-time addresses whose corresponding physical addresses do not have to be a linear address minus `__START_KERNEL_map`. Each fix-mapped address maps one page frame and the kernel uses them as pointers that never change their address. That is the main point of these addresses. As the comment says: `to have a constant address at compile time, but to set the physical address only in the boot process`. You can remember that in the earliest [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html), we already set the `level2_fixmap_pgt`:
+`Fix-Mapped` addresses are a set of special compile-time addresses whose corresponding physical addresses do not have to be a linear address minus `__START_KERNEL_map`. Each fix-mapped address maps one page frame and the kernel uses them as pointers that never change their address. That is the main point of these addresses. As the comment says: `to have a constant address at compile time, but to set the physical address only in the boot process`. You can remember that in the earliest [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1), we already set the `level2_fixmap_pgt`:
 
 ```assembly
 NEXT_PAGE(level2_fixmap_pgt)
@@ -96,7 +96,7 @@ As in previous example (in `__fix_to_virt` macro), we start from the top of the 
 
 That's all. For this moment we know a little about `fix-mapped` addresses, but this is enough to go next.
 
-`Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) in the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about of the linux kernel initialization. We use `fix-mapped` area in the early `ioremap` initialization. Let's look at it more closely and try to understand what `ioremap` is, how it is implemented in the kernel and how it is related to the `fix-mapped` addresses.
+`Fix-mapped` addresses are used in different [places](http://lxr.free-electrons.com/ident?i=fix_to_virt) in the linux kernel. `IDT` descriptor stored there, [Intel Trusted Execution Technology](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID stored in the `fix-mapped` area started from `FIX_TBOOT_BASE` index, [Xen](http://en.wikipedia.org/wiki/Xen) bootmap and many more... We already saw a little about `fix-mapped` addresses in the fifth [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-5) about of the linux kernel initialization. We use `fix-mapped` area in the early `ioremap` initialization. Let's look at it more closely and try to understand what `ioremap` is, how it is implemented in the kernel and how it is related to the `fix-mapped` addresses.
 
 ioremap
 --------------------------------------------------------------------------------
@@ -149,7 +149,7 @@ As we can see it takes three parameters:
 * `n`     -  length of region;
 * `name`  -  name of requester.
 
-`request_region` allocates an `I/O` port region. Very often the `check_region` function is called before the `request_region` to check that the given address range is available and the `release_region` function to release the memory region. `request_region` returns a pointer to the `resource` structure. The `resource` structure represents an abstraction for a tree-like subset of system resources. We already saw the `resource` structure in the fifth part of the kernel [initialization](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) process and it looks as follows:
+`request_region` allocates an `I/O` port region. Very often the `check_region` function is called before the `request_region` to check that the given address range is available and the `release_region` function to release the memory region. `request_region` returns a pointer to the `resource` structure. The `resource` structure represents an abstraction for a tree-like subset of system resources. We already saw the `resource` structure in the fifth part of the kernel [initialization](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-5) process and it looks as follows:
 
 ```C
 struct resource {
@@ -274,13 +274,13 @@ static inline const char *e820_type_to_string(int e820_type)
 
 and we can see them in the `/proc/iomem` (read above).
 
-Now let's try to understand how `ioremap` works. We already know a little about `ioremap`, we saw it in the fifth [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) about linux kernel initialization. If you have read this part, you can remember the call of the `early_ioremap_init` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/ioremap.c). Initialization of the `ioremap` is split into two parts: there is the early part which we can use before the normal `ioremap` is available and the normal `ioremap` which is available after `vmalloc` initialization and the call of `paging_init`. We do not know anything about `vmalloc` for now, so let's consider early initialization of the `ioremap`. First of all `early_ioremap_init` checks that `fixmap` is aligned on page middle directory boundary:
+Now let's try to understand how `ioremap` works. We already know a little about `ioremap`, we saw it in the fifth [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-5) about linux kernel initialization. If you have read this part, you can remember the call of the `early_ioremap_init` function from the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/ioremap.c). Initialization of the `ioremap` is split into two parts: there is the early part which we can use before the normal `ioremap` is available and the normal `ioremap` which is available after `vmalloc` initialization and the call of `paging_init`. We do not know anything about `vmalloc` for now, so let's consider early initialization of the `ioremap`. First of all `early_ioremap_init` checks that `fixmap` is aligned on page middle directory boundary:
 
 ```C
 BUILD_BUG_ON((fix_to_virt(0) + PAGE_SIZE) & ((1 << PMD_SHIFT) - 1));
 ```
 
-more about `BUILD_BUG_ON` you can read in the first part about [Linux Kernel initialization](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html). So `BUILD_BUG_ON` macro raises a compilation error if the given expression is true. In the next step after this check, we can see call of the `early_ioremap_setup` function from the [mm/early_ioremap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/early_ioremap.c). This function presents generic initialization of the `ioremap`. `early_ioremap_setup` function fills the `slot_virt` array with the virtual addresses of the early fixmaps. All early fixmaps are after `__end_of_permanent_fixed_addresses` in memory. They start at `FIX_BITMAP_BEGIN` (top) and end with `FIX_BITMAP_END` (down). Actually there are `512` temporary boot-time mappings, used by early `ioremap`:
+more about `BUILD_BUG_ON` you can read in the first part about [Linux Kernel initialization](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1). So `BUILD_BUG_ON` macro raises a compilation error if the given expression is true. In the next step after this check, we can see call of the `early_ioremap_setup` function from the [mm/early_ioremap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/early_ioremap.c). This function presents generic initialization of the `ioremap`. `early_ioremap_setup` function fills the `slot_virt` array with the virtual addresses of the early fixmaps. All early fixmaps are after `__end_of_permanent_fixed_addresses` in memory. They start at `FIX_BITMAP_BEGIN` (top) and end with `FIX_BITMAP_END` (down). Actually there are `512` temporary boot-time mappings, used by early `ioremap`:
 
 ```
 #define NR_FIX_BTMAPS		64
@@ -335,7 +335,7 @@ pmd_populate_kernel(&init_mm, pmd, bm_pte);
 
 `pmd_populate_kernel` takes three parameters:
 
-* `init_mm` - memory descriptor of the `init` process (you can read about it in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html));
+* `init_mm` - memory descriptor of the `init` process (you can read about it in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-5));
 * `pmd`     - page middle directory of the beginning of the `ioremap` fixmaps;
 * `bm_pte`  - early `ioremap` page table entries array which defined as:
 
@@ -535,5 +535,5 @@ Links
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit)
 * [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer)
-* [Paging](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html)
-* [Linux kernel memory management Part 1.](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html)
+* [Paging](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-1)
+* [Linux kernel memory management Part 1.](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-1)

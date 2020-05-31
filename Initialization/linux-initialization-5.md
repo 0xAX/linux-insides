@@ -4,7 +4,7 @@ Kernel initialization. Part 5.
 Continue of architecture-specific initialization
 ================================================================================
 
-In the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html), we stopped at the initialization of an architecture-specific stuff from the [setup_arch](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L856) function and now we will continue with it. As we reserved memory for the [initrd](http://en.wikipedia.org/wiki/Initrd), next step is the `olpc_ofw_detect` which detects [One Laptop Per Child support](http://wiki.laptop.org/go/OFW_FAQ). We will not consider platform related stuff in this book and will skip functions related with it. So let's go ahead. The next step is the `early_trap_init` function. This function initializes debug (`#DB` - raised when the `TF` flag of rflags is set) and `int3` (`#BP`) interrupts gate. If you don't know anything about interrupts, you can read about it in the [Early interrupt and exception handling](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html). In `x86` architecture `INT`, `INTO` and `INT3` are special instructions which allow a task to explicitly call an interrupt handler. The `INT3` instruction calls the breakpoint (`#BP`) handler. You may remember, we already saw it in the [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) about interrupts: and exceptions:
+In the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4), we stopped at the initialization of an architecture-specific stuff from the [setup_arch](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L856) function and now we will continue with it. As we reserved memory for the [initrd](http://en.wikipedia.org/wiki/Initrd), next step is the `olpc_ofw_detect` which detects [One Laptop Per Child support](http://wiki.laptop.org/go/OFW_FAQ). We will not consider platform related stuff in this book and will skip functions related with it. So let's go ahead. The next step is the `early_trap_init` function. This function initializes debug (`#DB` - raised when the `TF` flag of rflags is set) and `int3` (`#BP`) interrupts gate. If you don't know anything about interrupts, you can read about it in the [Early interrupt and exception handling](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-2). In `x86` architecture `INT`, `INTO` and `INT3` are special instructions which allow a task to explicitly call an interrupt handler. The `INT3` instruction calls the breakpoint (`#BP`) handler. You may remember, we already saw it in the [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-2) about interrupts: and exceptions:
 
 ```
 ----------------------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ The next step is initialization of early `ioremap`. In general there are two way
 * I/O Ports;
 * Device memory.
 
-We already saw first method (`outb/inb` instructions) in the part about linux kernel booting [process](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html). The second method is to map I/O physical addresses to virtual addresses. When a physical address is accessed by the CPU, it may refer to a portion of physical RAM which can be mapped on memory of the I/O device. So `ioremap` used to map device memory into kernel address space.
+We already saw first method (`outb/inb` instructions) in the part about linux kernel booting [process](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-3). The second method is to map I/O physical addresses to virtual addresses. When a physical address is accessed by the CPU, it may refer to a portion of physical RAM which can be mapped on memory of the I/O device. So `ioremap` used to map device memory into kernel address space.
 
 As i wrote above next function is the `early_ioremap_init` which re-maps I/O memory to kernel address space so it can access it. We need to initialize early ioremap for early initialization code which needs to temporarily map I/O or memory regions before the normal mapping functions like `ioremap` are available. Implementation of this function is in the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/ioremap.c). At the start of the `early_ioremap_init` we can see definition of the `pmd` pointer with `pmd_t` type (which presents page middle directory entry `typedef struct { pmdval_t pmd; } pmd_t;` where `pmdval_t` is `unsigned long`) and make a check that `fixmap` aligned in a correct way:
 
@@ -235,7 +235,7 @@ After calculation we will get `0xfff` or 12 bits for `major` if it is `0xfffffff
 Memory map setup
 --------------------------------------------------------------------------------
 
-The next point is the setup of the memory map with the call of the `setup_memory_map` function. But before this we setup different parameters as information about a screen (current row and column, video page and etc... (you can read about it in the [Video mode initialization and transition to protected mode](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html))), Extended display identification data, video mode, bootloader_type and etc...:
+The next point is the setup of the memory map with the call of the `setup_memory_map` function. But before this we setup different parameters as information about a screen (current row and column, video page and etc... (you can read about it in the [Video mode initialization and transition to protected mode](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-3))), Extended display identification data, video mode, bootloader_type and etc...:
 
 ```C
 	screen_info = boot_params.screen_info;
@@ -354,7 +354,7 @@ struct x86_init_ops x86_init __initdata = {
 }
 ```
 
-As we can see here `memory_setup` field is `default_machine_specific_memory_setup` where we get the number of the [e820](http://en.wikipedia.org/wiki/E820) entries which we collected in the [boot time](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html), sanitize the BIOS e820 map and fill `e820map` structure with the memory regions. As all regions are collected, print of all regions with printk. You can find this print if you execute `dmesg` command and you can see something like this:
+As we can see here `memory_setup` field is `default_machine_specific_memory_setup` where we get the number of the [e820](http://en.wikipedia.org/wiki/E820) entries which we collected in the [boot time](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-2), sanitize the BIOS e820 map and fill `e820map` structure with the memory regions. As all regions are collected, print of all regions with printk. You can find this print if you execute `dmesg` command and you can see something like this:
 
 ```
 [    0.000000] e820: BIOS-provided physical RAM map:
@@ -408,7 +408,7 @@ static inline void __init copy_edd(void)
 Memory descriptor initialization
 --------------------------------------------------------------------------------
 
-The next step is initialization of the memory descriptor of the init process. As you already can know every process has its own address space. This address space presented with special data structure which called `memory descriptor`. Directly in the linux kernel source code memory descriptor presented with `mm_struct` structure. `mm_struct` contains many different fields related with the process address space as start/end address of the kernel code/data, start/end of the brk, number of memory areas, list of memory areas and etc... This structure defined in the [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mm_types.h). As every process has its own memory descriptor, `task_struct` structure contains it in the `mm` and `active_mm` field. And our first `init` process has it too. You can remember that we saw the part of initialization of the init `task_struct` with `INIT_TASK` macro in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html):
+The next step is initialization of the memory descriptor of the init process. As you already can know every process has its own address space. This address space presented with special data structure which called `memory descriptor`. Directly in the linux kernel source code memory descriptor presented with `mm_struct` structure. `mm_struct` contains many different fields related with the process address space as start/end address of the kernel code/data, start/end of the brk, number of memory areas, list of memory areas and etc... This structure defined in the [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mm_types.h). As every process has its own memory descriptor, `task_struct` structure contains it in the `mm` and `active_mm` field. And our first `init` process has it too. You can remember that we saw the part of initialization of the init `task_struct` with `INIT_TASK` macro in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4):
 
 ```C
 #define INIT_TASK(tsk)  \
@@ -511,4 +511,4 @@ Links
 * [CFI directives](https://sourceware.org/binutils/docs/as/CFI-directives.html)
 * [PDF. dwarf4 specification](http://dwarfstd.org/doc/DWARF4.pdf)
 * [Call stack](http://en.wikipedia.org/wiki/Call_stack)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4)

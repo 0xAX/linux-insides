@@ -4,9 +4,9 @@ Synchronization primitives in the Linux kernel. Part 2.
 Queued Spinlocks
 --------------------------------------------------------------------------------
 
-This is the second part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel.  In the first [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) of this chapter we meet the first [spinlock](https://en.wikipedia.org/wiki/Spinlock). We will continue to learn about this synchronization primitive here. If you have read the previous part, you may remember that besides normal spinlocks, the Linux kernel provides a special type of `spinlocks` - `queued spinlocks`. Here we will try to understand what this concept represents.
+This is the second part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim) which describes synchronization primitives in the Linux kernel.  In the first [part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) of this chapter we meet the first [spinlock](https://en.wikipedia.org/wiki/Spinlock). We will continue to learn about this synchronization primitive here. If you have read the previous part, you may remember that besides normal spinlocks, the Linux kernel provides a special type of `spinlocks` - `queued spinlocks`. Here we will try to understand what this concept represents.
 
-We saw the [API](https://en.wikipedia.org/wiki/Application_programming_interface) of `spinlock` in the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html):
+We saw the [API](https://en.wikipedia.org/wiki/Application_programming_interface) of `spinlock` in the previous [part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1):
 
 * `spin_lock_init` - produces initialization of the given `spinlock`;
 * `spin_lock` - acquires given `spinlock`;
@@ -79,7 +79,7 @@ The first thread will execute the `test_and_set` which will set the `lock` to `1
 
 The topic of this part is `queued spinlocks`. This approach may help to solve both of these problems. The `queued spinlocks` allows each processor to spin while checking its own memory location. The basic principle of a queue-based spinlock can best be understood by studying a classic queue-based spinlock implementation called the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) lock. Before we look at implementation of the `queued spinlocks` in the Linux kernel, we will try to understand how `MCS` lock works.
 
-The basic idea of the `MCS` lock is that a thread spins on a local variable and each processor in the system has its own copy of this variable (see the previous paragraph). In other words this concept is built on top of the [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variables concept in the Linux kernel.
+The basic idea of the `MCS` lock is that a thread spins on a local variable and each processor in the system has its own copy of this variable (see the previous paragraph). In other words this concept is built on top of the [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) variables concept in the Linux kernel.
 
 When the first thread wants to acquire a lock, it registers itself in the `queue`. In other words it will be added to the special `queue` and will acquire lock, because it is free for now. When the second thread wants to acquire the same lock before the first thread release it, this thread adds its own copy of the lock variable into this `queue`. In this case the first thread will contain a `next` field which will point to the second thread. From this moment, the second thread will wait until the first thread release its lock and notify `next` thread about this event. The first thread will be deleted from the `queue` and the second thread will be owner of a lock.
 
@@ -406,7 +406,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock`. In this part we saw another implementation of the `spinlock` mechanism - `queued spinlock`. In the next part we will continue to dive into synchronization primitives in the Linux kernel. 
+This is the end of the second part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the previous [part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock`. In this part we saw another implementation of the `spinlock` mechanism - `queued spinlock`. In the next part we will continue to dive into synchronization primitives in the Linux kernel. 
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
@@ -421,11 +421,11 @@ Links
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Test and Set](https://en.wikipedia.org/wiki/Test-and-set)
 * [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
-* [per-cpu variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
+* [per-cpu variables](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [atomic instruction](https://en.wikipedia.org/wiki/Linearizability)
 * [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html) 
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [NOP instruction](https://en.wikipedia.org/wiki/NOP)
 * [PREFETCHW instruction](http://www.felixcloutier.com/x86/PREFETCHW.html)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1)

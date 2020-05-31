@@ -4,7 +4,7 @@ Kernel initialization. Part 7.
 The End of the architecture-specific initialization, almost...
 ================================================================================
 
-This is the seventh part of the Linux Kernel initialization process which covers insides of the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861). As you can know from the previous [parts](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html), the `setup_arch` function does some architecture-specific (in our case it is [x86_64](http://en.wikipedia.org/wiki/X86-64)) initialization stuff like reserving memory for kernel code/data/bss, early scanning of the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface), early dump of the [PCI](http://en.wikipedia.org/wiki/PCI) device and many many more. If you have read the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html), you can remember that we've finished it at the `setup_real_mode` function. In the next step, as we set limit of the [memblock](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html) to the all mapped pages, we can see the call of the `setup_log_buf` function from the [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c).
+This is the seventh part of the Linux Kernel initialization process which covers insides of the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861). As you can know from the previous [parts](https://0xax.gitbook.io/linux-insides/summary/initialization), the `setup_arch` function does some architecture-specific (in our case it is [x86_64](http://en.wikipedia.org/wiki/X86-64)) initialization stuff like reserving memory for kernel code/data/bss, early scanning of the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface), early dump of the [PCI](http://en.wikipedia.org/wiki/PCI) device and many many more. If you have read the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6), you can remember that we've finished it at the `setup_real_mode` function. In the next step, as we set limit of the [memblock](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-1) to the all mapped pages, we can see the call of the `setup_log_buf` function from the [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c).
 
 The `setup_log_buf` function setups kernel cyclic buffer and its length depends on the `CONFIG_LOG_BUF_SHIFT` configuration option. As we can read from the documentation of the `CONFIG_LOG_BUF_SHIFT` it can be between `12` and `21`. In the insides, buffer defined as array of chars:
 
@@ -32,7 +32,7 @@ setup_log_buf(1);
 
 where `1` means that it is early setup. In the next step we check `new_log_buf_len` variable which is updated length of the kernel log buffer and allocate new space for the buffer with the `memblock_virt_alloc` function for it, or just return.
 
-As kernel log buffer is ready, the next function is `reserve_initrd`. You can remember that we already called the `early_reserve_initrd` function in the fourth part of the [Kernel initialization](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html). Now, as we reconstructed direct memory mapping in the `init_mem_mapping` function, we need to move [initrd](http://en.wikipedia.org/wiki/Initrd) into directly mapped memory. The `reserve_initrd` function starts from the definition of the base address and end address of the `initrd` and check that `initrd` is provided by a bootloader. All the same as what we saw in the `early_reserve_initrd`. But instead of the reserving place in the `memblock` area with the call of the `memblock_reserve` function, we get the mapped size of the direct memory area and check that the size of the `initrd` is not greater than this area with:
+As kernel log buffer is ready, the next function is `reserve_initrd`. You can remember that we already called the `early_reserve_initrd` function in the fourth part of the [Kernel initialization](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4). Now, as we reconstructed direct memory mapping in the `init_mem_mapping` function, we need to move [initrd](http://en.wikipedia.org/wiki/Initrd) into directly mapped memory. The `reserve_initrd` function starts from the definition of the base address and end address of the `initrd` and check that `initrd` is provided by a bootloader. All the same as what we saw in the `early_reserve_initrd`. But instead of the reserving place in the `memblock` area with the call of the `memblock_reserve` function, we get the mapped size of the direct memory area and check that the size of the `initrd` is not greater than this area with:
 
 ```C
 mapped_size = memblock_mem_size(max_pfn_mapped);
@@ -68,7 +68,7 @@ memblock_free(ramdisk_image, ramdisk_end - ramdisk_image);
 
 After we relocated `initrd` ramdisk image, the next function is `vsmp_init` from the [arch/x86/kernel/vsmp_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vsmp_64.c). This function initializes support of the `ScaleMP vSMP`. As I already wrote in the previous parts, this chapter will not cover non-related `x86_64` initialization parts (for example as the current or `ACPI`, etc.). So we will skip implementation of this for now and will back to it in the part which cover techniques of parallel computing.
 
-The next function is `io_delay_init` from the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c). This function allows to override default I/O delay `0x80` port. We already saw I/O delay in the [Last preparation before transition into protected mode](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html), now let's look on the `io_delay_init` implementation:
+The next function is `io_delay_init` from the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c). This function allows to override default I/O delay `0x80` port. We already saw I/O delay in the [Last preparation before transition into protected mode](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-3), now let's look on the `io_delay_init` implementation:
 
 ```C
 void __init io_delay_init(void)
@@ -98,7 +98,7 @@ We can see `io_delay` command line parameter setup with the `early_param` macro 
 early_param("io_delay", io_delay_param);
 ```
 
-More about `early_param` you can read in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html). So the `io_delay_param` function which setups `io_delay_override` variable will be called in the [do_early_param](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L413) function. `io_delay_param` function gets the argument of the `io_delay` kernel command line parameter and sets `io_delay_type` depends on it:
+More about `early_param` you can read in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6). So the `io_delay_param` function which setups `io_delay_override` variable will be called in the [do_early_param](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L413) function. `io_delay_param` function gets the argument of the `io_delay` kernel command line parameter and sets `io_delay_type` depends on it:
 
 ```C
 static int __init io_delay_param(char *s)
@@ -296,19 +296,19 @@ BUILD_BUG_ON((unsigned long)__fix_to_virt(VSYSCALL_PAGE) !=
                      (unsigned long)VSYSCALL_ADDR);
 ```
 
-Now `vsyscall` area is in the `fix-mapped` area. That's all about `map_vsyscall`, if you do not know anything about fix-mapped addresses, you can read [Fix-Mapped Addresses and ioremap](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html). We will see more about `vsyscalls` in the `vsyscalls and vdso` part.
+Now `vsyscall` area is in the `fix-mapped` area. That's all about `map_vsyscall`, if you do not know anything about fix-mapped addresses, you can read [Fix-Mapped Addresses and ioremap](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2). We will see more about `vsyscalls` in the `vsyscalls and vdso` part.
 
 Getting the SMP configuration
 --------------------------------------------------------------------------------
 
-You may remember how we made a search of the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing) configuration in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html). Now we need to get the `SMP` configuration if we found it. For this we check `smp_found_config` variable which we set in the `smp_scan_config` function (read about it the previous part) and call the `get_smp_config` function:
+You may remember how we made a search of the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing) configuration in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6). Now we need to get the `SMP` configuration if we found it. For this we check `smp_found_config` variable which we set in the `smp_scan_config` function (read about it the previous part) and call the `get_smp_config` function:
 
 ```C
 if (smp_found_config)
 	get_smp_config();
 ```
 
-The `get_smp_config` expands to the `x86_init.mpparse.default_get_smp_config` function which is defined in the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/mpparse.c). This function defines a pointer to the multiprocessor floating pointer structure - `mpf_intel` (you can read about it in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html)) and does some checks:
+The `get_smp_config` expands to the `x86_init.mpparse.default_get_smp_config` function which is defined in the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/mpparse.c). This function defines a pointer to the multiprocessor floating pointer structure - `mpf_intel` (you can read about it in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)) and does some checks:
 
 ```C
 struct mpf_intel *mpf = mpf_found;
@@ -320,7 +320,7 @@ if (acpi_lapic && early)
    return;
 ```
 
-Here we can see that multiprocessor configuration was found in the `smp_scan_config` function or just return from the function if not. The next check is `acpi_lapic` and `early`. And as we did this checks, we start to read the `SMP` configuration. As we finished reading it, the next step is - `prefill_possible_map` function which makes preliminary filling of the possible CPU's `cpumask` (more about it you can read in the [Introduction to the cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)).
+Here we can see that multiprocessor configuration was found in the `smp_scan_config` function or just return from the function if not. The next check is `acpi_lapic` and `early`. And as we did this checks, we start to read the `SMP` configuration. As we finished reading it, the next step is - `prefill_possible_map` function which makes preliminary filling of the possible CPU's `cpumask` (more about it you can read in the [Introduction to the cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)).
 
 The rest of the setup_arch
 --------------------------------------------------------------------------------
@@ -334,7 +334,7 @@ That's all, and now we can back to the `start_kernel` from the `setup_arch`.
 Back to the main.c
 ================================================================================
 
-As I wrote above, we have finished with the `setup_arch` function and now we can back to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). As you may remember or saw yourself, `start_kernel` function as big as the `setup_arch`. So the couple of the next part will be dedicated to learning of this function. So, let's continue with it. After the `setup_arch` we can see the call of the `mm_init_cpumask` function. This function sets the [cpumask](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) pointer to the memory descriptor `cpumask`. We can look on its implementation:
+As I wrote above, we have finished with the `setup_arch` function and now we can back to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). As you may remember or saw yourself, `start_kernel` function as big as the `setup_arch`. So the couple of the next part will be dedicated to learning of this function. So, let's continue with it. After the `setup_arch` we can see the call of the `mm_init_cpumask` function. This function sets the [cpumask](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) pointer to the memory descriptor `cpumask`. We can look on its implementation:
 
 ```C
 static inline void mm_init_cpumask(struct mm_struct *mm)
@@ -379,7 +379,7 @@ static void __init setup_command_line(char *command_line)
 
 Here we can see that we allocate space for the three buffers which will contain kernel command line for the different purposes (read above). And as we allocated space, we store `boot_command_line` in the `saved_command_line` and `command_line` (kernel command line from the `setup_arch`) to the `static_command_line`.
 
-The next function after the `setup_command_line` is the `setup_nr_cpu_ids`. This function setting `nr_cpu_ids` (number of CPUs) according to the last bit in the `cpu_possible_mask` (more about it you can read in the chapter describes [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) concept). Let's look on its implementation:
+The next function after the `setup_command_line` is the `setup_nr_cpu_ids`. This function setting `nr_cpu_ids` (number of CPUs) according to the last bit in the `cpu_possible_mask` (more about it you can read in the chapter describes [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) concept). Let's look on its implementation:
 
 ```C
 void __init setup_nr_cpu_ids(void)
@@ -479,4 +479,4 @@ Links
 * [vsyscalls](https://lwn.net/Articles/446528/)
 * [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)
 * [jiffy](http://en.wikipedia.org/wiki/Jiffy_%28time%29)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)

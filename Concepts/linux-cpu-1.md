@@ -92,7 +92,7 @@ Where the `percpu_alloc_setup` function sets the `pcpu_chosen_fc` variable depen
 enum pcpu_fc pcpu_chosen_fc __initdata = PCPU_FC_AUTO;
 ```
 
-If the `percpu_alloc` parameter is not given to the kernel command line, the `embed` allocator will be used which embeds the first percpu chunk into bootmem with the [memblock](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html). The last allocator is the first chunk `page` allocator which maps the first chunk with `PAGE_SIZE` pages.
+If the `percpu_alloc` parameter is not given to the kernel command line, the `embed` allocator will be used which embeds the first percpu chunk into bootmem with the [memblock](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-1). The last allocator is the first chunk `page` allocator which maps the first chunk with `PAGE_SIZE` pages.
 
 As I wrote above, first of all we make a check of the first chunk allocator type in the `setup_per_cpu_areas`. We check that first chunk allocator is not page:
 

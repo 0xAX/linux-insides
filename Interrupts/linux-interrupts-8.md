@@ -4,9 +4,9 @@ Interrupts and Interrupt Handling. Part 8.
 Non-early initialization of the IRQs
 --------------------------------------------------------------------------------
 
-This is the eighth part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-7.html) we started to dive into the external hardware [interrupts](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). We looked on the implementation of the `early_irq_init` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c) source code file and saw the initialization of the `irq_desc` structure in this function. Remind that `irq_desc` structure (defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqdesc.h#L46) is the foundation of interrupt management code in the Linux kernel and represents an interrupt descriptor. In this part we will continue to dive into the initialization stuff which is related to the external hardware interrupts.
+This is the eighth part of the Interrupts and Interrupt Handling in the Linux kernel [chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts) and in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-7) we started to dive into the external hardware [interrupts](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). We looked on the implementation of the `early_irq_init` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c) source code file and saw the initialization of the `irq_desc` structure in this function. Remind that `irq_desc` structure (defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqdesc.h#L46) is the foundation of interrupt management code in the Linux kernel and represents an interrupt descriptor. In this part we will continue to dive into the initialization stuff which is related to the external hardware interrupts.
 
-Right after the call of the `early_irq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) we can see the call of the `init_IRQ` function. This function is architecture-specific and defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c). The `init_IRQ` function makes initialization of the `vector_irq` [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable that defined in the same [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c) source code file:
+Right after the call of the `early_irq_init` function in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) we can see the call of the `init_IRQ` function. This function is architecture-specific and defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c). The `init_IRQ` function makes initialization of the `vector_irq` [percpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) variable that defined in the same [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irqinit.c) source code file:
 
 ```C
 ...
@@ -22,13 +22,13 @@ and represents `percpu` array of the interrupt vector numbers. The `vector_irq_t
 typedef int vector_irq_t[NR_VECTORS];
 ```
 
-where `NR_VECTORS` is count of the vector number and as you can remember from the first [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-1.html) of this chapter it is `256` for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
+where `NR_VECTORS` is count of the vector number and as you can remember from the first [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-1) of this chapter it is `256` for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
 
 ```C
 #define NR_VECTORS                       256
 ```
 
-So, in the start of the `init_IRQ` function we fill the `vector_irq` [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) array with the vector number of the `legacy` interrupts:
+So, in the start of the `init_IRQ` function we fill the `vector_irq` [percpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) array with the vector number of the `legacy` interrupts:
 
 ```C
 void __init init_IRQ(void)
@@ -105,7 +105,7 @@ In the loop we are accessing the `vecto_irq` per-cpu array with the `per_cpu` ma
 #define IRQ0_VECTOR                     ((FIRST_EXTERNAL_VECTOR + 16) & ~15)
 ```
 
-Why is `0x30` here? You can remember from the first [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-1.html) of this chapter that first 32 vector numbers from `0` to `31` are reserved by the processor and used for the processing of architecture-defined exceptions and interrupts. Vector numbers from `0x30` to `0x3f` are reserved for the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture). So, it means that we fill the `vector_irq` from the `IRQ0_VECTOR` which is equal to the `32` to the `IRQ0_VECTOR + 16` (before the `0x30`).
+Why is `0x30` here? You can remember from the first [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-1) of this chapter that first 32 vector numbers from `0` to `31` are reserved by the processor and used for the processing of architecture-defined exceptions and interrupts. Vector numbers from `0x30` to `0x3f` are reserved for the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture). So, it means that we fill the `vector_irq` from the `IRQ0_VECTOR` which is equal to the `32` to the `IRQ0_VECTOR + 16` (before the `0x30`).
 
 In the end of the `init_IRQ` function we can see the call of the following function:
 
@@ -113,7 +113,7 @@ In the end of the `init_IRQ` function we can see the call of the following funct
 x86_init.irqs.intr_init();
 ```
 
-from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c) source code file. If you have read [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) about the Linux kernel initialization process, you can remember the `x86_init` structure. This structure contains a couple of files which are points to the function related to the platform setup (`x86_64` in our case), for example `resources` - related with the memory resources, `mpparse` - related with the parsing of the [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification) table and etc.). As we can see the `x86_init` also contains the `irqs` field which contains three following fields:
+from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c) source code file. If you have read [chapter](https://0xax.gitbook.io/linux-insides/summary/initialization) about the Linux kernel initialization process, you can remember the `x86_init` structure. This structure contains a couple of files which are points to the function related to the platform setup (`x86_64` in our case), for example `resources` - related with the memory resources, `mpparse` - related with the parsing of the [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification) table and etc.). As we can see the `x86_init` also contains the `irqs` field which contains three following fields:
 
 ```C
 struct x86_init_ops x86_init __initdata 
@@ -179,7 +179,7 @@ After this depends on the `CONFIG_X86_64` and `CONFIG_X86_LOCAL_APIC` kernel con
 #endif
 ```
 
-This function makes initialization of the [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) of `bootstrap processor` (or processor which starts first). It starts from the check that we found [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) config (read more about it in the sixth [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html) of the Linux kernel initialization process chapter) and the processor has `APIC`:
+This function makes initialization of the [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) of `bootstrap processor` (or processor which starts first). It starts from the check that we found [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) config (read more about it in the sixth [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6) of the Linux kernel initialization process chapter) and the processor has `APIC`:
 
 ```C
 if (smp_found_config || !cpu_has_apic)
@@ -241,7 +241,7 @@ do {                                                    \
 } while (0)
 ```
 
-As we can see, first of all it expands to the call of the `alloc_system_vector` function that checks the given vector number in the `used_vectors` bitmap (read previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-7.html) about it) and if it is not set in the `used_vectors` bitmap we set it. After this we test that the `first_system_vector` is greater than given interrupt vector number and if it is greater we assign it:
+As we can see, first of all it expands to the call of the `alloc_system_vector` function that checks the given vector number in the `used_vectors` bitmap (read previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-7) about it) and if it is not set in the `used_vectors` bitmap we set it. After this we test that the `first_system_vector` is greater than given interrupt vector number and if it is greater we assign it:
 
 ```C
 if (!test_bit(vector, used_vectors)) {
@@ -399,7 +399,7 @@ for (i = 0; i < FIRST_EXTERNAL_VECTOR; i++)
     set_bit(i, used_vectors);
 ```
 
-You can remember how we did it in the sixth [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-6.html) of this chapter.
+You can remember how we did it in the sixth [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-6) of this chapter.
 
 In the end of the `native_init_IRQ` function we can see the following check:
 
@@ -509,7 +509,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the eighth part of the [Interrupts and Interrupt Handling](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) chapter and we continued to dive into external hardware interrupts in this part. In the previous part we started to do it and saw early initialization of the `IRQs`. In this part we already saw non-early interrupts initialization in the `init_IRQ` function. We saw initialization of the `vector_irq` per-cpu array which is store vector numbers of the interrupts and will be used during interrupt handling and initialization of other stuff which is related to the external hardware interrupts.
+It is the end of the eighth part of the [Interrupts and Interrupt Handling](https://0xax.gitbook.io/linux-insides/summary/interrupts) chapter and we continued to dive into external hardware interrupts in this part. In the previous part we started to do it and saw early initialization of the `IRQs`. In this part we already saw non-early interrupts initialization in the `init_IRQ` function. We saw initialization of the `vector_irq` per-cpu array which is store vector numbers of the interrupts and will be used during interrupt handling and initialization of other stuff which is related to the external hardware interrupts.
 
 In the next part we will continue to learn interrupts handling related stuff and will see initialization of the `softirqs`.
 
@@ -521,7 +521,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
-* [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
+* [percpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259)
 * [Programmable Interrupt Controller](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)
@@ -539,4 +539,4 @@ Links
 * [Open Firmware](https://en.wikipedia.org/wiki/Open_Firmware)
 * [devicetree](https://en.wikipedia.org/wiki/Device_tree)
 * [RTC](https://en.wikipedia.org/wiki/Real-time_clock)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-7.html)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-7)
