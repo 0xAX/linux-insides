@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 2.
 Introduction to the `clocksource` framework
 --------------------------------------------------------------------------------
 
-The previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html) was the first part in the current [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) that describes timers and time management related stuff in the Linux kernel. We got acquainted with two concepts in the previous part:
+The previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1) was the first part in the current [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) that describes timers and time management related stuff in the Linux kernel. We got acquainted with two concepts in the previous part:
 
   * `jiffies`
   * `clocksource`
@@ -92,7 +92,7 @@ Within this framework, each clock source is required to maintain a representatio
 The `clocksource` structure
 --------------------------------------------------------------------------------
 
-The fundamental of the `clocksource` framework is the `clocksource` structure that defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) header file. We already saw some fields that are provided by the `clocksource` structure in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html). Let's look on the full definition of this structure and try to describe all of its fields:
+The fundamental of the `clocksource` framework is the `clocksource` structure that defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) header file. We already saw some fields that are provided by the `clocksource` structure in the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1). Let's look on the full definition of this structure and try to describe all of its fields:
 
 ```C
 struct clocksource {
@@ -197,7 +197,7 @@ That's all. From this moment we know all fields of the `clocksource` structure. 
 New `clocksource` registration
 --------------------------------------------------------------------------------
 
-We saw only one function from the `clocksource` framework in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html). This function was - `__clocksource_register`. This function defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/tree/master/include/linux/clocksource.h) header file and as we can understand from the function's name, main point of this function is to register new clocksource. If we will look on the implementation of the `__clocksource_register` function, we will see that it just makes call of the `__clocksource_register_scale` function and returns its result:
+We saw only one function from the `clocksource` framework in the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1). This function was - `__clocksource_register`. This function defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/tree/master/include/linux/clocksource.h) header file and as we can understand from the function's name, main point of this function is to register new clocksource. If we will look on the implementation of the `__clocksource_register` function, we will see that it just makes call of the `__clocksource_register_scale` function and returns its result:
 
 ```C
 static inline int __clocksource_register(struct clocksource *cs)
@@ -241,7 +241,7 @@ int __clocksource_register_scale(struct clocksource *cs, u32 scale, u32 freq)
 }
 ```
 
-First of all we can see that the `__clocksource_register_scale` function starts from the call of the `__clocksource_update_freq_scale` function that defined in the same source code file and updates given clock source with the new frequency. Let's look on the implementation of this function. In the first step we need to check given frequency and if it was not passed as `zero`, we need to calculate `mult` and `shift` parameters for the given clock source. Why do we need to check value of the `frequency`? Actually it can be zero. if you attentively looked on the implementation of the `__clocksource_register` function, you may have noticed that we passed `frequency` as `0`. We will do it only for some clock sources that have self defined `mult` and `shift` parameters. Look in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html) and you will see that we saw calculation of the `mult` and `shift` for `jiffies`. The `__clocksource_update_freq_scale` function will do it for us for other clock sources.
+First of all we can see that the `__clocksource_register_scale` function starts from the call of the `__clocksource_update_freq_scale` function that defined in the same source code file and updates given clock source with the new frequency. Let's look on the implementation of this function. In the first step we need to check given frequency and if it was not passed as `zero`, we need to calculate `mult` and `shift` parameters for the given clock source. Why do we need to check value of the `frequency`? Actually it can be zero. if you attentively looked on the implementation of the `__clocksource_register` function, you may have noticed that we passed `frequency` as `0`. We will do it only for some clock sources that have self defined `mult` and `shift` parameters. Look in the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1) and you will see that we saw calculation of the `mult` and `shift` for `jiffies`. The `__clocksource_update_freq_scale` function will do it for us for other clock sources.
 
 So in the start of the `__clocksource_update_freq_scale` function we check the value of the `frequency` parameter and if is not zero we need to calculate `mult` and `shift` for the given clock source. Let's look on the `mult` and `shift` calculation:
 
@@ -448,4 +448,4 @@ Links
 * [clock rate](https://en.wikipedia.org/wiki/Clock_rate)
 * [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
 * [sysfs](https://en.wikipedia.org/wiki/Sysfs)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html)
+* [previous part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1)

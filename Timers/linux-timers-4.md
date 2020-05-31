@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 4.
 Timers
 --------------------------------------------------------------------------------
 
-This is fourth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-3.html) we knew about the `tick broadcast` framework and `NO_HZ` mode in the Linux kernel. We will continue to dive into the time management related stuff in the Linux kernel in this part and will be acquainted with yet another concept in the Linux kernel - `timers`. Before we will look at timers in the Linux kernel, we have to learn some theory about this concept. Note that we will consider software timers in this part.
+This is fourth part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) which describes timers and time management related stuff in the Linux kernel and in the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-3) we knew about the `tick broadcast` framework and `NO_HZ` mode in the Linux kernel. We will continue to dive into the time management related stuff in the Linux kernel in this part and will be acquainted with yet another concept in the Linux kernel - `timers`. Before we will look at timers in the Linux kernel, we have to learn some theory about this concept. Note that we will consider software timers in this part.
 
 The Linux kernel provides a `software timer` concept to allow to kernel functions could be invoked at future moment. Timers are widely used in the Linux kernel. For example, look in the [net/netfilter/ipset/ip_set_list_set.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/net/netfilter/ipset/ip_set_list_set.c) source code file. This source code file provides implementation of the framework for the managing of groups of [IP](https://en.wikipedia.org/wiki/Internet_Protocol) addresses.
 
@@ -45,7 +45,7 @@ Now let's continue to research source code of Linux kernel which is related to t
 Introduction to dynamic timers in the Linux kernel
 --------------------------------------------------------------------------------
 
-As I already wrote, we knew about the `tick broadcast` framework and `NO_HZ` mode in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-3.html). They will be initialized in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file by the call of the `tick_init` function. If we will look at this source code file, we will see that the next time management related function is:
+As I already wrote, we knew about the `tick broadcast` framework and `NO_HZ` mode in the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-3). They will be initialized in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file by the call of the `tick_init` function. If we will look at this source code file, we will see that the next time management related function is:
 
 ```C
 init_timers();
@@ -75,7 +75,7 @@ static void __init init_timer_cpus(void)
 }
 ```
 
-If you do not know or do not remember what is it a `possible` cpu, you can read the special [part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) of this book which describes `cpumask` concept in the Linux kernel. In short words, a `possible` processor is a processor which can be plugged in anytime during the life of the system.
+If you do not know or do not remember what is it a `possible` cpu, you can read the special [part](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) of this book which describes `cpumask` concept in the Linux kernel. In short words, a `possible` processor is a processor which can be plugged in anytime during the life of the system.
 
 The `init_timer_cpu` function does main work for us, namely it executes initialization of the `tvec_base` structure for each processor. This structure defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/timer.c) source code file and stores data related to a `dynamic` timer for a certain processor. Let's look on the definition of this structure:
 
@@ -136,13 +136,13 @@ static void __init init_timer_cpu(int cpu)
 }
 ```
 
-The `tvec_bases` represents [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable which represents main data structure for a dynamic timer for a given processor. This `per-cpu` variable defined in the same source code file:
+The `tvec_bases` represents [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) variable which represents main data structure for a dynamic timer for a given processor. This `per-cpu` variable defined in the same source code file:
 
 ```C
 static DEFINE_PER_CPU(struct tvec_base, tvec_bases);
 ```
 
-First of all we're getting the address of the `tvec_bases` for the given processor to `base` variable and as we got it, we are starting to initialize some of the `tvec_base` fields in the `init_timer_cpu` function. After initialization of the `per-cpu` dynamic timers with the [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html) and the number of a possible processor, we need to initialize a `tstats_lookup_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) in the `init_timer_stats` function:
+First of all we're getting the address of the `tvec_bases` for the given processor to `base` variable and as we got it, we are starting to initialize some of the `tvec_base` fields in the `init_timer_cpu` function. After initialization of the `per-cpu` dynamic timers with the [jiffies](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1) and the number of a possible processor, we need to initialize a `tstats_lookup_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) in the `init_timer_stats` function:
 
 ```C
 void __init init_timer_stats(void)
@@ -240,7 +240,7 @@ The last step in the `init_timers` function is the call of the:
 open_softirq(TIMER_SOFTIRQ, run_timer_softirq);
 ```
 
-function. The `open_softirq` function may be already familiar to you if you have read the ninth [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-9.html) about the interrupts and interrupt handling in the Linux kernel. In short words, the `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/softirq.c) source code file and executes initialization of the deferred interrupt handler.
+function. The `open_softirq` function may be already familiar to you if you have read the ninth [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-9) about the interrupts and interrupt handling in the Linux kernel. In short words, the `open_softirq` function defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/softirq.c) source code file and executes initialization of the deferred interrupt handler.
 
 In our case the deferred function is the `run_timer_softirq` function that is will be called after a hardware interrupt in the `do_IRQ` function which defined in the [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/irq.c) source code file. The main point of this function is to handle a software dynamic timer. The Linux kernel does not do this thing during the hardware timer interrupt handling because this is time consuming operation.
 
@@ -256,7 +256,7 @@ static void run_timer_softirq(struct softirq_action *h)
 }
 ```
 
-At the beginning of the `run_timer_softirq` function we get a `dynamic` timer for a current processor and compares the current value of the [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html) with the value of the `timer_jiffies` for the current structure by the call of the `time_after_eq` macro which is defined in the [include/linux/jiffies.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/jiffies.h) header file:
+At the beginning of the `run_timer_softirq` function we get a `dynamic` timer for a current processor and compares the current value of the [jiffies](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1) with the value of the `timer_jiffies` for the current structure by the call of the `time_after_eq` macro which is defined in the [include/linux/jiffies.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/jiffies.h) header file:
 
 ```C
 #define time_after_eq(a,b)          \
@@ -418,10 +418,10 @@ Links
 * [IP](https://en.wikipedia.org/wiki/Internet_Protocol)
 * [netfilter](https://en.wikipedia.org/wiki/Netfilter)
 * [network](https://en.wikipedia.org/wiki/Computer_network)
-* [cpumask](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
+* [cpumask](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)
 * [interrupt](https://en.wikipedia.org/wiki/Interrupt)
-* [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html)
-* [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
+* [jiffies](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1)
+* [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [spinlock](https://en.wikipedia.org/wiki/Spinlock)
 * [procfs](https://en.wikipedia.org/wiki/Procfs)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-3.html)
+* [previous part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-3)

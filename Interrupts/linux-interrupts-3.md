@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 3.
 Exception Handling
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) about an interrupts and an exceptions handling in the Linux kernel and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) we stopped at the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blame/master/arch/x86/kernel/setup.c) source code file.
+This is the third part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts) about an interrupts and an exceptions handling in the Linux kernel and in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts) we stopped at the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blame/master/arch/x86/kernel/setup.c) source code file.
 
 We already know that this function executes initialization of architecture-specific stuff. In our case the `setup_arch` function does [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture related initializations. The `setup_arch` is big function, and in the previous part we stopped on the setting of the two exceptions handlers for the two following exceptions:
 
@@ -516,7 +516,7 @@ Links
 * [system call](http://en.wikipedia.org/wiki/System_call)
 * [swapgs](http://www.felixcloutier.com/x86/SWAPGS.html)
 * [SIGTRAP](https://en.wikipedia.org/wiki/Unix_signal#SIGTRAP)
-* [Per-CPU variables](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
+* [Per-CPU variables](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [kgdb](https://en.wikipedia.org/wiki/KGDB)
 * [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/interrupts)

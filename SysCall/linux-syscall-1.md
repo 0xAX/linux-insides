@@ -4,7 +4,7 @@ System calls in the Linux kernel. Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-This post opens up a new chapter in [linux-insides](https://0xax.gitbooks.io/linux-insides/content/) book, and as you may understand from the title, this chapter will be devoted to the [System call](https://en.wikipedia.org/wiki/System_call) concept in the Linux kernel. The choice of topic for this chapter is not accidental. In the previous [chapter](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) we saw interrupts and interrupt handling. The concept of system calls is very similar to that of interrupts. This is because the most common way to implement system calls is as software interrupts. We will see many different aspects that are related to the system call concept. For example, we will learn what's happening when a system call occurs from userspace. We will see an implementation of a couple system call handlers in the Linux kernel, [VDSO](https://en.wikipedia.org/wiki/VDSO) and [vsyscall](https://lwn.net/Articles/446528/) concepts and many many more.
+This post opens up a new chapter in [linux-insides](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md) book, and as you may understand from the title, this chapter will be devoted to the [System call](https://en.wikipedia.org/wiki/System_call) concept in the Linux kernel. The choice of topic for this chapter is not accidental. In the previous [chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts) we saw interrupts and interrupt handling. The concept of system calls is very similar to that of interrupts. This is because the most common way to implement system calls is as software interrupts. We will see many different aspects that are related to the system call concept. For example, we will learn what's happening when a system call occurs from userspace. We will see an implementation of a couple system call handlers in the Linux kernel, [VDSO](https://en.wikipedia.org/wiki/VDSO) and [vsyscall](https://lwn.net/Articles/446528/) concepts and many many more.
 
 Before we dive into Linux system call implementation, it is good to know some theory about system calls. Let's do it in the following paragraph.
 
@@ -416,4 +416,4 @@ Links
 * [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system)
 * [systemd](https://en.wikipedia.org/wiki/Systemd)
 * [epoll](https://en.wikipedia.org/wiki/Epoll)
-* [Previous chapter](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html)
+* [Previous chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts)
