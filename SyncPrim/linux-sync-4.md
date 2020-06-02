@@ -4,16 +4,16 @@ Synchronization primitives in the Linux kernel. Part 4.
 Introduction
 --------------------------------------------------------------------------------
 
-This is the fourth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the previous parts we finished to consider different types [spinlocks](https://en.wikipedia.org/wiki/Spinlock) and [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitives. We will continue to learn [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) in this part and consider yet another one which is called - [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) which is stands for `MUTual EXclusion`.
+This is the fourth part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim) which describes synchronization primitives in the Linux kernel and in the previous parts we finished to consider different types [spinlocks](https://en.wikipedia.org/wiki/Spinlock) and [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitives. We will continue to learn [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) in this part and consider yet another one which is called - [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) which is stands for `MUTual EXclusion`.
 
-As in all previous parts of this [book](https://0xax.gitbooks.io/linux-insides/content), we will try to consider this synchronization primitive from the theoretical side and only than we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) provided by the Linux kernel to manipulate with `mutexes`.
+As in all previous parts of this [book](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md), we will try to consider this synchronization primitive from the theoretical side and only than we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) provided by the Linux kernel to manipulate with `mutexes`.
 
 So, let's start.
 
 Concept of `mutex`
 --------------------------------------------------------------------------------
 
-We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html). It represented by the:
+We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the previous [part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-3). It represented by the:
 
 ```C
 struct semaphore {
@@ -77,7 +77,7 @@ struct mutex_waiter {
 };
 ```
 
-structure from the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and will be sleep. Before we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) which is provided by the Linux kernel for manipulation with `mutexes`, let's consider the `mutex_waiter` structure. If you have read the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html) of this chapter, you may notice that the `mutex_waiter` structure is similar to the `semaphore_waiter` structure from the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file:
+structure from the [include/linux/mutex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and will be sleep. Before we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) which is provided by the Linux kernel for manipulation with `mutexes`, let's consider the `mutex_waiter` structure. If you have read the [previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-3) of this chapter, you may notice that the `mutex_waiter` structure is similar to the `semaphore_waiter` structure from the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/semaphore.c) source code file:
 
 ```C
 struct semaphore_waiter {
@@ -114,7 +114,7 @@ macro. Let's consider implementation of this macro. As we may see, the `DEFINE_M
 }
 ```
 
-This macro is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and as we may understand it initializes fields of the `mutex` structure the initial values. The `count` field get initialized with the `1` which represents `unlocked` state of a mutex. The `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) get initialized to the unlocked state and the last field `wait_list` to empty [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html).
+This macro is defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mutex.h) header file and as we may understand it initializes fields of the `mutex` structure the initial values. The `count` field get initialized with the `1` which represents `unlocked` state of a mutex. The `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) get initialized to the unlocked state and the last field `wait_list` to empty [doubly linked list](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1).
 
 The second approach allows us to initialize a `mutex` dynamically. To do this we need to call the `__mutex_init` function from the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/mutex.c) source code file. Actually, the `__mutex_init` function rarely called directly. Instead of the `__mutex_init`, the:
 
@@ -159,7 +159,7 @@ static inline bool osq_is_locked(struct optimistic_spin_queue *lock)
 }
 ```
 
-In the end of the `__mutex_init` function we may see the call of the `debug_mutex_init` function, but as I already wrote in previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will not consider debugging related stuff in this chapter.
+In the end of the `__mutex_init` function we may see the call of the `debug_mutex_init` function, but as I already wrote in previous parts of this [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim), we will not consider debugging related stuff in this chapter.
 
 After the `mutex` structure is initialized, we may go ahead and will look at the `lock` and `unlock` API of `mutex` synchronization primitive. Implementation of `mutex_lock` and `mutex_unlock` functions located in the [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/mutex.c) source code file. First of all let's start from the implementation of the `mutex_lock`. It looks:
 
@@ -176,7 +176,7 @@ We may see the call of the `might_sleep` macro from the [include/linux/kernel.h]
 
 After the `might_sleep` macro, we may see the call of the `__mutex_fastpath_lock` function. This function is architecture-specific and as we consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture in this book, the implementation of the `__mutex_fastpath_lock` is located in the [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/mutex_64.h) header file. As we may understand from the name of the `__mutex_fastpath_lock` function, this function will try to acquire lock in a fast path or in other words this function will try to decrement the value of the `count` of the given mutex.
 
-Implementation of the `__mutex_fastpath_lock` function consists from two parts. The first part is [inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-3.html) statement. Let's look at it:
+Implementation of the `__mutex_fastpath_lock` function consists from two parts. The first part is [inline assembly](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-3) statement. Let's look at it:
 
 ```C
 asm_volatile_goto(LOCK_PREFIX "   decl %0\n"
@@ -403,7 +403,7 @@ That's all. We have considered main `API` for manipulation with `mutexes`: `mute
 * `mutex_lock_killable`;
 * `mutex_trylock`.
 
-and corresponding versions of `unlock` prefixed functions. This part will not describe this `API`, because it is similar to corresponding `API` of `semaphores`. More about it you may read in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html).
+and corresponding versions of `unlock` prefixed functions. This part will not describe this `API`, because it is similar to corresponding `API` of `semaphores`. More about it you may read in the [previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-3).
 
 That's all.
 
@@ -429,12 +429,12 @@ Links
 * [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [Atomic](https://en.wikipedia.org/wiki/Linearizability)
 * [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
-* [Doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/linux-datastructures-1.html)
+* [Doubly linked list](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [Inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-3.html)
+* [Inline assembly](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-3)
 * [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
 * [Lock instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [JNS instruction](http://unixwiz.net/techtips/x86-jumps.html)
 * [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [Unix signals](https://en.wikipedia.org/wiki/Unix_signal)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-3)

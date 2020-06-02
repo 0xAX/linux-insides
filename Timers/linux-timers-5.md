@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 5.
 Introduction to the `clockevents` framework
 --------------------------------------------------------------------------------
 
-This is fifth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. As you might noted from the title of this part, the `clockevents` framework will be discussed. We already saw one framework in the [second](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-2.html) part of this chapter. It was `clocksource` framework. Both of these frameworks represent timekeeping abstractions in the Linux kernel.
+This is fifth part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) which describes timers and time management related stuff in the Linux kernel. As you might noted from the title of this part, the `clockevents` framework will be discussed. We already saw one framework in the [second](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-2) part of this chapter. It was `clocksource` framework. Both of these frameworks represent timekeeping abstractions in the Linux kernel.
 
 At first let's refresh your memory and try to remember what is it `clocksource` framework and and what its purpose. The main goal of the `clocksource` framework is to provide `timeline`. As described in the [documentation](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/Documentation/timers/timekeeping.txt):
 
@@ -130,7 +130,7 @@ The next two fields `shift` and `mult` are familiar to us. They will be used to 
 #define cpumask_of(cpu) (get_cpu_mask(cpu))
 ```
 
-Where the `get_cpu_mask` returns the cpumask containing just a given `cpu` number. More about `cpumasks` concept you may read in the [CPU masks in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) part. In the last four lines of code we set callbacks for the clock event device suspend/resume, device shutdown and update of the clock event device state.
+Where the `get_cpu_mask` returns the cpumask containing just a given `cpu` number. More about `cpumasks` concept you may read in the [CPU masks in the Linux kernel](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) part. In the last four lines of code we set callbacks for the clock event device suspend/resume, device shutdown and update of the clock event device state.
 
 After we finished with the initialization of the `at91sam926x` periodic timer, we can register it by the call of the following functions:
 
@@ -185,7 +185,7 @@ if (!dev->cpumask) {
 }
 ```
 
-Remember that we have set the `cpumask` of the `at91sam926x` periodic timer to first processor. If the `cpumask` field is zero, we check the number of possible processors in the system and print warning message if it is less than on. Additionally we set the `cpumask` of the given clock event device to the current processor. If you are interested in how the `smp_processor_id` macro is implemented, you can read more about it in the fourth [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process chapter.
+Remember that we have set the `cpumask` of the `at91sam926x` periodic timer to first processor. If the `cpumask` field is zero, we check the number of possible processors in the system and print warning message if it is less than on. Additionally we set the `cpumask` of the given clock event device to the current processor. If you are interested in how the `smp_processor_id` macro is implemented, you can read more about it in the fourth [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4) of the Linux kernel initialization process chapter.
 
 After this check we lock the actual code of the clock event device registration by the call following macros:
 
@@ -385,7 +385,7 @@ That's all.
 Conclusion
 -------------------------------------------------------------------------------
 
-This is the end of the fifth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `timers` concept. In this part we continued to learn time management related stuff in the Linux kernel and saw a little about yet another framework - `clockevents`.
+This is the end of the fifth part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `timers` concept. In this part we continued to learn time management related stuff in the Linux kernel and saw a little about yet another framework - `clockevents`.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
@@ -409,7 +409,7 @@ Links
 * [local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [C3 state](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface#Device_states) 
 * [Periodic Interval Timer (PIT) for at91sam926x](http://www.atmel.com/Images/doc6062.pdf)
-* [CPU masks in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
+* [CPU masks in the Linux kernel](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)
 * [deadlock](https://en.wikipedia.org/wiki/Deadlock)
 * [CPU hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-3.html)
+* [previous part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-3)

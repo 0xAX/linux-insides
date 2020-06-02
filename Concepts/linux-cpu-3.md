@@ -224,7 +224,7 @@ If you are interested, you can find these sections in the `arch/x86/kernel/vmlin
 }
 ```
 
-If you are not familiar with this then you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbooks.io/linux-insides/content/Misc/linux-misc-3.html) of this book.
+If you are not familiar with this then you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbook.io/linux-insides/summary/misc/linux-misc-3) of this book.
 
 As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` - and does the following two things:
 
@@ -415,9 +415,9 @@ Links
 * [symbols concatenation](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html)
 * [GCC](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)
 * [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization)
-* [Introduction to linkers](https://0xax.gitbooks.io/linux-insides/content/Misc/linux-misc-3.html)
+* [Introduction to linkers](https://0xax.gitbook.io/linux-insides/summary/misc/linux-misc-3)
 * [Linux kernel command line](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst)
 * [Process identifier](https://en.wikipedia.org/wiki/Process_identifier)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [rootfs](https://en.wikipedia.org/wiki/Initramfs)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
+* [previous part](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)

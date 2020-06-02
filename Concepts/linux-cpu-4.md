@@ -76,7 +76,7 @@ In the first case for the `blocking notifier chains`, callbacks will be called/e
 
 The second `SRCU notifier chains` represent alternative form of `blocking notifier chains`. In the first case, blocking notifier chains uses `rw_semaphore` synchronization primitive to protect chain links. `SRCU` notifier chains run in process context too, but uses special form of [RCU](https://en.wikipedia.org/wiki/Read-copy-update) mechanism which is permissible to block in an read-side critical section.
 
-In the third case for the `atomic notifier chains` runs in interrupt or atomic context and protected by [spinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html) synchronization primitive. The last `raw notifier chains` provides special type of notifier chains without any locking restrictions on callbacks. This means that protection rests on the shoulders of caller side. It is very useful when we want to protect our chain with very specific locking mechanism.
+In the third case for the `atomic notifier chains` runs in interrupt or atomic context and protected by [spinlock](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) synchronization primitive. The last `raw notifier chains` provides special type of notifier chains without any locking restrictions on callbacks. This means that protection rests on the shoulders of caller side. It is very useful when we want to protect our chain with very specific locking mechanism.
 
 If we will look at the implementation of the `notifier_block` structure, we will see that it contains pointer to the `next` element from a notification chain list, but we have no head. Actually a head of such list is in separate structure depends on type of a notification chain. For example for the `blocking notifier chains`:
 
@@ -118,7 +118,7 @@ which defines head for loadable modules blocking notifier chain. The `BLOCKING_N
 	} while (0)
 ```
 
-So we may see that it takes name of a name of a head of a blocking notifier chain and initializes read/write [semaphore](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html) and set head to `NULL`. Besides the `BLOCKING_INIT_NOTIFIER_HEAD` macro, the Linux kernel additionally provides `ATOMIC_INIT_NOTIFIER_HEAD`, `RAW_INIT_NOTIFIER_HEAD` macros and `srcu_init_notifier` function for initialization atomic and other types of notification chains.
+So we may see that it takes name of a name of a head of a blocking notifier chain and initializes read/write [semaphore](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-3) and set head to `NULL`. Besides the `BLOCKING_INIT_NOTIFIER_HEAD` macro, the Linux kernel additionally provides `ATOMIC_INIT_NOTIFIER_HEAD`, `RAW_INIT_NOTIFIER_HEAD` macros and `srcu_init_notifier` function for initialization atomic and other types of notification chains.
 
 After initialization of a head of a notification chain, a subsystem which wants to receive notification from the given notification chain it should register with certain function which is depends on type of notification. If you will look in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file, you will see following four function for this:
 
@@ -331,7 +331,7 @@ static struct notifier_block tracepoint_module_nb = {
 };
 ```
 
-When one of the `MODULE_STATE_LIVE`, `MODULE_STATE_COMING` or `MODULE_STATE_GOING` events occurred. For example the `MODULE_STATE_LIVE` the `MODULE_STATE_COMING` notifications will be sent during execution of the [init_module](http://man7.org/linux/man-pages/man2/init_module.2.html) [system call](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html). Or for example `MODULE_STATE_GOING` will be sent during execution of the [delete_module](http://man7.org/linux/man-pages/man2/delete_module.2.html) `system call`:
+When one of the `MODULE_STATE_LIVE`, `MODULE_STATE_COMING` or `MODULE_STATE_GOING` events occurred. For example the `MODULE_STATE_LIVE` the `MODULE_STATE_COMING` notifications will be sent during execution of the [init_module](http://man7.org/linux/man-pages/man2/init_module.2.html) [system call](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-1). Or for example `MODULE_STATE_GOING` will be sent during execution of the [delete_module](http://man7.org/linux/man-pages/man2/delete_module.2.html) `system call`:
 
 ```C
 SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
@@ -359,11 +359,11 @@ Links
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29)
 * [RCU](https://en.wikipedia.org/wiki/Read-copy-update)
-* [spinlock](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-1.html)
+* [spinlock](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1)
 * [loadable modules](https://en.wikipedia.org/wiki/Loadable_kernel_module)
-* [semaphore](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/linux-sync-3.html)
+* [semaphore](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-3)
 * [tracepoints](https://www.kernel.org/doc/Documentation/trace/tracepoints.txt)
-* [system call](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html)
+* [system call](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-1)
 * [init_module system call](http://man7.org/linux/man-pages/man2/init_module.2.html)
 * [delete_module](http://man7.org/linux/man-pages/man2/delete_module.2.html)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-3.html)
+* [previous part](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-3)

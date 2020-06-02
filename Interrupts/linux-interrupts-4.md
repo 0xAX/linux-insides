@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 4.
 Initialization of non-early interrupt gates
 --------------------------------------------------------------------------------
 
-This is fourth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-3.html) we saw first early `#DB` and `#BP` exceptions handlers from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We stopped on the right after the `early_trap_init` function that called in the `setup_arch` function which defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/setup.c). In this part we will continue to dive into an interrupts and exceptions handling in the Linux kernel for `x86_64` and continue to do it from the place where we left off in the last part. First thing which is related to the interrupts and exceptions handling is the setup of the `#PF` or [page fault](https://en.wikipedia.org/wiki/Page_fault) handler with the `early_trap_pf_init` function. Let's start from it.
+This is fourth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3) we saw first early `#DB` and `#BP` exceptions handlers from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We stopped on the right after the `early_trap_init` function that called in the `setup_arch` function which defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/setup.c). In this part we will continue to dive into an interrupts and exceptions handling in the Linux kernel for `x86_64` and continue to do it from the place where we left off in the last part. First thing which is related to the interrupts and exceptions handling is the setup of the `#PF` or [page fault](https://en.wikipedia.org/wiki/Page_fault) handler with the `early_trap_pf_init` function. Let's start from it.
 
 Early page fault handler
 --------------------------------------------------------------------------------
@@ -20,7 +20,7 @@ void __init early_trap_pf_init(void)
 }
 ```
 
-This macro defined in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/desc.h). We already saw macros like this in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-3.html) - `set_system_intr_gate` and `set_intr_gate_ist`. This macro checks that given vector number is not greater than `255` (maximum vector number) and calls `_set_gate` function as `set_system_intr_gate` and `set_intr_gate_ist` did it:
+This macro defined in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/desc.h). We already saw macros like this in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3) - `set_system_intr_gate` and `set_intr_gate_ist`. This macro checks that given vector number is not greater than `255` (maximum vector number) and calls `_set_gate` function as `set_system_intr_gate` and `set_intr_gate_ist` did it:
 
 ```C
 #define set_intr_gate(n, addr)                                  \
@@ -64,7 +64,7 @@ When the `early_trap_pf_init` will be called, the `set_intr_gate` will be expand
 trace_idtentry page_fault do_page_fault has_error_code=1
 ```
 
-We saw in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-3.html) how `#DB` and `#BP` handlers defined. They were defined with the `idtentry` macro, but here we can see `trace_idtentry`. This macro defined in the same source code file and depends on the `CONFIG_TRACING` kernel configuration option:
+We saw in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3) how `#DB` and `#BP` handlers defined. They were defined with the `idtentry` macro, but here we can see `trace_idtentry`. This macro defined in the same source code file and depends on the `CONFIG_TRACING` kernel configuration option:
 
 ```assembly
 #ifdef CONFIG_TRACING
@@ -79,7 +79,7 @@ idtentry \sym \do_sym has_error_code=\has_error_code
 #endif
 ```
 
-We will not dive into exceptions [Tracing](https://en.wikipedia.org/wiki/Tracing_%28software%29) now. If `CONFIG_TRACING` is not set, we can see that `trace_idtentry` macro just expands to the normal `idtentry`. We already saw implementation of the `idtentry` macro in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-3.html), so let's start from the `page_fault` exception handler.
+We will not dive into exceptions [Tracing](https://en.wikipedia.org/wiki/Tracing_%28software%29) now. If `CONFIG_TRACING` is not set, we can see that `trace_idtentry` macro just expands to the normal `idtentry`. We already saw implementation of the `idtentry` macro in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3), so let's start from the `page_fault` exception handler.
 
 As we can see in the `idtentry` definition, the handler of the `page_fault` is `do_page_fault` function which defined in the [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/fault.c) and as all exceptions handlers it takes two arguments:
 
@@ -197,7 +197,7 @@ static int proc_root_readdir(struct file *file, struct dir_context *ctx)
 }
 ```
 
-Here we can see `proc_root_readdir` function which will be called when the Linux [VFS](https://en.wikipedia.org/wiki/Virtual_file_system) needs to read the `root` directory contents. If condition marked with `unlikely`, compiler can put `false` code right after branching. Now let's back to the our address check. Comparison between the given address and the `0x00007ffffffff000` will give us to know, was page fault in the kernel mode or user mode. After this check we know it. After this `__do_page_fault` routine will try to understand the problem that provoked page fault exception and then will pass address to the appropriate routine. It can be `kmemcheck` fault, spurious fault, [kprobes](https://www.kernel.org/doc/Documentation/kprobes.txt) fault and etc. Will not dive into implementation details of the page fault exception handler in this part, because we need to know many different concepts which are provided by the Linux kernel, but will see it in the chapter about the [memory management](https://0xax.gitbooks.io/linux-insides/content/MM/index.html) in the Linux kernel.
+Here we can see `proc_root_readdir` function which will be called when the Linux [VFS](https://en.wikipedia.org/wiki/Virtual_file_system) needs to read the `root` directory contents. If condition marked with `unlikely`, compiler can put `false` code right after branching. Now let's back to the our address check. Comparison between the given address and the `0x00007ffffffff000` will give us to know, was page fault in the kernel mode or user mode. After this check we know it. After this `__do_page_fault` routine will try to understand the problem that provoked page fault exception and then will pass address to the appropriate routine. It can be `kmemcheck` fault, spurious fault, [kprobes](https://www.kernel.org/doc/Documentation/kprobes.txt) fault and etc. Will not dive into implementation details of the page fault exception handler in this part, because we need to know many different concepts which are provided by the Linux kernel, but will see it in the chapter about the [memory management](https://0xax.gitbook.io/linux-insides/summary/mm) in the Linux kernel.
 
 Back to start_kernel
 --------------------------------------------------------------------------------
@@ -214,7 +214,7 @@ There are many different function calls after the `early_trap_pf_init` in the `s
 #endif
 ```
 
-Note that it depends on the `CONFIG_EISA` kernel configuration parameter which represents `EISA` support. Here we use `early_ioremap` function to map `I/O` memory on the page tables. We use `readl` function to read first `4` bytes from the mapped region and if they are equal to `EISA` string we set `EISA_bus` to one. In the end we just unmap previously mapped region. More about `early_ioremap` you can read in the part which describes [Fix-Mapped Addresses and ioremap](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html).
+Note that it depends on the `CONFIG_EISA` kernel configuration parameter which represents `EISA` support. Here we use `early_ioremap` function to map `I/O` memory on the page tables. We use `readl` function to read first `4` bytes from the mapped region and if they are equal to `EISA` string we set `EISA_bus` to one. In the end we just unmap previously mapped region. More about `early_ioremap` you can read in the part which describes [Fix-Mapped Addresses and ioremap](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2).
 
 After this we start to fill the `Interrupt Descriptor Table` with the different interrupt gates. First of all we set `#DE` or `Divide Error` and `#NMI` or `Non-maskable Interrupt`:
 
@@ -223,7 +223,7 @@ set_intr_gate(X86_TRAP_DE, divide_error);
 set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
 ```
 
-We use `set_intr_gate` macro to set the interrupt gate for the `#DE` exception and `set_intr_gate_ist` for the `#NMI`. You can remember that we already used these macros when we have set the interrupts gates for the page fault handler, debug handler and etc, you can find explanation of it in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-3.html). After this we setup exception gates for the following exceptions:
+We use `set_intr_gate` macro to set the interrupt gate for the `#DE` exception and `set_intr_gate_ist` for the `#NMI`. You can remember that we already used these macros when we have set the interrupts gates for the page fault handler, debug handler and etc, you can find explanation of it in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3). After this we setup exception gates for the following exceptions:
 
 ```C
 set_system_intr_gate(X86_TRAP_OF, &overflow);
@@ -300,7 +300,7 @@ In the next step we fill the `used_vectors` array which defined in the [arch/x86
 DECLARE_BITMAP(used_vectors, NR_VECTORS);
 ```
 
-of the first `32` interrupts (more about bitmaps in the Linux kernel you can read in the part which describes [cpumasks and bitmaps](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html))
+of the first `32` interrupts (more about bitmaps in the Linux kernel you can read in the part which describes [cpumasks and bitmaps](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2))
 
 ```C
 for (i = 0; i < FIRST_EXTERNAL_VECTOR; i++)
@@ -329,7 +329,7 @@ __set_fixmap(FIX_RO_IDT, __pa_symbol(idt_table), PAGE_KERNEL_RO);
 idt_descr.address = fix_to_virt(FIX_RO_IDT);
 ```
 
-and write its address to the `idt_descr.address` (more about fix-mapped addresses you can read in the second part of the [Linux kernel memory management](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html) chapter). After this we can see the call of the `cpu_init` function that defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function makes initialization of the all `per-cpu` state. In the beginning of the `cpu_init` we do the following things: First of all we wait while current cpu is initialized and than we call the `cr4_init_shadow` function which stores shadow copy of the `cr4` control register for the current cpu and load CPU microcode if need with the following function calls:
+and write its address to the `idt_descr.address` (more about fix-mapped addresses you can read in the second part of the [Linux kernel memory management](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2) chapter). After this we can see the call of the `cpu_init` function that defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function makes initialization of the all `per-cpu` state. In the beginning of the `cpu_init` we do the following things: First of all we wait while current cpu is initialized and than we call the `cr4_init_shadow` function which stores shadow copy of the `cr4` control register for the current cpu and load CPU microcode if need with the following function calls:
 
 ```C
 wait_for_master_cpu(cpu);
@@ -421,7 +421,7 @@ set_system_intr_gate_ist(X86_TRAP_BP, &int3, DEBUG_STACK);
 #endif
 ```
 
-Here we copy `idt_table` to the `nmi_dit_table` and setup exception handlers for the `#DB` or `Debug exception` and `#BR` or `Breakpoint exception`. You can remember that we already set these interrupt gates in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-3.html), so why do we need to setup it again? We setup it again because when we initialized it before in the `early_trap_init` function, the `Task State Segment` was not ready yet, but now it is ready after the call of the `cpu_init` function.
+Here we copy `idt_table` to the `nmi_dit_table` and setup exception handlers for the `#DB` or `Debug exception` and `#BR` or `Breakpoint exception`. You can remember that we already set these interrupt gates in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3), so why do we need to setup it again? We setup it again because when we initialized it before in the `early_trap_init` function, the `Task State Segment` was not ready yet, but now it is ready after the call of the `cpu_init` function.
 
 That's all. Soon we will consider all handlers of these interrupts/exceptions.
 
@@ -448,8 +448,8 @@ Links
 * [3DNow](https://en.wikipedia.org/?title=3DNow!)
 * [CPU caches](https://en.wikipedia.org/wiki/CPU_cache)
 * [VFS](https://en.wikipedia.org/wiki/Virtual_file_system) 
-* [Linux kernel memory management](https://0xax.gitbooks.io/linux-insides/content/MM/index.html)
-* [Fix-Mapped Addresses and ioremap](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-2.html)
+* [Linux kernel memory management](https://0xax.gitbook.io/linux-insides/summary/mm)
+* [Fix-Mapped Addresses and ioremap](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2)
 * [Extended Industry Standard Architecture](https://en.wikipedia.org/wiki/Extended_Industry_Standard_Architecture)
 * [INT isntruction](https://en.wikipedia.org/wiki/INT_%28x86_instruction%29)
 * [INTO](http://x86.renejeschke.de/html/file_module_x86_id_142.html)
@@ -459,7 +459,7 @@ Links
 * [x87 FPU](https://en.wikipedia.org/wiki/X86_instruction_listings#x87_floating-point_instructions)
 * [MCE exception](https://en.wikipedia.org/wiki/Machine-check_exception)
 * [SIMD](https://en.wikipedia.org/?title=SIMD)
-* [cpumasks and bitmaps](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
+* [cpumasks and bitmaps](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)
 * [NX](https://en.wikipedia.org/wiki/NX_bit)
 * [Task State Segment](https://en.wikipedia.org/wiki/Task_state_segment)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-3.html)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3)

@@ -76,7 +76,7 @@ After microcode was loaded we can see the check of the `console_loglevel` and th
 Move on init pages
 --------------------------------------------------------------------------------
 
-In the next step, as we have copied `boot_params` structure, we need to move from the early page tables to the page tables for initialization process. We already set early page tables for switchover, you can read about it in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) and dropped all it in the `reset_early_page_tables` function (you can read about it in the previous part too) and kept only kernel high mapping. After this we call:
+In the next step, as we have copied `boot_params` structure, we need to move from the early page tables to the page tables for initialization process. We already set early page tables for switchover, you can read about it in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1) and dropped all it in the `reset_early_page_tables` function (you can read about it in the previous part too) and kept only kernel high mapping. After this we call:
 
 ```C
 	clear_page(init_level4_pgt);

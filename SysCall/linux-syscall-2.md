@@ -4,7 +4,7 @@ System calls in the Linux kernel. Part 2.
 How does the Linux kernel handle a system call
 --------------------------------------------------------------------------------
 
-The previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html) was the first part of the chapter that describes the [system call](https://en.wikipedia.org/wiki/System_call) concepts in the Linux kernel.
+The previous [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-1) was the first part of the chapter that describes the [system call](https://en.wikipedia.org/wiki/System_call) concepts in the Linux kernel.
 In the previous part we learned what a system call is in the Linux kernel, and in operating systems in general. This was introduced from a user-space perspective, and part of the [write](http://man7.org/linux/man-pages/man2/write.2.html) system call implementation was discussed. In this part we continue our look at system calls, starting with some theory before moving onto the Linux kernel code.
 
 A user application does not make the system call directly from our applications. We did not write the `Hello world!` program like:
@@ -114,7 +114,7 @@ asmlinkage const sys_call_ptr_t sys_call_table[__NR_syscall_max+1] = {
 
 After this all elements that point to the non-implemented system calls will contain the address of the `sys_ni_syscall` function that just returns `-ENOSYS` as we saw above, and other elements will point to the `sys_syscall_name` functions.
 
-At this point, we have filled the system call table and the Linux kernel knows where each system call handler is. But the Linux kernel does not call a `sys_syscall_name` function immediately after it is instructed to handle a system call from a user space application. Remember the [chapter](https://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) about interrupts and interrupt handling. When the Linux kernel gets the control to handle an interrupt, it had to do some preparations like save user space registers, switch to a new stack and many more tasks before it will call an interrupt handler. There is the same situation with the system call handling. The preparation for handling a system call is the first thing, but before the Linux kernel will start these preparations, the entry point of a system call must be initialized and only the Linux kernel knows how to perform this preparation. In the next paragraph we will see the process of the initialization of the system call entry in the Linux kernel.
+At this point, we have filled the system call table and the Linux kernel knows where each system call handler is. But the Linux kernel does not call a `sys_syscall_name` function immediately after it is instructed to handle a system call from a user space application. Remember the [chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts) about interrupts and interrupt handling. When the Linux kernel gets the control to handle an interrupt, it had to do some preparations like save user space registers, switch to a new stack and many more tasks before it will call an interrupt handler. There is the same situation with the system call handling. The preparation for handling a system call is the first thing, but before the Linux kernel will start these preparations, the entry point of a system call must be initialized and only the Linux kernel knows how to perform this preparation. In the next paragraph we will see the process of the initialization of the system call entry in the Linux kernel.
 
 Initialization of the system call entry
 --------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ SYSCALL invokes an OS system-call handler at privilege level 0.
 It does so by loading RIP from the IA32_LSTAR MSR
 ```
 
-it means that we need to put the system call entry in to the `IA32_LSTAR` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register). This operation takes place during the Linux kernel initialization process. If you have read the fourth [part](https://0xax.gitbooks.io/linux-insides/content/Interrupts/linux-interrupts-4.html) of the chapter that describes interrupts and interrupt handling in the Linux kernel, you know that the Linux kernel calls the `trap_init` function during the initialization process. This function is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code file and executes the initialization of the `non-early` exception handlers like divide error, [coprocessor](https://en.wikipedia.org/wiki/Coprocessor) error etc. Besides the initialization of the `non-early` exceptions handlers, this function calls the `cpu_init` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/blob/arch/x86/kernel/cpu/common.c) source code file which besides initialization of `per-cpu` state, calls the `syscall_init` function from the same source code file.
+it means that we need to put the system call entry in to the `IA32_LSTAR` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register). This operation takes place during the Linux kernel initialization process. If you have read the fourth [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-4) of the chapter that describes interrupts and interrupt handling in the Linux kernel, you know that the Linux kernel calls the `trap_init` function during the initialization process. This function is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code file and executes the initialization of the `non-early` exception handlers like divide error, [coprocessor](https://en.wikipedia.org/wiki/Coprocessor) error etc. Besides the initialization of the `non-early` exceptions handlers, this function calls the `cpu_init` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/blob/arch/x86/kernel/cpu/common.c) source code file which besides initialization of `per-cpu` state, calls the `syscall_init` function from the same source code file.
 
 This function performs the initialization of the system call entry point. Let's look on the implementation of this function. It does not take parameters and first of all it fills two model specific registers:
 
@@ -181,7 +181,7 @@ wrmsrl_safe(MSR_IA32_SYSENTER_ESP, 0ULL);
 wrmsrl_safe(MSR_IA32_SYSENTER_EIP, 0ULL);
 ```
 
-You can read more about the `Global Descriptor Table` in the second [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) of the chapter that describes the booting process of the Linux kernel.
+You can read more about the `Global Descriptor Table` in the second [part](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-2) of the chapter that describes the booting process of the Linux kernel.
 
 At the end of the `syscall_init` function, we just mask flags in the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) by writing the set of flags to the `MSR_SYSCALL_MASK` model specific register:
 
@@ -210,7 +210,7 @@ This macro is defined in the [arch/x86/include/asm/irqflags.h](https://github.co
 #define SWAPGS_UNSAFE_STACK	swapgs
 ```
 
-which exchanges the current GS base register value with the value contained in the `MSR_KERNEL_GS_BASE ` model specific register. In other words we moved it on to the kernel stack. After this we point the old stack pointer to the `rsp_scratch` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable and setup the stack pointer to point to the top of stack for the current processor:
+which exchanges the current GS base register value with the value contained in the `MSR_KERNEL_GS_BASE ` model specific register. In other words we moved it on to the kernel stack. After this we point the old stack pointer to the `rsp_scratch` [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) variable and setup the stack pointer to point to the top of stack for the current processor:
 
 ```assembly
 movq	%rsp, PER_CPU_VAR(rsp_scratch)
@@ -378,7 +378,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part about the system calls concept in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html) we saw theory about this concept from the user application view. In this part we continued to dive into the stuff which is related to the system call concept and saw what the Linux kernel does when a system call occurs.
+This is the end of the second part about the system calls concept in the Linux kernel. In the previous [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-1) we saw theory about this concept from the user application view. In this part we continued to dive into the stuff which is related to the system call concept and saw what the Linux kernel does when a system call occurs.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
@@ -402,8 +402,8 @@ Links
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
-* [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
+* [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [general purpose registers](https://en.wikipedia.org/wiki/Processor_register)
 * [ABI](https://en.wikipedia.org/wiki/Application_binary_interface)
 * [x86_64 C ABI](http://www.x86-64.org/documentation/abi.pdf)
-* [previous chapter](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html)
+* [previous chapter](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-1)
