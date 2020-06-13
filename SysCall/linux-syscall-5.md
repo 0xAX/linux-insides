@@ -49,7 +49,7 @@ So let's start.
 Definition of the open system call
 --------------------------------------------------------------------------------
 
-If you have read the [fourth part](https://github.com/0xAX/linux-insides/blob/master/SysCall/linux-syscall-4.md) of the [linux-insides](https://0xax.gitbooks.io/linux-insides/content/index.html) book, you should know that system calls are defined with the help of `SYSCALL_DEFINE` macro. So, the `open` system call is not exception.
+If you have read the [fourth part](https://github.com/0xAX/linux-insides/blob/master/SysCall/linux-syscall-4.md) of the [linux-insides](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md) book, you should know that system calls are defined with the help of `SYSCALL_DEFINE` macro. So, the `open` system call is not exception.
 
 Definition of the `open` system call is located in the [fs/open.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) source code file and looks pretty small for the first view:
 
@@ -400,4 +400,4 @@ Links
 * [inode](https://en.wikipedia.org/wiki/Inode)
 * [RCU](https://www.kernel.org/doc/Documentation/RCU/whatisRCU.txt)
 * [read](http://man7.org/linux/man-pages/man2/read.2.html)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-4.html)
+* [previous part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4)

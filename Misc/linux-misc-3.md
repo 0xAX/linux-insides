@@ -1,7 +1,7 @@
 Introduction
 ---------------
 
-During the writing of the [linux-insides](https://0xax.gitbooks.io/linux-insides/content/) book I have received many emails with questions related to the [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script and linker-related subjects. So I've decided to write this to cover some aspects of the linker and the linking of object files.
+During the writing of the [linux-insides](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md) book I have received many emails with questions related to the [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script and linker-related subjects. So I've decided to write this to cover some aspects of the linker and the linking of object files.
 
 If we open the `Linker` page on Wikipedia, we will see following definition:
 
@@ -569,7 +569,7 @@ Disassembly of section .data:
   ...
 ```
 
-Apart from the commands we have already seen, there are a few others. The first is the `ASSERT(exp, message)` that ensures that given expression is not zero. If it is zero, then exit the linker with an error code and print the given error message. If you've read about Linux kernel booting process in the [linux-insides](https://0xax.gitbooks.io/linux-insides/content/) book, you may know that the setup header of the Linux kernel has offset `0x1f1`. In the linker script of the Linux kernel we can find a check for this:
+Apart from the commands we have already seen, there are a few others. The first is the `ASSERT(exp, message)` that ensures that given expression is not zero. If it is zero, then exit the linker with an error code and print the given error message. If you've read about Linux kernel booting process in the [linux-insides](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md) book, you may know that the setup header of the Linux kernel has offset `0x1f1`. In the linker script of the Linux kernel we can find a check for this:
 
 ```
 . = ASSERT(hdr == 0x1f1, "The setup header has the wrong offset!");
@@ -631,7 +631,7 @@ Please note that English is not my first language, and I am really sorry for any
 Links
 -----------------
 
-* [Book about Linux kernel insides](https://0xax.gitbooks.io/linux-insides/content/)
+* [Book about Linux kernel insides](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md)
 * [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29)
 * [object files](https://en.wikipedia.org/wiki/Object_file)
 * [glibc](https://en.wikipedia.org/wiki/GNU_C_Library)

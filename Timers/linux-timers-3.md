@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 3.
 The tick broadcast framework and dyntick
 --------------------------------------------------------------------------------
 
-This is third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel and we stopped on the `clocksource` framework in the previous [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-2.html). We have started to consider this framework because it is closely related to the special counters which are provided by the Linux kernel. One of these counters which we already saw in the first [part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-1.html) of this chapter is - `jiffies`. As I already wrote in the first part of this chapter, we will consider time management related stuff step by step during the Linux kernel initialization. Previous step was call of the:
+This is third part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) which describes timers and time management related stuff in the Linux kernel and we stopped on the `clocksource` framework in the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-2). We have started to consider this framework because it is closely related to the special counters which are provided by the Linux kernel. One of these counters which we already saw in the first [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1) of this chapter is - `jiffies`. As I already wrote in the first part of this chapter, we will consider time management related stuff step by step during the Linux kernel initialization. Previous step was call of the:
 
 ```C
 register_refined_jiffies(CLOCK_TICK_RATE);
@@ -12,7 +12,7 @@ register_refined_jiffies(CLOCK_TICK_RATE);
 
 function which defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file and executes initialization of the `refined_jiffies` clock source for us. Recall that this function is called from the `setup_arch` function that defined in the [https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c](arch/x86/kernel/setup.c) source code and executes architecture-specific ([x86_64](https://en.wikipedia.org/wiki/X86-64) in our case) initialization. Look on the implementation of the `setup_arch` and you will note that the call of the `register_refined_jiffies` is the last step before the `setup_arch` function will finish its work.
 
-There are many different `x86_64` specific things already configured after the end of the `setup_arch` execution. For example some early [interrupt](https://en.wikipedia.org/wiki/Interrupt) handlers already able to handle interrupts, memory space reserved for the [initrd](https://en.wikipedia.org/wiki/Initrd), [DMI](https://en.wikipedia.org/wiki/Desktop_Management_Interface) scanned, the Linux kernel log buffer is already set and this means that the [printk](https://en.wikipedia.org/wiki/Printk) function is able to work, [e820](https://en.wikipedia.org/wiki/E820) parsed and the Linux kernel already knows about available memory and and many many other architecture specific things (if you are interesting, you can read more about the `setup_arch` function and Linux kernel initialization process in the second [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) of this book).
+There are many different `x86_64` specific things already configured after the end of the `setup_arch` execution. For example some early [interrupt](https://en.wikipedia.org/wiki/Interrupt) handlers already able to handle interrupts, memory space reserved for the [initrd](https://en.wikipedia.org/wiki/Initrd), [DMI](https://en.wikipedia.org/wiki/Desktop_Management_Interface) scanned, the Linux kernel log buffer is already set and this means that the [printk](https://en.wikipedia.org/wiki/Printk) function is able to work, [e820](https://en.wikipedia.org/wiki/E820) parsed and the Linux kernel already knows about available memory and and many many other architecture specific things (if you are interesting, you can read more about the `setup_arch` function and Linux kernel initialization process in the second [chapter](https://0xax.gitbook.io/linux-insides/summary/initialization) of this book).
 
 Now, the `setup_arch` finished its work and we can back to the generic Linux kernel code. Recall that the `setup_arch` function was called from the `start_kernel` function which is defined in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. So, we shall return to this function. You can see that there are many different function are called right after `setup_arch` function inside of the `start_kernel` function, but since our chapter is devoted to timers and time management related stuff, we will skip all code which is not related to this topic. The first function which is related to the time management in the Linux kernel is:
 
@@ -42,7 +42,7 @@ void __init tick_init(void)
 
 As you can understand from the paragraph's title, we are interesting only in the `tick_broadcast_init` function for now. This function defined in the [kernel/time/tick-broadcast.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/tick-broadcast.c) source code file and executes initialization of the `tick broadcast` framework related data structures. Before we will look on the implementation of the `tick_broadcast_init` function and will try to understand what does this function do, we need to know about `tick broadcast` framework.
 
-Main point of a central processor is to execute programs. But sometimes a processor may be in a special state when it is not being used by any program. This special state is called - [idle](https://en.wikipedia.org/wiki/Idle_%28CPU%29). When the processor has no anything to execute, the Linux kernel launches `idle` task. We already saw a little about this in the last part of the [Linux kernel initialization process](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-10.html). When the Linux kernel will finish all initialization processes in the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file, it will call the `rest_init` function from the same source code file. Main point of this function is to launch kernel `init` thread and the `kthreadd` thread, to call the `schedule` function to start task scheduling and to go to sleep by calling the `cpu_idle_loop` function that defined in the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/idle.c) source code file.
+Main point of a central processor is to execute programs. But sometimes a processor may be in a special state when it is not being used by any program. This special state is called - [idle](https://en.wikipedia.org/wiki/Idle_%28CPU%29). When the processor has no anything to execute, the Linux kernel launches `idle` task. We already saw a little about this in the last part of the [Linux kernel initialization process](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-10). When the Linux kernel will finish all initialization processes in the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file, it will call the `rest_init` function from the same source code file. Main point of this function is to launch kernel `init` thread and the `kthreadd` thread, to call the `schedule` function to start task scheduling and to go to sleep by calling the `cpu_idle_loop` function that defined in the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/idle.c) source code file.
 
 The `cpu_idle_loop` function represents infinite loop which checks the need for rescheduling on each iteration. After the scheduler finds something to execute, the `idle` process will finish its work and the control will be moved to a new runnable task with the call of the `schedule_preempt_disabled` function:
 
@@ -102,7 +102,7 @@ void __init tick_broadcast_init(void)
 }
 ```
 
-As we can see, the `tick_broadcast_init` function allocates different [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) with the help of the `zalloc_cpumask_var` function. The `zalloc_cpumask_var` function defined in the [lib/cpumask.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/cpumask.c) source code file and expands to the call of the following function:
+As we can see, the `tick_broadcast_init` function allocates different [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) with the help of the `zalloc_cpumask_var` function. The `zalloc_cpumask_var` function defined in the [lib/cpumask.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/cpumask.c) source code file and expands to the call of the following function:
 
 ```C
 bool zalloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
@@ -243,7 +243,7 @@ int tick_device_uses_broadcast(struct clock_event_device *dev, int cpu)
 }
 ```
 
-More about the `smp_processor_id` macro you can read in the fourth [part](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process chapter.
+More about the `smp_processor_id` macro you can read in the fourth [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4) of the Linux kernel initialization process chapter.
 
 The `tick_broadcast_start_periodic` function check the given `clock event` device and call the `tick_setup_periodic` function:
 
@@ -407,7 +407,7 @@ for_each_cpu(cpu, tick_nohz_full_mask)
 	context_tracking_cpu_set(cpu);
 ```
 
-The `context_tracking_cpu_set` function defined in the [kernel/context_tracking.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/context_tracking.c) source code file and main point of this function is to set the `context_tracking.active` [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html) variable to `true`. When the `active` field will be set to `true` for the certain processor, all [context switches](https://en.wikipedia.org/wiki/Context_switch) will be ignored by the Linux kernel context tracking subsystem for this processor.
+The `context_tracking_cpu_set` function defined in the [kernel/context_tracking.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/context_tracking.c) source code file and main point of this function is to set the `context_tracking.active` [percpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) variable to `true`. When the `active` field will be set to `true` for the certain processor, all [context switches](https://en.wikipedia.org/wiki/Context_switch) will be ignored by the Linux kernel context tracking subsystem for this processor.
 
 That's all. This is the end of the `tick_nohz_init` function. After this `NO_HZ` related data structures will be initialized. We didn't see API of the `NO_HZ` mode, but will see it soon.
 
@@ -433,12 +433,12 @@ Links
 * [CPU idle](https://en.wikipedia.org/wiki/Idle_%28CPU%29)
 * [power management](https://en.wikipedia.org/wiki/Power_management)
 * [NO_HZ documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/timers/NO_HZ.txt)
-* [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
+* [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)
 * [high precision event timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
 * [irq](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [IPI](https://en.wikipedia.org/wiki/Inter-processor_interrupt)
 * [CPUID](https://en.wikipedia.org/wiki/CPUID)
 * [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
-* [percpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-1.html)
+* [percpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [context switches](https://en.wikipedia.org/wiki/Context_switch)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/Timers/linux-timers-2.html)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-2)

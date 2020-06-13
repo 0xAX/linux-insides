@@ -4,7 +4,7 @@ Paging
 Introduction
 --------------------------------------------------------------------------------
 
-In the fifth [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) of the series `Linux kernel booting process` we learned about what the kernel does in its earliest stage. In the next step the kernel will initialize different things like `initrd` mounting, lockdep initialization, and many many other things, before we can see how the kernel runs the first init process.
+In the fifth [part](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-5) of the series `Linux kernel booting process` we learned about what the kernel does in its earliest stage. In the next step the kernel will initialize different things like `initrd` mounting, lockdep initialization, and many many other things, before we can see how the kernel runs the first init process.
 
 Yeah, there will be many different things, but many many and once again many work with **memory**.
 
@@ -259,4 +259,4 @@ Links
 * [MMU](http://en.wikipedia.org/wiki/Memory_management_unit)
 * [ELF64](https://github.com/0xAX/linux-insides/blob/master/Theory/ELF.md)
 * [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/x86_64/mm.txt)
-* [Last part - Kernel booting process](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html)
+* [Last part - Kernel booting process](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-5)

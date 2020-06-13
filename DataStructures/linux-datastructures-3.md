@@ -13,7 +13,7 @@ Besides these two files, there is also architecture-specific header file which p
 
 * [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bitops.h)
 
-header file. As I just wrote above, the `bitmap` is heavily used in the Linux kernel. For example a `bit array` is used to store set of online/offline processors for systems which support [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) cpu (more about this you can read in the [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html) part), a `bit array` stores set of allocated [irqs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) during initialization of the Linux kernel and etc.
+header file. As I just wrote above, the `bitmap` is heavily used in the Linux kernel. For example a `bit array` is used to store set of online/offline processors for systems which support [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) cpu (more about this you can read in the [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) part), a `bit array` stores set of allocated [irqs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) during initialization of the Linux kernel and etc.
 
 So, the main goal of this part is to see how `bit arrays` are implemented in the Linux kernel. Let's start.
 
@@ -365,7 +365,7 @@ Links
 * [linked data structures](https://en.wikipedia.org/wiki/Linked_data_structure)
 * [tree data structures](https://en.wikipedia.org/wiki/Tree_%28data_structure%29) 
 * [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
-* [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/linux-cpu-2.html)
+* [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [atomic operations](https://en.wikipedia.org/wiki/Linearizability)

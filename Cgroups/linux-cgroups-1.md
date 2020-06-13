@@ -4,7 +4,7 @@ Control Groups
 Introduction
 --------------------------------------------------------------------------------
 
-This is the first part of the new chapter of the [linux insides](https://0xax.gitbooks.io/linux-insides/content/) book and as you may guess by part's name - this part will cover [control groups](https://en.wikipedia.org/wiki/Cgroups) or `cgroups` mechanism in the Linux kernel.
+This is the first part of the new chapter of the [linux insides](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md) book and as you may guess by part's name - this part will cover [control groups](https://en.wikipedia.org/wiki/Cgroups) or `cgroups` mechanism in the Linux kernel.
 
 `Cgroups` are special mechanism provided by the Linux kernel which allows us to allocate kind of `resources` like processor time, number of processes per group, amount of memory per control group or combination of such resources for a process or set of processes. `Cgroups` are organized hierarchically and here this mechanism is similar to usual processes as they are hierarchical too and child `cgroups` inherit set of certain parameters from their parents. But actually they are not the same. The main differences between `cgroups` and normal processes that many different hierarchies of control groups may exist simultaneously in one time while normal process tree is always single. This was not a casual step because each control group hierarchy is attached to set of control group `subsystems`.
 
@@ -448,4 +448,4 @@ Links
 * [bash](https://www.gnu.org/software/bash/)
 * [docker](https://en.wikipedia.org/wiki/Docker_\(software\))
 * [perf events](https://en.wikipedia.org/wiki/Perf_\(Linux\))
-* [Previous chapter](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html)
+* [Previous chapter](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-1)
