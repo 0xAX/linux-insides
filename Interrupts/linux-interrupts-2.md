@@ -78,12 +78,12 @@ As you can remember the 32-bit entry point is in the [arch/x86/boot/compressed/h
 But the 32-bit mode entry point is the second file in our case. The first file is not even compiled for `x86_64`. Let's look at the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile):
 
 ```
-vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
+vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/kernel_info.o $(obj)/head_$(BITS).o \
 ...
 ...
 ```
 
-We can see here that `head_*` depends on the `$(BITS)` variable which depends on the architecture. You can find it in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile):
+We can see here that `head_*` depends on the `$(BITS)` variable, which is based on the architecture. The variable is defined within [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile):
 
 ```
 ifeq ($(CONFIG_X86_32),y)
@@ -95,7 +95,7 @@ else
 endif
 ```
 
-Now as we jumped on the `startup_32` from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) we will not find anything related to the interrupt handling here. The `startup_32` contains code that makes preparations before the transition into [long mode](http://en.wikipedia.org/wiki/Long_mode) and directly jumps in to it. The `long mode` entry is located in `startup_64` and it makes preparations before the [kernel decompression](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-5) that occurs in the `decompress_kernel` from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c). After the kernel is decompressed, we jump on the `startup_64` from the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S). In the `startup_64` we start to build identity-mapped pages. After we have built identity-mapped pages, checked the [NX](http://en.wikipedia.org/wiki/NX_bit) bit, setup the `Extended Feature Enable Register` (see in links), and updated the early `Global Descriptor Table` with the `lgdt` instruction, we need to setup `gs` register with the following code:
+Now as we jumped into `startup_32` from [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S), we will not encounter anything related to interrupt handling here. The code inside of `startup_32` makes necessary preparations, before transitioning into the [long mode](http://en.wikipedia.org/wiki/Long_mode) with a direct jump. The `long mode` entry is located in `startup_64` and it makes arrangements for the [kernel decompression](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) that occurs in the `decompress_kernel` function inside of [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c). After the kernel is decompressed, we jump into `startup_64` defined at [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S). In `startup_64` we start to build identity-mapped pages, check the [NX](http://en.wikipedia.org/wiki/NX_bit) bit, setup the `Extended Feature Enable Register` (see in links) and update the early `Global Descriptor Table` with the `lgdt` instruction. And proceed to setup `gs` register with the following code:
 
 ```assembly
 movl	$MSR_GS_BASE,%ecx
