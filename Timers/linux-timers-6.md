@@ -208,7 +208,7 @@ function which just reads and returns atomic counter from the `Main Counter Regi
 ACPI PM timer
 --------------------------------------------------------------------------------
 
-The seconds clock source is [ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf). Implementation of this clock source is located in the [drivers/clocksource/acpi_pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/clocksource_acpi_pm.c) source code file and starts from the call of the `init_acpi_pm_clocksource` function during `fs` [initcall](https://kernelnewbies.org/Documents/InitcallMechanism).
+The seconds clock source is [ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf). Implementation of this clock source is located in the [drivers/clocksource/acpi_pm.c](https://github.com/torvalds/linux/blob/master/drivers/clocksource/acpi_pm.c) source code file and starts from the call of the `init_acpi_pm_clocksource` function during `fs` [initcall](https://kernelnewbies.org/Documents/InitcallMechanism).
 
 If we will look at implementation of the `init_acpi_pm_clocksource` function, we will see that it starts from the check of the value of `pmtmr_ioport` variable:
 

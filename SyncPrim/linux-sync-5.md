@@ -149,7 +149,7 @@ config RWSEM_XCHGADD_ALGORITHM
 	def_bool 64BIT
 ```
 
-in the [arch/x86/um/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/um/Kconfig) kernel configuration file. In this case, implementation of the `__init_rwsem` function will be located in the [kernel/locking/rwsem-xadd.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/locking/rwsem-xadd.c) source code file for us. Let's take a look at this function:
+in the [arch/x86/um/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/um/Kconfig) kernel configuration file. In this case, implementation of the `__init_rwsem` function will be located in the [kernel/locking/rwsem.c](https://github.com/torvalds/linux/blob/master/kernel/locking/rwsem.c) source code file for us. Let's take a look at this function:
 
 ```C
 void __init_rwsem(struct rw_semaphore *sem, const char *name,
@@ -249,7 +249,7 @@ As for other synchronization primitives which we saw in this chapter, usually `l
 #define RWSEM_ACTIVE_BIAS               0x00000001L
 ```
 
-or `0xffffffff00000001` to the `count` of the given `reader/writer semaphore` and returns previous value of it. After this we check the active mask in the `rw_semaphore->count`. If it was zero before, this means that there were no-one writer before, so we acquired a lock. In other way we call the `call_rwsem_down_write_failed` function from the [arch/x86/lib/rwsem.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/rwsem.S) assembly file. The `call_rwsem_down_write_failed` function just calls the `rwsem_down_write_failed` function from the [kernel/locking/rwsem-xadd.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/locking/rwsem-xadd.c) source code file anticipatorily save general purpose registers:
+or `0xffffffff00000001` to the `count` of the given `reader/writer semaphore` and returns previous value of it. After this we check the active mask in the `rw_semaphore->count`. If it was zero before, this means that there were no-one writer before, so we acquired a lock. In other way we call the `call_rwsem_down_write_failed` function from the [arch/x86/lib/rwsem.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/rwsem.S) assembly file. The `call_rwsem_down_write_failed` function just calls the `rwsem_down_write_failed` function from the [kernel/locking/rwsem-xadd.c](https://github.com/torvalds/linux/blob/master/kernel/locking/rwsem.c) source code file anticipatorily save general purpose registers:
 
 ```assembly
 ENTRY(call_rwsem_down_write_failed)

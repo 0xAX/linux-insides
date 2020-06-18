@@ -526,5 +526,5 @@ Links
 * [eflags](https://en.wikipedia.org/wiki/FLAGS_register)
 * [CPU masks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)
 * [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
-* [Workqueue](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/workqueue.txt)
+* [Workqueue](https://github.com/torvalds/linux/blob/6f0d349d922ba44e4348a17a78ea51b7135965b1/Documentation/core-api/workqueue.rst)
 * [Previous part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-8)

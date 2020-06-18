@@ -91,7 +91,7 @@ Here we can see the call of the `kmem_cache_create`. We already called the `kmem
 * flags;
 * constructor for the objects.
 
-and it will create `kmem_cache` for the integer IDs. Integer `IDs` is commonly used pattern to map set of integer IDs to the set of pointers. We can see usage of the integer IDs in the [i2c](http://en.wikipedia.org/wiki/I%C2%B2C) drivers subsystem. For example [drivers/i2c/i2c-core.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/i2c/i2c-core.c) which represents the core of the `i2c` subsystem defines `ID` for the `i2c` adapter with the `DEFINE_IDR` macro:
+and it will create `kmem_cache` for the integer IDs. Integer `IDs` is commonly used pattern to map set of integer IDs to the set of pointers. We can see usage of the integer IDs in the [i2c](http://en.wikipedia.org/wiki/I%C2%B2C) drivers subsystem. For example [drivers/i2c/i2c-core-base.c](https://github.com/torvalds/linux/blob/master/drivers/i2c/i2c-core-base.c) which represents the core of the `i2c` subsystem defines `ID` for the `i2c` adapter with the `DEFINE_IDR` macro:
 
 ```C
 static DEFINE_IDR(i2c_adapter_idr);

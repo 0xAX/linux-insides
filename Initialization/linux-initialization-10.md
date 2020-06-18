@@ -66,7 +66,7 @@ void __init cred_init(void)
 }
 ```
 
-more about credentials you can read in the [Documentation/security/credentials.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/security/credentials.txt). Next step is the `fork_init` function from the [kernel/fork.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/fork.c). The `fork_init` function allocates cache for the `task_struct`. Let's look on the implementation of the `fork_init`. First of all we can see definitions of the `ARCH_MIN_TASKALIGN` macro and creation of a slab where task_structs will be allocated:
+more about credentials you can read in the [Documentation/security/credentials.txt](https://github.com/torvalds/linux/blob/master/Documentation/security/credentials.rst). Next step is the `fork_init` function from the [kernel/fork.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/fork.c). The `fork_init` function allocates cache for the `task_struct`. Let's look on the implementation of the `fork_init`. First of all we can see definitions of the `ARCH_MIN_TASKALIGN` macro and creation of a slab where task_structs will be allocated:
 
 ```C
 #ifndef CONFIG_ARCH_TASK_STRUCT_ALLOCATOR
@@ -314,7 +314,7 @@ void init_idle_bootup_task(struct task_struct *idle)
 }
 ```
 
-where `idle` class is a low task priority and tasks can be run only when the processor doesn't have anything to run besides this tasks. The second function `schedule_preempt_disabled` disables preempt in `idle` tasks. And the third function `cpu_startup_entry` is defined in the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/sched/idle.c) and calls `cpu_idle_loop` from the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/sched/idle.c). The `cpu_idle_loop` function works as process with `PID = 0` and works in the background. Main purpose of the `cpu_idle_loop` is to consume the idle CPU cycles. When there is no process to run, this process starts to work. We have one process with `idle` scheduling class (we just set the `current` task to the `idle` with the call of the `init_idle_bootup_task` function), so the `idle` thread does not do useful work but just checks if there is an active task to switch to: 
+where `idle` class is a low task priority and tasks can be run only when the processor doesn't have anything to run besides this tasks. The second function `schedule_preempt_disabled` disables preempt in `idle` tasks. And the third function `cpu_startup_entry` is defined in the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/master/kernel/sched/idle.c) and calls `cpu_idle_loop` from the [kernel/sched/idle.c](https://github.com/torvalds/linux/blob/master/kernel/sched/idle.c). The `cpu_idle_loop` function works as process with `PID = 0` and works in the background. Main purpose of the `cpu_idle_loop` is to consume the idle CPU cycles. When there is no process to run, this process starts to work. We have one process with `idle` scheduling class (we just set the `current` task to the `idle` with the call of the `init_idle_bootup_task` function), so the `idle` thread does not do useful work but just checks if there is an active task to switch to: 
 
 ```C
 static void cpu_idle_loop(void)
@@ -452,7 +452,7 @@ Links
 * [SLAB](http://en.wikipedia.org/wiki/Slab_allocation)
 * [xsave](http://www.felixcloutier.com/x86/XSAVES.html)
 * [FPU](http://en.wikipedia.org/wiki/Floating-point_unit)
-* [Documentation/security/credentials.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/security/credentials.txt)
+* [Documentation/security/credentials.txt](https://github.com/torvalds/linux/blob/master/Documentation/security/credentials.rst)
 * [Documentation/x86/x86_64/mm](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/x86_64/mm.txt)
 * [RCU](http://en.wikipedia.org/wiki/Read-copy-update)
 * [VFS](http://en.wikipedia.org/wiki/Virtual_file_system)
