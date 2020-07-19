@@ -71,7 +71,7 @@ asmlinkage __visible void *extract_kernel(void *rmode, memptr heap,
 }
 ```
 
-This parameter is passed through assembly from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S)source code file:
+This parameter is passed through assembly from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S) source code file:
 
 ```C
 leaq	input_data(%rip), %rdx
