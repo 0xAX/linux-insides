@@ -129,3 +129,4 @@ Thank you to all contributors:
 * [Marco Torsello](https://github.com/md1512)
 * [Bruno Meneguele](https://github.com/bmeneguele)
 * [Sebastian Fricke](https://github.com/initBasti)
+* [Zhouyi Zhou](https://github.com/zhouzhouyi-hub)
