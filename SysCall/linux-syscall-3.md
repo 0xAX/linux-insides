@@ -357,12 +357,13 @@ int arch_setup_additional_pages(struct linux_binprm *bprm, int uses_interp)
 }
 ```
 
-The `map_vdso` function is defined in the same source code file and maps pages for the `vDSO` and for the shared `vDSO` variables. That's all. The main differences between the `vsyscall` and the `vDSO` concepts is that `vsyscall` has a static address of `ffffffffff600000` and implements `3` system calls, whereas the `vDSO` loads dynamically and implements four system calls:
+The `map_vdso` function is defined in the same source code file and maps pages for the `vDSO` and for the shared `vDSO` variables. That's all. The main differences between the `vsyscall` and the `vDSO` concepts is that `vsyscall` has a static address of `ffffffffff600000` and implements three system calls, whereas the `vDSO` loads dynamically and implements five system calls, as defined in [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vdso.lds.S):
 
 * `__vdso_clock_gettime`;
 * `__vdso_getcpu`;
 * `__vdso_gettimeofday`;
-* `__vdso_time`.
+* `__vdso_time`;
+* `__vdso_clock_getres`.
 
 
 That's all.
