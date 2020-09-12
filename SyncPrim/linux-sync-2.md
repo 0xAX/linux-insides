@@ -249,7 +249,7 @@ which compares the `old` with the value pointed to by `ptr`.  If they differ, it
 Let's back to the `queued_spin_lock` function. Assuming that we are the first one who tried to acquire the lock, the `val` will be zero and we will return from the `queued_spin_lock` function:
 
 ```C
-	val = atomic_cmpxchg_acquire(&lock-val, 0, _Q_LOCKED_VAL);
+	val = atomic_cmpxchg_acquire(&lock->val, 0, _Q_LOCKED_VAL);
 	if (likely(val == 0))
 		return;
 ```
@@ -264,7 +264,7 @@ void queued_spin_lock_slowpath(struct qspinlock *lock, u32 val)
 	...
 	if (val == _Q_PENDING_VAL) {
 		int cnt = _Q_PENDING_LOOPS;
-		val = atomic_cond_read_relaxed(&lock-val,
+		val = atomic_cond_read_relaxed(&lock->val,
 					       (VAL != _Q_PENDING_VAL) || !cnt--);
 	}
 	...
