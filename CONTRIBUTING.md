@@ -5,7 +5,7 @@ If you want to contribute to [linux-insides](https://github.com/0xAX/linux-insid
 
 1. Press the fork button:
 
-    ![fork](http://oi58.tinypic.com/jj2trm.jpg)
+    ![fork](https://docs.github.com/assets/images/help/repository/fork_button.jpg)
 
 2. Clone the repository from your account with:
 
