@@ -56,6 +56,7 @@ def main(path):
             for ref in refs:
                 if ref not in urls:
                     urls.append(ref)
+        fd.close()
 
     #print(len(urls))
 
