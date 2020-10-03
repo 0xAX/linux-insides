@@ -58,8 +58,6 @@ def main(path):
                     urls.append(ref)
         fd.close()
 
-    #print(len(urls))
-
     for url in urls:
         if not url.startswith("http"):
             print("markdown file name: " + url)
