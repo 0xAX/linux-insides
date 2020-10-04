@@ -5,21 +5,23 @@
 #!/bin/bash
 rm -r build 
 mkdir build
-for D in $(ls ../); do
-    if [ -d "../${D}" ]
+for D in ../*; do
+    if [ -d "$D" ]
     then
-        echo "Converting $D . . ."
-        pandoc ../$D/README.md ../$D/linux-*.md -o build/$D.tex --template default
+        name=$(basename "$D")
+        echo "Converting $name . . ."
+        pandoc "$D"/README.md "$D"/linux-*.md \
+           -o build/"$name".tex --template default
     fi
 done
 
-cd ./build
+cd ./build || exit 1
 for f in *.tex
 do
-    pdflatex -interaction=nonstopmode $f 
+    pdflatex -interaction=nonstopmode "$f"
 done
 
-cd ../
+cd ../ || exit 1
 pandoc ../README.md ../SUMMARY.md ../CONTRIBUTING.md ../contributors.md \
    -o ./build/Preface.tex --template default
 
