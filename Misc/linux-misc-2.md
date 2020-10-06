@@ -27,7 +27,7 @@ VERSION = 4
 PATCHLEVEL = 2
 SUBLEVEL = 0
 EXTRAVERSION = -rc3
-NAME = Hurr durr I'ma sheep
+NAME = Hurr durr I'm a sheep
 ```
 
 These variables determine the current version of Linux kernel and are used in different places, for example in the forming of the `KERNELVERSION` variable in the same `Makefile`:
