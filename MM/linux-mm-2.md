@@ -256,7 +256,7 @@ e0000000-feafffff : PCI Bus 0000:00
 ...
 ```
 
-Part of these addresses are from the call of the `e820_reserve_resources` function. We can find a call to this function in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) and the function itself is defined in [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/e820.c). `e820_reserve_resources` goes through the [e820](http://en.wikipedia.org/wiki/E820) map and inserts memory regions into the root `iomem` resource structure. All `e820` memory regions which are inserted into the `iomem` resource have the following types:
+Part of these addresses are from the call of the `e820_reserve_resources` function. We can find a call to this function in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) and the function itself is defined in [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/e820.c). `e820_reserve_resources` goes through the [e820](http://en.wikipedia.org/wiki/E820) map and inserts memory regions into the root `iomem` resource structure. All `e820` memory regions which are inserted into the `iomem` resource have the following types:
 
 ```C
 static inline const char *e820_type_to_string(int e820_type)
@@ -343,7 +343,7 @@ pmd_populate_kernel(&init_mm, pmd, bm_pte);
 static pte_t bm_pte[PAGE_SIZE/sizeof(pte_t)] __page_aligned_bss;
 ```
 
-The `pmd_populate_kernel` function is defined in the [arch/x86/include/asm/pgalloc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/pgalloc.) and populates the page middle directory (`pmd`) provided as an argument with the given page table entries (`bm_pte`):
+The `pmd_populate_kernel` function is defined in the [arch/x86/include/asm/pgalloc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/pgalloc.h) and populates the page middle directory (`pmd`) provided as an argument with the given page table entries (`bm_pte`):
 
 ```C
 static inline void pmd_populate_kernel(struct mm_struct *mm,
@@ -462,7 +462,7 @@ flags, so we call `set_pte` function to set the page table entry which works in 
 __flush_tlb_one(addr);
 ```
 
-This function is defined in [arch/x86/include/asm/tlbflush.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973) and calls `__flush_tlb_single` or `__flush_tlb` depending on the value of `cpu_has_invlpg`:
+This function is defined in [arch/x86/include/asm/tlbflush.h](https://github.com/torvalds/linux) and calls `__flush_tlb_single` or `__flush_tlb` depending on the value of `cpu_has_invlpg`:
 
 ```C
 static inline void __flush_tlb_one(unsigned long addr)

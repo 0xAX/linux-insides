@@ -237,7 +237,7 @@ nmi_restore:
 	INTERRUPT_RETURN
 ```
 
-where `INTERRUPT_RETURN` is defined in the [arch/x86/include/irqflags.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/irqflags.h) and just expands to the `iret` instruction. That's all.
+where `INTERRUPT_RETURN` is defined in the [arch/x86/include/asm/irqflags.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irqflags.h) and just expands to the `iret` instruction. That's all.
 
 Now let's consider case when another `NMI` interrupt occurred when previous `NMI` interrupt didn't finish its execution. You can remember from the beginning of this part that we've made a check that we came from userspace and jump on the `first_nmi` in this case:
 

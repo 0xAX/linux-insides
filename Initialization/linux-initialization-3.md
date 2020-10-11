@@ -250,7 +250,7 @@ lowmem = min(lowmem, LOWMEM_CAP);
 memblock_reserve(lowmem, 0x100000 - lowmem);
 ```
 
-`memblock_reserve` function is defined at [mm/block.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/block.c) and takes two parameters:
+`memblock_reserve` function is defined at [mm/memblock.c](https://github.com/torvalds/linux/blob/master/mm/memblock.c) and takes two parameters:
 
 * base physical address;
 * region size.

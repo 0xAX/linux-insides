@@ -104,7 +104,7 @@ movl	initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-We already saw this code in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-1). First of all pay attention on the last `wrmsr` instruction. This instruction writes data from the `edx:eax` registers to the [model specific register](http://en.wikipedia.org/wiki/Model-specific_register) specified by the `ecx` register. We can see that `ecx` contains `$MSR_GS_BASE` which is declared in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/msr-index.h) and looks like:
+We already saw this code in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-1). First of all pay attention on the last `wrmsr` instruction. This instruction writes data from the `edx:eax` registers to the [model specific register](http://en.wikipedia.org/wiki/Model-specific_register) specified by the `ecx` register. We can see that `ecx` contains `$MSR_GS_BASE` which is declared in the [arch/x86/include/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/msr-index.h) and looks like:
 
 ```C
 #define MSR_GS_BASE             0xc0000101
@@ -149,7 +149,7 @@ where:
 endif
 ```
 
-So, we are accessing `gs:irq_stack_union` and getting its type which is `irq_union`. Ok, we defined the first variable and know its address, now let's look at the second `__per_cpu_load` symbol. There are a couple of `per-cpu` variables which are located after this symbol. The `__per_cpu_load` is defined in the [include/asm-generic/sections.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic-sections.h):
+So, we are accessing `gs:irq_stack_union` and getting its type which is `irq_union`. Ok, we defined the first variable and know its address, now let's look at the second `__per_cpu_load` symbol. There are a couple of `per-cpu` variables which are located after this symbol. The `__per_cpu_load` is defined in the [include/asm-generic/sections.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/sections.h):
 
 ```C
 extern char __per_cpu_load[], __per_cpu_start[], __per_cpu_end[];
@@ -309,7 +309,7 @@ void trace_hardirqs_off(void)
 EXPORT_SYMBOL(trace_hardirqs_off);
 ```
 
-and just calls `trace_hardirqs_off_caller` function. The `trace_hardirqs_off_caller` checks the `hardirqs_enabled` field of the current process and increases the `redundant_hardirqs_off` if call of the `local_irq_disable` was redundant or the `hardirqs_off_events` if it was not. These two fields and other `lockdep` statistic related fields are defined in the [kernel/locking/lockdep_insides.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/lockdep_insides.h) and located in the `lockdep_stats` structure:
+and just calls `trace_hardirqs_off_caller` function. The `trace_hardirqs_off_caller` checks the `hardirqs_enabled` field of the current process and increases the `redundant_hardirqs_off` if call of the `local_irq_disable` was redundant or the `hardirqs_off_events` if it was not. These two fields and other `lockdep` statistic related fields are defined in the [kernel/locking/lockdep_internals.h](https://github.com/torvalds/linux/blob/master/kernel/locking/lockdep_internals.h) and located in the `lockdep_stats` structure:
 
 ```C
 struct lockdep_stats {
@@ -397,7 +397,7 @@ WARN_ON_ONCE(cpu_online(this_cpu) && irqs_disabled()
 Early trap initialization during kernel initialization
 --------------------------------------------------------------------------------
 
-The next functions after the `local_disable_irq` are `boot_cpu_init` and `page_address_init`, but they are not related to the interrupts and exceptions (more about this functions you can read in the chapter about Linux kernel [initialization process](https://0xax.gitbook.io/linux-insides/summary/initialization)). The next is the `setup_arch` function. As you can remember this function located in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel.setup.c) source code file and makes initialization of many different architecture-dependent [stuff](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4). The first interrupts related function which we can see in the `setup_arch` is the - `early_trap_init` function. This function defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) and fills `Interrupt Descriptor Table` with the couple of entries:
+The next functions after the `local_disable_irq` are `boot_cpu_init` and `page_address_init`, but they are not related to the interrupts and exceptions (more about this functions you can read in the chapter about Linux kernel [initialization process](https://0xax.gitbook.io/linux-insides/summary/initialization)). The next is the `setup_arch` function. As you can remember this function located in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file and makes initialization of many different architecture-dependent [stuff](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4). The first interrupts related function which we can see in the `setup_arch` is the - `early_trap_init` function. This function defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) and fills `Interrupt Descriptor Table` with the couple of entries:
 
 ```C
 void __init early_trap_init(void)
