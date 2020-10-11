@@ -56,8 +56,7 @@ def main(path):
             for ref in refs:
                 if ref not in urls:
                     urls.append(ref)
-
-    #print(len(urls))
+        fd.close()
 
     for url in urls:
         if not url.startswith("http"):
