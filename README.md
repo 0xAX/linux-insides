@@ -43,6 +43,32 @@ On other languages
   * [Spanish](https://github.com/leolas95/linux-insides)
   * [Turkish](https://github.com/ayyucedemirbas/linux-insides_Turkish)
 
+Docker
+------
+
+In order to run own copy of the book with gitook within local container:
+
+1. Build container image
+   ```bash
+   docker image build \
+       --rm --squash \
+       --label linux-insides \
+       --tag linux-insides-book:latest \
+       -f Dockerfile
+   ```
+1. Create and run book in local container
+   ```bash
+   docker run \
+       --detach \
+       --rm \
+       -p 4000:4000 \
+       --name linux-insides-book \
+       --hostname linux-insides-book \
+       localhost/linux-insides-book
+   ```
+1. Open your local copy of linux insides book under this url
+   http://127.0.0.1:4000
+
 Contributions 
 --------------
 
