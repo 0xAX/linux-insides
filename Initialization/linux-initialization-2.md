@@ -542,7 +542,7 @@ All what this funtion does is just returns `1` if the exception is generated bec
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part about linux kernel insides. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part we will see all steps before kernel entry point - `start_kernel` function.
+This is the end of the second part about linux kernel insides. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part we will see all steps before kernel entry point - `start_kernel` function.
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 

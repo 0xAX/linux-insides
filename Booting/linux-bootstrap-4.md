@@ -609,7 +609,7 @@ That's all!
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fourth part of the linux kernel booting process. If you have any questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
+This is the end of the fourth part of the linux kernel booting process. If you have any questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
 
 In the next part, we will learn about many things, including how kernel decompression works.
 

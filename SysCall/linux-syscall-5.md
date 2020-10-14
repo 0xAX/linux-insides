@@ -377,7 +377,7 @@ That's all for now. We didn't consider **full** implementation of the `open` sys
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fifth part of the implementation of different system calls in the Linux kernel. If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-internals/issues/new). In the next part, we will continue to dive into system calls in the Linux kernel and see the implementation of the [read](http://man7.org/linux/man-pages/man2/read.2.html) system call.
+This is the end of the fifth part of the implementation of different system calls in the Linux kernel. If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-internals/issues/new). In the next part, we will continue to dive into system calls in the Linux kernel and see the implementation of the [read](http://man7.org/linux/man-pages/man2/read.2.html) system call.
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
 

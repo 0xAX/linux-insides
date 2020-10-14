@@ -624,7 +624,7 @@ Conclusion
 
 This is the end of the post about linkers. We learned many things about linkers in this post, such as what is a linker and why it is needed, how to use it, etc..
 
-If you have any questions or suggestions, write me an [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
+If you have any questions or suggestions, write me an [email](mailto:kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
 
 Please note that English is not my first language, and I am really sorry for any inconvenience. If you find any mistakes please let me know via email or send a PR.
 

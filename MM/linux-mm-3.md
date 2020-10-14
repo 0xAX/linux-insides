@@ -410,7 +410,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the third part about linux kernel [memory management](https://en.wikipedia.org/wiki/Memory_management). If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part we will see yet another memory debugging related tool - `kmemleak`.
+This is the end of the third part about linux kernel [memory management](https://en.wikipedia.org/wiki/Memory_management). If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part we will see yet another memory debugging related tool - `kmemleak`.
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me a PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
