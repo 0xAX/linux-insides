@@ -159,7 +159,7 @@ sched_exec();
 
 The `sched_exec` function is used to determine the least loaded processor that can execute the new program and to migrate the current process to it.
 
-After this we need to check [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) of the give executable binary. We try to check does the name of the our binary file starts from the `/` symbol or does the path of the given executable binary is interpreted relative to the current working directory of the calling process or in other words file descriptor is `AT_FDCWD` (read above about this).
+After this we need to check the [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) of the given executable binary. We try to check whether the name of the our binary file starts from the `/` symbol, or the path of the given executable binary is interpreted relative to the current working directory of the calling process (in other words, the file descriptor is `AT_FDCWD`, read above about this).
 
 If one of these checks is successful we set the binary parameter filename:
 
