@@ -115,7 +115,7 @@ Where:
 * `Offset` - is offset to entry point of an interrupt handler;
 * `DPL` -    Descriptor Privilege Level;
 * `P` -      Segment Present flag;
-* `Segment selector` - a code segment selector in GDT or LDT (actually it always point to GDT in linux)
+* `Segment selector` - a code segment selector in GDT or LDT (actually in linux, it must point to a valid descriptor in your GDT.)
 ```C
 #define __KERNEL_CS	(GDT_ENTRY_KERNEL_CS*8) // 0000 0000 0001 0000
 #define GDT_ENTRY_KERNEL_CS 2
