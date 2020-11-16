@@ -131,3 +131,4 @@ Thank you to all contributors:
 * [Sebastian Fricke](https://github.com/initBasti)
 * [Zhouyi Zhou](https://github.com/zhouzhouyi-hub)
 * [Mingzhe Yang](https://github.com/Mutated1994)
+* [Yuxin Wu](https://github.com/chaffz)
