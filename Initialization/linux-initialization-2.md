@@ -336,15 +336,39 @@ Next we save general registers on the stack:
 	UNWIND_HINT_REGS
 ```
 
+Okay, now the stack contains following data:
+```
+High |-------------------------|
+     | %rflags                 |
+     | %cs                     |
+     | %rip                    |
+     | error code              |
+     | %rdi                    |
+     | %rsi                    |
+     | %rdx                    |
+     | %rax                    |
+     | %r8                     |
+     | %r9                     |
+     | %r10                    |
+     | %r11                    |
+     | %rbx                    |
+     | %rbp                    |
+     | %r12                    |
+     | %r13                    |
+     | %r14                    |
+     | %r15                    |<-- %rsp
+Low  |-------------------------|
+```
+
 We need to do it to prevent wrong values of registers when we return from the interrupt handler. After this we check the vector number, and if it is `#PF` or [Page Fault](https://en.wikipedia.org/wiki/Page_fault), we put value from the `cr2` to the `rdi` register and call `early_make_pgtable` (we'll see it soon):
 
 ```assembly
-	cmpq $14,%rsi
+	cmpq $14,%rsi            /* Page fault? */
 	jnz 10f
 	GET_CR2_INTO(%rdi)
 	call early_make_pgtable
-	andl %eax,%eax
-	jz 20f
+	andl %eax,%eax           /* It is more efficient, the opcode is shorter than movl 1, %eax, only 2 bytes. */
+	jz 20f                   /* All good */
 ```
 
 otherwise we call `early_fixup_exception` function by passing kernel stack pointer:
