@@ -314,6 +314,13 @@ Now let's look on the `early_idt_handler_common` implementation. It locates in t
 	incl early_recursion_flag(%rip)
 ```
 
+The `early_recursion_flag` locates in the same assembly file as the `early_idt_handler_common` symbol like the following:
+
+```assembly
+	early_recursion_flag:
+		.long 0
+```
+
 Next we save general registers on the stack:
 
 ```assembly
@@ -409,6 +416,33 @@ int __init early_make_pgtable(unsigned long address)
 	return __early_make_pgtable(address, pmd);
 }
 ```
+
+`__PAGE_OFFSET` is defined in the [arch/x86/include/asm/page_64_types.h](https://www.notion.so/lance1994/IDT-Interrupt-Descriptor-Table-2a2e5714fbf44b2f8dc3cf962a1a13e6#60c1ca54af4042b292921f1640f8c893) header file, and you can note that the `UL` tells the compiler that they are not of type int, but unsigned long.
+
+```C
+#define __PAGE_OFFSET           _AC(0xffff880000000000, UL) 
+```
+
+And the `_AC` macro is defined in the [include/uapi/linux/const.h](https://www.notion.so/lance1994/IDT-Interrupt-Descriptor-Table-2a2e5714fbf44b2f8dc3cf962a1a13e6#5e0b21a1a3394a7bbb526897708dc5a4) header file: 
+
+```C
+/* Some constant macros are used in both assembler and
+ * C code.  Therefore we cannot annotate them always with
+ * 'UL' and other type specifiers unilaterally.  We
+ * use the following macros to deal with this.
+ *
+ * Similarly, _AT() will cast an expression with a type in C, but
+ * leave it unchanged in asm.
+ */
+
+#ifdef __ASSEMBLY__
+#define _AC(X,Y)	X
+#else
+#define __AC(X,Y)	(X##Y)
+#define _AC(X,Y)	__AC(X,Y)
+#endif
+```
+So, where `__PAGE_OFFSET` expands to `0xffff880000000000`.
 
 We initialize `pmd` and pass it to the `__early_make_pgtable` function along with `address`. The `__early_make_pgtable` function is defined in the same file as the `early_make_pgtable` function as the following:
 
