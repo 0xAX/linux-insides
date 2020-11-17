@@ -115,7 +115,11 @@ Where:
 * `Offset` - is offset to entry point of an interrupt handler;
 * `DPL` -    Descriptor Privilege Level;
 * `P` -      Segment Present flag;
-* `Segment selector` - a code segment selector in GDT or LDT
+* `Segment selector` - a code segment selector in GDT or LDT (actually in linux, it must point to a valid descriptor in your GDT.)
+```C
+#define __KERNEL_CS	(GDT_ENTRY_KERNEL_CS*8) // 0000 0000 0001 0000
+#define GDT_ENTRY_KERNEL_CS 2
+```
 * `IST` -    provides ability to switch to a new stack for interrupts handling.
 
 And the last `Type` field describes type of the `IDT` entry. There are three different kinds of gates for interrupts:
@@ -164,7 +168,7 @@ where `NUM_EXCEPTION_VECTORS` expands to `32`. As we can see, We're filling only
 
 and inserts an interrupt gate to the `IDT` table which is represented by the `&idt_descr` array. 
 
-The `early_idt_handler_array` array is declaredd in the [arch/x86/include/asm/segment.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/segment.h) header file and contains addresses of the first `32` exception handlers:
+The `early_idt_handler_array` array is declared in the [arch/x86/include/asm/segment.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/segment.h) header file and contains addresses of the first `32` exception handlers:
 
 ```C
 #define EARLY_IDT_HANDLER_SIZE   9
