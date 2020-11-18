@@ -314,7 +314,7 @@ Now let's look on the `early_idt_handler_common` implementation. It locates in t
 	incl early_recursion_flag(%rip)
 ```
 
-The `early_recursion_flag` locates in the same assembly file as the `early_idt_handler_common` symbol like the following:
+The `early_recursion_flag` is defined in the same assembly file as the `early_idt_handler_common` symbol as follows:
 
 ```assembly
 	early_recursion_flag:
@@ -417,7 +417,7 @@ int __init early_make_pgtable(unsigned long address)
 }
 ```
 
-`__PAGE_OFFSET` is defined in the [arch/x86/include/asm/page_64_types.h](https://elixir.bootlin.com/linux/v3.10-rc1/source/arch/x86/include/asm/page_64_types.h#L33) header file, and you can note that the `UL` tells the compiler that they are not of type int, but unsigned long.
+`__PAGE_OFFSET` is defined in the [arch/x86/include/asm/page_64_types.h](https://elixir.bootlin.com/linux/v3.10-rc1/source/arch/x86/include/asm/page_64_types.h#L33) header file, and the suffix `UL` forces the page offset to be a unsigned long data type.
 
 ```C
 #define __PAGE_OFFSET           _AC(0xffff880000000000, UL) 
