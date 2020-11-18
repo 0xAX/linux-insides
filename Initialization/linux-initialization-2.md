@@ -314,6 +314,13 @@ Now let's look on the `early_idt_handler_common` implementation. It locates in t
 	incl early_recursion_flag(%rip)
 ```
 
+The `early_recursion_flag` is defined in the same assembly file as the `early_idt_handler_common` symbol as follows:
+
+```assembly
+	early_recursion_flag:
+		.long 0
+```
+
 Next we save general registers on the stack:
 
 ```assembly
@@ -409,6 +416,33 @@ int __init early_make_pgtable(unsigned long address)
 	return __early_make_pgtable(address, pmd);
 }
 ```
+
+`__PAGE_OFFSET` is defined in the [arch/x86/include/asm/page_64_types.h](https://elixir.bootlin.com/linux/v3.10-rc1/source/arch/x86/include/asm/page_64_types.h#L33) header file, and the suffix `UL` forces the page offset to be a unsigned long data type.
+
+```C
+#define __PAGE_OFFSET           _AC(0xffff880000000000, UL) 
+```
+
+And the `_AC` macro is defined in the [include/uapi/linux/const.h](https://elixir.bootlin.com/linux/v3.10-rc1/source/include/uapi/linux/const.h#L16) header file: 
+
+```C
+/* Some constant macros are used in both assembler and
+ * C code.  Therefore we cannot annotate them always with
+ * 'UL' and other type specifiers unilaterally.  We
+ * use the following macros to deal with this.
+ *
+ * Similarly, _AT() will cast an expression with a type in C, but
+ * leave it unchanged in asm.
+ */
+
+#ifdef __ASSEMBLY__
+#define _AC(X,Y)	X
+#else
+#define __AC(X,Y)	(X##Y)
+#define _AC(X,Y)	__AC(X,Y)
+#endif
+```
+So, where `__PAGE_OFFSET` expands to `0xffff880000000000`.
 
 We initialize `pmd` and pass it to the `__early_make_pgtable` function along with `address`. The `__early_make_pgtable` function is defined in the same file as the `early_make_pgtable` function as the following:
 
