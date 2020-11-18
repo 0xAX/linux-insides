@@ -444,6 +444,18 @@ And the `_AC` macro is defined in the [include/uapi/linux/const.h](https://elixi
 ```
 So, where `__PAGE_OFFSET` expands to `0xffff880000000000`.
 
+Then, let's dive a little deeper. From Documentation/x86/x86_64/mm.txt:
+```
+<previous description obsolete, deleted>
+
+Virtual memory map with 4 level page tables:
+...
+ffff880000000000 - ffffc7ffffffffff (=64 TB) direct mapping of all phys. memory
+...
+```
+
+As you may see,  the virtual address space `ffff880000000000-ffffc7ffffffffff` is direct mapping of all physical memory. When the kernel wants to access all physical memory, it uses direct mapping.
+
 We initialize `pmd` and pass it to the `__early_make_pgtable` function along with `address`. The `__early_make_pgtable` function is defined in the same file as the `early_make_pgtable` function as the following:
 
 ```C
