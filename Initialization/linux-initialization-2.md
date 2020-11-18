@@ -417,13 +417,13 @@ int __init early_make_pgtable(unsigned long address)
 }
 ```
 
-`__PAGE_OFFSET` is defined in the [arch/x86/include/asm/page_64_types.h](https://www.notion.so/lance1994/IDT-Interrupt-Descriptor-Table-2a2e5714fbf44b2f8dc3cf962a1a13e6#60c1ca54af4042b292921f1640f8c893) header file, and you can note that the `UL` tells the compiler that they are not of type int, but unsigned long.
+`__PAGE_OFFSET` is defined in the [arch/x86/include/asm/page_64_types.h](https://elixir.bootlin.com/linux/v3.10-rc1/source/arch/x86/include/asm/page_64_types.h#L33) header file, and you can note that the `UL` tells the compiler that they are not of type int, but unsigned long.
 
 ```C
 #define __PAGE_OFFSET           _AC(0xffff880000000000, UL) 
 ```
 
-And the `_AC` macro is defined in the [include/uapi/linux/const.h](https://www.notion.so/lance1994/IDT-Interrupt-Descriptor-Table-2a2e5714fbf44b2f8dc3cf962a1a13e6#5e0b21a1a3394a7bbb526897708dc5a4) header file: 
+And the `_AC` macro is defined in the [include/uapi/linux/const.h](https://elixir.bootlin.com/linux/v3.10-rc1/source/include/uapi/linux/const.h#L16) header file: 
 
 ```C
 /* Some constant macros are used in both assembler and
