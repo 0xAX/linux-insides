@@ -442,9 +442,8 @@ And the `_AC` macro is defined in the [include/uapi/linux/const.h](https://elixi
 #define _AC(X,Y)	__AC(X,Y)
 #endif
 ```
-So, where `__PAGE_OFFSET` expands to `0xffff880000000000`.
+Where `__PAGE_OFFSET` expands to `0xffff880000000000`. But, why a virtual address can be translated to the physical address by simply subtracting `__PAGE_OFFSET`? The answer is in the [Documentation/x86/x86_64/mm.txt](https://elixir.bootlin.com/linux/v3.10-rc1/source/Documentation/x86/x86_64/mm.txt#L9) documentation: 
 
-Then, let's dive a little deeper. From Documentation/x86/x86_64/mm.txt:
 ```
 <previous description obsolete, deleted>
 
@@ -454,9 +453,9 @@ ffff880000000000 - ffffc7ffffffffff (=64 TB) direct mapping of all phys. memory
 ...
 ```
 
-As you may see,  the virtual address space `ffff880000000000-ffffc7ffffffffff` is direct mapping of all physical memory. When the kernel wants to access all physical memory, it uses direct mapping.
+As explained above, the virtual address space `ffff880000000000-ffffc7ffffffffff` is direct mapping of all physical memory. When the kernel wants to access all physical memory, it uses direct mapping.
 
-We initialize `pmd` and pass it to the `__early_make_pgtable` function along with `address`. The `__early_make_pgtable` function is defined in the same file as the `early_make_pgtable` function as the following:
+Okay, let's get back to discussing `early_make_pgtable`. We initialize `pmd` and pass it to the `__early_make_pgtable` function along with `address`. The `__early_make_pgtable` function is defined in the same file as the `early_make_pgtable` function as the following:
 
 ```C
 int __init __early_make_pgtable(unsigned long address, pmdval_t pmd)
