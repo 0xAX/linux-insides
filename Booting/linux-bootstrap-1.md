@@ -141,7 +141,7 @@ You will see:
 
 ![Simple bootloader which prints only `!`](images/simple_bootloader.png)
 
-In this example, we can see that the code will be executed in `16-bit` real mode. After starting, it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt, which just prints the `!` symbol. It fills the remaining `510` bytes with zeros and finishes with the two magic bytes `0xaa` and `0x55`.
+In this example, we can see that the code will be executed in `16-bit` real mode. After starting, it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt, which just prints the `!` symbol. The times directive will pad that number of bytes up to 510th byte with zeros and finishes with the two magic bytes `0xaa` and `0x55`.
 
 You can see a binary dump of this using the `objdump` utility:
 
