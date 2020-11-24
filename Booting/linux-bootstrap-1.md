@@ -64,7 +64,7 @@ which is `65520` bytes past the first megabyte. Since only one megabyte is acces
 
 Ok, now we know a little bit about real mode and its memory addressing. Let's get back to discussing register values after reset.
 
-The `CS` register consists of two parts: the visible segment selector and the hidden base address. While the base address is normally formed by multiplying the segment selector value by 16, during a hardware reset the segment selector in the CS register is loaded with `0xf000` and the base address is loaded with `0xffff0000`. The processor uses this special base address until `CS` changes.
+The `CS` register consists of two parts: the visible segment selector and the hidden base address.  In real-address mode, the base address is normally formed by shifting the 16-bit segment selector value 4 bits to the left to produce a 20-bit base address. However, during a hardware reset the segment selector in the CS register is loaded with `0xf000` and the base address is loaded with `0xffff0000`. The processor uses this special base address until `CS` changes.
 
 The starting address is formed by adding the base address to the value in the EIP register:
 
