@@ -442,20 +442,17 @@ And the `_AC` macro is defined in the [include/uapi/linux/const.h](https://elixi
 #define _AC(X,Y)	__AC(X,Y)
 #endif
 ```
-Where `__PAGE_OFFSET` expands to `0xffff880000000000`. But, why a virtual address can be translated to the physical address by simply subtracting `__PAGE_OFFSET`? The answer is in the [Documentation/x86/x86_64/mm.txt](https://elixir.bootlin.com/linux/v3.10-rc1/source/Documentation/x86/x86_64/mm.txt#L9) documentation: 
+Where `__PAGE_OFFSET` expands to `0xffff888000000000`. But, why is it possible to translate a virtual address to a physical address by subtracting `__PAGE_OFFSET`?  The answer is in the [Documentation/x86/x86_64/mm.rst](https://elixir.bootlin.com/linux/v5.10-rc5/source/Documentation/x86/x86_64/mm.rst#L45) documentation: 
 
 ```
-<previous description obsolete, deleted>
-
-Virtual memory map with 4 level page tables:
 ...
-ffff880000000000 - ffffc7ffffffffff (=64 TB) direct mapping of all phys. memory
+ffff888000000000 | -119.5  TB | ffffc87fffffffff |   64 TB | direct mapping of all physical memory (page_offset_base)
 ...
 ```
 
-As explained above, the virtual address space `ffff880000000000-ffffc7ffffffffff` is direct mapping of all physical memory. When the kernel wants to access all physical memory, it uses direct mapping.
+As explained above, the virtual address space `ffff888000000000-ffffc87fffffffff` is direct mapping of all physical memory. When the kernel wants to access all physical memory, it uses direct mapping.
 
-Okay, let's get back to discussing `early_make_pgtable`. We initialize `pmd` and pass it to the `__early_make_pgtable` function along with `address`. The `__early_make_pgtable` function is defined in the same file as the `early_make_pgtable` function as the following:
+Okay, let's get back to discussing `early_make_pgtable`. We initialize `pmd` and pass it to the `__early_make_pgtable` function along with `address`. The `__early_make_pgtable` function is defined in the same file as the `early_make_pgtable` function as follows:
 
 ```C
 int __init __early_make_pgtable(unsigned long address, pmdval_t pmd)
