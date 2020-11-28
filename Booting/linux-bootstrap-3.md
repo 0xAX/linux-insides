@@ -515,13 +515,31 @@ It takes two parameters:
 
 Let's look inside `protected_mode_jump`. As I wrote above, you can find it in `arch/x86/boot/pmjump.S`. The first parameter will be in the `eax` register and the second one is in `edx`.
 
-First of all, we put the address of `boot_params` in the `esi` register and the address of the code segment register `cs` in `bx`. After this, we shift `bx` by 4 bits and add it to the memory location labeled `2` (which is `(cs << 4) + in_pm32`, the physical address to jump after transitioned to 32-bit mode) and jump to label `1`. So after this `in_pm32` in label `2` will be overwritten with `(cs << 4) + in_pm32`.
+First of all, we put the address of `boot_params` in the `esi` register and the address of the code segment register `cs` in `bx`. 
+
+```assembly
+GLOBAL(protected_mode_jump)
+	movl	%edx, %esi	# Pointer to boot_params table
+
+	xorl	%ebx, %ebx
+	movw	%cs, %bx
+```
+
+After this, we shift `bx` by 4 bits and add it to the memory location labeled `2` (which is `(cs << 4) + in_pm32`, the physical address to jump after transitioned to 32-bit mode) and jump to label `1`. 
+
+```assembly
+	shll	$4, %ebx
+	addl	%ebx, 2f 	# Add %ebx to the value stored at label 2
+	jmp	1f		# Short jump to serialize on 386/486
+```
+
+So after this `in_pm32` in label `2` will be overwritten with `(cs << 4) + in_pm32`.
 
 Next we put the data segment and the task state segment in the `cx` and `di` registers with:
 
 ```assembly
-movw	$__BOOT_DS, %cx
-movw	$__BOOT_TSS, %di
+	movw	$__BOOT_DS, %cx
+	movw	$__BOOT_TSS, %di
 ```
 
 As you can read above `GDT_ENTRY_BOOT_CS` has index 2 and every GDT entry is 8 byte, so `CS` will be `2 * 8 = 16`, `__BOOT_DS` is 24 etc.
@@ -529,9 +547,9 @@ As you can read above `GDT_ENTRY_BOOT_CS` has index 2 and every GDT entry is 8 b
 Next, we set the `PE` (Protection Enable) bit in the `CR0` control register:
 
 ```assembly
-movl	%cr0, %edx
-orb	$X86_CR0_PE, %dl
-movl	%edx, %cr0
+	movl	%cr0, %edx
+	orb	$X86_CR0_PE, %dl
+	movl	%edx, %cr0
 ```
 
 and make a long jump to protected mode:
