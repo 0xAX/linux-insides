@@ -253,6 +253,84 @@ where `X` is the address of the kernel boot sector being loaded. In my case, `X`
 
 ![kernel first address](images/kernel_first_address.png)
 
+How to get this memory dump in real mode?
+--------------------------------------------------------------------------------
+```
+root@parallels-vm:/usr/src/linux# more arch/x86/kernel/vmlinux.lds
+...
+SECTIONS
+{
+ . = (0xffffffff80000000 + ALIGN(0x1000000, 0x200000));
+ phys_startup_64 = ABSOLUTE(startup_64 - 0xffffffff80000000);
+ .text : AT(ADDR(.text) - 0xffffffff80000000) {
+  _text = .;
+  _stext = .;
+....
+```
+
+```
+root@parallels-vm:/usr/src/linux# nm vmlinux|grep startup_64
+0000000001000000 A phys_startup_64
+ffffffff81000030 T secondary_startup_64
+ffffffff810001f0 T __startup_64
+ffffffff81000000 T startup_64
+```
+
+Here we can see the memory address of the entry point, which is `0x0000000001000000`. Let's go ahead.
+
+Before trying to debug the kernel, please see [Booting a Custom Linux Kernel in QEMU and Debugging It With GDB](http://nickdesaulniers.github.io/blog/2018/10/24/booting-a-custom-linux-kernel-in-qemu-and-debugging-it-with-gdb/)
+
+#### Step 1
+Booting in QEMU
+```
+qemu-system-x86_64 -kernel /usr/src/linux-4.14.207/arch/x86_64/boot/bzImage -nographic -append "console=ttyS0 nokaslr" -initrd /data/busybox/busybox-1.28.0/initramfs.cpio.gz -S -s
+```
+#### Step 2
+Attaching GDB to QEMU
+```
+gdb vmlinux
+(gdb) target remote :1234
+(gdb) hbreak *0x0000000001000000
+(gdb) c
+(gdb) dump binary memory /tmp/dump 0x0000 0x20000
+```
+#### Step 3
+```
+root@parallels-vm:/# hd /tmp/dump |grep -A 31 MZ
+00010000  4d 5a ea 07 00 c0 07 8c  c8 8e d8 8e c0 8e d0 31  |MZ.............1|
+00010010  e4 fb fc be 40 00 ac 20  c0 74 09 b4 0e bb 07 00  |....@.. .t......|
+00010020  cd 10 eb f2 31 c0 cd 16  cd 19 ea f0 ff 00 f0 00  |....1...........|
+00010030  00 00 00 00 00 00 00 00  00 00 00 00 82 00 00 00  |................|
+00010040  55 73 65 20 61 20 62 6f  6f 74 20 6c 6f 61 64 65  |Use a boot loade|
+00010050  72 2e 0d 0a 0a 52 65 6d  6f 76 65 20 64 69 73 6b  |r....Remove disk|
+00010060  20 61 6e 64 20 70 72 65  73 73 20 61 6e 79 20 6b  | and press any k|
+00010070  65 79 20 74 6f 20 72 65  62 6f 6f 74 2e 2e 2e 0d  |ey to reboot....|
+00010080  0a 00 50 45 00 00 64 86  04 00 00 00 00 00 00 00  |..PE..d.........|
+00010090  00 00 01 00 00 00 a0 00  06 02 0b 02 02 14 20 d5  |.............. .|
+000100a0  80 00 00 00 00 00 e0 b8  79 01 80 46 00 00 00 02  |........y..F....|
+000100b0  00 00 00 00 00 00 00 00  00 00 20 00 00 00 20 00  |.......... ... .|
+000100c0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000100d0  00 00 00 90 fa 01 00 02  00 00 00 00 00 00 0a 00  |................|
+000100e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00010100  00 00 00 00 00 00 06 00  00 00 00 00 00 00 00 00  |................|
+00010110  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00010130  00 00 00 00 00 00 00 00  00 00 2e 73 65 74 75 70  |...........setup|
+00010140  00 00 e0 41 00 00 00 02  00 00 e0 41 00 00 00 02  |...A.......A....|
+00010150  00 00 00 00 00 00 00 00  00 00 00 00 00 00 20 00  |.............. .|
+00010160  50 60 2e 72 65 6c 6f 63  00 00 20 00 00 00 e0 43  |P`.reloc.. ....C|
+00010170  00 00 20 00 00 00 e0 43  00 00 00 00 00 00 00 00  |.. ....C........|
+00010180  00 00 00 00 00 00 40 00  10 42 2e 74 65 78 74 00  |......@..B.text.|
+00010190  00 00 20 93 80 00 00 44  00 00 20 93 80 00 00 44  |.. ....D.. ....D|
+000101a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 20 00  |.............. .|
+000101b0  50 60 2e 62 73 73 00 00  00 00 e0 b8 79 01 20 d7  |P`.bss......y. .|
+000101c0  80 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+000101d0  00 00 00 00 00 00 80 00  00 c8 00 00 00 00 00 00  |................|
+000101e0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 ff  |................|
+000101f0  ff 21 01 00 32 09 08 00  00 00 ff ff 00 00 55 aa  |.!..2.........U.|
+```
+
 The bootloader has now loaded the Linux kernel into memory, filled the header fields, and then jumped to the corresponding memory address. We now move directly to the kernel setup code.
 
 The Beginning of the Kernel Setup Stage
