@@ -249,7 +249,7 @@ When the bootloader transfers control to the kernel, it starts at:
 X + sizeof(KernelBootSector) + 1
 ```
 
-where `X` is the address of the kernel boot sector being loaded. In my case, `X` is `0x10000`, as we can see in a memory dump:
+where `X` is the address of the kernel boot sector being loaded. In my case, `X` is `0x10000`, as we can see in a [memory dump](https://github.com/0xAX/linux-insides/issues/758#issuecomment-732536804):
 
 ![kernel first address](images/kernel_first_address.png)
 
