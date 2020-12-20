@@ -304,14 +304,20 @@ Note that before the first will be called, we lock the `clocksource_mutex` [mute
 The first `clocksource_enqueue` function and other two defined in the same source code [file](https://github.com/torvalds/linux/tree/master/kernel/time/clocksource.c). We go through all already registered `clocksources` or in other words we go through all elements of the `clocksource_list` and tries to find best place for a given `clocksource`:
 
 ```C
+/*
+ * Enqueue the clocksource sorted by rating
+ */
 static void clocksource_enqueue(struct clocksource *cs)
 {
 	struct list_head *entry = &clocksource_list;
 	struct clocksource *tmp;
 
-	list_for_each_entry(tmp, &clocksource_list, list)
-		if (tmp->rating >= cs->rating)
-			entry = &tmp->list;
+	list_for_each_entry(tmp, &clocksource_list, list) {
+		/* Keep track of the place, where to insert */
+		if (tmp->rating < cs->rating)
+			break;
+		entry = &tmp->list;
+	}
 	list_add(&cs->list, entry);
 }
 ```
