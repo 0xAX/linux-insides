@@ -90,7 +90,7 @@ Here we allocate memory for the `A` structure and tries to print value of the `a
 gcc test.c -o test
 ```
 
-The [compiler](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) will not show us warning that `a` filed is not unitialized. But if we will run this program with [valgrind](https://en.wikipedia.org/wiki/Valgrind) tool, we will see the following output:
+The [compiler](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) will not show us warning that `a` filed is not initialized. But if we will run this program with [valgrind](https://en.wikipedia.org/wiki/Valgrind) tool, we will see the following output:
 
 ```
 ~$   valgrind --leak-check=yes ./test
@@ -314,7 +314,7 @@ if (kmemcheck_fault(regs, address, error_code))
 		return;
 ```
 
-First of all the `kmemcheck_fault` function checks that the fault was occured by the correct reason. At first we check the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) and check that we are in normal kernel mode:
+First of all the `kmemcheck_fault` function checks that the fault was occurred by the correct reason. At first we check the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) and check that we are in normal kernel mode:
 
 ```C
 if (regs->flags & X86_VM_MASK)

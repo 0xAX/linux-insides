@@ -432,5 +432,5 @@ Links
 * [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond)
 * [Intel 8253](https://en.wikipedia.org/wiki/Intel_8253)
 * [seqlocks](https://en.wikipedia.org/wiki/Seqlock)
-* [cloksource documentation](https://www.kernel.org/doc/Documentation/timers/timekeeping.txt)
+* [clocksource documentation](https://www.kernel.org/doc/Documentation/timers/timekeeping.txt)
 * [Previous chapter](https://0xax.gitbook.io/linux-insides/summary/syscall)

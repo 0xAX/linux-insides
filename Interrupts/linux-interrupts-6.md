@@ -446,7 +446,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the sixth part of the [Interrupts and Interrupt Handling](https://0xax.gitbook.io/linux-insides/summary/interrupts) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally we have finsihed with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c).
+It is the end of the sixth part of the [Interrupts and Interrupt Handling](https://0xax.gitbook.io/linux-insides/summary/interrupts) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally we have finished with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c).
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
@@ -472,7 +472,7 @@ Links
 * [breakpoint](https://en.wikipedia.org/wiki/Breakpoint)
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
 * [stack frame](https://en.wikipedia.org/wiki/Call_stack)
-* [Model Specific regiser](https://en.wikipedia.org/wiki/Model-specific_register)
+* [Model Specific register](https://en.wikipedia.org/wiki/Model-specific_register)
 * [percpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [RCU](https://en.wikipedia.org/wiki/Read-copy-update) 
 * [MPX](https://en.wikipedia.org/wiki/Intel_MPX)

@@ -392,7 +392,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the seventh part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) that describes timers and timer management related stuff in the Linux kernel. In the previous part we saw [x86_64](https://en.wikipedia.org/wiki/X86-64) specific clock sources. As I wrote in the beginning, this part is the last part of this chapter. We saw important time management related concepts like `clocksource` and `clockevents` frameworks, `jiffies` counter and etc., in this chpater. Of course this does not cover all of the time management in the Linux kernel. Many parts of this mostly related to the scheduling which we will see in other chapter. 
+This is the end of the seventh part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) that describes timers and timer management related stuff in the Linux kernel. In the previous part we saw [x86_64](https://en.wikipedia.org/wiki/X86-64) specific clock sources. As I wrote in the beginning, this part is the last part of this chapter. We saw important time management related concepts like `clocksource` and `clockevents` frameworks, `jiffies` counter and etc., in this chapter. Of course this does not cover all of the time management in the Linux kernel. Many parts of this mostly related to the scheduling which we will see in other chapter. 
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 

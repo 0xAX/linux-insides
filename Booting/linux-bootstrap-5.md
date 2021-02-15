@@ -75,7 +75,7 @@ In the next step we set up the stack pointer, reset the flags register and set u
     popfq
 ```
 
-If you take a look at the code after the `lgdt gdt64(%rip)` instruction, you will see that there is some additional code. This code builds the trampoline to enable [5-level pagging](https://lwn.net/Articles/708526/) if needed. We will only consider 4-level paging in this book, so this code will be omitted.
+If you take a look at the code after the `lgdt gdt64(%rip)` instruction, you will see that there is some additional code. This code builds the trampoline to enable [5-level paging](https://lwn.net/Articles/708526/) if needed. We will only consider 4-level paging in this book, so this code will be omitted.
 
 As you can see above, the `rbx` register contains the start address of the kernel decompressor code and we just put this address with an offset of `boot_stack_end` in the `rsp` register which points to the top of the stack. After this step, the stack will be correct. You can find the definition of the `boot_stack_end` constant in the end of the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
@@ -231,7 +231,7 @@ boot_heap:
 	.fill BOOT_HEAP_SIZE, 1, 0
 ```
 
-where `BOOT_HEAP_SIZE` is a macro which expands to `0x10000` (`0x400000` in thecase of a `bzip2` kernel) and represents the size of the heap.
+where `BOOT_HEAP_SIZE` is a macro which expands to `0x10000` (`0x400000` in the case of a `bzip2` kernel) and represents the size of the heap.
 
 After we initialize the heap pointers, the next step is to call the `choose_random_location` function from the [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/kaslr.c) source code file. As we can guess from the function name, it chooses a memory location to write the decompressed kernel to. It may look weird that we need to find or even `choose` where to decompress the compressed kernel image, but the Linux kernel supports [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) which allows decompression of the kernel into a random address, for security reasons.
 

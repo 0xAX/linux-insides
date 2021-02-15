@@ -132,3 +132,4 @@ Thank you to all contributors:
 * [Zhouyi Zhou](https://github.com/zhouzhouyi-hub)
 * [Mingzhe Yang](https://github.com/Mutated1994)
 * [Yuxin Wu](https://github.com/chaffz)
+* [Kevin Joseph Francis](https://github.com/itinerant-fox)

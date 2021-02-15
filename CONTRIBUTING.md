@@ -24,7 +24,7 @@ If you want to contribute to [linux-insides](https://github.com/0xAX/linux-insid
 
 5. Don't forget to add yourself in `contributors.md`.
 
-6. Commit and push your changes, then make a pull request from Github.
+6. Commit and push your changes, then make a pull request from GitHub.
 
 **IMPORTANT**
 

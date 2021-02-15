@@ -376,7 +376,7 @@ because we no need in it anymore as lock is acquired. If the `queued_spin_tryloc
 	next = NULL;
 ```
 
-and retrieve previous tail. The next step is to check that `queue` is not empty. In this case we need to link previous entry with the new. While waitaing for the MCS lock, the next pointer may have been set by another lock waiter. We optimistically load the next pointer & prefetch the cacheline for writing to reduce latency in the upcoming MCS unlock operation:
+and retrieve previous tail. The next step is to check that `queue` is not empty. In this case we need to link previous entry with the new. While waiting for the MCS lock, the next pointer may have been set by another lock waiter. We optimistically load the next pointer & prefetch the cacheline for writing to reduce latency in the upcoming MCS unlock operation:
 
 ```C
 	if (old & _Q_TAIL_MASK) {

@@ -386,7 +386,7 @@ otherwise we call `early_fixup_exception` function by passing kernel stack point
 	call early_fixup_exception
 ```
 
-We'll see the implementaion of the `early_fixup_exception` function later.
+We'll see the implementation of the `early_fixup_exception` function later.
 
 ```assembly
 20:
@@ -607,7 +607,7 @@ int fixup_bug(struct pt_regs *regs, int trapnr)
 }
 ```
 
-All what this funtion does is just returns `1` if the exception is generated because `#UD` (or [Invalid Opcode](https://wiki.osdev.org/Exceptions#Invalid_Opcode)) occured and the `report_bug` function returns `BUG_TRAP_TYPE_WARN`, otherwise returns `0`.
+All what this function does is just returns `1` if the exception is generated because `#UD` (or [Invalid Opcode](https://wiki.osdev.org/Exceptions#Invalid_Opcode)) occurred and the `report_bug` function returns `BUG_TRAP_TYPE_WARN`, otherwise returns `0`.
 
 Conclusion
 --------------------------------------------------------------------------------

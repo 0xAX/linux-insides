@@ -284,7 +284,7 @@ static int notifier_call_chain(struct notifier_block **nl,
 }
 ```
 
-That's all. In generall all looks pretty simple.
+That's all. In general all looks pretty simple.
 
 Now let's consider on a simple example related to [loadable modules](https://en.wikipedia.org/wiki/Loadable_kernel_module). If we will look in the [kernel/module.c](https://github.com/torvalds/linux/blob/master/kernel/module.c). As we already saw in this part, there is:
 
@@ -298,7 +298,7 @@ definition of the `module_notify_list` in the [kernel/module.c](https://github.c
 * MODULE_STATE_COMING
 * MODULE_STATE_GOING
 
-in which maybe interested some subsystems of the Linux kernel. For example tracing of kernel modules states. Instead of direct call of the `atomic_notifier_chain_register`, `blocking_notifier_chain_register` and etc., most notification chains come with a set of wrappers used to register to them. Registatrion on these modules events is going with the help of such wrapper:
+in which maybe interested some subsystems of the Linux kernel. For example tracing of kernel modules states. Instead of direct call of the `atomic_notifier_chain_register`, `blocking_notifier_chain_register` and etc., most notification chains come with a set of wrappers used to register to them. Registration on these modules events is going with the help of such wrapper:
 
 ```C
 int register_module_notifier(struct notifier_block *nb)

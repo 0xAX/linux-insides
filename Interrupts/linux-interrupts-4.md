@@ -451,7 +451,7 @@ Links
 * [Linux kernel memory management](https://0xax.gitbook.io/linux-insides/summary/mm)
 * [Fix-Mapped Addresses and ioremap](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2)
 * [Extended Industry Standard Architecture](https://en.wikipedia.org/wiki/Extended_Industry_Standard_Architecture)
-* [INT isntruction](https://en.wikipedia.org/wiki/INT_%28x86_instruction%29)
+* [INT instruction](https://en.wikipedia.org/wiki/INT_%28x86_instruction%29)
 * [INTO](http://x86.renejeschke.de/html/file_module_x86_id_142.html)
 * [BOUND](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm)
 * [opcode](https://en.wikipedia.org/?title=Opcode)

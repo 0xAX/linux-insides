@@ -35,7 +35,7 @@ The first exceptions - `#DB` or `debug` exception occurs when a debug event occu
 
 These registers allow to set breakpoints on the code and read or write data to trace it. Debug registers may be accessed only in the privileged mode and an attempt to read or write the debug registers when executing at any other privilege level causes a [general protection fault](https://en.wikipedia.org/wiki/General_protection_fault) exception. That's why we have used `set_intr_gate_ist` for the `#DB` exception, but not the `set_system_intr_gate_ist`.
 
-The verctor number of the `#DB` exceptions is `1` (we pass it as `X86_TRAP_DB`) and as we may read in specification, this exception has no error code:
+The vector number of the `#DB` exceptions is `1` (we pass it as `X86_TRAP_DB`) and as we may read in specification, this exception has no error code:
 
 ```
 +-----------------------------------------------------+
@@ -283,7 +283,7 @@ After we allocated space for general purpose registers, we do some checks to und
 
 Let's consider all of these there cases in course.
 
-An exception occured in userspace
+An exception occurred in userspace
 --------------------------------------------------------------------------------
 
 In the first let's consider a case when an exception has `paranoid=1` like our `debug` and `int3` exceptions. In this case we check selector from `CS` segment register and jump at `1f` label if we came from userspace or the `paranoid_entry` will be called in other way.
@@ -461,7 +461,7 @@ movq	%rsp, %rdi
 .endif
 ```
 
-The last step before a secondary handler of an exception will be called is cleanup of new `IST` stack fram:
+The last step before a secondary handler of an exception will be called is cleanup of new `IST` stack frame:
 
 ```assembly
 .if \shift_ist != -1
@@ -477,7 +477,7 @@ In the end of this second way we just call secondary exception handler as we did
 call	\do_sym
 ```
 
-The last method is similar to previous both, but an exception occured with `paranoid=0` and we may use fast method determination of where we are from.
+The last method is similar to previous both, but an exception occurred with `paranoid=0` and we may use fast method determination of where we are from.
 
 Exit from an exception handler
 --------------------------------------------------------------------------------
