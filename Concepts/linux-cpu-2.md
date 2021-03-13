@@ -59,7 +59,7 @@ where `BITS_TO_LONGS`:
 As we are focusing on the `x86_64` architecture, `unsigned long` is 8-bytes size and our array will contain only one element:
 
 ```
-(((8) + (8) - 1) / (8)) = 1
+(((8) + (64) - 1) / (64)) = 1
 ```
 
 `NR_CPUS` macro represents the number of CPUs in the system and depends on the `CONFIG_NR_CPUS` macro which is defined in [include/linux/threads.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/threads.h) and looks like this:
