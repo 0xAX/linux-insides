@@ -244,7 +244,7 @@ Looks pretty easy, except for the `queued_spin_lock_slowpath` function. We see t
 })
 ```
 
-which compares the `old` with the value pointed to by `ptr`.  If they differ, it stores the `new` in the memory location which is pointed by the `ptr` and returns the initial value in this memory location.
+which compares the `old` with the value pointed to by `ptr`.  If they are equal, it stores the `new` in the memory location which is pointed by the `ptr` and returns the initial value in this memory location.
 
 Let's back to the `queued_spin_lock` function. Assuming that we are the first one who tried to acquire the lock, the `val` will be zero and we will return from the `queued_spin_lock` function:
 
