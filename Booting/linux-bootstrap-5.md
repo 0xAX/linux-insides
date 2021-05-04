@@ -75,7 +75,7 @@ In the next step we set up the stack pointer, reset the flags register and set u
     popfq
 ```
 
-If you take a look at the code after the `lgdt gdt64(%rip)` instruction, you will see that there is some additional code. This code builds the trampoline to enable [5-level pagging](https://lwn.net/Articles/708526/) if needed. We will only consider 4-level paging in this book, so this code will be omitted.
+If you take a look at the code after the `lgdt gdt64(%rip)` instruction, you will see that there is some additional code. This code builds the trampoline to enable [5-level paging](https://lwn.net/Articles/708526/) if needed. We will only consider 4-level paging in this book, so this code will be omitted.
 
 As you can see above, the `rbx` register contains the start address of the kernel decompressor code and we just put this address with an offset of `boot_stack_end` in the `rsp` register which points to the top of the stack. After this step, the stack will be correct. You can find the definition of the `boot_stack_end` constant in the end of the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
