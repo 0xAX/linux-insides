@@ -231,7 +231,7 @@ boot_heap:
 	.fill BOOT_HEAP_SIZE, 1, 0
 ```
 
-where `BOOT_HEAP_SIZE` is a macro which expands to `0x10000` (`0x400000` in thecase of a `bzip2` kernel) and represents the size of the heap.
+where `BOOT_HEAP_SIZE` is a macro which expands to `0x10000` (`0x400000` in the case of a `bzip2` kernel) and represents the size of the heap.
 
 After we initialize the heap pointers, the next step is to call the `choose_random_location` function from the [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/kaslr.c) source code file. As we can guess from the function name, it chooses a memory location to write the decompressed kernel to. It may look weird that we need to find or even `choose` where to decompress the compressed kernel image, but the Linux kernel supports [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) which allows decompression of the kernel into a random address, for security reasons.
 
