@@ -46,17 +46,33 @@ On other languages
 Docker
 ------
 
-In order to run own copy of the book with gitook within local container:
+In order to run your own copy of the book with gitbook within a local container:
 
-1. Build container image
+1. Enable Docker experimental features with vim or another text editor
+   ```bash
+    sudo vim /usr/lib/systemd/system/docker.service
+   ```
+
+   Then add --experimental=true to the end of the ExecStart=/usr/bin/dockerd -H fd:// line and save.
+
+   Eg: *ExecStart=/usr/bin/dockerd -H fd:// --experimental=true*
+
+   Then, you need to reload and restart the Docker daemon:
+   ```bash
+    systemctl daemon-reload
+    systemctl restart docker.service
+   ```
+
+2. Build container image
    ```bash
    docker image build \
        --rm --squash \
        --label linux-insides \
        --tag linux-insides-book:latest \
-       -f Dockerfile
+       -f Dockerfile .
    ```
-1. Create and run book in local container
+
+3. Create and run book in local container
    ```bash
    docker run \
        --detach \
@@ -64,10 +80,11 @@ In order to run own copy of the book with gitook within local container:
        -p 4000:4000 \
        --name linux-insides-book \
        --hostname linux-insides-book \
-       localhost/linux-insides-book
+       linux-insides-book
    ```
-1. Open your local copy of linux insides book under this url
-   http://127.0.0.1:4000
+
+4. Open your local copy of linux insides book under this url
+   http://localhost:4000
 
 Contributions 
 --------------
