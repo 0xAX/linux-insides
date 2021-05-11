@@ -46,9 +46,9 @@ On other languages
 Docker
 ------
 
-In order to run own copy of the book with gitook within local container:
+In order to run your own copy of the book with gitbook within a local container:
 
-1. Enable Docker experimental features with vim or other text editor
+1. Enable Docker experimental features with vim or another text editor
    ```bash
     sudo vim /usr/lib/systemd/system/docker.service
    ```
@@ -84,7 +84,7 @@ In order to run own copy of the book with gitook within local container:
    ```
 
 4. Open your local copy of linux insides book under this url
-   http://127.0.0.1:4000
+   http://localhost:4000
 
 Contributions 
 --------------
