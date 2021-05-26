@@ -159,7 +159,7 @@ The first `radix_tree_insert` function takes three parameters:
 
 The `radix_tree_delete` function takes the same set of parameters as the `radix_tree_insert`, but without data.
 
-The search in a radix tree implemented in two ways:
+Searching through a radix tree is implemented in three ways:
 
 * `radix_tree_lookup`;
 * `radix_tree_gang_lookup`;
