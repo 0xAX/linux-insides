@@ -79,7 +79,7 @@ After we sanitized CPU configuration, we call `__startup_64` function which is d
 ```
 
 ```C
-unsigned log __head __startup_64(unsigned long physaddr,
+unsigned long __head __startup_64(unsigned long physaddr,
 				 struct boot_params *bp)
 {
 	unsigned long load_delta, *p;
