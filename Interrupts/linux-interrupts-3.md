@@ -283,7 +283,7 @@ After we allocated space for general purpose registers, we do some checks to und
 
 Let's consider all of these there cases in course.
 
-An exception occured in userspace
+An exception occurred in userspace
 --------------------------------------------------------------------------------
 
 In the first let's consider a case when an exception has `paranoid=1` like our `debug` and `int3` exceptions. In this case we check selector from `CS` segment register and jump at `1f` label if we came from userspace or the `paranoid_entry` will be called in other way.
@@ -477,7 +477,7 @@ In the end of this second way we just call secondary exception handler as we did
 call	\do_sym
 ```
 
-The last method is similar to previous both, but an exception occured with `paranoid=0` and we may use fast method determination of where we are from.
+The last method is similar to previous both, but an exception occurred with `paranoid=0` and we may use fast method determination of where we are from.
 
 Exit from an exception handler
 --------------------------------------------------------------------------------

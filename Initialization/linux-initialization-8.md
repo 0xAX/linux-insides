@@ -403,7 +403,7 @@ $ cat /proc/sys/kernel/sched_rt_runtime_us
 950000
 ```
 
-The values related to a group can be configured in `<cgroup>/cpu.rt_period_us` and `<cgroup>/cpu.rt_runtime_us`. Due no one filesystem is not mounted yet, the `def_rt_bandwidth` and the `def_dl_bandwidth` will be initialzed with default values which will be retuned by the `global_rt_period` and `global_rt_runtime` functions.
+The values related to a group can be configured in `<cgroup>/cpu.rt_period_us` and `<cgroup>/cpu.rt_runtime_us`. Due no one filesystem is not mounted yet, the `def_rt_bandwidth` and the `def_dl_bandwidth` will be initialized with default values which will be retuned by the `global_rt_period` and `global_rt_runtime` functions.
 
 That's all with the bandwiths of `real-time` and `deadline` tasks and in the next step, depends on enable of [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing), we make initialization of the `root domain`:
 
@@ -501,7 +501,7 @@ struct task_struct {
 
 The first one is `dynamic priority` which can't be changed during lifetime of a process based on its static priority and interactivity of the process. The `static_prio` contains initial priority most likely well-known to you `nice value`. This value does not changed by the kernel if a user will not change it. The last one is `normal_priority` based on the value of the `static_prio` too, but also it depends on the scheduling policy of a process.
 
-So the main goal of the `set_load_weight` function is to initialze `load_weight` fields for the `init` task:
+So the main goal of the `set_load_weight` function is to initialize `load_weight` fields for the `init` task:
 
 ```C
 static void set_load_weight(struct task_struct *p)

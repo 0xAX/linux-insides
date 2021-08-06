@@ -91,7 +91,7 @@ We also see that the `reset` section is `16` bytes and is compiled to start from
 
 ```
 SECTIONS {
-    /* Trigger an error if I have an unuseable start address */
+    /* Trigger an error if I have an unusable start address */
     _bogus = ASSERT(_start16bit >= 0xffff0000, "_start16bit too low. Please report.");
     _ROMTOP = 0xfffffff0;
     . = _ROMTOP;

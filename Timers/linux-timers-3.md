@@ -321,7 +321,7 @@ If you remember, we have started this part with the call of the `tick_init` func
 Initialization of dyntick related data structures
 --------------------------------------------------------------------------------
 
-We already saw some information about `dyntick` concept in this part and we know that this concept allows kernel to disable system timer interrupts in the `idle` state. The `tick_nohz_init` function makes initialization of the different data structures which are related to this concept. This function defined in the [kernel/time/tick-sched.c](https://github.com/torvalds/linux/blob/master/kernel/time/tick-sched.c) source code file and starts from the check of the value of the `tick_nohz_full_running` variable which represents state of the tick-less mode for the `idle` state and the state when system timer interrups are disabled during a processor has only one runnable task:
+We already saw some information about `dyntick` concept in this part and we know that this concept allows kernel to disable system timer interrupts in the `idle` state. The `tick_nohz_init` function makes initialization of the different data structures which are related to this concept. This function defined in the [kernel/time/tick-sched.c](https://github.com/torvalds/linux/blob/master/kernel/time/tick-sched.c) source code file and starts from the check of the value of the `tick_nohz_full_running` variable which represents state of the tick-less mode for the `idle` state and the state when system timer interrupts are disabled during a processor has only one runnable task:
 
 ```C
 if (!tick_nohz_full_running) {

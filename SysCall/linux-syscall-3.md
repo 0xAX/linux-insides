@@ -196,7 +196,7 @@ if (vsyscall_nr < 0) {
 ...
 sigsegv:
 	force_sig(SIGSEGV, current);
-	reutrn true;
+	return true;
 ```
 
 As it checked number of a virtual system call, it does some yet another checks like `access_ok` violations and execute system call function depends on the number of a virtual system call:

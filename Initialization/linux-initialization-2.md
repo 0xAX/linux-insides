@@ -386,7 +386,7 @@ otherwise we call `early_fixup_exception` function by passing kernel stack point
 	call early_fixup_exception
 ```
 
-We'll see the implementaion of the `early_fixup_exception` function later.
+We'll see the implementation of the `early_fixup_exception` function later.
 
 ```assembly
 20:

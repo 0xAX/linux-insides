@@ -133,3 +133,4 @@ Thank you to all contributors:
 * [Mingzhe Yang](https://github.com/Mutated1994)
 * [Yuxin Wu](https://github.com/chaffz)
 * [Biao Ding](https://github.com/SmallPond)
+* [Arfy slowy](https://github.com/slowy07)
