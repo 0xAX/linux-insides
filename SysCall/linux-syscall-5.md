@@ -25,7 +25,7 @@ int main(int argc, char *argv) {
                 perror("Opening of the file is failed\n");
         }
         else {
-                printf("file sucessfully opened\n");
+                printf("file successfully opened\n");
         }
 
         close(fd); 

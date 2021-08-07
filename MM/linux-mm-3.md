@@ -314,7 +314,7 @@ if (kmemcheck_fault(regs, address, error_code))
 		return;
 ```
 
-First of all the `kmemcheck_fault` function checks that the fault was occured by the correct reason. At first we check the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) and check that we are in normal kernel mode:
+First of all the `kmemcheck_fault` function checks that the fault was occurred by the correct reason. At first we check the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) and check that we are in normal kernel mode:
 
 ```C
 if (regs->flags & X86_VM_MASK)

@@ -212,7 +212,7 @@ As the buffer for new page tables is initialized, we may return to the `choose_r
 Avoiding Reserved Memory Ranges
 --------------------------------------------------------------------------------
 
-After the stuff related to identity page tables is initilized, we can choose a random memory location to extract the kernel image to. But as you may have guessed, we can't just choose any address. There are certain reseved memory regions which are occupied by important things like the [initrd](https://en.wikipedia.org/wiki/Initial_ramdisk) and the kernel command line which must be avoided. The `mem_avoid_init` function will help us do this:
+After the stuff related to identity page tables is initilized, we can choose a random memory location to extract the kernel image to. But as you may have guessed, we can't just choose any address. There are certain reserved memory regions which are occupied by important things like the [initrd](https://en.wikipedia.org/wiki/Initial_ramdisk) and the kernel command line which must be avoided. The `mem_avoid_init` function will help us do this:
 
 ```C
 mem_avoid_init(input, input_size, *output);
@@ -245,7 +245,7 @@ enum mem_avoid_index {
 
 Both are defined in the [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/kaslr.c) source code file.
 
-Let's look at the implementation of the `mem_avoid_init` function. The main goal of this function is to store information about reseved memory regions with descriptions given by the `mem_avoid_index` enum in the `mem_avoid` array and to create new pages for such regions in our new identity mapped buffer. The `mem_avoid_index` function does the same thing for all elements in the `mem_avoid_index`enum, so let's look at a typical example of the process:
+Let's look at the implementation of the `mem_avoid_init` function. The main goal of this function is to store information about reserved memory regions with descriptions given by the `mem_avoid_index` enum in the `mem_avoid` array and to create new pages for such regions in our new identity mapped buffer. The `mem_avoid_index` function does the same thing for all elements in the `mem_avoid_index`enum, so let's look at a typical example of the process:
 
 ```C
 mem_avoid[MEM_AVOID_ZO_RANGE].start = input;
@@ -377,7 +377,7 @@ if (*output != random_addr) {
 }
 ```
 
-From now on, `output` will store the base address of the memory region where kernel will be decompressed. Currrently, we have only randomized the physical address. We can randomize the virtual address as well on the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture:
+From now on, `output` will store the base address of the memory region where kernel will be decompressed. Currently, we have only randomized the physical address. We can randomize the virtual address as well on the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture:
 
 ```C
 if (IS_ENABLED(CONFIG_X86_64))
