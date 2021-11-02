@@ -4,12 +4,12 @@ Interrupts and Interrupt Handling. Part 4.
 Initialization of non-early interrupt gates
 --------------------------------------------------------------------------------
 
-This is fourth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3) we saw first early `#DB` and `#BP` exceptions handlers from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We stopped on the right after the `early_trap_init` function that called in the `setup_arch` function which defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/setup.c). In this part we will continue to dive into an interrupts and exceptions handling in the Linux kernel for `x86_64` and continue to do it from the place where we left off in the last part. First thing which is related to the interrupts and exceptions handling is the setup of the `#PF` or [page fault](https://en.wikipedia.org/wiki/Page_fault) handler with the `early_trap_pf_init` function. Let's start from it.
+This fourth part is about interrupts and exceptions handling in the Linux kernel. In the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3) we saw first early `#DB` and `#BP` exceptions handlers from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We stopped on the right after the `early_trap_init` function that called in the `setup_arch` function which defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/setup.c). In this part we will continue to dive into an interrupts and exceptions handling in the Linux kernel for `x86_64` and continue to do it from the place where we left off in the last part. First thing which is related to the interrupts and exceptions handling is the setup of the `#PF` or [page fault](https://en.wikipedia.org/wiki/Page_fault) handler with the `early_trap_pf_init` function. Let's start from it.
 
 Early page fault handler
 --------------------------------------------------------------------------------
 
-The `early_trap_pf_init` function defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). It uses `set_intr_gate` macro that fills [Interrupt Descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table) with the given entry:
+The `early_trap_pf_init` function was defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). It used `set_intr_gate` macro that fills [Interrupt Descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table) with the given entry:
 
 ```C
 void __init early_trap_pf_init(void)
@@ -43,7 +43,7 @@ In our case they are:
 * `X86_TRAP_PF` - `14`;
 * `page_fault` - the interrupt handler entry point.
 
-The `X86_TRAP_PF` is the element of enum which defined in the [arch/x86/include/asm/traprs.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/traprs.h):
+The `X86_TRAP_PF` is the element of enum which defined in the [arch/x86/include/asm/trapnr.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/trapnr.h):
 
 ```C
 enum {
