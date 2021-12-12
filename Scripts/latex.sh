@@ -25,4 +25,4 @@ cd ../ || exit 1
 pandoc ../README.md ../SUMMARY.md ../CONTRIBUTING.md ../contributors.md \
    -o ./build/Preface.tex --template default
 
-pdfunite ./build/*.pdf LinuxKernelInsides.pdf
+pdfunite ./build/*.pdf ../Assets/linux-kernel-insides.pdf
