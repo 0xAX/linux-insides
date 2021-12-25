@@ -284,7 +284,7 @@ static int notifier_call_chain(struct notifier_block **nl,
 }
 ```
 
-That's all. In generall all looks pretty simple.
+That's all. In general all looks pretty simple.
 
 Now let's consider on a simple example related to [loadable modules](https://en.wikipedia.org/wiki/Loadable_kernel_module). If we will look in the [kernel/module.c](https://github.com/torvalds/linux/blob/master/kernel/module.c). As we already saw in this part, there is:
 
