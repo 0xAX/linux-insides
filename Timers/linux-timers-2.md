@@ -50,7 +50,7 @@ if (!boot_error) {
 
 We assign `jiffies + 10*HZ` value to the `timeout` variable here. As I think you already understood, this means a ten seconds timeout. After this we are entering a loop where we use the `time_before` macro to compare the current `jiffies` value and our timeout.
 
-Or for example if we look into the [sound/isa/sscape.c](https://github.com/torvalds/linux/blob/master/sound/isa/sscape.c) source code file which represents the driver for the [Ensoniq Soundscape Elite](https://en.wikipedia.org/wiki/Ensoniq_Soundscape_Elite) sound card, we will see the `obp_startup_ack` function that waits upto a given timeout for the On-Board Processor to return its start-up acknowledgement sequence:
+Or for example if we look into the [sound/isa/sscape.c](https://github.com/torvalds/linux/blob/master/sound/isa/sscape.c) source code file which represents the driver for the [Ensoniq Soundscape Elite](https://en.wikipedia.org/wiki/Ensoniq_Soundscape_Elite) sound card, we will see the `obp_startup_ack` function that waits up to a given timeout for the On-Board Processor to return its start-up acknowledgement sequence:
 
 ```C
 static int obp_startup_ack(struct soundscape *s, unsigned timeout)

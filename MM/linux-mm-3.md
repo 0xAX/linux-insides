@@ -90,7 +90,7 @@ Here we allocate memory for the `A` structure and tries to print value of the `a
 gcc test.c -o test
 ```
 
-The [compiler](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) will not show us warning that `a` filed is not unitialized. But if we will run this program with [valgrind](https://en.wikipedia.org/wiki/Valgrind) tool, we will see the following output:
+The [compiler](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) will not show us warning that `a` filed is not uninitialized. But if we will run this program with [valgrind](https://en.wikipedia.org/wiki/Valgrind) tool, we will see the following output:
 
 ```
 ~$   valgrind --leak-check=yes ./test

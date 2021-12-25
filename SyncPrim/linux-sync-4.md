@@ -348,7 +348,7 @@ for (;;) {
 
 where try to acquire a lock again and exit if this operation was successful. Yes, we try to acquire a lock again right after unsuccessful try  before the loop. We need to do it to make sure that we get a wakeup once a lock will be unlocked. Besides this, it allows us to acquire a lock after sleep.  In other case we check the current process for pending [signals](https://en.wikipedia.org/wiki/Unix_signal) and exit if the process was interrupted by a `signal` during wait for a lock acquisition. In the end of loop we didn't acquire a lock, so we set the task state for `TASK_UNINTERRUPTIBLE` and go to sleep with call of the `schedule_preempt_disabled` function.
 
-That's all. We have considered all three possible paths through which a process may pass when it will wan to acquire a lock. Now let's consider how `mutex_unlock` is implemented. When the `mutex_unlock` will be called by a process which wants to release a lock, the `__mutex_fastpath_unlock` will be called from the  [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/mutex_64.h)  header file:
+That's all. We have considered all three possible paths through which a process may pass when it will want to acquire a lock. Now let's consider how `mutex_unlock` is implemented. When the `mutex_unlock` will be called by a process which wants to release a lock, the `__mutex_fastpath_unlock` will be called from the  [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/mutex_64.h)  header file:
 
 ```C
 void __sched mutex_unlock(struct mutex *lock)

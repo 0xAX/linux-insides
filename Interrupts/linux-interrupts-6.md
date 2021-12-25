@@ -246,7 +246,7 @@ cmpl	$__KERNEL_CS, 16(%rsp)
 jne	first_nmi
 ```
 
-Note that in this case it is first `NMI` every time, because if the first `NMI` catched page fault, breakpoint or another exception it will be executed in the kernel mode. If we didn't come from userspace, first of all we test our temporary variable:
+Note that in this case it is first `NMI` every time, because if the first `NMI` caught page fault, breakpoint or another exception it will be executed in the kernel mode. If we didn't come from userspace, first of all we test our temporary variable:
 
 ```assembly
 cmpl	$1, -8(%rsp)
