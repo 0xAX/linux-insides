@@ -8,7 +8,7 @@ This is the third part of the `Kernel booting process` series. In the previous [
 
 In this part, we will look at:
 
-* video mode initialization in the kernel setup code,
+* Video mode initialization in the kernel setup code,
 * the preparations made before switching into protected mode,
 * the transition to protected mode
 
@@ -35,7 +35,7 @@ vga=<mode>
 	<mode> here is either an integer (in C notation, either
 	decimal, octal, or hexadecimal) or one of the strings
 	"normal" (meaning 0xFFFF), "ext" (meaning 0xFFFE) or "ask"
-	(meaning 0xFFFD).  This value should be entered into the
+	(meaning 0xFFFD). This value should be entered into the
 	vid_mode field, as it is used by the kernel before the command
 	line is parsed.
 ```
