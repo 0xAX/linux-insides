@@ -77,9 +77,9 @@ We saw preparation before a system call called by a user application and after a
 
 ```
 SYSCALL_DEFINE3(execve,
-		const char __user *, filename,
-		const char __user *const __user *, argv,
-		const char __user *const __user *, envp)
+		const char __user * filename,
+		const char __user *const __user * argv,
+		const char __user *const __user * envp)
 {
 	return do_execve(getname(filename), argv, envp);
 }
