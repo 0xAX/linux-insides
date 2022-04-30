@@ -60,7 +60,7 @@ Note that `__set_param` macro defines with `__section(.init.setup)` attribute. I
                 VMLINUX_SYMBOL(__setup_end) = .;
 ```
 
-Now we know how parameters are defined, let's back to the `parse_early_param` implementation: 
+Now we know how parameters are defined, let's back to the `parse_early_param` implementation:
 
 ```C
 void __init parse_early_param(void)
@@ -165,7 +165,7 @@ char *__init pcibios_setup(char *str) {
 }
 ```
 
-So, if `CONFIG_PCI` option is set and we passed `pci=earlydump` option to the kernel command line, next function which will be called - `early_dump_pci_devices` from the [arch/x86/pci/early.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/pci/early.c). This function checks `noearly` pci parameter with:
+So, if `CONFIG_PCI` option is set and we passed `pci=earlydump` option to the kernel command line, next function which will be called - `early_dump_pci_devices` from the [arch/x86/pci/early.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/pci/early.c). This function checks `noearly` PCI parameter with:
 
 ```C
 if (!early_pci_allowed())
@@ -208,7 +208,7 @@ After the `early_dump_pci_devices`, there are a couple of function related with 
 	early_reserve_e820_mpc_new();
 ```
 
-Let's look on it. As you can see the first function is `e820_reserve_setup_data`. This function does almost the same as `memblock_x86_reserve_range_setup_data` which we saw above, but it also calls `e820_update_range` which adds new regions to the `e820map` with the given type which is `E820_RESERVED_KERN` in our case. The next function is `finish_e820_parsing` which sanitizes `e820map` with the `sanitize_e820_map` function. Besides this two functions we can see a couple of functions related to the [e820](http://en.wikipedia.org/wiki/E820). You can see it in the listing above. `e820_add_kernel_range` function takes the physical address of the kernel start and end:
+Let's look at it. As you can see the first function is `e820_reserve_setup_data`. This function does almost the same as `memblock_x86_reserve_range_setup_data` which we saw above, but it also calls `e820_update_range` which adds new regions to the `e820map` with the given type which is `E820_RESERVED_KERN` in our case. The next function is `finish_e820_parsing` which sanitizes `e820map` with the `sanitize_e820_map` function. Besides this two functions we can see a couple of functions related to the [e820](http://en.wikipedia.org/wiki/E820). You can see it in the listing above. `e820_add_kernel_range` function takes the physical address of the kernel start and end:
 
 ```C
 u64 start = __pa_symbol(_text);
@@ -273,13 +273,13 @@ if (max_pfn > (1UL<<(32 - PAGE_SHIFT)))
 	max_low_pfn = e820_end_of_low_ram_pfn();
 else
 	max_low_pfn = max_pfn;
-		
+
 high_memory = (void *)__va(max_pfn * PAGE_SIZE - 1) + 1;
 ```
 
 Next we calculate `high_memory` (defines the upper bound on direct map memory) with `__va` macro which returns a virtual address by the given physical memory.
 
-DMI scanning 
+DMI scanning
 -------------------------------------------------------------------------------
 
 The next step after manipulations with different memory regions and `e820` slots is collecting information about computer. We will get all information with the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface) and following functions:
@@ -356,7 +356,7 @@ RESERVE_BRK(dmi_alloc, 65536);
 #endif
 ```
 
-`RESERVE_BRK` defined in the [arch/x86/include/asm/setup.h](http://en.wikipedia.org/wiki/Desktop_Management_Interface) and reserves space with given size in the `brk` section.
+`RESERVE_BRK` defined in the [arch/x86/include/asm/setup.h](http://github.com/torvalds/linux/blob/master/arch/x86/include/asm/setup.h) and reserves space with given size in the `brk` section.
 
 -------------------------
 	init_hypervisor_platform();
