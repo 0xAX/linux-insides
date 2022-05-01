@@ -137,7 +137,7 @@ Now that we have our bearings, let's look at the contents of the `startup_32` fu
 
 In the beginning of the `startup_32` function, we can see the `cld` instruction which clears the `DF` bit in the [flags](https://en.wikipedia.org/wiki/FLAGS_register) register. When the direction flag is clear, all string operations like [stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html), [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html) and others will increment the index registers `esi` or `edi`. We need to clear the direction flag because later we will use strings operations to perform various operations such as clearing space for page tables.
 
-After we have cleared the `DF` bit, the next step is to check the `KEEP_SEGMENTS` flag in the `loadflags` kernel setup header field. If you remember, we already talked about `loadflags` in the very first [part](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-1) of this book. There we checked the `CAN_USE_HEAP` flag to query the ability to use the heap. Now we need to check the `KEEP_SEGMENTS` flag. This flag is described in the linux [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) documentation:
+After we have cleared the `DF` bit, the next step is to check the `KEEP_SEGMENTS` flag in the `loadflags` kernel setup header field. If you remember, we already talked about `loadflags` in the very first [part](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-1) of this book. There we checked the `CAN_USE_HEAP` flag to query the ability to use the heap. Now we need to check the `KEEP_SEGMENTS` flag. This flag is described in the Linux [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) documentation:
 
 ```
 Bit 6 (write): KEEP_SEGMENTS
@@ -607,7 +607,7 @@ That's all!
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fourth part of the linux kernel booting process. If you have any questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
+This is the end of the fourth part of the Linux kernel booting process. If you have any questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
 
 In the next part, we will learn about many things, including how kernel decompression works.
 

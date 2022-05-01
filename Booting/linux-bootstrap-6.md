@@ -91,7 +91,7 @@ input_data:
 input_data_end:
 ```
 
-As you can see, it contains four global symbols. The first two, `z_input_len` and `z_output_len` are the sizes of the compressed and uncompressed `vmlinux.bin.gz` archive. The third is our `input_data` parameter which points to the linux kernel image's raw binary (stripped of all debugging symbols, comments and relocation information). The last parameter,  `input_data_end`, points to the end of the compressed linux image.
+As you can see, it contains four global symbols. The first two, `z_input_len` and `z_output_len` are the sizes of the compressed and uncompressed `vmlinux.bin.gz` archive. The third is our `input_data` parameter which points to the Linux kernel image's raw binary (stripped of all debugging symbols, comments and relocation information). The last parameter,  `input_data_end`, points to the end of the compressed linux image.
 
 So, the first parameter to the `choose_random_location` function is the pointer to the compressed kernel image that is embedded into the `piggy.o` object file.
 
@@ -395,7 +395,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the sixth and last part concerning the linux kernel's booting process. We will not see any more posts about kernel booting (though there may be updates to this and previous posts). We will now turn to other parts of the linux kernel instead.
+This is the end of the sixth and last part concerning the Linux kernel's booting process. We will not see any more posts about kernel booting (though there may be updates to this and previous posts). We will now turn to other parts of the linux kernel instead.
 
 The next chapter will be about kernel initialization and we will study the first steps take in the Linux kernel initialization code.
 

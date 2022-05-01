@@ -1,6 +1,6 @@
 # Timers and time management
 
-This chapter describes timers and time management related concepts in the linux kernel.
+This chapter describes timers and time management related concepts in the Linux kernel.
 
 * [Introduction](linux-timers-1.md) - An introduction to the timers in the Linux kernel.
 * [Introduction to the clocksource framework](linux-timers-2.md) - Describes `clocksource` framework in the Linux kernel.

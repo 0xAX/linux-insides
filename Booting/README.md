@@ -1,6 +1,6 @@
 # Kernel Boot Process
 
-This chapter describes the linux kernel boot process. Here you will see a series of posts which describes the full cycle of the kernel loading process:
+This chapter describes the Linux kernel boot process. Here you will see a series of posts which describes the full cycle of the kernel loading process:
 
 * [From the bootloader to kernel](linux-bootstrap-1.md) - describes all stages from turning on the computer to running the first instruction of the kernel.
 * [First steps in the kernel setup code](linux-bootstrap-2.md) - describes first steps in the kernel setup code. You will see heap initialization, query of different parameters like EDD, IST and etc...

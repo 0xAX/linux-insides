@@ -1,6 +1,6 @@
 # System calls
 
-This chapter describes the `system call` concept in the linux kernel.
+This chapter describes the `system call` concept in the Linux kernel.
 
 * [Introduction to system call concept](linux-syscall-1.md) - this part is introduction to the `system call` concept in the Linux kernel.
 * [How the Linux kernel handles a system call](linux-syscall-2.md) - this part describes how the Linux kernel handles a system call from a userspace application.

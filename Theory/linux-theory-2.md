@@ -1,7 +1,7 @@
 Executable and Linkable Format
 ================================================================================
 
-ELF (Executable and Linkable Format) is a standard file format for executable files, object code, shared libraries and core dumps. Linux and many UNIX-like operating systems use this format. Let's look at the structure of the ELF-64 Object File Format and some definitions in the linux kernel source code which related with it.
+ELF (Executable and Linkable Format) is a standard file format for executable files, object code, shared libraries and core dumps. Linux and many UNIX-like operating systems use this format. Let's look at the structure of the ELF-64 Object File Format and some definitions in the Linux kernel source code which related with it.
 
 An ELF object file consists of the following parts:
 
@@ -26,7 +26,7 @@ The ELF header is located at the beginning of the object file. Its main purpose 
 * Size of a program header table entry;
 * and other fields...
 
-You can find the `elf64_hdr` structure which presents ELF64 header in the linux kernel source code:
+You can find the `elf64_hdr` structure which presents ELF64 header in the Linux kernel source code:
 
 ```C
 typedef struct elf64_hdr {
@@ -64,7 +64,7 @@ All data stores in a sections in an Elf object file. Sections identified by inde
 * Address alignment boundary;
 * Size of entries, if section has table;
 
-And presented with the following `elf64_shdr` structure in the linux kernel:
+And presented with the following `elf64_shdr` structure in the Linux kernel:
 
 ```C
 typedef struct elf64_shdr {
@@ -100,7 +100,7 @@ typedef struct elf64_phdr {
 } Elf64_Phdr;
 ```
 
-in the linux kernel source code.
+in the Linux kernel source code.
 
 `elf64_phdr` defined in the same [elf.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/elf.h#L254).
 

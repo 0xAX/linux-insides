@@ -383,9 +383,9 @@ That's all. Now we are in the kernel!
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fifth part about the linux kernel booting process. We will not see any more posts about the kernel booting process (there may be updates to this and previous posts though), but there will be many posts about other kernel internals.
+This is the end of the fifth part about the Linux kernel booting process. We will not see any more posts about the kernel booting process (there may be updates to this and previous posts though), but there will be many posts about other kernel internals.
 
-The Next chapter will describe more advanced details about linux kernel booting process, like load address randomization and etc.
+The Next chapter will describe more advanced details about Linux kernel booting process, like load address randomization and etc.
 
 If you have any questions or suggestions write me a comment or ping me in [twitter](https://twitter.com/0xAX).
 
