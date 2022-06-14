@@ -340,7 +340,7 @@ The first is for case when scheduling of task groups is enabled with `completely
 * scheduler entity structure;
 * `runqueue`.
 
-After we have calculated size, we allocate a space with the `kzalloc` function and set pointers of `sched_entity` and `runquques` there:
+After we have calculated size, we allocate a space with the `kzalloc` function and set pointers of `sched_entity` and `runqueues` there:
 
 ```C
 ptr = (unsigned long)kzalloc(alloc_size, GFP_NOWAIT);
