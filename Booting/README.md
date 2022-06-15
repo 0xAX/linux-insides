@@ -7,6 +7,6 @@ This chapter describes the linux kernel boot process. Here you will see a series
 * [Video mode initialization and transition to protected mode](linux-bootstrap-3.md) - describes video mode initialization in the kernel setup code and transition to protected mode.
 * [Transition to 64-bit mode](linux-bootstrap-4.md) - describes preparation for transition into 64-bit mode and details of transition.
 * [Kernel Decompression](linux-bootstrap-5.md) - describes preparation before kernel decompression and details of direct decompression.
-* [Kernel random address randomization](linux-bootstrap-6.md) - describes randomization of the Linux kernel load address.
+* [Kernel load address randomization](linux-bootstrap-6.md) - describes randomization of the Linux kernel load address.
 
 This chapter coincides with `Linux kernel v4.17`.
