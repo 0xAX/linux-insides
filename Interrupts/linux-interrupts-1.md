@@ -373,7 +373,7 @@ int irq_init_percpu_irqstack(unsigned int cpu)
 
 Here we go over all the CPUs one-by-one and setup the `hardirq_stack_ptr`.  
 Where `map_irq_stack` is called to initialize the `hardirq_stack_ptr`,  
-to point onto the `irq_backing_store` of the current CPU with an offset of IRQ\_STACK\_SIZE,   
+to point onto the `irq_stack_backing_store` of the current CPU with an offset of IRQ\_STACK\_SIZE,   
 either with guard pages or without when KASan is enabled.  
 
 
