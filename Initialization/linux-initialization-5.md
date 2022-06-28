@@ -165,7 +165,7 @@ The next step is initialization of early `ioremap`. In general there are two way
 
 We already saw first method (`outb/inb` instructions) in the part about linux kernel booting [process](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-3). The second method is to map I/O physical addresses to virtual addresses. When a physical address is accessed by the CPU, it may refer to a portion of physical RAM which can be mapped on memory of the I/O device. So `ioremap` used to map device memory into kernel address space.
 
-As i wrote above next function is the `early_ioremap_init` which re-maps I/O memory to kernel address space so it can access it. We need to initialize early ioremap for early initialization code which needs to temporarily map I/O or memory regions before the normal mapping functions like `ioremap` are available. Implementation of this function is in the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/ioremap.c). At the start of the `early_ioremap_init` we can see definition of the `pmd` pointer with `pmd_t` type (which presents page middle directory entry `typedef struct { pmdval_t pmd; } pmd_t;` where `pmdval_t` is `unsigned long`) and make a check that `fixmap` aligned in a correct way:
+As I wrote above next function is the `early_ioremap_init` which re-maps I/O memory to kernel address space so it can access it. We need to initialize early ioremap for early initialization code which needs to temporarily map I/O or memory regions before the normal mapping functions like `ioremap` are available. Implementation of this function is in the [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/ioremap.c). At the start of the `early_ioremap_init` we can see definition of the `pmd` pointer with `pmd_t` type (which presents page middle directory entry `typedef struct { pmdval_t pmd; } pmd_t;` where `pmdval_t` is `unsigned long`) and make a check that `fixmap` aligned in a correct way:
 
 ```C
 pmd_t *pmd;
@@ -298,7 +298,7 @@ presents abstraction for a tree-like subset of system resources. This structure 
        |
 +-------------+
 |             |
-|    child    | 
+|    child    |
 |             |
 +-------------+
 ```
@@ -422,7 +422,7 @@ The next step is initialization of the memory descriptor of the init process. As
 }
 ```
 
-`mm` points to the process address space and `active_mm` points to the active address space if process has no address space such as kernel threads (more about it you can read in the [documentation](https://www.kernel.org/doc/Documentation/vm/active_mm.txt)). Now we fill memory descriptor of the initial process: 
+`mm` points to the process address space and `active_mm` points to the active address space if process has no address space such as kernel threads (more about it you can read in the [documentation](https://www.kernel.org/doc/Documentation/vm/active_mm.txt)). Now we fill memory descriptor of the initial process:
 
 ```C
 	init_mm.start_code = (unsigned long) _text;
@@ -457,7 +457,7 @@ where `mm_rb` is a red-black tree of the virtual memory areas, `pgd` is a pointe
 	bss_resource.end = __pa_symbol(__bss_stop)-1;
 ```
 
-We already know a little about `resource` structure (read above). Here we fills code/data/bss resources with their physical addresses. You can see it in the `/proc/iomem`:
+We already know a little about `resource` structure (read above). Here we fill code/data/bss resources with their physical addresses. You can see it in the `/proc/iomem`:
 
 ```C
 00100000-be825fff : System RAM
@@ -477,7 +477,7 @@ static struct resource code_resource = {
 };
 ```
 
-The last step which we will cover in this part will be `NX` configuration. `NX-bit` or no execute bit is 63-bit in the page directory entry which controls the ability to execute code from all physical pages mapped by the table entry. This bit can only be used/set when the `no-execute` page-protection mechanism is enabled by the setting `EFER.NXE` to 1. In the `x86_configure_nx` function we check that CPU has support of `NX-bit` and it does not disabled. After the check we fill `__supported_pte_mask` depend on it: 
+The last step which we will cover in this part will be `NX` configuration. `NX-bit` or no execute bit is 63-bit in the page directory entry which controls the ability to execute code from all physical pages mapped by the table entry. This bit can only be used/set when the `no-execute` page-protection mechanism is enabled by the setting `EFER.NXE` to 1. In the `x86_configure_nx` function we check that CPU has support of `NX-bit` and it does not disabled. After the check we fill `__supported_pte_mask` depend on it:
 
 ```C
 void x86_configure_nx(void)
@@ -492,7 +492,7 @@ void x86_configure_nx(void)
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the fifth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function which makes initialization of architecture-specific stuff. It was long part, but we have not finished with it. As i already wrote, the `setup_arch` is big function, and I am really not sure that we will cover all of it even in the next part. There were some new interesting concepts in this part like `Fix-mapped` addresses, ioremap and etc... Don't worry if they are unclear for you. There is a special part about these concepts - [Linux kernel memory management Part 2.](https://github.com/0xAX/linux-insides/blob/master/MM/linux-mm-2.md). In the next part we will continue with the initialization of the architecture-specific stuff and will see parsing of the early kernel parameters, early dump of the pci devices, `Desktop Management Interface` scanning and many many more.
+It is the end of the fifth part about linux kernel initialization process. In this part we continued to dive in the `setup_arch` function which makes initialization of architecture-specific stuff. It was long part, but we are not finished with it. As I already wrote, the `setup_arch` is big function, and I am really not sure that we will cover all of it even in the next part. There were some new interesting concepts in this part like `Fix-mapped` addresses, ioremap and etc... Don't worry if they are unclear for you. There is a special part about these concepts - [Linux kernel memory management Part 2.](https://github.com/0xAX/linux-insides/blob/master/MM/linux-mm-2.md). In the next part we will continue with the initialization of the architecture-specific stuff and will see parsing of the early kernel parameters, early dump of the pci devices, `Desktop Management Interface` scanning and many many more.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 

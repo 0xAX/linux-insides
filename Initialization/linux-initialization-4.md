@@ -4,7 +4,7 @@ Kernel initialization. Part 4.
 Kernel entry point
 ================================================================================
 
-If you have read the previous part - [Last preparations before the kernel entry point](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-3.md), you can remember that we finished all pre-initialization stuff and stopped right before the call to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). The `start_kernel` is the entry of the generic and architecture independent kernel code, although we will return to the `arch/` folder many times. If you look inside of the `start_kernel` function, you will see that this function is very big. For this moment it contains about `86` calls of functions. Yes, it's very big and of course this part will not cover all the processes that occur in this function. In the current part we will only start to do it. This part and all the next which will be in the [Kernel initialization process](https://github.com/0xAX/linux-insides/blob/master/Initialization/README.md) chapter will cover it.
+If you have read the previous part - [Last preparations before the kernel entry point](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-3.md), you can remember that we finished all pre-initialization stuff and stopped right before the call to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). The `start_kernel` is the entry of the generic and architecture independent kernel code, although we will return to the `arch/` folder many times. If you look inside of the `start_kernel` function, you will see that this function is very big. For this moment it contains about `86` function calls. Yes, it's very big and of course this part will not cover all the processes that occur in this function. In the current part we will only start to do it. This part and all the next which will be in the [Kernel initialization process](https://github.com/0xAX/linux-insides/blob/master/Initialization/README.md) chapter will cover it.
 
 The main purpose of the `start_kernel` to finish kernel initialization process and launch the first `init` process. Before the first process will be started, the `start_kernel` must do many things such as: to enable [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), to initialize processor id, to enable early [cgroups](http://en.wikipedia.org/wiki/Cgroups) subsystem, to setup per-cpu areas, to initialize different caches in [vfs](http://en.wikipedia.org/wiki/Virtual_file_system), to initialize memory manager, rcu, vmalloc, scheduler, IRQs, ACPI and many many more. Only after these steps will we see the launch of the first `init` process in the last part of this chapter. So much kernel code awaits us, let's start.
 
@@ -63,7 +63,7 @@ You can see the definition of the `init_task` and it initialized by the `INIT_TA
 
 ```C
 union thread_union {
-	struct thread_info thread_info;
+    struct thread_info thread_info;
     unsigned long stack[THREAD_SIZE/sizeof(long)];
 };
 ```
@@ -74,7 +74,7 @@ Every process has its own stack and it is 16 kilobytes or 4 page frames in `x86_
 struct thread_info {
         struct task_struct      *task;
         struct exec_domain      *exec_domain;
-        __u32                   flags; 
+        __u32                   flags;
         __u32                   status;
         __u32                   cpu;
         int                     saved_preempt_count;
@@ -179,7 +179,7 @@ As we got the end of the `init` process stack, we write `STACK_END_MAGIC` there.
 if (*end_of_stack(task) != STACK_END_MAGIC) {
         //
         // handle stack overflow here
-	//
+        //
 }
 ```
 
@@ -263,7 +263,7 @@ Remember that we have passed `cpu_number` as `pcp` to the `this_cpu_read` from t
                 __bad_size_call_parameter(); break;                     \
         }                                                               \
         pscr_ret__;                                                     \
-}) 
+})
 ```
 
 Yes, it looks a little strange but it's easy. First of all we can see the definition of the `pscr_ret__` variable with the `int` type. Why int? Ok, `variable` is `common_cpu` and it was declared as per-cpu int variable:
@@ -272,7 +272,7 @@ Yes, it looks a little strange but it's easy. First of all we can see the defini
 DECLARE_PER_CPU_READ_MOSTLY(int, cpu_number);
 ```
 
-In the next step we call `__verify_pcpu_ptr` with the address of `cpu_number`. `__veryf_pcpu_ptr` used to verify that the given parameter is a per-cpu pointer. After that we set `pscr_ret__` value which depends on the size of the variable. Our `common_cpu` variable is `int`, so it 4 bytes in size. It means that we will get `this_cpu_read_4(common_cpu)` in `pscr_ret__`. In the end of the `__pcpu_size_call_return` we just call it. `this_cpu_read_4` is a macro:
+In the next step we call `__verify_pcpu_ptr` with the address of `cpu_number`. `__veryf_pcpu_ptr` used to verify that the given parameter is a per-cpu pointer. After that we set `pscr_ret__` value which depends on the size of the variable. Our `common_cpu` variable is `int`, so it's 4 bytes in size. It means that we will get `this_cpu_read_4(common_cpu)` in `pscr_ret__`. In the end of the `__pcpu_size_call_return` we just call it. `this_cpu_read_4` is a macro:
 
 ```C
 #define this_cpu_read_4(pcp)       percpu_from_op("mov", pcp)

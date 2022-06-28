@@ -75,7 +75,7 @@ static inline struct desc_struct *get_cpu_gdt_table(unsigned int cpu)
 
 The `get_cpu_gdt_table` uses `per_cpu` macro for getting value of a `gdt_page` percpu variable for the given CPU number (bootstrap processor with `id` - 0 in our case).
 
-You may ask the following question: so, if we can access `gdt_page` percpu variable, where it was defined? Actually we already saw it in this book. If you have read the first [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/kernel/head_64.S):
+You may ask the following question: so, if we can access `gdt_page` percpu variable, where was it defined? Actually we already saw it in this book. If you have read the first [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/kernel/head_64.S):
 
 ```assembly
 early_gdt_descr:
@@ -117,29 +117,29 @@ void load_percpu_segment(int cpu) {
 }
 ```
 
-The base address of the `percpu` area must contain `gs` register (or `fs` register for `x86`), so we are using `loadsegment` macro and pass `gs`. In the next step we writes the base address if the [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) stack and setup stack [canary](http://en.wikipedia.org/wiki/Buffer_overflow_protection) (this is only for `x86_32`). After we load new `GDT`, we fill `cpu_callout_mask` bitmap with the current cpu and set cpu state as online with the setting `cpu_state` percpu variable for the current processor - `CPU_ONLINE`:
+The base address of the `percpu` area must contain `gs` register (or `fs` register for `x86`), so we are using `loadsegment` macro and pass `gs`. In the next step we write the base address if the [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) stack and setup stack [canary](http://en.wikipedia.org/wiki/Buffer_overflow_protection) (this is only for `x86_32`). After we load new `GDT`, we fill `cpu_callout_mask` bitmap with the current cpu and set cpu state as online with the setting `cpu_state` percpu variable for the current processor - `CPU_ONLINE`:
 
 ```C
 cpumask_set_cpu(me, cpu_callout_mask);
 per_cpu(cpu_state, me) = CPU_ONLINE;
 ```
 
-So, what is `cpu_callout_mask` bitmap... As we initialized bootstrap processor (processor which is booted the first on `x86`) the other processors in a multiprocessor system are known as `secondary processors`. Linux kernel uses following two bitmasks:
+So, what is `cpu_callout_mask` bitmap? As we initialized bootstrap processor (processor which is booted the first on `x86`) the other processors in a multiprocessor system are known as `secondary processors`. Linux kernel uses following two bitmasks:
 
 * `cpu_callout_mask`
 * `cpu_callin_mask`
 
-After bootstrap processor initialized, it updates the `cpu_callout_mask` to indicate which secondary processor can be initialized next. All other or secondary processors can do some initialization stuff before and check the `cpu_callout_mask` on the bootstrap processor bit. Only after the bootstrap processor filled the `cpu_callout_mask` with this secondary processor, it will continue the rest of its initialization. After that the certain processor finish its initialization process, the processor sets bit in the `cpu_callin_mask`. Once the bootstrap processor finds the bit in the `cpu_callin_mask` for the current secondary processor, this processor repeats the same procedure for initialization of one of the remaining secondary processors. In a short words it works as i described, but we will see more details in the chapter about `SMP`.
-        
+After bootstrap processor initialized, it updates the `cpu_callout_mask` to indicate which secondary processor can be initialized next. All other or secondary processors can do some initialization stuff before and check the `cpu_callout_mask` on the bootstrap processor bit. Only after the bootstrap processor filled the `cpu_callout_mask` with this secondary processor, it will continue the rest of its initialization. After that the certain processor finish its initialization process, the processor sets bit in the `cpu_callin_mask`. Once the bootstrap processor finds the bit in the `cpu_callin_mask` for the current secondary processor, this processor repeats the same procedure for initialization of one of the remaining secondary processors. In a short words it works as I described, but we will see more details in the chapter about `SMP`.
+
 That's all. We did all `SMP` boot preparation.
 
 Build zonelists
 -----------------------------------------------------------------------
 
-In the next step we can see the call of the `build_all_zonelists` function. This function sets up the order of zones that allocations are preferred from. What are zones and what's order we will understand soon. For the start let's see how linux kernel considers physical memory. Physical memory is split into banks which are called - `nodes`. If you has no hardware support for `NUMA`, you will see only one node:
+In the next step we can see the call of the `build_all_zonelists` function. This function sets up the order of zones that allocations are preferred from. What are zones and what's order we will understand soon. For the start let's see how linux kernel considers physical memory. Physical memory is split into banks which are called - `nodes`. If you have no hardware support for `NUMA`, you will see only one node:
 
 ```
-$ cat /sys/devices/system/node/node0/numastat 
+$ cat /sys/devices/system/node/node0/numastat
 numa_hit 72452442
 numa_miss 0
 numa_foreign 0
@@ -185,13 +185,13 @@ As I wrote above all nodes are described with the `pglist_data` or `pg_data_t` s
 The rest of the stuff before scheduler initialization
 --------------------------------------------------------------------------------
 
-Before we will start to dive into linux kernel scheduler initialization process we must do a couple of things. The first thing is the `page_alloc_init` function from the [mm/page_alloc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/page_alloc.c). This function looks pretty easy:
+Before we start to dive into linux kernel scheduler initialization process we must do a couple of things. The first thing is the `page_alloc_init` function from the [mm/page_alloc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/page_alloc.c). This function looks pretty easy:
 
 ```C
 void __init page_alloc_init(void)
 {
     int ret;
- 
+
     ret = cpuhp_setup_state_nocalls(CPUHP_PAGE_ALLOC_DEAD,
                                     "mm/page_alloc:dead", NULL,
                                     page_alloc_cpu_dead);
@@ -230,7 +230,7 @@ pid_hash = alloc_large_system_hash("PID", sizeof(*pid_hash), 0, 18,
 ```
 
 The number of elements of the `pid_hash` depends on the `RAM` configuration, but it can be between `2^4` and `2^12`. The `pidhash_init` computes the size
-and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h)]. The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
+and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h). The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
 
 The result we can see in the `dmesg` output:
 
@@ -255,7 +255,7 @@ pgtable_init();
 vmalloc_init();
 ```
 
-The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernel memory manager](https://0xax.gitbook.io/linux-insides/summary/mm) chapter.
+The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of them it in the [Linux kernel memory manager](https://0xax.gitbook.io/linux-insides/summary/mm) chapter.
 
 That's all. Now we can look on the `scheduler`.
 
@@ -318,7 +318,7 @@ The `Completely Fair Scheduler` supports following `normal` or in other words `n
 
 The `SCHED_NORMAL` is used for the most normal applications, the amount of cpu each process consumes is mostly determined by the [nice](http://en.wikipedia.org/wiki/Nice_%28Unix%29) value, the `SCHED_BATCH` used for the 100% non-interactive tasks and the `SCHED_IDLE` runs tasks only when the processor has no task to run besides this task.
 
-The `real-time` policies are also supported for the time-critical applications: `SCHED_FIFO` and `SCHED_RR`. If you've read something about the Linux kernel scheduler, you can know that it is modular. That means it supports different algorithms to schedule different types of processes. Usually this modularity is called `scheduler classes`. These modules encapsulate scheduling policy details and are handled by the scheduler core without knowing too much about them. 
+The `real-time` policies are also supported for the time-critical applications: `SCHED_FIFO` and `SCHED_RR`. If you've read something about the Linux kernel scheduler, you can know that it is modular. That means it supports different algorithms to schedule different types of processes. Usually this modularity is called `scheduler classes`. These modules encapsulate scheduling policy details and are handled by the scheduler core without knowing too much about them.
 
 Now let's get back to the our code and look on the two configuration options: `CONFIG_FAIR_GROUP_SCHED` and `CONFIG_RT_GROUP_SCHED`. The smallest unit that the scheduler works with is an individual task or thread. However, a process is not the only type of entity that the scheduler can operate with. Both of these options provide support for group scheduling. The first option provides support for group scheduling with the `completely fair scheduler` policies and the second with the `real-time` policies respectively.
 
@@ -344,7 +344,7 @@ After we have calculated size, we allocate a space with the `kzalloc` function a
 
 ```C
 ptr = (unsigned long)kzalloc(alloc_size, GFP_NOWAIT);
- 
+
 #ifdef CONFIG_FAIR_GROUP_SCHED
         root_task_group.se = (struct sched_entity **)ptr;
         ptr += nr_cpu_ids * sizeof(void **);
@@ -396,10 +396,10 @@ All groups have to be able to rely on the amount of CPU time. The two following 
 The first represents a period and the second represents quantum that is allocated for `real-time` tasks during `sched_rt_period_us`. You may see global values of these parameters in the:
 
 ```
-$ cat /proc/sys/kernel/sched_rt_period_us 
+$ cat /proc/sys/kernel/sched_rt_period_us
 1000000
 
-$ cat /proc/sys/kernel/sched_rt_runtime_us 
+$ cat /proc/sys/kernel/sched_rt_runtime_us
 950000
 ```
 
@@ -415,7 +415,7 @@ That's all with the bandwiths of `real-time` and `deadline` tasks and in the nex
 
 The real-time scheduler requires global resources to make scheduling decision. But unfortunately scalability bottlenecks appear as the number of CPUs increase. The concept of `root domains` was introduced for improving scalability and avoid such bottlenecks. Instead of bypassing over all `run queues`, the scheduler gets information about a CPU where/from to push/pull a `real-time` task from the `root_domain` structure. This structure is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/sched.h) kernel header file and just keeps track of CPUs that can be used to push or pull a process.
 
-After `root domain` initialization, we make initialization of the `bandwidth` for the `real-time` tasks of the `root task group` as we did the same above: 
+After `root domain` initialization, we make initialization of the `bandwidth` for the `real-time` tasks of the `root task group` as we did the same above:
 ```C
 #ifdef CONFIG_RT_GROUP_SCHED
 	init_rt_bandwidth(&root_task_group.rt_bandwidth,
@@ -499,7 +499,7 @@ struct task_struct {
 }
 ```
 
-The first one is `dynamic priority` which can't be changed during lifetime of a process based on its static priority and interactivity of the process. The `static_prio` contains initial priority most likely well-known to you `nice value`. This value does not changed by the kernel if a user will not change it. The last one is `normal_priority` based on the value of the `static_prio` too, but also it depends on the scheduling policy of a process.
+The first one is `dynamic priority` which can't be changed during lifetime of a process based on its static priority and interactivity of the process. The `static_prio` contains initial priority most likely well-known to you `nice value`. This value is not changed by the kernel if a user does not change it. The last one is `normal_priority` based on the value of the `static_prio` too, but also it depends on the scheduling policy of a process.
 
 So the main goal of the `set_load_weight` function is to initialize `load_weight` fields for the `init` task:
 
