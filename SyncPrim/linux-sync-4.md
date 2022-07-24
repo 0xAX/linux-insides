@@ -303,7 +303,7 @@ static bool mutex_optimistic_spin(struct mutex *lock,
 #endif
 ```
 
-In all of these cases, the `__mutex_lock_common` function will acct like a `semaphore`. We try to acquire a lock again because the owner of a lock might already release a lock before this time:
+In all of these cases, the `__mutex_lock_common` function will act like a `semaphore`. We try to acquire a lock again because the owner of a lock might already release a lock before this time:
 
 ```C
 if (!mutex_is_locked(lock) &&
