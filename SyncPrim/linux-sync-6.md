@@ -4,20 +4,20 @@ Synchronization primitives in the Linux kernel. Part 6.
 Introduction
 --------------------------------------------------------------------------------
 
-This is the sixth part of the chapter which describes [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_\(computer_science\)) in the Linux kernel and in the previous parts we finished to consider different [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) synchronization primitives. We will continue to learn synchronization primitives in this part and start to consider a similar synchronization primitive which can be used to avoid the `writer starvation` problem. The name of this synchronization primitive is - `seqlock` or `sequential locks`.
+This is the sixth part of the chapter which describes [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_(computer_science)) in the Linux kernel and in the previous parts we finished to consider different [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) synchronization primitives. We will continue to learn synchronization primitives in this part and start to consider a similar synchronization primitive which can be used to avoid the `writer starvation` problem. The name of this synchronization primitive is - `seqlock` or `sequential locks`.
 
 We know from the previous [part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-5) that [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) is a special lock mechanism which allows concurrent access for read-only operations, but an exclusive lock is needed for writing or modifying data. As we may guess, it may lead to a problem which is called `writer starvation`. In other words, a writer process can't acquire a lock as long as at least one reader process which acquired a lock holds it. So, in the situation when contention is high, it will lead to situation when a writer process which wants to acquire a lock will wait for it for a long time.
 
 The `seqlock` synchronization primitive can help solve this problem.
 
-As in all previous parts of this [book](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md), we will try to consider this synchronization primitive from the theoretical side and only than we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) provided by the Linux kernel to manipulate with `seqlocks`.
+As in all previous parts of this [book](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md), we will try to consider this synchronization primitive from the theoretical side and only than we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) provided by the Linux kernel to manipulate the `seqlocks`.
 
 So, let's start.
 
 Sequential lock
 --------------------------------------------------------------------------------
 
-So, what is a `seqlock` synchronization primitive and how does it work? Let's try to answer on these questions in this paragraph. Actually `sequential locks` were introduced in the Linux kernel 2.6.x. Main point of this synchronization primitive is to provide fast and lock-free access to shared resources. Since the heart of `sequential lock` synchronization primitive is [spinlock](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) synchronization primitive, `sequential locks` work in situations where the protected resources are small and simple. Additionally write access must be rare and also should be fast. 
+So, what is a `seqlock` synchronization primitive and how does it work? Let's try to answer these questions in this paragraph. Actually `sequential locks` were introduced in the Linux kernel 2.6.x. Main point of this synchronization primitive is to provide fast and lock-free access to shared resources. Since the heart of `sequential lock` synchronization primitive is [spinlock](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) synchronization primitive, `sequential locks` work in situations where the protected resources are small and simple. Additionally write access must be rare and also should be fast.
 
 Work of this synchronization primitive is based on the sequence of events counter. Actually a `sequential lock` allows free access to a resource for readers, but each reader must check existence of conflicts with a writer. This synchronization primitive introduces a special counter. The main algorithm of work of `sequential locks` is simple: Each writer which acquired a sequential lock increments this counter and additionally acquires a [spinlock](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1). When this writer finishes, it will release the acquired spinlock to give access to other writers and increment the counter of a sequential lock again.
 
@@ -114,7 +114,7 @@ So we just initialize counter of the given sequential lock to zero and additiona
 #endif
 ```
 
-As I already wrote in previous parts of this [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim) we will not consider [debugging](https://en.wikipedia.org/wiki/Debugging) and [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related stuff in this part. So for now we just skip the `SEQCOUNT_DEP_MAP_INIT` macro. The second field of the given `seqlock_t` is `lock` initialized with the `__SPIN_LOCK_UNLOCKED` macro which is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file. We will not consider implementation of this macro here as it just initialize [rawspinlock](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) with architecture-specific methods (More abot spinlocks you may read in first parts of this [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim)).
+As I already wrote in previous parts of this [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim) we will not consider [debugging](https://en.wikipedia.org/wiki/Debugging) and [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related stuff in this part. So for now we just skip the `SEQCOUNT_DEP_MAP_INIT` macro. The second field of the given `seqlock_t` is `lock` initialized with the `__SPIN_LOCK_UNLOCKED` macro which is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/spinlock_types.h) header file. We will not consider implementation of this macro here as it just initializes [rawspinlock](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) with architecture-specific methods (More about spinlocks you may read in first parts of this [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim)).
 
 We have considered the first way to initialize a sequential lock. Let's consider second way to do the same, but do it dynamically. We can initialize a sequential lock with the `seqlock_init` macro which is defined in the same  [include/linux/seqlock.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/seqlock.h) header file.
 
@@ -164,7 +164,7 @@ static inline void read_seqlock_excl(seqlock_t *sl)
 static inline void read_sequnlock_excl(seqlock_t *sl)
 ```
 
-and others. Before we move on to considering the implementation of this [API](https://en.wikipedia.org/wiki/Application_programming_interface), we must know that actually there are two types of readers. The first type of reader never blocks a writer process. In this case writer will not wait for readers. The second type of reader which can lock. In this case, the locking reader will block the writer as it will wait while reader will not release its lock.
+and others. Before we move on to considering the implementation of this [API](https://en.wikipedia.org/wiki/Application_programming_interface), we must know that there actually are two types of readers. The first type of reader never blocks a writer process. In this case writer will not wait for readers. The second type of reader which can lock. In this case, the locking reader will block the writer as it will wait while reader will not release its lock.
 
 First of all let's consider the first type of readers. The `read_seqbegin` function begins a seq-read [critical section](https://en.wikipedia.org/wiki/Critical_section).
 
@@ -281,7 +281,7 @@ static inline void raw_write_seqcount_begin(seqcount_t *s)
 }
 ```
 
-When a writer process will finish to modify data, the `write_sequnlock` function must be called to release a lock and give access to other writers or readers. Let's consider at the implementation of the `write_sequnlock` function. It looks pretty simple:
+When a writer process will finish to modify data, the `write_sequnlock` function must be called to release a lock and give access to other writers or readers. Let's consider the implementation of the `write_sequnlock` function. It looks pretty simple:
 
 ```C
 static inline void write_sequnlock(seqlock_t *sl)
@@ -321,7 +321,7 @@ static inline void write_sequnlock_irq(seqlock_t *sl)
 
 As we may see, these functions differ only in the initialization of spinlock. They call `spin_lock_irq` and `spin_unlock_irq` instead of `spin_lock` and `spin_unlock`.
 
-Or for example `write_seqlock_irqsave` and `write_sequnlock_irqrestore` functions which are the same but used `spin_lock_irqsave` and `spin_unlock_irqsave` macro to use in [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_\(PC_architecture\)) handlers.
+Or for example `write_seqlock_irqsave` and `write_sequnlock_irqrestore` functions which are the same but used `spin_lock_irqsave` and `spin_unlock_irqsave` macro to use in [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_(PC_architecture)) handlers.
 
 That's all.
 
@@ -338,7 +338,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_\(computer_science\))
-* [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) 
+* [readers-writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock)
 * [spinlock](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1)
 * [critical section](https://en.wikipedia.org/wiki/Critical_section)
 * [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
