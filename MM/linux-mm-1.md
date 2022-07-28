@@ -171,7 +171,7 @@ First of all we get the end of the memory region with the:
 phys_addr_t end = base + memblock_cap_size(base, &size);
 ```
 
-`memblock_cap_size` adjusts `size` that `base + size` will not overflow. Its implementation is pretty easy:
+`memblock_cap_size` adjusts `size` so that `base + size` will not overflow. Its implementation is pretty easy:
 
 ```C
 static inline phys_addr_t memblock_cap_size(phys_addr_t base, phys_addr_t *size)
@@ -337,10 +337,10 @@ There is also `memblock_reserve` function which does the same as `memblock_add`,
 
 Of course this is not the full API. Memblock provides APIs not only for adding `memory` and `reserved` memory regions, but also:
 
-* memblock_remove - removes memory region from memblock;
-* memblock_find_in_range - finds free area in given range;
-* memblock_free - releases memory region in memblock;
-* for_each_mem_range - iterates through memblock areas.
+* `memblock_remove` - removes memory region from memblock;
+* `memblock_find_in_range` - finds free area in given range;
+* `memblock_free` - releases memory region in memblock;
+* `for_each_mem_range` - iterates through memblock areas.
 
 and many more....
 
@@ -349,8 +349,8 @@ Getting info about memory regions
 
 Memblock also provides an API for getting information about allocated memory regions in the `memblock`. It is split in two parts:
 
-* get_allocated_memblock_memory_regions_info - getting info about memory regions;
-* get_allocated_memblock_reserved_regions_info - getting info about reserved regions.
+* `get_allocated_memblock_memory_regions_info` - getting info about memory regions;
+* `get_allocated_memblock_reserved_regions_info` - getting info about reserved regions.
 
 Implementation of these functions is easy. Let's look at `get_allocated_memblock_reserved_regions_info` for example:
 
@@ -401,9 +401,9 @@ And you will see something like this:
 
 Memblock also has support in [debugfs](http://en.wikipedia.org/wiki/Debugfs). If you run the kernel on another architecture than `X86` you can access:
 
-* /sys/kernel/debug/memblock/memory
-* /sys/kernel/debug/memblock/reserved
-* /sys/kernel/debug/memblock/physmem
+* `/sys/kernel/debug/memblock/memory`
+* `/sys/kernel/debug/memblock/reserved`
+* `/sys/kernel/debug/memblock/physmem`
 
 to get a dump of the `memblock` contents.
 
