@@ -8,7 +8,7 @@ In the fifth [part](https://0xax.gitbook.io/linux-insides/summary/booting/linux-
 
 Yeah, there will be many different things, but many many and once again many work with **memory**.
 
-In my view, memory management is one of the most complex parts of the Linux kernel and in system programming in general. This is why we need to get acquainted with paging, before we proceed with the kernel initialization stuff.
+In my view, memory management is one of the most complex parts of the Linux kernel and system programming in general. This is why we need to get acquainted with paging, before we proceed with the kernel initialization stuff.
 
 `Paging` is a mechanism that translates a linear memory address to a physical address. If you have read the previous parts of this book, you may remember that we saw segmentation in real mode when physical addresses are calculated by shifting a segment register by four and adding an offset. We also saw segmentation in protected mode, where we used the descriptor tables and base addresses from descriptors with offsets to calculate the physical addresses. Now we will see paging in 64-bit mode.
 
@@ -27,7 +27,7 @@ There are three paging modes:
 * PAE paging;
 * IA-32e paging.
 
-We will only explain the last mode here. To enable the `IA-32e paging` paging mode we need to do following things:
+We will only explain the last mode here. To enable the `IA-32e paging` paging mode we need to do the following things:
 
 * set the `CR0.PG` bit;
 * set the `CR4.PAE` bit;
@@ -211,7 +211,7 @@ Usually kernel's `.text` starts here with the `CONFIG_PHYSICAL_START` offset. We
 
 ```
 readelf -s vmlinux | grep ffffffff81000000
-     1: ffffffff81000000     0 SECTION LOCAL  DEFAULT    1 
+     1: ffffffff81000000     0 SECTION LOCAL  DEFAULT    1
  65099: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 _text
  90766: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 startup_64
 ```

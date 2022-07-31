@@ -19,13 +19,13 @@ set_cpu_present(cpu, true);
 set_cpu_possible(cpu, true);
 ```
 
-Before we will consider implementation of these functions, let's consider all of these masks.
+Before we consider implementation of these functions, let's consider all of these masks.
 
-The `cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot or in other words mask of possible CPUs contains maximum number of CPUs which are possible in the system. It will be equal to value of the `NR_CPUS` which is which is set statically via the `CONFIG_NR_CPUS` kernel configuration option.
+The `cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot or in other words mask of possible CPUs contains maximum number of CPUs which are possible in the system. It will be equal to value of the `NR_CPUS` which is set statically via the `CONFIG_NR_CPUS` kernel configuration option.
 
 The `cpu_present` mask represents which CPUs are currently plugged in.
 
-The `cpu_online` represents a subset of the `cpu_present` and indicates CPUs which are available for scheduling or in other words a bit from this mask tells to kernel is a processor may be utilized by the Linux kernel.
+The `cpu_online` represents a subset of the `cpu_present` and indicates CPUs which are available for scheduling or in other words a bit from this mask tells the kernel if a processor may be utilized by the Linux kernel.
 
 The last mask is `cpu_active`. Bits of this mask tells to Linux kernel is a task may be moved to a certain processor.
 
@@ -94,9 +94,9 @@ And returns `1` every time. We need it here for only one purpose: at compile tim
 cpumask API
 --------------------------------------------------------------------------------
 
-As we can define cpumask with one of the method, Linux kernel provides API for manipulating a cpumask. Let's consider one of the function which presented above. For example `set_cpu_online`. This function takes two parameters:
+As we can define cpumask with one of the methods, Linux kernel provides API for manipulating a cpumask. Let's consider one of the function which presented above. For example `set_cpu_online`. This function takes two parameters:
 
-* Number of CPU;
+* Index of CPU;
 * CPU status;
 
 Implementation of this function looks as:
@@ -113,7 +113,7 @@ void set_cpu_online(unsigned int cpu, bool online)
 }
 ```
 
-First of all it checks the second `state` parameter and calls `cpumask_set_cpu` or `cpumask_clear_cpu` depends on it. Here we can see casting to the `struct cpumask *` of the second parameter in the `cpumask_set_cpu`. In our case it is `cpu_online_bits` which is a bitmap and defined as:
+First of all it checks the second `state` parameter and calls `cpumask_set_cpu` or `cpumask_clear_cpu` depending on it. Here we can see casting to the `struct cpumask *` of the second parameter in the `cpumask_set_cpu`. In our case it is `cpu_online_bits` which is a bitmap and defined as:
 
 ```C
 static DECLARE_BITMAP(cpu_online_bits, CONFIG_NR_CPUS) __read_mostly;
@@ -128,7 +128,7 @@ static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
 }
 ```
 
-The `set_bit` function takes two parameters too, and sets a given bit (first parameter) in the memory (second parameter or `cpu_online_bits` bitmap). We can see here that before `set_bit` will be called, its two parameters will be passed to the
+The `set_bit` function takes two parameters too, and sets a given bit (first parameter) in the memory (second parameter or `cpu_online_bits` bitmap). We can see here that before `set_bit` is called, its two parameters will be passed to the
 
 * cpumask_check;
 * cpumask_bits.

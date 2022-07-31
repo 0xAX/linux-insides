@@ -63,7 +63,7 @@ The first field we will discuss is `gfp_mask`:
 
 Low-level kernel memory allocation functions take a set of flags as - `gfp_mask`, which describes how that allocation is to be performed. These `GFP_` flags which control the allocation process can have following values: (`GFP_NOIO` flag) means allocation can block but must not initiate disk I/O; (`__GFP_HIGHMEM` flag) means either ZONE_HIGHMEM or ZONE_NORMAL memory can be used; (`GFP_ATOMIC` flag) means the allocation is high-priority and must not sleep, etc.
 
-* `GFP_NOIO` - allcation can block but must not initiate disk I/O;
+* `GFP_NOIO` - allocation can block but must not initiate disk I/O;
 * `__GFP_HIGHMEM` - either ZONE_HIGHMEM or ZONE_NORMAL can be used;
 * `GFP_ATOMIC` - allocation process is high-priority and must not sleep;
 

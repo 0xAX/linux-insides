@@ -61,7 +61,7 @@ $ sudo cat /proc/ioports
 ...
 ```
 
-can show us lists of currently registered port regions used for input or output communication with a device. All memory-mapped I/O addresses are not used by the kernel directly. So, before the Linux kernel can use such memory, it must map it to the virtual memory space which is the main purpose of the `ioremap` mechanism. Note that we saw only early `ioremap` in the previous [part](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2). Soon we will look at the implementation of the non-early `ioremap` function. But before this we must learn other things, like a different types of memory allocators and etc., because in other way it will be very difficult to understand it.
+can show us lists of currently registered port regions used for input or output communication with a device. All memory-mapped I/O addresses are not used by the kernel directly. So, before the Linux kernel can use such memory, it must map it to the virtual memory space which is the main purpose of the `ioremap` mechanism. Note that we saw only early `ioremap` in the previous [part](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2). Soon we will look at the implementation of the non-early `ioremap` function. But before this we must learn other things, like different types of memory allocators and etc., because otherwise it will be very difficult to understand it.
 
 So, before we will move on to the non-early [memory management](https://en.wikipedia.org/wiki/Memory_management) of the Linux kernel, we will see some mechanisms which provide special abilities for [debugging](https://en.wikipedia.org/wiki/Debugging), check of [memory leaks](https://en.wikipedia.org/wiki/Memory_leak), memory control and etc. It will be easier to understand how memory management arranged in the Linux kernel after learning of all of these things.
 
@@ -90,7 +90,7 @@ Here we allocate memory for the `A` structure and tries to print value of the `a
 gcc test.c -o test
 ```
 
-The [compiler](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) will not show us warning that `a` filed is not unitialized. But if we will run this program with [valgrind](https://en.wikipedia.org/wiki/Valgrind) tool, we will see the following output:
+The [compiler](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) will not show us warning that `a` field is not uninitialized. But if we will run this program with [valgrind](https://en.wikipedia.org/wiki/Valgrind) tool, we will see the following output:
 
 ```
 ~$   valgrind --leak-check=yes ./test
@@ -98,12 +98,12 @@ The [compiler](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) will not s
 ==28469== Copyright (C) 2002-2015, and GNU GPL'd, by Julian Seward et al.
 ==28469== Using Valgrind-3.11.0 and LibVEX; rerun with -h for copyright info
 ==28469== Command: ./test
-==28469== 
+==28469==
 ==28469== Conditional jump or move depends on uninitialised value(s)
 ==28469==    at 0x4E820EA: vfprintf (in /usr/lib64/libc-2.22.so)
 ==28469==    by 0x4E88D48: printf (in /usr/lib64/libc-2.22.so)
 ==28469==    by 0x4005B9: main (in /home/alex/test)
-==28469== 
+==28469==
 ==28469== Use of uninitialised value of size 8
 ==28469==    at 0x4E7E0BB: _itoa_word (in /usr/lib64/libc-2.22.so)
 ==28469==    by 0x4E8262F: vfprintf (in /usr/lib64/libc-2.22.so)
@@ -122,7 +122,7 @@ To enable this mechanism in the Linux kernel, you need to enable the `CONFIG_KME
 Kernel hacking
   -> Memory Debugging
 ```
-  
+
 menu of the Linux kernel configuration:
 
 ![kernel configuration menu](images/kernel_configuration_menu1.png)
@@ -140,7 +140,7 @@ config X86
   ...
 ```
 
-So, there is no anything which is specific for other architectures.
+So, there isn't anything which is specific for other architectures.
 
 Ok, so we know that `kmemcheck` provides mechanism to check usage of `uninitialized memory` in the Linux kernel and how to enable it. How it does these checks? When the Linux kernel tries to allocate some memory i.e. something is called like this:
 
@@ -148,7 +148,7 @@ Ok, so we know that `kmemcheck` provides mechanism to check usage of `uninitiali
 struct my_struct *my_struct = kmalloc(sizeof(struct my_struct), GFP_KERNEL);
 ```
 
-or in other words somebody wants to access a [page](https://en.wikipedia.org/wiki/Page_%28computer_memory%29), a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception is generated. This is achieved by the fact that the `kmemcheck` marks memory pages as `non-present` (more about this you can read in the special part which is devoted to [Paging](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-1)). If a `page fault` exception is occurred, the exception handler knows about it and in a case when the `kmemcheck` is enabled it transfers control to it. After the `kmemcheck` will finish its checks, the page will be marked as `present` and the interrupted code will be able to continue execution. There is little subtlety in this chain. When the first instruction of interrupted code will be executed, the `kmemcheck` will mark the page as `non-present` again. In this way next access to memory will be caught again.
+or in other words somebody wants to access a [page](https://en.wikipedia.org/wiki/Page_%28computer_memory%29), a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception is generated. This is achieved by the fact that the `kmemcheck` marks memory pages as `non-present` (more about this you can read in the special part which is devoted to [Paging](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-1)). If a `page fault` exception occurred, the exception handler knows about it and in a case when the `kmemcheck` is enabled it transfers control to it. After the `kmemcheck` will finish its checks, the page will be marked as `present` and the interrupted code will be able to continue execution. There is little subtlety in this chain. When the first instruction of interrupted code will be executed, the `kmemcheck` will mark the page as `non-present` again. In this way next access to memory will be caught again.
 
 We just considered the `kmemcheck` mechanism from theoretical side. Now let's consider how it is implemented in the Linux kernel.
 
@@ -215,9 +215,9 @@ if (!kmemcheck_selftest()) {
 printk(KERN_INFO "kmemcheck: Initialized\n");
 ```
 
-and return with the `EINVAL` if this check is failed. The `kmemcheck_selftest` function checks sizes of different memory access related [opcodes](https://en.wikipedia.org/wiki/Opcode) like `rep movsb`, `movzwq` and etc. If sizes of opcodes are equal to expected sizes, the `kmemcheck_selftest` will return `true` and `false` in other way.
+and return with the `EINVAL` if this check is failed. The `kmemcheck_selftest` function checks sizes of different memory access related [opcodes](https://en.wikipedia.org/wiki/Opcode) like `rep movsb`, `movzwq` and etc. If sizes of opcodes are equal to expected sizes, the `kmemcheck_selftest` will return `true` and `false` otherwise.
 
-So when the somebody will call:
+So when somebody calls:
 
 ```C
 struct my_struct *my_struct = kmalloc(sizeof(struct my_struct), GFP_KERNEL);
@@ -236,7 +236,7 @@ if (kmemcheck_enabled && !(cachep->flags & SLAB_NOTRACK)) {
 }
 ```
 
-So, here we check that the if `kmemcheck` is enabled and the `SLAB_NOTRACK` bit is not set in flags we set `non-present` bit for the just allocated page. The `SLAB_NOTRACK` bit tell us to not track uninitialized memory. Additionally we check if a cache object has constructor (details will be considered in next parts) we mark allocated page as uninitialized or unallocated in other way. The `kmemcheck_alloc_shadow` function is defined in the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/kmemcheck.c) source code file and does following things:
+So, here we check that the if `kmemcheck` is enabled and the `SLAB_NOTRACK` bit is not set in flags we set `non-present` bit for the just allocated page. The `SLAB_NOTRACK` bit tell us to not track uninitialized memory. Additionally we check if a cache object has constructor (details will be considered in next parts) we mark allocated page as uninitialized or unallocated otherwise. The `kmemcheck_alloc_shadow` function is defined in the [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/kmemcheck.c) source code file and does following things:
 
 ```C
 void kmemcheck_alloc_shadow(struct page *page, int order, gfp_t flags, int node)
@@ -276,7 +276,7 @@ void kmemcheck_hide_pages(struct page *p, unsigned int n)
 }
 ```
 
-Here we go through all pages and and tries to get `page table entry` for each page. If this operation was successful, we unset present bit and set hidden bit in each page. In the end we flush [translation lookaside buffer](https://en.wikipedia.org/wiki/Translation_lookaside_buffer), because some pages was changed. From this point allocated pages are tracked by the `kmemcheck`. Now, as `present` bit is unset, the [page fault](https://en.wikipedia.org/wiki/Page_fault) execution will be occurred right after the `kmalloc` will return pointer to allocated space and a code will try to access this memory.
+Here we go through all pages and try to get `page table entry` for each page. If this operation was successful, we unset present bit and set hidden bit in each page. In the end we flush [translation lookaside buffer](https://en.wikipedia.org/wiki/Translation_lookaside_buffer), because some pages was changed. From this point allocated pages are tracked by the `kmemcheck`. Now, as `present` bit is unset, the [page fault](https://en.wikipedia.org/wiki/Page_fault) execution will be occurred right after the `kmalloc` will return pointer to allocated space and a code will try to access this memory.
 
 As you may remember from the [second part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-2) of the Linux kernel initialization chapter, the `page fault` handler is located in the [arch/x86/mm/fault.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/fault.c) source code file and represented by the `do_page_fault` function. We can see following check from the beginning of the `do_page_fault` function:
 
@@ -296,7 +296,7 @@ __do_page_fault(struct pt_regs *regs, unsigned long error_code,
 }
 ```
 
-The `kmemcheck_active` gets `kmemcheck_context` [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) structure and return the result of comparison of the `balance` field of this structure with zero:
+The `kmemcheck_active` gets `kmemcheck_context` [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) structure and returns the result of comparison of the `balance` field of this structure with zero:
 
 ```
 bool kmemcheck_active(struct pt_regs *regs)
@@ -314,7 +314,7 @@ if (kmemcheck_fault(regs, address, error_code))
 		return;
 ```
 
-First of all the `kmemcheck_fault` function checks that the fault was occurred by the correct reason. At first we check the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) and check that we are in normal kernel mode:
+First of all the `kmemcheck_fault` function checks that the fault occurred by the correct reason. At first we check the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) and check that we are in normal kernel mode:
 
 ```C
 if (regs->flags & X86_VM_MASK)
@@ -323,7 +323,7 @@ if (regs->cs != __KERNEL_CS)
 		return false;
 ```
 
-If these checks wasn't successful we return from the `kmemcheck_fault` function as it was not `kmemcheck` related page fault. After this we try to lookup a `page table entry` related to the faulted address and if we can't find it we return:
+If these checks weren't successful we return from the `kmemcheck_fault` function as it was not `kmemcheck` related page fault. After this we try to lookup a `page table entry` related to the faulted address and if we can't find it we return:
 
 ```C
 pte = kmemcheck_pte_lookup(address);
@@ -331,7 +331,7 @@ if (!pte)
 	return false;
 ```
 
-Last two steps of the `kmemcheck_fault` function is to call the `kmemcheck_access` function which check access to the given page and show addresses again by setting present bit in the given page. The `kmemcheck_access` function does all main job. It check current instruction which caused a page fault. If it will find an error, the context of this error will be saved by `kmemcheck` to the ring queue:
+Last two steps of the `kmemcheck_fault` function is to call the `kmemcheck_access` function which check access to the given page and show addresses again by setting present bit in the given page. The `kmemcheck_access` function does all main job. It checks current instruction which caused a page fault. If it finds an error, the context of this error will be saved by `kmemcheck` to the ring queue:
 
 ```C
 static struct kmemcheck_error error_fifo[CONFIG_KMEMCHECK_QUEUE_SIZE];
@@ -343,7 +343,7 @@ The `kmemcheck` mechanism declares special [tasklet](https://0xax.gitbook.io/lin
 static DECLARE_TASKLET(kmemcheck_tasklet, &do_wakeup, 0);
 ```
 
-which runs the `do_wakeup` function from the [arch/x86/mm/kmemcheck/error.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/kmemcheck/error.c) source code file when it will be scheduled to run.
+which runs the `do_wakeup` function from the [arch/x86/mm/kmemcheck/error.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/kmemcheck/error.c) source code file when it is scheduled to run.
 
 The `do_wakeup` function will call the `kmemcheck_error_recall` function which will print errors collected by `kmemcheck`. As we already saw the:
 

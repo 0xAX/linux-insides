@@ -6,7 +6,7 @@ Introduction
 
 This is the first part of the new chapter of the [linux insides](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md) book and as you may guess by part's name - this part will cover [control groups](https://en.wikipedia.org/wiki/Cgroups) or `cgroups` mechanism in the Linux kernel.
 
-`Cgroups` are special mechanism provided by the Linux kernel which allows us to allocate kind of `resources` like processor time, number of processes per group, amount of memory per control group or combination of such resources for a process or set of processes. `Cgroups` are organized hierarchically and here this mechanism is similar to usual processes as they are hierarchical too and child `cgroups` inherit set of certain parameters from their parents. But actually they are not the same. The main differences between `cgroups` and normal processes that many different hierarchies of control groups may exist simultaneously in one time while normal process tree is always single. This was not a casual step because each control group hierarchy is attached to set of control group `subsystems`.
+`Cgroups` are special mechanism provided by the Linux kernel which allows us to allocate kind of `resources` like processor time, number of processes per group, amount of memory per control group or combination of such resources for a process or set of processes. `Cgroups` are organized hierarchically and here this mechanism is similar to usual processes as they are hierarchical too and child `cgroups` inherit set of certain parameters from their parents. But actually they are not the same. The main difference between `cgroups` and normal processes is that many different hierarchies of control groups may exist simultaneously in one time while normal process tree is always single. This was not a casual step because each control group hierarchy is attached to set of control group `subsystems`.
 
 One `control group subsystem` represents one kind of resources like a processor time or number of [pids](https://en.wikipedia.org/wiki/Process_identifier) or in other words number of processes for a `control group`. Linux kernel provides support for following twelve `control group subsystems`:
 
@@ -30,7 +30,7 @@ Each of these control group subsystems depends on related configuration option. 
 You may see enabled control groups on your computer via [proc](https://en.wikipedia.org/wiki/Procfs) filesystem:
 
 ```
-$ cat /proc/cgroups 
+$ cat /proc/cgroups
 #subsys_name	hierarchy	num_cgroups	enabled
 cpuset	8	1	1
 cpu	7	66	1
@@ -74,7 +74,7 @@ The first way is to create subdirectory in any subsystem from `/sys/fs/cgroup` a
 
 The second way is to create/destroy/manage `cgroups` with utils from `libcgroup` library (`libcgroup-tools` in Fedora).
 
-Let's consider simple example. Following [bash](https://www.gnu.org/software/bash/) script will print a line to `/dev/tty` device which represents control terminal for the current process:
+Let's consider a simple example. Following [bash](https://www.gnu.org/software/bash/) script will print a line to `/dev/tty` device which represents control terminal for the current process:
 
 ```shell
 #!/bin/bash
@@ -90,7 +90,7 @@ So, if we will run this script we will see following result:
 
 ```
 $ sudo chmod +x cgroup_test_script.sh
-~$ ./cgroup_test_script.sh 
+~$ ./cgroup_test_script.sh
 print line
 print line
 print line
@@ -147,7 +147,7 @@ crw-rw-rw- 1 root tty 5, 0 Dec  3 22:48 /dev/tty
 see the first `c` letter in a permissions list. The second part is `5:0` is major and minor numbers of the device. You can see these numbers in the output of `ls` too. And the last `w` letter forbids tasks to write to the specified device. So let's start the `cgroup_test_script.sh` script:
 
 ```
-~$ ./cgroup_test_script.sh 
+~$ ./cgroup_test_script.sh
 print line
 print line
 print line
@@ -164,7 +164,7 @@ and add pid of this process to the `devices/tasks` file of our group:
 The result of this action will be as expected:
 
 ```
-~$ ./cgroup_test_script.sh 
+~$ ./cgroup_test_script.sh
 print line
 print line
 print line
@@ -174,7 +174,7 @@ print line
 ./cgroup_test_script.sh: line 5: /dev/tty: Operation not permitted
 ```
 
-Similar situation will be when you will run you [docker](https://en.wikipedia.org/wiki/Docker_\(software\)) containers for example:
+Similar situation will be when you will run you [docker](https://en.wikipedia.org/wiki/Docker_(software)) containers for example:
 
 ```
 ~$ docker ps
@@ -213,12 +213,12 @@ Control group /:
 │   └─6404 /bin/bash
 ```
 
-Now we know a little about `control groups` mechanism, how to use it manually and what's purpose of this mechanism. It's time to look inside of the Linux kernel source code and start to dive into implementation of this mechanism.
+Now we know a little about `control groups` mechanism, how to use it manually and what's the purpose of this mechanism. It's time to look inside of the Linux kernel source code and start to dive into implementation of this mechanism.
 
 Early initialization of control groups
 --------------------------------------------------------------------------------
 
-Now after we just saw little theory about `control groups` Linux kernel mechanism, we may start to dive into the source code of Linux kernel to acquainted with this mechanism closer. As always we will start from the initialization of `control groups`. Initialization of `cgroups` divided into two parts in the Linux kernel: early and late. In this part we will consider only `early` part and `late` part will be considered in next parts.
+Now after we just saw a little theory about `control groups` Linux kernel mechanism, we may start to dive into the source code of Linux kernel to get better acquainted with this mechanism. As always we will start from the initialization of `control groups`. Initialization of `cgroups` is divided into two parts in the Linux kernel: early and late. In this part we will consider only `early` part and `late` part will be considered in next parts.
 
 Early initialization of `cgroups` starts from the call of the:
 
@@ -294,7 +294,7 @@ Here we may see call of the `init_cgroup_root` function which will execute initi
 struct cgroup_root cgrp_dfl_root;
 ```
 
-Its `cgrp` field represented by the `cgroup` structure which represents a `cgroup` as you already may guess and defined in the [include/linux/cgroup-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/cgroup-defs.h) header file. We already know that a process which is represented by the `task_struct` in the Linux kernel. The `task_struct` does not contain direct link to a `cgroup` where this task is attached. But it may be reached via `css_set` field of the `task_struct`. This `css_set` structure holds pointer to the array of subsystem states:
+Its `cgrp` field represented by the `cgroup` structure which represents a `cgroup` as you already may guess and defined in the [include/linux/cgroup-defs.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/cgroup-defs.h) header file. We already know that a process is represented by the `task_struct` in the Linux kernel. The `task_struct` does not contain direct link to a `cgroup` where this task is attached. But it may be reached via `css_set` field of the `task_struct`. This `css_set` structure holds pointer to the array of subsystem states:
 
 ```C
 struct css_set {
@@ -324,14 +324,14 @@ struct cgroup_subsys_state {
 
 So, the overall picture of `cgroups` related data structure is following:
 
-```                                                 
+```
 +-------------+         +---------------------+    +------------->+---------------------+          +----------------+
 | task_struct |         |       css_set       |    |              | cgroup_subsys_state |          |     cgroup     |
 +-------------+         |                     |    |              +---------------------+          +----------------+
 |             |         |                     |    |              |                     |          |     flags      |
 |             |         |                     |    |              +---------------------+          |  cgroup.procs  |
 |             |         |                     |    |              |        cgroup       |--------->|       id       |
-|             |         |                     |    |              +---------------------+          |      ....      | 
+|             |         |                     |    |              +---------------------+          |      ....      |
 |-------------+         |---------------------+----+                                               +----------------+
 |   cgroups   | ------> | cgroup_subsys_state | array of cgroup_subsys_state
 |-------------+         +---------------------+------------------>+---------------------+          +----------------+
