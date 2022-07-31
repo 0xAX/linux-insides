@@ -281,8 +281,7 @@ The `PAGE_SIZE` is `4096`-bytes and the `THREAD_SIZE_ORDER` depends on the `KASA
 #define IRQ_STACK_SIZE (PAGE_SIZE << IRQ_STACK_ORDER)
 ```
 
-Or `16384` bytes. The per-cpu interrupt stack is represented by the `irq_stack` struct and the `fixed_percpu_data` struct  
-in the Linux kernel for `x86_64`:
+Or `16384` bytes. The per-cpu interrupt stack is represented by the `irq_stack` struct and the `fixed_percpu_data` struct in the Linux kernel for `x86_64`:
 
 ```C
 /* Per CPU interrupt stacks */
@@ -306,7 +305,7 @@ struct fixed_percpu_data {
 #endif
 ```
 
-The `irq_stack` struct contains a 16 kilobytes array.  
+The `irq_stack` struct contains a 16 kilobytes array.
 Also, you can see that the fixed\_percpu\_data contains two fields:
 
 * `gs_base` - The `gs` register always points to the bottom of the `fixed_percpu_data`. On the `x86_64`, the `gs` register is shared by per-cpu area and stack canary (more about `per-cpu` variables you can read in the special [part](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)).  All per-cpu symbols are zero-based and the `gs` points to the base of the per-cpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) is abolished in the long mode, but we can set the base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still be used as address registers. If you remember the first [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1) of the Linux kernel initialization process, you can remember that we have set the `gs` register:
@@ -373,11 +372,11 @@ int irq_init_percpu_irqstack(unsigned int cpu)
 
 Here we go over all the CPUs one-by-one and setup the `hardirq_stack_ptr`.  
 Where `map_irq_stack` is called to initialize the `hardirq_stack_ptr`,  
-to point onto the `irq_backing_store` of the current CPU with an offset of IRQ\_STACK\_SIZE,   
+to point onto the `irq_stack_backing_store` of the current CPU with an offset of IRQ\_STACK\_SIZE,   
 either with guard pages or without when KASan is enabled.  
 
 
-After the initialization of the interrupt stack, we need to initialize the gs register within [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c):  
+After the initialization of the interrupt stack, we need to initialize the gs register within [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c):
 
 ```C
 void load_percpu_segment(int cpu)
@@ -406,7 +405,7 @@ and as we already know the `gs` register points to the bottom of the interrupt s
 
 Here we can see the `wrmsr` instruction, which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case the model specific register is `MSR_GS_BASE`, which contains the base address of the memory segment pointed to by the `gs` register. `edx:eax` points to the address of the `initial_gs,` which is the base address of our `fixed_percpu_data`.
 
-We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides the ability to switch to a new stack for events like a non-maskable interrupt, double fault etc. There can be up to seven `IST` entries per-cpu. Some of them are:
+We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides the ability to switch to a new stack for events like a non-maskable interrupt, double fault, etc. There can be up to seven `IST` entries per-cpu. Some of them are:
 
 * `DOUBLEFAULT_STACK`
 * `NMI_STACK`
@@ -433,7 +432,7 @@ static const __initconst struct idt_data def_idts[] = {
 	INTG(X86_TRAP_DF,		double_fault),
 ```
 
-where `nmi` and `double_fault` are entry points created at [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S): 
+where `nmi` and `double_fault` are entry points created at [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S):
 
 ```assembly
 idtentry double_fault			do_double_fault			has_error_code=1 paranoid=2 read_cr2=1

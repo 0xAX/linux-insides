@@ -224,7 +224,7 @@ $ make -j4
 
 `busybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities). In the `busybox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
 
-![busybox menu](http://i68.tinypic.com/11933bp.png)
+![busysbox menu](https://i.imgur.com/TxPRCzQ.png)
 
 We can find this menu in the:
 

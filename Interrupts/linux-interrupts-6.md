@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 6.
 Non-maskable interrupt handler
 --------------------------------------------------------------------------------
 
-It is sixth part of the [Interrupts and Interrupt Handling in the Linux kernel](https://0xax.gitbook.io/linux-insides/summary/interrupts) chapter and in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-5) we saw implementation of some exception handlers for the [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault) exception, divide exception, invalid [opcode](https://en.wikipedia.org/wiki/Opcode) exceptions and etc. As I wrote in the previous part we will see implementations of the rest exceptions in this part. We will see implementation of the following handlers:
+It is sixth part of the [Interrupts and Interrupt Handling in the Linux kernel](https://0xax.gitbook.io/linux-insides/summary/interrupts) chapter and in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-5) we saw implementation of some exception handlers for the [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault) exception, divide exception, invalid [opcode](https://en.wikipedia.org/wiki/Opcode) exceptions, etc. As I wrote in the previous part we will see implementations of the rest exceptions in this part. We will see implementation of the following handlers:
 
 * [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) interrupt;
 * [BOUND](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm) Range Exceeded Exception;
@@ -169,7 +169,7 @@ pushq	$-1
 ALLOC_PT_GPREGS_ON_STACK
 ```
 
-We already saw implementation of the `ALLOC_PT_GREGS_ON_STACK` macro in the third part of the interrupts [chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3). This macro defined in the [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) and yet another allocates `120` bytes on stack for the general purpose registers, from the `rdi` to the `r15`:
+We already saw implementation of the `ALLOC_PT_GPREGS_ON_STACK` macro in the third part of the interrupts [chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3). This macro defined in the [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) and yet another allocates `120` bytes on stack for the general purpose registers, from the `rdi` to the `r15`:
 
 ```assembly
 .macro ALLOC_PT_GPREGS_ON_STACK addskip=0
@@ -261,7 +261,7 @@ Now let's look on the `do_nmi` exception handler. This function defined in the [
 * error code.
 
 as all exception handlers. The `do_nmi` starts from the call of the `nmi_nesting_preprocess` function and ends with the call of the `nmi_nesting_postprocess`. The `nmi_nesting_preprocess` function checks that we likely do not work with the debug stack and if we on the debug stack set the `update_debug_stack` [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) variable to `1` and call the `debug_stack_set_zero` function from the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c). This function increases the `debug_stack_use_ctr` per-cpu variable and loads new `Interrupt Descriptor Table`:
- 
+
 ```C
 static inline void nmi_nesting_preprocess(struct pt_regs *regs)
 {
@@ -362,7 +362,7 @@ After all of this, there is still only one way when `MPX` is responsible for thi
 Coprocessor exception and SIMD exception
 --------------------------------------------------------------------------------
 
-The next two exceptions are [x87 FPU](https://en.wikipedia.org/wiki/X87) Floating-Point Error exception or `#MF` and [SIMD](https://en.wikipedia.org/wiki/SIMD) Floating-Point Exception or `#XF`. The first exception occurs when the `x87 FPU` has detected floating point error. For example divide by zero, numeric overflow and etc. The second exception occurs when the processor has detected [SSE/SSE2/SSE3](https://en.wikipedia.org/wiki/SSE3) `SIMD` floating-point exception. It can be the same as for the `x87 FPU`. The handlers for these exceptions are `do_coprocessor_error` and `do_simd_coprocessor_error` are defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) and very similar on each other. They both make a call of the `math_error` function from the same source code file but pass different vector number. The `do_coprocessor_error` passes `X86_TRAP_MF` vector number to the `math_error`:
+The next two exceptions are [x87 FPU](https://en.wikipedia.org/wiki/X87) Floating-Point Error exception or `#MF` and [SIMD](https://en.wikipedia.org/wiki/SIMD) Floating-Point Exception or `#XF`. The first exception occurs when the `x87 FPU` has detected floating point error. For example divide by zero, numeric overflow, etc. The second exception occurs when the processor has detected [SSE/SSE2/SSE3](https://en.wikipedia.org/wiki/SSE3) `SIMD` floating-point exception. It can be the same as for the `x87 FPU`. The handlers for these exceptions are `do_coprocessor_error` and `do_simd_coprocessor_error` are defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) and very similar on each other. They both make a call of the `math_error` function from the same source code file but pass different vector number. The `do_coprocessor_error` passes `X86_TRAP_MF` vector number to the `math_error`:
 
 ```C
 dotraplinkage void do_coprocessor_error(struct pt_regs *regs, long error_code)
@@ -389,7 +389,7 @@ do_simd_coprocessor_error(struct pt_regs *regs, long error_code)
 }
 ```
 
-First of all the `math_error` function defines current interrupted task, address of its fpu, string which describes an exception, add it to the `notify_die` chain and return from the exception handler if it will return `NOTIFY_STOP`:
+First of all the `math_error` function defines current interrupted task, address of its FPU, string which describes an exception, add it to the `notify_die` chain and return from the exception handler if it will return `NOTIFY_STOP`:
 
 ```C
 	struct task_struct *task = current;
@@ -434,7 +434,7 @@ After this we check the signal code and if it is non-zero we return:
 if (!info.si_code)
 	return;
 ```
-		
+
 Or send the `SIGFPE` signal in the end:
 
 ```C
@@ -446,7 +446,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the sixth part of the [Interrupts and Interrupt Handling](https://0xax.gitbook.io/linux-insides/summary/interrupts) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally we have finished with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c).
+It is the end of the sixth part of the [Interrupts and Interrupt Handling](https://0xax.gitbook.io/linux-insides/summary/interrupts) chapter and we saw implementation of some exception handlers in this part, like `non-maskable` interrupt, [SIMD](https://en.wikipedia.org/wiki/SIMD) and [x87 FPU](https://en.wikipedia.org/wiki/X87) floating point exception. Finally, we finished with the `trap_init` function in this part and will go ahead in the next part. The next our point is the external interrupts and the `early_irq_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c).
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
@@ -457,7 +457,7 @@ Links
 
 * [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault)
 * [opcode](https://en.wikipedia.org/wiki/Opcode)
-* [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt) 
+* [Non-Maskable](https://en.wikipedia.org/wiki/Non-maskable_interrupt)
 * [BOUND instruction](http://pdos.csail.mit.edu/6.828/2005/readings/i386/BOUND.htm)
 * [CPU socket](https://en.wikipedia.org/wiki/CPU_socket)
 * [Interrupt Descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table)
@@ -474,7 +474,7 @@ Links
 * [stack frame](https://en.wikipedia.org/wiki/Call_stack)
 * [Model Specific register](https://en.wikipedia.org/wiki/Model-specific_register)
 * [percpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
-* [RCU](https://en.wikipedia.org/wiki/Read-copy-update) 
+* [RCU](https://en.wikipedia.org/wiki/Read-copy-update)
 * [MPX](https://en.wikipedia.org/wiki/Intel_MPX)
 * [x87 FPU](https://en.wikipedia.org/wiki/X87)
 * [Previous part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-5)

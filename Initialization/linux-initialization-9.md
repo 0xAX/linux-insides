@@ -120,7 +120,7 @@ More about integer ID management you can read [here](https://lwn.net/Articles/10
 RCU initialization
 --------------------------------------------------------------------------------
 
-The next step is [RCU](http://en.wikipedia.org/wiki/Read-copy-update) initialization with the `rcu_init` function and it's implementation depends on two kernel configuration options:
+The next step is [RCU](http://en.wikipedia.org/wiki/Read-copy-update) initialization with the `rcu_init` function and its implementation depends on two kernel configuration options:
 
 * `CONFIG_TINY_RCU`
 * `CONFIG_TREE_RCU`
@@ -292,7 +292,7 @@ extern struct rcu_state rcu_bh_state;
 DECLARE_PER_CPU(struct rcu_data, rcu_bh_data);
 ```
 
-About this states you can read [here](http://lwn.net/Articles/264090/). As I wrote above we need to initialize `rcu_state` structures and `rcu_init_one` function will help us with it. After the `rcu_state` initialization, we can see the call of the ` __rcu_init_preempt` which depends on the `CONFIG_PREEMPT_RCU` kernel configuration option. It does the same as previous functions - initialization of the `rcu_preempt_state` structure with the `rcu_init_one` function which has `rcu_state` type. After this, in the `rcu_init`, we can see the call of the:
+About these states you can read [here](http://lwn.net/Articles/264090/). As I wrote above we need to initialize `rcu_state` structures and `rcu_init_one` function will help us with it. After the `rcu_state` initialization, we can see the call of the ` __rcu_init_preempt` which depends on the `CONFIG_PREEMPT_RCU` kernel configuration option. It does the same as previous functions - initialization of the `rcu_preempt_state` structure with the `rcu_init_one` function which has `rcu_state` type. After this, in the `rcu_init`, we can see the call of the:
 
 ```C
 open_softirq(RCU_SOFTIRQ, rcu_process_callbacks);

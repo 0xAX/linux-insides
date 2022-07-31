@@ -7,21 +7,21 @@ Implementation of exception handlers
 This is the fifth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-4) we stopped on the setting of interrupt gates to the [Interrupt descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table). We did it in the `trap_init` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c) source code file. We saw only setting of these interrupt gates in the previous part and in the current part we will see implementation of the exception handlers for these gates. The preparation before an exception handler will be executed is in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly file and occurs in the [idtentry](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S#L820) macro that defines exceptions entry points:
 
 ```assembly
-idtentry divide_error			        do_divide_error			       has_error_code=0
-idtentry overflow			            do_overflow			           has_error_code=0
-idtentry invalid_op			            do_invalid_op			       has_error_code=0
-idtentry bounds				            do_bounds			           has_error_code=0
-idtentry device_not_available		    do_device_not_available		   has_error_code=0
-idtentry coprocessor_segment_overrun	do_coprocessor_segment_overrun has_error_code=0
-idtentry invalid_TSS			        do_invalid_TSS			       has_error_code=1
-idtentry segment_not_present		    do_segment_not_present		   has_error_code=1
-idtentry spurious_interrupt_bug		    do_spurious_interrupt_bug	   has_error_code=0
-idtentry coprocessor_error		        do_coprocessor_error		   has_error_code=0
-idtentry alignment_check		        do_alignment_check		       has_error_code=1
-idtentry simd_coprocessor_error		    do_simd_coprocessor_error	   has_error_code=0
+idtentry divide_error		     do_divide_error		    has_error_code=0
+idtentry overflow		     do_overflow		    has_error_code=0
+idtentry invalid_op		     do_invalid_op		    has_error_code=0
+idtentry bounds			     do_bounds			    has_error_code=0
+idtentry device_not_available	     do_device_not_available	    has_error_code=0
+idtentry coprocessor_segment_overrun do_coprocessor_segment_overrun has_error_code=0
+idtentry invalid_TSS		     do_invalid_TSS		    has_error_code=1
+idtentry segment_not_present	     do_segment_not_present	    has_error_code=1
+idtentry spurious_interrupt_bug	     do_spurious_interrupt_bug      has_error_code=0
+idtentry coprocessor_error	     do_coprocessor_error	    has_error_code=0
+idtentry alignment_check	     do_alignment_check		    has_error_code=1
+idtentry simd_coprocessor_error	     do_simd_coprocessor_error      has_error_code=0
 ```
 
-The `idtentry` macro does following preparation before an actual exception handler (`do_divide_error` for the `divide_error`, `do_overflow` for the `overflow` and etc.) will get control. In another words the `idtentry` macro allocates place for the registers ([pt_regs](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/ptrace.h#L43) structure) on the stack, pushes dummy error code for the stack consistency if an interrupt/exception has no error code, checks the segment selector in the `cs` segment register and switches depends on the previous state(userspace or kernelspace). After all of these preparations it makes a call of an actual interrupt/exception handler:
+The `idtentry` macro does following preparation before an actual exception handler (`do_divide_error` for the `divide_error`, `do_overflow` for the `overflow`, etc.) will get control. In another words the `idtentry` macro allocates place for the registers ([pt_regs](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/ptrace.h#L43) structure) on the stack, pushes dummy error code for the stack consistency if an interrupt/exception has no error code, checks the segment selector in the `cs` segment register and switches depends on the previous state (userspace or kernelspace). After all of these preparations it makes a call to an actual interrupt/exception handler:
 
 ```assembly
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
@@ -84,7 +84,7 @@ DO_ERROR(X86_TRAP_TS,     SIGSEGV, "invalid TSS",                 invalid_TSS)
 DO_ERROR(X86_TRAP_NP,     SIGBUS,  "segment not present",         segment_not_present)
 DO_ERROR(X86_TRAP_SS,     SIGBUS,  "stack segment",               stack_segment)
 DO_ERROR(X86_TRAP_AC,     SIGBUS,  "alignment check",             alignment_check)
-``` 
+```
 
 As we can see the `DO_ERROR` macro takes 4 parameters:
 
@@ -112,7 +112,7 @@ dotraplinkage void do_divide_error(struct pt_regs *regs, long error_code)     \
 }
 ```
 
-We can see that all functions which are generated by the `DO_ERROR` macro just make a call of the `do_error_trap` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). Let's look on implementation of the `do_error_trap` function.
+We can see that all functions which are generated by the `DO_ERROR` macro just make a call to the `do_error_trap` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). Let's look on implementation of the `do_error_trap` function.
 
 Trap handlers
 --------------------------------------------------------------------------------
@@ -150,7 +150,7 @@ enum ctx_state {
 } state;
 ```
 
-The second function is `exception_exit` defined in the same [include/linux/context_tracking.h](https://github.com/torvalds/linux/tree/master/include/linux/context_tracking.h) file and checks that context tracking is enabled and call the `contert_tracking_enter` function if the previous context was `user`:
+The second function is `exception_exit` defined in the same [include/linux/context_tracking.h](https://github.com/torvalds/linux/tree/master/include/linux/context_tracking.h) file and checks that context tracking is enabled and call the `context_tracking_enter` function if the previous context was `user`:
 
 ```C
 static inline void exception_exit(enum ctx_state prev_ctx)
@@ -173,7 +173,7 @@ if (notify_die(DIE_TRAP, str, regs, error_code, trapnr, signr) !=
 }
 ```
 
-First of all it calls the `notify_die` function which defined in the [kernel/notifier.c](https://github.com/torvalds/linux/tree/master/kernel/notifier.c). To get notified for [kernel panic](https://en.wikipedia.org/wiki/Kernel_panic), [kernel oops](https://en.wikipedia.org/wiki/Linux_kernel_oops), [Non-Maskable Interrupt](https://en.wikipedia.org/wiki/Non-maskable_interrupt) or other events the caller needs to insert itself in the `notify_die` chain and the `notify_die` function does it. The Linux kernel has special mechanism that allows kernel to ask when something happens and this mechanism called `notifiers` or `notifier chains`. This mechanism used for example for the `USB` hotplug events (look on the [drivers/usb/core/notify.c](https://github.com/torvalds/linux/tree/master/drivers/usb/core/notify.c)), for the memory [hotplug](https://en.wikipedia.org/wiki/Hot_swapping) (look on the [include/linux/memory.h](https://github.com/torvalds/linux/tree/master/include/linux/memory.h), the `hotplug_memory_notifier` macro and etc...), system reboots and etc. A notifier chain is thus a simple, singly-linked list. When a Linux kernel subsystem wants to be notified of specific events, it fills out a special `notifier_block` structure and passes it to the `notifier_chain_register` function. An event can be sent with the call of the `notifier_call_chain` function. First of all the `notify_die` function fills `die_args` structure with the trap number, trap string, registers and other values:
+First of all it calls the `notify_die` function which defined in the [kernel/notifier.c](https://github.com/torvalds/linux/tree/master/kernel/notifier.c). To get notified for [kernel panic](https://en.wikipedia.org/wiki/Kernel_panic), [kernel oops](https://en.wikipedia.org/wiki/Linux_kernel_oops), [Non-Maskable Interrupt](https://en.wikipedia.org/wiki/Non-maskable_interrupt) or other events the caller needs to insert itself in the `notify_die` chain and the `notify_die` function does it. The Linux kernel has special mechanism that allows kernel to ask when something happens and this mechanism called `notifiers` or `notifier chains`. This mechanism used for example for the `USB` hotplug events (look on the [drivers/usb/core/notify.c](https://github.com/torvalds/linux/tree/master/drivers/usb/core/notify.c)), for the memory [hotplug](https://en.wikipedia.org/wiki/Hot_swapping) (look on the [include/linux/memory.h](https://github.com/torvalds/linux/tree/master/include/linux/memory.h), the `hotplug_memory_notifier` macro, etc...), system reboots, etc. A notifier chain is thus a simple, singly-linked list. When a Linux kernel subsystem wants to be notified of specific events, it fills out a special `notifier_block` structure and passes it to the `notifier_chain_register` function. An event can be sent with the call of the `notifier_call_chain` function. First of all the `notify_die` function fills `die_args` structure with the trap number, trap string, registers and other values:
 
 ```C
 struct die_args args = {
@@ -247,7 +247,7 @@ if (!fixup_exception(regs)) {
 }
 ```
 
-The `die` function defined in the [arch/x86/kernel/dumpstack.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/dumpstack.c) source code file, prints useful information about stack, registers, kernel modules and caused kernel [oops](https://en.wikipedia.org/wiki/Linux_kernel_oops). If we came from the userspace the `do_trap_no_signal` function will return `-1` and the execution of the `do_trap` function will continue. If we passed through the `do_trap_no_signal` function and did not exit from the `do_trap` after this, it means that previous context was - `user`.  Most exceptions caused by the processor are interpreted by Linux as error conditions, for example division by zero, invalid opcode and etc. When an exception occurs the Linux kernel sends a [signal](https://en.wikipedia.org/wiki/Unix_signal) to the interrupted process that caused the exception to notify it of an incorrect condition. So, in the `do_trap` function we need to send a signal with the given number (`SIGFPE` for the divide error, `SIGILL` for a illegal instruction and etc...). First of all we save error code and vector number in the current interrupts process with the filling `thread.error_code` and `thread_trap_nr`:
+The `die` function defined in the [arch/x86/kernel/dumpstack.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/dumpstack.c) source code file, prints useful information about stack, registers, kernel modules and caused kernel [oops](https://en.wikipedia.org/wiki/Linux_kernel_oops). If we came from the userspace the `do_trap_no_signal` function will return `-1` and the execution of the `do_trap` function will continue. If we passed through the `do_trap_no_signal` function and did not exit from the `do_trap` after this, it means that previous context was - `user`.  Most exceptions caused by the processor are interpreted by Linux as error conditions, for example division by zero, invalid opcode, etc. When an exception occurs the Linux kernel sends a [signal](https://en.wikipedia.org/wiki/Unix_signal) to the interrupted process that caused the exception to notify it of an incorrect condition. So, in the `do_trap` function we need to send a signal with the given number (`SIGFPE` for the divide error, `SIGILL` for a illegal instruction, etc.). First of all we save error code and vector number in the current interrupts process with the filling `thread.error_code` and `thread_trap_nr`:
 
 ```C
 tsk->thread.error_code = error_code;
@@ -275,7 +275,7 @@ And send a given signal to interrupted process:
 force_sig_info(signr, info ?: SEND_SIG_PRIV, tsk);
 ```
 
-This is the end of the `do_trap`. We just saw generic implementation for eight different exceptions which are defined with the `DO_ERROR` macro. Now let's look on another exception handlers.
+This is the end of the `do_trap`. We just saw generic implementation for eight different exceptions which are defined with the `DO_ERROR` macro. Now let's look at other exception handlers.
 
 Double fault
 --------------------------------------------------------------------------------

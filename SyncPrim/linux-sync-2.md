@@ -81,7 +81,7 @@ The topic of this part is `queued spinlocks`. This approach may help to solve bo
 
 The basic idea of the `MCS` lock is that a thread spins on a local variable and each processor in the system has its own copy of this variable (see the previous paragraph). In other words this concept is built on top of the [per-cpu](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) variables concept in the Linux kernel.
 
-When the first thread wants to acquire a lock, it registers itself in the `queue`. In other words it will be added to the special `queue` and will acquire lock, because it is free for now. When the second thread wants to acquire the same lock before the first thread release it, this thread adds its own copy of the lock variable into this `queue`. In this case the first thread will contain a `next` field which will point to the second thread. From this moment, the second thread will wait until the first thread release its lock and notify `next` thread about this event. The first thread will be deleted from the `queue` and the second thread will be owner of a lock.
+When the first thread wants to acquire a lock, it registers itself in the `queue`. In other words it will be added to the special `queue` and will acquire lock, because it is free for now. When the second thread wants to acquire the same lock before the first thread releases it, this thread adds its own copy of the lock variable into this `queue`. In this case the first thread will contain a `next` field which will point to the second thread. From this moment, the second thread will wait until the first thread releases its lock and notifies `next` thread about this event. The first thread will be deleted from the `queue` and the second thread will be owner of a lock.
 
 Schematically we can represent it like:
 
@@ -175,7 +175,7 @@ All of these macros expand to the call of functions from the same header file. A
 typedef struct qspinlock {
 	union {
 		atomic_t val;
-		
+
 		struct {
 			u8	locked;
 			u8	pending;
@@ -335,7 +335,7 @@ This array allows to make four attempts of a lock acquisition for the four event
 * software interrupt context;
 * non-maskable interrupt context.
 
-Notice that we did not touch `queue` yet. We no need in it, because for two threads it just leads to unnecessary latency for memory access. In other case, the first thread may release it lock before this moment. In this case the `lock->val` will contain `_Q_LOCKED_VAL | _Q_PENDING_VAL` and we will start to build `queue`. We start to build `queue` by the getting the local copy of the `qnodes` array of the processor which executes thread and calculate `tail` which will indicate the tail of the `queue` and `idx` which represents an index of the `qnodes` array:
+Notice that we did not touch `queue` yet. We do not need it, because for two threads it just leads to unnecessary latency for memory access. In other case, the first thread may release it lock before this moment. In this case the `lock->val` will contain `_Q_LOCKED_VAL | _Q_PENDING_VAL` and we will start to build `queue`. We start to build `queue` by the getting the local copy of the `qnodes` array of the processor which executes thread and calculate `tail` which will indicate the tail of the `queue` and `idx` which represents an index of the `qnodes` array:
 
 ```C
 queue:
@@ -376,7 +376,7 @@ because we no need in it anymore as lock is acquired. If the `queued_spin_tryloc
 	next = NULL;
 ```
 
-and retrieve previous tail. The next step is to check that `queue` is not empty. In this case we need to link previous entry with the new. While waitaing for the MCS lock, the next pointer may have been set by another lock waiter. We optimistically load the next pointer & prefetch the cacheline for writing to reduce latency in the upcoming MCS unlock operation:
+and retrieve previous tail. The next step is to check that `queue` is not empty. In this case we need to link previous entry with the new. While waiting for the MCS lock, the next pointer may have been set by another lock waiter. We optimistically load the next pointer & prefetch the cacheline for writing to reduce latency in the upcoming MCS unlock operation:
 
 ```C
 	if (old & _Q_TAIL_MASK) {
@@ -384,7 +384,7 @@ and retrieve previous tail. The next step is to check that `queue` is not empty.
 		WRITE_ONCE(prev->next, node);
 
 		arch_mcs_spin_lock_contended(&node->locked);
-		
+
 		next = READ_ONCE(node->next);
 		if (next)
 			prefetchw(next);
@@ -399,14 +399,14 @@ Yes, from this moment we are in the head of the `queue`. But before we are able 
 	val = atomic_cond_read_acquire(&lock->val, !(VAL & _Q_LOCKED_PENDING_MASK));
 ```
 
-After both threads will release a lock, the head of the `queue` will hold a lock. In the end we just need to update the tail of the `queue` and remove current head from it. 
+After both threads will release a lock, the head of the `queue` will hold a lock. In the end we just need to update the tail of the `queue` and remove current head from it.
 
 That's all.
 
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the previous [part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock`. In this part we saw another implementation of the `spinlock` mechanism - `queued spinlock`. In the next part we will continue to dive into synchronization primitives in the Linux kernel. 
+This is the end of the second part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the previous [part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-1) we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock`. In this part we saw another implementation of the `spinlock` mechanism - `queued spinlock`. In the next part we will continue to dive into synchronization primitives in the Linux kernel.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
@@ -417,13 +417,13 @@ Links
 
 * [spinlock](https://en.wikipedia.org/wiki/Spinlock)
 * [interrupt](https://en.wikipedia.org/wiki/Interrupt)
-* [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler) 
+* [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Test and Set](https://en.wikipedia.org/wiki/Test-and-set)
 * [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
 * [per-cpu variables](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [atomic instruction](https://en.wikipedia.org/wiki/Linearizability)
-* [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html) 
+* [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [NOP instruction](https://en.wikipedia.org/wiki/NOP)
 * [PREFETCHW instruction](http://www.felixcloutier.com/x86/PREFETCHW.html)
