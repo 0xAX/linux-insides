@@ -7,6 +7,8 @@ A book-in-progress about the linux kernel and its insides.
 
 **Questions/Suggestions**: Feel free about any questions or suggestions by pinging me at twitter [@0xAX](https://twitter.com/0xAX), adding an [issue](https://github.com/0xAX/linux-insides/issues/new) or just drop me an [email](mailto:anotherworldofworld@gmail.com).
 
+Generating eBooks and PDFs - [documentation](https://github.com/GitbookIO/gitbook/blob/master/docs/ebook.md)
+
 # Mailing List
 
 We have a Google Group mailing list for learning the kernel source code. Here are some instructions about how to use it.
