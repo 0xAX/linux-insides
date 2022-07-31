@@ -75,7 +75,7 @@ Whenever the idle task is selected to run, the periodic tick is disabled with th
 
 The second way is to omit scheduling-clock ticks on processors that are either in `idle` state or that have only one runnable task or in other words busy processor. We can enable this feature with the `CONFIG_NO_HZ_FULL` kernel configuration option and it allows to reduce the number of timer interrupts significantly.
 
-Besides the `cpu_idle_loop`, idle processor can be in a sleeping state. The Linux kernel provides special `cpuidle` framework. Main point of this framework is to put an idle processor to sleeping states. The name of the set of these states is - `C-states`. But how will a processor will be woken if local timer is disabled? The linux kernel provides `tick broadcast` framework for this. The main point of this framework is assign a timer which is not affected by the `C-states`. This timer will wake a sleeping processor.
+Besides the `cpu_idle_loop`, idle processor can be in a sleeping state. The Linux kernel provides special `cpuidle` framework. Main point of this framework is to put an idle processor to sleeping states. The name of the set of these states is - `C-states`. But how will a processor will be woken if local timer is disabled? The Linux kernel provides `tick broadcast` framework for this. The main point of this framework is assign a timer which is not affected by the `C-states`. This timer will wake a sleeping processor.
 
 Now, after some theory we can return to the implementation of our function. Let's recall that the `tick_init` function just calls two following functions:
 
@@ -131,7 +131,7 @@ As we already know, the next three `cpumasks` depends on the `CONFIG_TICK_ONESHO
 * `periodic` - clock events devices that support periodic events;
 * `oneshot`  - clock events devices that capable of issuing events that happen only once.
 
-The linux kernel defines two mask for such clock events devices in the [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clockchips.h) header file:
+The Linux kernel defines two mask for such clock events devices in the [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clockchips.h) header file:
 
 ```C
 #define CLOCK_EVT_FEAT_PERIODIC        0x000001

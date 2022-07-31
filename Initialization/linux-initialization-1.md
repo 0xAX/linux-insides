@@ -674,7 +674,7 @@ The next step will be setup of the early `IDT` handlers, but it's big concept so
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the first part about linux kernel initialization.
+This is the end of the first part about Linux kernel initialization.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 

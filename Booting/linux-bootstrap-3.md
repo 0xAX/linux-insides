@@ -28,7 +28,7 @@ Offset	Proto	Name		Meaning
 01FA/2	ALL	    vid_mode	Video mode control
 ```
 
-As we can read from the linux kernel boot protocol:
+As we can read from the Linux kernel boot protocol:
 
 ```
 vga=<mode>
@@ -615,7 +615,7 @@ That's all. We're in protected mode and stop at its entry point. We will see wha
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the third part about linux kernel insides. In the next part, we will look at the first steps we take in protected mode and transition into [long mode](http://en.wikipedia.org/wiki/Long_mode).
+This is the end of the third part about Linux kernel insides. In the next part, we will look at the first steps we take in protected mode and transition into [long mode](http://en.wikipedia.org/wiki/Long_mode).
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 

@@ -1,6 +1,6 @@
 # Interrupts and Interrupt Handling
 
-In the following posts, we will cover interrupts and exceptions handling in the linux kernel.
+In the following posts, we will cover interrupts and exceptions handling in the Linux kernel.
 
 * [Interrupts and Interrupt Handling. Part 1.](linux-interrupts-1.md) - describes interrupts and interrupt handling theory.
 * [Interrupts in the Linux Kernel](linux-interrupts-2.md) - describes stuffs related to interrupts and exceptions handling from the early stage.

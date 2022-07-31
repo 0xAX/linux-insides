@@ -350,7 +350,7 @@ If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear 
 
 As we activated the bootstrap processor, it's time to go to the next function in the `start_kernel.` Now it is `page_address_init`, but this function does nothing in our case, because it executes only when all `RAM` can't be mapped directly.
 
-Print linux banner
+Print Linux banner
 ---------------------------------------------------------------------------------
 
 The next call is `pr_notice`:

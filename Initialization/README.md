@@ -13,4 +13,4 @@ You will find here a couple of posts which describe the full cycle of kernel ini
 * [The End of the architecture-specific initializations, almost...](linux-initialization-7.md) - describes the end of the `setup_arch` related stuff.
 * [Scheduler initialization](linux-initialization-8.md) - describes preparation before scheduler initialization and initialization of it.
 * [RCU initialization](linux-initialization-9.md) - describes the initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update).
-* [End of the initialization](linux-initialization-10.md) - the last part about linux kernel initialization.
+* [End of the initialization](linux-initialization-10.md) - the last part about Linux kernel initialization.
