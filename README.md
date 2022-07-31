@@ -63,28 +63,14 @@ In order to run your own copy of the book with gitbook within a local container:
     systemctl restart docker.service
    ```
 
-2. Build container image
+2. Run docker image
    ```bash
-   docker image build \
-       --rm --squash \
-       --label linux-insides \
-       --tag linux-insides-book:latest \
-       -f Dockerfile .
+   make run
    ```
 
-3. Create and run book in local container
-   ```bash
-   docker run \
-       --detach \
-       --rm \
-       -p 4000:4000 \
-       --name linux-insides-book \
-       --hostname linux-insides-book \
-       linux-insides-book
-   ```
+3. Open your local copy of linux insides book under this url
+   http://localhost:4000 or run `make browse`
 
-4. Open your local copy of linux insides book under this url
-   http://localhost:4000
 
 Contributions 
 --------------
