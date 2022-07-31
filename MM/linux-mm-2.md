@@ -36,9 +36,9 @@ Base virtual address and size of the `fix-mapped` area are presented by the two 
 #define FIXADDR_START	(FIXADDR_TOP - FIXADDR_SIZE)
 ```
 
-Here `__end_of_permanent_fixed_addresses` is an element of the `fixed_addresses` enum and as I wrote above: Every fix-mapped address is represented by an integer index which is defined in the `fixed_addresses`. `PAGE_SHIFT` determines the size of a page. For example size of the one page we can get with the `1 << PAGE_SHIFT` expression.
+Here `__end_of_permanent_fixed_addresses` is an element of the `fixed_addresses` enum and as I wrote above, every fix-mapped address is represented by an integer index which is defined in the `fixed_addresses`. `PAGE_SHIFT` determines the size of a page. For example size of the one page we can get with the `1 << PAGE_SHIFT` expression.
 
-In our case we need to get the size of the fix-mapped area, but not only of one page, that's why we are using `__end_of_permanent_fixed_addresses` for getting the size of the fix-mapped area. The `__end_of_permanent_fixed_addresses` is the last index of the `fixed_addresses` enum or in other words the `__end_of_permanent_fixed_addresses` contains amount of pages in a fixed-mapped area. So if multiply value of the `__end_of_permanent_fixed_addresses` on a page size value we will get size of fix-mapped area. In my case it's a little more than `536` kilobytes. In your case it might be a different number, because the size depends on amount of the fix-mapped addresses which are depends on your kernel's configuration.
+In our case we need to get the size of the fix-mapped area, but not only of one page, that's why we are using `__end_of_permanent_fixed_addresses` for getting the size of the fix-mapped area. The `__end_of_permanent_fixed_addresses` is the last index of the `fixed_addresses` enum or in other words the `__end_of_permanent_fixed_addresses` contains amount of pages in a fixed-mapped area. So if we multiply the value of the `__end_of_permanent_fixed_addresses` on a page size value we will get size of fix-mapped area. In my case it's a little more than `536` kilobytes. In your case it might be a different number, because the size depends on amount of the fix-mapped addresses which depends on your kernel configuration.
 
 The second `FIXADDR_START` macro just subtracts the fix-mapped area size from the last address of the fix-mapped area to get its base virtual address. `FIXADDR_TOP` is a rounded up address from the base address of the [vsyscall](https://lwn.net/Articles/446528/) space:
 
@@ -46,8 +46,8 @@ The second `FIXADDR_START` macro just subtracts the fix-mapped area size from th
 #define FIXADDR_TOP     (round_up(VSYSCALL_ADDR + PAGE_SIZE, 1<<PMD_SHIFT) - PAGE_SIZE)
 ```
 
-The `fixed_addresses` enums are used as an index to get the virtual address by the `fix_to_virt` function. Implementation of this function is easy:
- 
+The `fixed_addresses` enums are used as indexes to get the virtual addresses by the `fix_to_virt` function. Implementation of this function is easy:
+
 ```C
 static __always_inline unsigned long fix_to_virt(const unsigned int idx)
 {
@@ -65,7 +65,7 @@ first of all it checks that the index given for the `fixed_addresses` enum is no
 Here we shift left the given index of a `fix-mapped` area on the `PAGE_SHIFT` which determines size of a page as I wrote above and subtract it from the `FIXADDR_TOP` which is the highest address of the `fix-mapped` area:
 
 ```
-+-----------------+ 
++-----------------+
 |    PAGE 1       | FIXADDR_TOP (virt address)
 |    PAGE 2       |
 |    PAGE 3       |
@@ -104,7 +104,7 @@ ioremap
 The Linux kernel provides many different primitives to manage memory. For this moment we will touch `I/O memory`. Every device is controlled by reading/writing from/to its registers. For example a driver can turn off/on a device by writing to its registers or get the state of a device by reading from its registers. Besides registers, many devices have buffers where a driver can write something or read from there. As we know for this moment there are two ways to access device's registers and data buffers:
 
 * through the I/O ports;
-* mapping of the all registers to the memory address space;
+* mapping of all the registers to the memory address space;
 
 In the first case every control register of a device has a number of input and output port. A device driver can read from a port and write to it with two `in` and `out` instructions which we already saw. If you want to know about currently registered port regions, you can learn about them by accessing `/proc/ioports`:
 
@@ -208,7 +208,7 @@ Here `RTC_IO_EXTENT` is the size of the memory region and it is `0x8`, `"rtc"` i
 #define RTC_PORT(x)     (0x70 + (x))
 ```
 
-So with the `request_region(RTC_PORT(0), size, "rtc")` we register a memory region that starts at `0x70` and and has a size of `0x8`. Let's look at `/proc/ioports`:
+So with the `request_region(RTC_PORT(0), size, "rtc")` we register a memory region that starts at `0x70` and has a size of `0x8`. Let's look at `/proc/ioports`:
 
 ```
 ~$ sudo cat /proc/ioports | grep rtc
@@ -499,7 +499,7 @@ static inline void __native_flush_tlb_single(unsigned long addr)
 }
 ```
 
-or call `__flush_tlb` which just updates the `cr3` register as we have seen. After this step execution of the `__early_set_fixmap` function is finished and we can go back to the `__early_ioremap` implementation. When we have set up the fixmap area for the given address, we need to save the base virtual address of the I/O Re-mapped area in the `prev_map` using the `slot` index:
+or call `__flush_tlb` which just updates the `cr3` register as we have seen. After this step execution of the `__early_set_fixmap` function is finished and we can go back to the `__early_ioremap` implementation. When we have set up the fixmap area for the given address, we need to save the base virtual address of the I/O remapped area in the `prev_map` using the `slot` index:
 
 ```C
 prev_map[slot] = (void __iomem *)(offset + slot_virt[slot]);

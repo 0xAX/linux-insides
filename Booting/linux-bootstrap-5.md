@@ -204,7 +204,7 @@ Like before, we push `rsi` onto the stack to preserve the pointer to `boot_param
 * `output` - the start address of the decompressed kernel;
 * `output_len` - the size of the decompressed kernel;
 
-All arguments will be passed through registers as per the [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf). We've finished all the preparations and can now decompress the kernel.
+All arguments will be passed through registers as per the [System V Application Binary Interface](https://github.com/hjl-tools/x86-psABI/wiki/x86-64-psABI-1.0.pdf). We've finished all the preparations and can now decompress the kernel.
 
 Kernel decompression
 --------------------------------------------------------------------------------
