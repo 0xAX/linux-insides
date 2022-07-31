@@ -266,13 +266,13 @@ Remember that we have passed `cpu_number` as `pcp` to the `this_cpu_read` from t
 })
 ```
 
-Yes, it looks a little strange but it's easy. First of all we can see the definition of the `pscr_ret__` variable with the `int` type. Why int? Ok, `variable` is `common_cpu` and it was declared as per-cpu int variable:
+Yes, it looks a little strange but it's easy. First of all we can see the definition of the `pscr_ret__` variable with the `int` type. Why int? Ok, `variable` is `cpu_number` and it was declared as per-cpu int variable:
 
 ```C
 DECLARE_PER_CPU_READ_MOSTLY(int, cpu_number);
 ```
 
-In the next step we call `__verify_pcpu_ptr` with the address of `cpu_number`. `__veryf_pcpu_ptr` used to verify that the given parameter is a per-cpu pointer. After that we set `pscr_ret__` value which depends on the size of the variable. Our `common_cpu` variable is `int`, so it's 4 bytes in size. It means that we will get `this_cpu_read_4(common_cpu)` in `pscr_ret__`. In the end of the `__pcpu_size_call_return` we just call it. `this_cpu_read_4` is a macro:
+In the next step we call `__verify_pcpu_ptr` with the address of `cpu_number`. `__veryf_pcpu_ptr` used to verify that the given parameter is a per-cpu pointer. After that we set `pscr_ret__` value which depends on the size of the variable. Our `cpu_number` variable is `int`, so it's 4 bytes in size. It means that we will get `this_cpu_read_4(cpu_number)` in `pscr_ret__`. In the end of the `__pcpu_size_call_return` we just call it. `this_cpu_read_4` is a macro:
 
 ```C
 #define this_cpu_read_4(pcp)       percpu_from_op("mov", pcp)
@@ -281,19 +281,19 @@ In the next step we call `__verify_pcpu_ptr` with the address of `cpu_number`. `
 which calls `percpu_from_op` and pass `mov` instruction and per-cpu variable there. `percpu_from_op` will expand to the inline assembly call:
 
 ```C
-asm("movl %%gs:%1,%0" : "=r" (pfo_ret__) : "m" (common_cpu))
+asm("movl %%gs:%1,%0" : "=r" (pfo_ret__) : "m" (cpu_number))
 ```
 
-Let's try to understand how it works and what it does. The `gs` segment register contains the base of per-cpu area. Here we just copy `common_cpu` which is in memory to the `pfo_ret__` with the `movl` instruction. Or with another words:
+Let's try to understand how it works and what it does. The `gs` segment register contains the base of per-cpu area. Here we just copy `cpu_number` which is in memory to the `pfo_ret__` with the `movl` instruction. Or with another words:
 
 ```C
-this_cpu_read(common_cpu)
+this_cpu_read(cpu_number)
 ```
 
 is the same as:
 
 ```C
-movl %gs:$common_cpu, $pfo_ret__
+movl %gs:$cpu_number, $pfo_ret__
 ```
 
 As we didn't setup per-cpu area, we have only one - for the current running CPU, we will get `zero` as a result of the `smp_processor_id`.
