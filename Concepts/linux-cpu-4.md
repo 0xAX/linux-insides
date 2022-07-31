@@ -6,12 +6,12 @@ Introduction
 
 The Linux kernel is huge piece of [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code which consists from many different subsystems. Each subsystem has its own purpose which is independent of other subsystems. But often one subsystem wants to know something from other subsystem(s). There is special mechanism in the Linux kernel which allows to solve this problem partly. The name of this mechanism is - `notification chains` and its main purpose to provide a way for different subsystems to subscribe on asynchronous events from other subsystems. Note that this mechanism is only for communication inside kernel, but there are other mechanisms for communication between kernel and userspace.
 
-Before we will consider `notification chains` [API](https://en.wikipedia.org/wiki/Application_programming_interface) and implementation of this API, let's look at `Notification chains` mechanism from theoretical side as we did it in other parts of this book. Everything which is related to `notification chains` mechanism is located in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file and [kernel/notifier.c](https://github.com/torvalds/linux/blob/master/kernel/notifier.c) source code file. So let's open them and start to dive.
+Before we consider `notification chains` [API](https://en.wikipedia.org/wiki/Application_programming_interface) and implementation of this API, let's look at `Notification chains` mechanism from theoretical side as we did it in other parts of this book. Everything which is related to `notification chains` mechanism is located in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file and [kernel/notifier.c](https://github.com/torvalds/linux/blob/master/kernel/notifier.c) source code file. So let's open them and start to dive.
 
 Notification Chains related data structures
 --------------------------------------------------------------------------------
 
-Let's start to consider `notification chains` mechanism from related data structures. As I wrote above, main data structures should be located in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file, so the Linux kernel provides generic API which does not depend on certain architecture. In general, the `notification chains` mechanism represents a list (that's why it named `chains`) of [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) functions which are will be executed when an event will be occurred.
+Let's start to consider `notification chains` mechanism from related data structures. As I wrote above, main data structures should be located in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file, so the Linux kernel provides generic API which does not depend on certain architecture. In general, the `notification chains` mechanism represents a list (that's why it's named `chains`) of [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) functions which are will be executed when an event will be occurred.
 
 All of these callback functions are represented as `notifier_fn_t` type in the Linux kernel:
 
@@ -101,7 +101,7 @@ Now as we know a little about `notification chains` mechanism let's consider imp
 Notification Chains
 --------------------------------------------------------------------------------
 
-Usually there are two sides in a publish/subscriber mechanisms. One side who wants to get notifications and other side(s) who generates these notifications. We will consider notification chains mechanism from both sides. We will consider `blocking notification chains` in this part, because of other types of notification chains are similar to it and differs mostly in protection mechanisms.
+Usually there are two sides in a publish/subscriber mechanisms. One side who wants to get notifications and other side(s) who generates these notifications. We will consider notification chains mechanism from both sides. We will consider `blocking notification chains` in this part, because of other types of notification chains are similar to it and differ mostly in protection mechanisms.
 
 Before a notification producer is able to produce notification, first of all it should initialize head of a notification chain. For example let's consider notification chains related to kernel [loadable modules](https://en.wikipedia.org/wiki/Loadable_kernel_module). If we will look in the [kernel/module.c](https://github.com/torvalds/linux/blob/master/kernel/module.c) source code file, we will see following definition:
 
@@ -120,7 +120,7 @@ which defines head for loadable modules blocking notifier chain. The `BLOCKING_N
 
 So we may see that it takes name of a name of a head of a blocking notifier chain and initializes read/write [semaphore](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-3) and set head to `NULL`. Besides the `BLOCKING_INIT_NOTIFIER_HEAD` macro, the Linux kernel additionally provides `ATOMIC_INIT_NOTIFIER_HEAD`, `RAW_INIT_NOTIFIER_HEAD` macros and `srcu_init_notifier` function for initialization atomic and other types of notification chains.
 
-After initialization of a head of a notification chain, a subsystem which wants to receive notification from the given notification chain it should register with certain function which is depends on type of notification. If you will look in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file, you will see following four function for this:
+After initialization of a head of a notification chain, a subsystem which wants to receive notification from the given notification chain should register with certain function which depends on the type of notification. If you will look in the [include/linux/notifier.h](https://github.com/torvalds/linux/blob/master/include/linux/notifier.h) header file, you will see following four function for this:
 
 ```C
 extern int atomic_notifier_chain_register(struct atomic_notifier_head *nh,
@@ -247,7 +247,7 @@ int __blocking_notifier_call_chain(struct blocking_notifier_head *nh,
 }
 ```
 
-Where `nr_to_call` and `nr_calls` are number of notifier functions to be called and number of sent notifications. As you may guess the main goal of the `__blocking_notifer_call_chain` function and other functions for other notification types is to call callback function when an event occurred. Implementation of the `__blocking_notifier_call_chain` is pretty simple, it just calls the `notifier_call_chain` function from the same source code file protected with read/write semaphore:
+Where `nr_to_call` and `nr_calls` are number of notifier functions to be called and number of sent notifications. As you may guess the main goal of the `__blocking_notifer_call_chain` function and other functions for other notification types is to call callback function when an event occurs. Implementation of the `__blocking_notifier_call_chain` is pretty simple, it just calls the `notifier_call_chain` function from the same source code file protected with read/write semaphore:
 
 ```C
 int __blocking_notifier_call_chain(struct blocking_notifier_head *nh,
@@ -266,7 +266,7 @@ int __blocking_notifier_call_chain(struct blocking_notifier_head *nh,
 }
 ```
 
-and returns its result. In this case all job is done by the `notifier_call_chain` function. Main purpose of this function informs registered notifiers about an asynchronous event:
+and returns its result. In this case all job is done by the `notifier_call_chain` function. Main purpose of this function is to inform registered notifiers about an asynchronous event:
 
 ```C
 static int notifier_call_chain(struct notifier_block **nl,
@@ -298,7 +298,7 @@ definition of the `module_notify_list` in the [kernel/module.c](https://github.c
 * MODULE_STATE_COMING
 * MODULE_STATE_GOING
 
-in which maybe interested some subsystems of the Linux kernel. For example tracing of kernel modules states. Instead of direct call of the `atomic_notifier_chain_register`, `blocking_notifier_chain_register` and etc., most notification chains come with a set of wrappers used to register to them. Registatrion on these modules events is going with the help of such wrapper:
+in which maybe interested some subsystems of the Linux kernel. For example tracing of kernel modules states. Instead of direct call of the `atomic_notifier_chain_register`, `blocking_notifier_chain_register` and etc., most notification chains come with a set of wrappers used to register to them. Registration on these modules events is going with the help of such wrapper:
 
 ```C
 int register_module_notifier(struct notifier_block *nb)
@@ -348,7 +348,7 @@ SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
 }
 ```
 
-Thus when one of these system call will be called from userspace, the Linux kernel will send certain notification depends on a system call and the `tracepoint_module_notify` callback function will be called.
+Thus when one of these system call will be called from userspace, the Linux kernel will send certain notification depending on a system call and the `tracepoint_module_notify` callback function will be called.
 
 That's all.
 
