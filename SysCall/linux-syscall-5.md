@@ -4,11 +4,11 @@ How does the `open` system call work
 Introduction
 --------------------------------------------------------------------------------
 
-This is the fifth part of the chapter that describes [system calls](https://en.wikipedia.org/wiki/System_call) mechanism in the Linux kernel. Previous parts of this chapter described this mechanism in general. Now I will try to describe implementation of different system calls in the Linux kernel. Previous parts from this chapter and parts from other chapters of the books describe mostly deep parts of the Linux kernel that are faintly visible or fully invisible from the userspace. But the Linux kernel code is not only about itself. The vast of the Linux kernel code provides ability to our code. Due to the linux kernel our programs can read/write from/to files and don't know anything about sectors, tracks and other parts of a disk structures, we can send data over network and don't build encapsulated network packets by hand and etc.
+This is the fifth part of the chapter that describes [system calls](https://en.wikipedia.org/wiki/System_call) mechanism in the Linux kernel. Previous parts of this chapter described the mechanism of system calls in general. I will now try to describe the implementation of different system calls in the Linux kernel. Previous parts from this chapter and parts of other chapters of the book mostly described deep parts of the Linux kernel that are barely visible or  invisible from userspace. However, the greatness of the Linux kernel is not its singular existence, but its ability to enable our code to perform various useful functions such as reading/writing from/to files without the knowledge of details such as sectors, tracks and other nitty gritties of the disk layout. For eg., the kernel allows programs to send data over networks without our having to encapsulate network packets by hand etc.
 
-I don't know about you, but it is interesting to me not only how an operating system works, but how does my software interact with it. As you may know, our programs interacts with the kernel through the special mechanism which is called [system call](https://en.wikipedia.org/wiki/System_call). So, I've decided to write series of parts which will describe implementation and behavior of system calls which we are using every day like `read`, `write`, `open`, `close`, `dup` and etc.
+I don't know how about you, but the inner workings of the operating system both fascinate and excite my curiosity greatly. As you may know, our programs interact with the kernel through a special mechanism called [system call](https://en.wikipedia.org/wiki/System_call). I will hence attempt to describe the implementation and behavior of system calls such as `read`, `write`, `open`, `close`, `dup` etc. in a series of articles.
 
-I have decided to start from the description of the [open](http://man7.org/linux/man-pages/man2/open.2.html) system call. If you have written at least one `C` program, you should know that before we are able to read/write or execute other manipulations with a file we need to open it with the `open` function:
+Let me start with the description of the simplest (and commonly used) [open](http://man7.org/linux/man-pages/man2/open.2.html) system call. if you have done any `C` programming at all, you should know that a file must be opened using the `open` system call before we are able to read/write to it.
 
 ```C
 #include <fcntl.h>
@@ -33,7 +33,7 @@ int main(int argc, char *argv) {
 }
 ```
 
-In this case, the open is the function from standard library, but not system call. The standard library will call related system call for us. The `open` call will return a [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) which is just a unique number within our process which is associated with the opened file. Now as we opened a file and got file descriptor as result of `open` call, we may start to interact with this file. We can write into, read from it and etc. List of opened file by a process is available via [proc](https://en.wikipedia.org/wiki/Procfs) filesystem:
+In this case, `open` is a function from standard library, but not the system call. The standard library will call the related system call for us. The `open` call will return a [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) which is just a unique number within our process which is associated with the opened file. Now as we opened a file and got file descriptor as result of `open` call, we may start to interact with this file. We can write into, read from it and etc. List of opened file by a process is available via [proc](https://en.wikipedia.org/wiki/Procfs) filesystem: 
 
 ```
 $ sudo ls /proc/1/fd/
