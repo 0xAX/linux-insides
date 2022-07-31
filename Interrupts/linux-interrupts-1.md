@@ -370,10 +370,10 @@ int irq_init_percpu_irqstack(unsigned int cpu)
 }
 ```
 
-Here we go over all the CPUs one-by-one and setup the `hardirq_stack_ptr`.
-Where `map_irq_stack` is called to initialize the `hardirq_stack_ptr`,
-to point onto the `irq_backing_store` of the current CPU with an offset of IRQ\_STACK\_SIZE,
-either with guard pages or without when KASan is enabled.
+Here we go over all the CPUs one-by-one and setup the `hardirq_stack_ptr`.  
+Where `map_irq_stack` is called to initialize the `hardirq_stack_ptr`,  
+to point onto the `irq_stack_backing_store` of the current CPU with an offset of IRQ\_STACK\_SIZE,   
+either with guard pages or without when KASan is enabled.  
 
 
 After the initialization of the interrupt stack, we need to initialize the gs register within [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c):

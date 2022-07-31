@@ -150,7 +150,7 @@ enum ctx_state {
 } state;
 ```
 
-The second function is `exception_exit` defined in the same [include/linux/context_tracking.h](https://github.com/torvalds/linux/tree/master/include/linux/context_tracking.h) file and checks that context tracking is enabled and call the `contert_tracking_enter` function if the previous context was `user`:
+The second function is `exception_exit` defined in the same [include/linux/context_tracking.h](https://github.com/torvalds/linux/tree/master/include/linux/context_tracking.h) file and checks that context tracking is enabled and call the `context_tracking_enter` function if the previous context was `user`:
 
 ```C
 static inline void exception_exit(enum ctx_state prev_ctx)

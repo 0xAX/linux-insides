@@ -169,7 +169,7 @@ pushq	$-1
 ALLOC_PT_GPREGS_ON_STACK
 ```
 
-We already saw implementation of the `ALLOC_PT_GREGS_ON_STACK` macro in the third part of the interrupts [chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3). This macro defined in the [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) and yet another allocates `120` bytes on stack for the general purpose registers, from the `rdi` to the `r15`:
+We already saw implementation of the `ALLOC_PT_GPREGS_ON_STACK` macro in the third part of the interrupts [chapter](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3). This macro defined in the [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) and yet another allocates `120` bytes on stack for the general purpose registers, from the `rdi` to the `r15`:
 
 ```assembly
 .macro ALLOC_PT_GPREGS_ON_STACK addskip=0
