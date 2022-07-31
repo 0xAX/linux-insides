@@ -25,13 +25,6 @@ Just send emails to `kernelhacking@googlegroups.com`. The basic usage is the sam
 
 https://groups.google.com/forum/#!forum/kernelhacking
 
-Support
--------
-
-**Support** If you like `linux-insides` you can support me with: 
-
-[![Support with bitcoin](https://img.shields.io/badge/donate-bitcoin-green.svg)](https://www.coinbase.com/checkouts/0bfa452a41cf52c0b3f99500b4f31685) [![Join the chat at https://gitter.im/0xAX/linux-insides](https://badges.gitter.im/0xAX/linux-insides.svg)](https://gitter.im/0xAX/linux-insides?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 On other languages
 -------------------
 
