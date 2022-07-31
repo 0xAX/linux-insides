@@ -205,7 +205,7 @@ exit:
         return;
 ```
 
-For this moment he implementation of the `__mutex_fastpath_lock` function looks pretty easy. But the value of the `mutex->counter` may be negative after increment. In this case the:
+For this moment the implementation of the `__mutex_fastpath_lock` function looks pretty easy. But the value of the `mutex->counter` may be negative after decrement. In this case the: 
 
 ```C
 fail_fn(v);
