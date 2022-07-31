@@ -181,7 +181,7 @@ if (paravirt_enabled())
 	return;
 ```
 
-we exit from the `reserve_ebda_region` function if paravirtualization is enabled because if it enabled the extended bios data area is absent. In the next step we need to get the end of the low memory:
+we exit from the `reserve_ebda_region` function if paravirtualization is enabled because if it enabled the extended BIOS data area is absent. In the next step we need to get the end of the low memory:
 
 ```C
 lowmem = *(unsigned short *)__va(BIOS_LOWMEM_KILOBYTES);
@@ -205,7 +205,7 @@ static inline unsigned int get_bios_ebda(void)
 }
 ```
 
-Let's try to understand how it works. Here we can see that we converting physical address `0x40E` to the virtual, where `0x0040:0x000e` is the segment which contains base address of the extended BIOS data area. Don't worry that we are using `phys_to_virt` function for converting a physical address to virtual address. You can note that previously we have used `__va` macro for the same point, but `phys_to_virt` is the same:
+Let's try to understand how it works. Here we can see that we are converting physical address `0x40E` to the virtual, where `0x0040:0x000e` is the segment which contains base address of the extended BIOS data area. Don't worry that we are using `phys_to_virt` function for converting a physical address to virtual address. You can note that previously we have used `__va` macro for the same point, but `phys_to_virt` is the same:
 
 ```C
 static inline void *phys_to_virt(phys_addr_t address)
@@ -242,7 +242,7 @@ which is:
 #define INSANE_CUTOFF		0x20000U
 ```
 
-or 128 kilobytes. In the last step we get lower part in the low memory and extended bios data area and call `memblock_reserve` function which will reserve memory region for extended bios data between low memory and one megabyte mark:
+or 128 kilobytes. In the last step we get lower part in the low memory and extended BIOS data area and call `memblock_reserve` function which will reserve memory region for extended BIOS data between low memory and one megabyte mark:
 
 ```C
 lowmem = min(lowmem, ebda_addr);
@@ -260,7 +260,7 @@ and reserves memory region for the given base address and size. `memblock_reserv
 First touch of the linux kernel memory manager framework
 --------------------------------------------------------------------------------
 
-In the previous paragraph we stopped at the call of the `memblock_reserve` function and as i said before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function just calls:
+In the previous paragraph we stopped at the call of the `memblock_reserve` function and as I said before it is the first function from the memory manager framework. Let's try to understand how it works. `memblock_reserve` function just calls:
 
 ```C
 memblock_reserve_region(base, size, MAX_NUMNODES, 0);
@@ -290,7 +290,7 @@ struct memblock_type {
 };
 ```
 
-As we need to reserve memory block for extended bios data area, the type of the current memory region is reserved where `memblock` structure is:
+As we need to reserve memory block for extended BIOS data area, the type of the current memory region is reserved where `memblock` structure is:
 
 ```C
 struct memblock {
@@ -401,7 +401,7 @@ static inline void memblock_set_region_node(struct memblock_region *r, int nid)
 }
 ```
 
-After this we will have first reserved `memblock` for the extended bios data area in the `.meminit.data` section. `reserve_ebda_region` function finished its work on this step and we can go back to the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c).
+After this we will have first reserved `memblock` for the extended BIOS data area in the `.meminit.data` section. `reserve_ebda_region` function finished its work on this step and we can go back to the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c).
 
 We finished all preparations before the kernel entry point! The last step in the `x86_64_start_reservations` function is the call of the:
 

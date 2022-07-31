@@ -4,17 +4,17 @@ Timers and time management in the Linux kernel. Part 3.
 The tick broadcast framework and dyntick
 --------------------------------------------------------------------------------
 
-This is third part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) which describes timers and time management related stuff in the Linux kernel and we stopped on the `clocksource` framework in the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-2). We have started to consider this framework because it is closely related to the special counters which are provided by the Linux kernel. One of these counters which we already saw in the first [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1) of this chapter is - `jiffies`. As I already wrote in the first part of this chapter, we will consider time management related stuff step by step during the Linux kernel initialization. Previous step was call of the:
+This is third part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) which describes timers and time management related stuff in the Linux kernel and we stopped on the `clocksource` framework in the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-2). We have started to consider this framework because it is closely related to the special counters which are provided by the Linux kernel. One of these counters which we already saw in the first [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-1.md) of this chapter is - `jiffies`. As I already wrote in the first part of this chapter, we will consider time management related stuff step by step during the Linux kernel initialization. Previous step was call of the:
 
 ```C
 register_refined_jiffies(CLOCK_TICK_RATE);
 ```
 
-function which defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file and executes initialization of the `refined_jiffies` clock source for us. Recall that this function is called from the `setup_arch` function that defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code and executes architecture-specific ([x86_64](https://en.wikipedia.org/wiki/X86-64) in our case) initialization. Look on the implementation of the `setup_arch` and you will note that the call of the `register_refined_jiffies` is the last step before the `setup_arch` function will finish its work.
+function which is defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file and executes initialization of the `refined_jiffies` clock source for us. Recall that this function is called from the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c) source code and executes architecture-specific ([x86_64](https://en.wikipedia.org/wiki/X86-64) in our case) initialization. Look on the implementation of the `setup_arch` and you will note that the call of the `register_refined_jiffies` is the last step before the `setup_arch` function finishes its work.
 
-There are many different `x86_64` specific things already configured after the end of the `setup_arch` execution. For example some early [interrupt](https://en.wikipedia.org/wiki/Interrupt) handlers already able to handle interrupts, memory space reserved for the [initrd](https://en.wikipedia.org/wiki/Initrd), [DMI](https://en.wikipedia.org/wiki/Desktop_Management_Interface) scanned, the Linux kernel log buffer is already set and this means that the [printk](https://en.wikipedia.org/wiki/Printk) function is able to work, [e820](https://en.wikipedia.org/wiki/E820) parsed and the Linux kernel already knows about available memory and and many many other architecture specific things (if you are interesting, you can read more about the `setup_arch` function and Linux kernel initialization process in the second [chapter](https://0xax.gitbook.io/linux-insides/summary/initialization) of this book).
+There are many different `x86_64` specific things already configured after the end of the `setup_arch` execution. For example some early [interrupt](https://en.wikipedia.org/wiki/Interrupt) handlers already able to handle interrupts, memory space reserved for the [initrd](https://en.wikipedia.org/wiki/Initrd), [DMI](https://en.wikipedia.org/wiki/Desktop_Management_Interface) scanned, the Linux kernel log buffer is already set and this means that the [printk](https://en.wikipedia.org/wiki/Printk) function is able to work, [e820](https://en.wikipedia.org/wiki/E820) parsed and the Linux kernel already knows about available memory and and many many other architecture specific things (if you are interested, you can read more about the `setup_arch` function and Linux kernel initialization process in the second [chapter](https://0xax.gitbook.io/linux-insides/summary/initialization) of this book).
 
-Now, the `setup_arch` finished its work and we can back to the generic Linux kernel code. Recall that the `setup_arch` function was called from the `start_kernel` function which is defined in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. So, we shall return to this function. You can see that there are many different function are called right after `setup_arch` function inside of the `start_kernel` function, but since our chapter is devoted to timers and time management related stuff, we will skip all code which is not related to this topic. The first function which is related to the time management in the Linux kernel is:
+Now, the `setup_arch` finished its work and we can go back to the generic Linux kernel code. Recall that the `setup_arch` function was called from the `start_kernel` function which is defined in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. So, we shall return to this function. You can see that there are many different functions that are called right after `setup_arch` function inside of the `start_kernel` function, but since our chapter is devoted to timers and time management related stuff, we will skip all code which is not related to this topic. The first function which is related to the time management in the Linux kernel is:
 
 ```C
 tick_init();
@@ -25,12 +25,12 @@ in the `start_kernel`. The `tick_init` function defined in the [kernel/time/tick
 * Initialization of `tick broadcast` framework related data structures;
 * Initialization of `full` tickless mode related data structures.
 
-We didn't see anything related to the `tick broadcast` framework in this book and didn't know anything about tickless mode in the Linux kernel. So, the main point of this part is to look on these concepts and to know what are they.
+We didn't see anything related to the `tick broadcast` framework in this book and didn't know anything about tickless mode in the Linux kernel. So, the main point of this part is to look on these concepts and to know what they are.
 
 The idle process
 --------------------------------------------------------------------------------
 
-First of all, let's look on the implementation of the `tick_init` function. As I already wrote, this function defined in the [kernel/time/tick-common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/tick-common.c) source code file and consists from the two calls of following functions:
+First of all, let's look on the implementation of the `tick_init` function. As I already wrote, this function is defined in the [kernel/time/tick-common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/tick-common.c) source code file and consists from the two calls of following functions:
 
 ```C
 void __init tick_init(void)
@@ -74,7 +74,7 @@ Whenever the idle task is selected to run, the periodic tick is disabled with th
 
 The second way is to omit scheduling-clock ticks on processors that are either in `idle` state or that have only one runnable task or in other words busy processor. We can enable this feature with the `CONFIG_NO_HZ_FULL` kernel configuration option and it allows to reduce the number of timer interrupts significantly.
 
-Besides the `cpu_idle_loop`, idle processor can be in a sleeping state. The Linux kernel provides special `cpuidle` framework. Main point of this framework is to put an idle processor to sleeping states. The name of the set of these states is - `C-states`. But how does a processor will be woken if local timer is disabled? The linux kernel provides `tick broadcast` framework for this. The main point of this framework is assign a timer which is not affected by the `C-states`. This timer will wake a sleeping processor.
+Besides the `cpu_idle_loop`, idle processor can be in a sleeping state. The Linux kernel provides special `cpuidle` framework. Main point of this framework is to put an idle processor to sleeping states. The name of the set of these states is - `C-states`. But how will a processor will be woken if local timer is disabled? The linux kernel provides `tick broadcast` framework for this. The main point of this framework is assign a timer which is not affected by the `C-states`. This timer will wake a sleeping processor.
 
 Now, after some theory we can return to the implementation of our function. Let's recall that the `tick_init` function just calls two following functions:
 
@@ -117,7 +117,7 @@ Ultimately, the memory space will be allocated for the given `cpumask` with the 
 *mask = kmalloc_node(cpumask_size(), flags, node);
 ```
 
-Now let's look on the `cpumasks` that will be initialized in the `tick_broadcast_init` function. As we can see, the `tick_broadcast_init` function will initialize six `cpumasks`, and moreover, initialization of the last three `cpumasks` will be depended on the `CONFIG_TICK_ONESHOT` kernel configuration option.
+Now let's look on the `cpumasks` that will be initialized in the `tick_broadcast_init` function. As we can see, the `tick_broadcast_init` function will initialize six `cpumasks`, and moreover, initialization of the last three `cpumasks` will depend on the `CONFIG_TICK_ONESHOT` kernel configuration option.
 
 The first three `cpumasks` are:
 
@@ -157,7 +157,7 @@ struct tick_device {
 };
 ```
 
-Note, that the `tick_device` structure contains two fields. The first field - `evtdev` represents pointer to the `clock_event_device` structure that defined in the [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clockchips.h) header file and represents descriptor of a clock event device. A `clock event` device allows to register an event that will happen in the future. As I already wrote, we will not consider `clock_event_device` structure and related API in this part, but will see it in the next part.
+Note, that the `tick_device` structure contains two fields. The first field - `evtdev` represents pointer to the `clock_event_device` structure that is defined in the [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clockchips.h) header file and represents descriptor of a clock event device. A `clock event` device allows to register an event that will happen in the future. As I already wrote, we will not consider `clock_event_device` structure and related API in this part, but will see it in the next part.
 
 The second field of the `tick_device` structure represents mode of the `tick_device`. As we already know, the mode can be one of the:
 
@@ -208,7 +208,7 @@ First of all we get the current `clock event` device from the `tick_broadcast_de
 static struct tick_device tick_broadcast_device;
 ```
 
-and represents external clock device that keeps track of events for a processor. The first step after we got the current clock device is the call of the `tick_check_broadcast_device` function which checks that a given clock events device can be utilized as broadcast device. The main point of the `tick_check_broadcast_device` function is to check value of the `features` field of the given `clock events` device. As we can understand from the name of this field, the `features` field contains a clock event device features. Available values defined in the [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clockchips.h) header file and can be one of the `CLOCK_EVT_FEAT_PERIODIC` - which represents a clock events device which supports periodic events and etc. So, the `tick_check_broadcast_device` function check `features` flags for `CLOCK_EVT_FEAT_ONESHOT`, `CLOCK_EVT_FEAT_DUMMY` and other flags and returns `false` if the given clock events device has one of these features. In other way the `tick_check_broadcast_device` function compares `ratings` of the given clock event device and current clock event device and returns the best.
+and represents external clock device that keeps track of events for a processor. The first step after we get the current clock device is the call of the `tick_check_broadcast_device` function which checks that a given clock events device can be utilized as broadcast device. The main point of the `tick_check_broadcast_device` function is to check value of the `features` field of the given `clock events` device. As we can understand from the name of this field, the `features` field contains a clock event device features. Available values defined in the [include/linux/clockchips.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clockchips.h) header file and can be one of the `CLOCK_EVT_FEAT_PERIODIC` - which represents a clock events device which supports periodic events and etc. So, the `tick_check_broadcast_device` function check `features` flags for `CLOCK_EVT_FEAT_ONESHOT`, `CLOCK_EVT_FEAT_DUMMY` and other flags and returns `false` if the given clock events device has one of these features. In other way the `tick_check_broadcast_device` function compares `ratings` of the given clock event device and current clock event device and returns the best.
 
 After the `tick_check_broadcast_device` function, we can see the call of the `try_module_get` function that checks module owner of the clock events. We need to do it to be sure that the given `clock events` device was correctly initialized. The next step is the call of the `clockevents_exchange_device` function that defined in the [kernel/time/clockevents.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/clockevents.c) source code file and will release old clock events device and replace the previous functional handler with a dummy handler.
 
@@ -292,7 +292,7 @@ static irqreturn_t hpet_interrupt_handler(int irq, void *data)
 }
 ```
 
-The `hpet_interrupt_handler` gets the [irq](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) specific data and check the event handler of the `clock event` device. Recall that we just set in the `tick_set_periodic_handler` function. So the `tick_handler_periodic_broadcast` function will be called in the end of the high precision event timer interrupt handler.
+The `hpet_interrupt_handler` gets the [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) specific data and check the event handler of the `clock event` device. Recall that we just set in the `tick_set_periodic_handler` function. So the `tick_handler_periodic_broadcast` function will be called in the end of the high precision event timer interrupt handler.
 
 The `tick_handler_periodic_broadcast` function calls the
 
@@ -314,7 +314,7 @@ if (bc_local)
 	td->evtdev->event_handler(td->evtdev);
 ```
 
-which actually represents interrupt handler of the local timer of a processor. After this a processor will wake up. That is all about `tick broadcast` framework in the Linux kernel. We have missed some aspects of this framework, for example reprogramming of a `clock event` device and broadcast with the oneshot timer and etc. But the Linux kernel is very big, it is not real to cover all aspects of it. I think it will be interesting to dive into with yourself.
+which actually represents interrupt handler of the local timer of a processor. After this a processor will wake up. That is all about `tick broadcast` framework in the Linux kernel. We have missed some aspects of this framework, for example reprogramming of a `clock event` device and broadcast with the oneshot timer and etc. But the Linux kernel is very big, it is not realistic to cover all aspects of it. I think it will be interesting to dive into it yourself.
 
 If you remember, we have started this part with the call of the `tick_init` function. We just consider the `tick_broadcast_init` function and related theory, but the `tick_init` function contains another call of a function and this function is - `tick_nohz_init`. Let's look on the implementation of this function.
 
@@ -435,7 +435,7 @@ Links
 * [NO_HZ documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/timers/NO_HZ.txt)
 * [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)
 * [high precision event timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
-* [irq](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
+* [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [IPI](https://en.wikipedia.org/wiki/Inter-processor_interrupt)
 * [CPUID](https://en.wikipedia.org/wiki/CPUID)
 * [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)

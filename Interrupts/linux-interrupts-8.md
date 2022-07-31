@@ -113,10 +113,10 @@ In the end of the `init_IRQ` function we can see the call of the following funct
 x86_init.irqs.intr_init();
 ```
 
-from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c) source code file. If you have read [chapter](https://0xax.gitbook.io/linux-insides/summary/initialization) about the Linux kernel initialization process, you can remember the `x86_init` structure. This structure contains a couple of files which are points to the function related to the platform setup (`x86_64` in our case), for example `resources` - related with the memory resources, `mpparse` - related with the parsing of the [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification) table and etc.). As we can see the `x86_init` also contains the `irqs` field which contains three following fields:
+from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c) source code file. If you have read [chapter](https://0xax.gitbook.io/linux-insides/summary/initialization) about the Linux kernel initialization process, you can remember the `x86_init` structure. This structure contains a couple of files which point to the function related to the platform setup (`x86_64` in our case), for example `resources` - related with the memory resources, `mpparse` - related with the parsing of the [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification) table, etc.). As we can see the `x86_init` also contains the `irqs` field which contains the three following fields:
 
 ```C
-struct x86_init_ops x86_init __initdata 
+struct x86_init_ops x86_init __initdata
 {
 	...
 	...
@@ -132,7 +132,7 @@ struct x86_init_ops x86_init __initdata
 }
 ```
 
-Now, we are interesting in the `native_init_IRQ`. As we can note, the name of the `native_init_IRQ` function contains the `native_` prefix which means that this function is architecture-specific. It defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) and executes general initialization of the [Local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#Integrated_local_APICs) and initialization of the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) irqs. Let's look on the implementation of the `native_init_IRQ` function and will try to understand what occurs there. The `native_init_IRQ` function starts from the execution of the following function:
+Now, we are interesting in the `native_init_IRQ`. As we can note, the name of the `native_init_IRQ` function contains the `native_` prefix which means that this function is architecture-specific. It defined in the [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) and executes general initialization of the [Local APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#Integrated_local_APICs) and initialization of the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) irqs. Let's look at the implementation of the `native_init_IRQ` function and try to understand what occurs there. The `native_init_IRQ` function starts from the execution of the following function:
 
 ```C
 x86_init.irqs.pre_vector_init();
@@ -155,21 +155,21 @@ The `irq_chip` structure defined in the [include/linux/irq.h](https://github.com
 
 ```C
 $ cat /proc/interrupts
-           CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7       
+           CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7
   0:         16          0          0          0          0          0          0          0   IO-APIC   2-edge      timer
   1:          2          0          0          0          0          0          0          0   IO-APIC   1-edge      i8042
   8:          1          0          0          0          0          0          0          0   IO-APIC   8-edge      rtc0
 ```
 
-look on the last column;
+look at the last column;
 
 * `(*irq_mask)(struct irq_data *data)`  - mask an interrupt source;
 * `(*irq_ack)(struct irq_data *data)` - start of a new interrupt;
 * `(*irq_startup)(struct irq_data *data)` - start up the interrupt;
 * `(*irq_shutdown)(struct irq_data *data)` - shutdown the interrupt
-* and etc.
+* etc.
 
-fields. Note that the `irq_data` structure represents set of the per irq chip data passed down to chip functions. It contains `mask` - precomputed bitmask for accessing the chip registers, `irq` - interrupt number, `hwirq` - hardware interrupt number, local to the interrupt domain chip low level interrupt hardware access and etc.
+fields. Note that the `irq_data` structure represents set of the per irq chip data passed down to chip functions. It contains `mask` - precomputed bitmask for accessing the chip registers, `irq` - interrupt number, `hwirq` - hardware interrupt number, local to the interrupt domain chip low level interrupt hardware access, etc.
 
 After this depends on the `CONFIG_X86_64` and `CONFIG_X86_LOCAL_APIC` kernel configuration option call the `init_bsp_APIC` function from the [arch/x86/kernel/apic/apic.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/apic/apic.c):
 
@@ -186,7 +186,7 @@ if (smp_found_config || !cpu_has_apic)
 	return;
 ```
 
-In other way we return from this function. In the next step we call the `clear_local_APIC` function from the same source code file that shutdowns the local `APIC` (more about it will be in the chapter about the `Advanced Programmable Interrupt Controller`) and enable `APIC` of the first processor by the setting `unsigned int value` to the `APIC_SPIV_APIC_ENABLED`: 
+Otherwise, we return from this function. In the next step we call the `clear_local_APIC` function from the same source code file that shuts down the local `APIC` (more on it in the `Advanced Programmable Interrupt Controller` chapter) and enable `APIC` of the first processor by the setting `unsigned int value` to the `APIC_SPIV_APIC_ENABLED`:
 
 ```C
 value = apic_read(APIC_SPIV);
@@ -200,11 +200,11 @@ and writing it with the help of the `apic_write` function:
 apic_write(APIC_SPIV, value);
 ```
 
-After we have enabled `APIC` for the bootstrap processor, we return to the `init_ISA_irqs` function and in the next step we initialize legacy `Programmable Interrupt Controller` and set the legacy chip and handler for the each legacy irq:
+After we have enabled `APIC` for the bootstrap processor, we return to the `init_ISA_irqs` function and in the next step we initialize legacy `Programmable Interrupt Controller` and set the legacy chip and handler for each legacy irq:
 
 ```C
 legacy_pic->init(0);
- 
+
 for (i = 0; i < nr_legacy_irqs(); i++)
     irq_set_chip_and_handler(i, chip, handle_level_irq);
 ```
@@ -229,7 +229,7 @@ struct legacy_pic default_legacy_pic = {
 }
 ```
 
-The `init_8259A` function defined in the same source code file and executes initialization of the [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259) ``Programmable Interrupt Controller` (more about it will be in the separate chapter about `Programmable Interrupt Controllers` and `APIC`).
+The `init_8259A` function defined in the same source code file and executes initialization of the [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259) `Programmable Interrupt Controller` (more about it will be in the separate chapter about `Programmable Interrupt Controllers` and `APIC`).
 
 Now we can return to the `native_init_IRQ` function, after the `init_ISA_irqs` function finished its work. The next step is the call of the `apic_intr_init` function that allocates special interrupt gates which are used by the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) architecture for the [Inter-processor interrupt](https://en.wikipedia.org/wiki/Inter-processor_interrupt). The `alloc_intr_gate` macro from the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h) used for the interrupt descriptor allocation:
 
@@ -253,7 +253,7 @@ if (!test_bit(vector, used_vectors)) {
 }
 ```
 
-We already saw the `set_bit` macro, now let's look on the `test_bit` and the `first_system_vector`. The first `test_bit` macro defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) and looks like this:
+We already saw the `set_bit` macro, now let's look at the `test_bit` and the `first_system_vector`. The first `test_bit` macro defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) and looks like this:
 
 ```C
 #define test_bit(nr, addr)                      \
@@ -262,7 +262,7 @@ We already saw the `set_bit` macro, now let's look on the `test_bit` and the `fi
          : variable_test_bit((nr), (addr)))
 ```
 
-We can see the [ternary operator](https://en.wikipedia.org/wiki/Ternary_operation) here make a test with the [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) built-in function `__builtin_constant_p` tests that given vector number (`nr`) is known at compile time. If you're feeling misunderstanding of the `__builtin_constant_p`, we can make simple test:
+We can see the [ternary operator](https://en.wikipedia.org/wiki/Ternary_operation) here makes a test with the [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) built-in function `__builtin_constant_p` tests that given vector number (`nr`) is known at compile time. If you're feeling misunderstanding of the `__builtin_constant_p`, we can make simple test:
 
 ```C
 #include <stdio.h>
@@ -279,7 +279,7 @@ int main() {
 }
 ```
 
-and look on the result:
+and look at the result:
 
 ```
 $ gcc test.c -o test
@@ -289,7 +289,7 @@ __builtin_constant_p(PREDEFINED_VAL) is 1
 __builtin_constant_p(100) is 1
 ```
 
-Now I think it must be clear for you. Let's get back to the `test_bit` macro. If the `__builtin_constant_p` will return non-zero, we call `constant_test_bit` function:
+Now I think it must be clear for you. Let's get back to the `test_bit` macro. If the `__builtin_constant_p` returns non-zero, we call `constant_test_bit` function:
 
 ```C
 static inline int constant_test_bit(int nr, const void *addr)
@@ -313,7 +313,7 @@ static inline int variable_test_bit(int nr, const void *addr)
 }
 ```
 
-What's the difference between two these functions and why do we need in two different functions for the same purpose? As you already can guess main purpose is optimization. If we will write simple example with these functions:
+What's the difference between two these functions and why do we need in two different functions for the same purpose? As you already can guess main purpose is optimization. If we write simple example with these functions:
 
 ```C
 #define CONST 25
@@ -326,7 +326,7 @@ int main() {
 }
 ```
 
-and will look on the assembly output of our example we will see following assembly code:
+and will look at the assembly output of our example we will see following assembly code:
 
 ```assembly
 pushq	%rbp
@@ -351,10 +351,10 @@ movl	%eax, %edi
 call	variable_test_bit
 ```
 
-for the `variable_test_bit`. These two code listings starts with the same part, first of all we save base of the current stack frame in the `%rbp` register. But after this code for both examples is different. In the first example we put `$268435456` (here the `$268435456` is our second parameter - `0x10000000`) to the `esi` and `$25` (our first parameter) to the `edi` register and call `constant_test_bit`. We put function parameters to the `esi` and `edi` registers because as we are learning Linux kernel for the `x86_64` architecture we use `System V AMD64 ABI` [calling convention](https://en.wikipedia.org/wiki/X86_calling_conventions). All is pretty simple. When we are using predefined constant, the compiler can just substitute its value. Now let's look on the second part. As you can see here, the compiler can not substitute value from the `nr` variable. In this case compiler must calculate its offset on the program's [stack frame](https://en.wikipedia.org/wiki/Call_stack). We subtract `16` from the `rsp` register to allocate stack for the local variables data and put the `$24` (value of the `nr` variable) to the `rbp` with offset `-4`. Our stack frame will be like this:
+for the `variable_test_bit`. These two code listings starts with the same part, first of all we save base of the current stack frame in the `%rbp` register. But after this code for both examples is different. In the first example we put `$268435456` (here the `$268435456` is our second parameter - `0x10000000`) to the `esi` and `$25` (our first parameter) to the `edi` register and call `constant_test_bit`. We put function parameters to the `esi` and `edi` registers because as we are learning Linux kernel for the `x86_64` architecture we use `System V AMD64 ABI` [calling convention](https://en.wikipedia.org/wiki/X86_calling_conventions). All is pretty simple. When we are using predefined constant, the compiler can just substitute its value. Now let's look at the second part. As you can see here, the compiler can not substitute value from the `nr` variable. In this case compiler must calculate its offset on the program's [stack frame](https://en.wikipedia.org/wiki/Call_stack). We subtract `16` from the `rsp` register to allocate stack for the local variables data and put the `$24` (value of the `nr` variable) to the `rbp` with offset `-4`. Our stack frame will be like this:
 
 ```
-         <- stack grows 
+         <- stack grows
 
 	          %[rbp]
                  |
@@ -367,7 +367,7 @@ for the `variable_test_bit`. These two code listings starts with the same part, 
               %[rsp]
 ```
 
-After this we put this value to the `eax`, so `eax` register now contains value of the `nr`. In the end we do the same that in the first example, we put the `$268435456` (the first parameter of the `variable_test_bit` function) and the value of the `eax` (value of `nr`) to the `edi` register (the second parameter of the `variable_test_bit function`). 
+After this we put this value to the `eax`, so `eax` register now contains value of the `nr`. In the end we do the same that in the first example, we put the `$268435456` (the first parameter of the `variable_test_bit` function) and the value of the `eax` (value of `nr`) to the `edi` register (the second parameter of the `variable_test_bit function`).
 
 The next step after the `apic_intr_init` function will finish its work is the setting interrupt gates from the `FIRST_EXTERNAL_VECTOR` or `0x20` up to `0x100`:
 
@@ -408,7 +408,7 @@ if (!acpi_ioapic && !of_ioapic && nr_legacy_irqs())
 	setup_irq(2, &irq2);
 ```
 
-First of all let's deal with the condition. The `acpi_ioapic` variable represents existence of [I/O APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs). It defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/acpi/boot.c). This variable set in the `acpi_set_irq_model_ioapic` function that called during the processing `Multiple APIC Description Table`. This occurs during initialization of the architecture-specific stuff in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) (more about it we will know in the other chapter about [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)). Note that the value of the `acpi_ioapic` variable depends on the `CONFIG_ACPI` and `CONFIG_X86_LOCAL_APIC` Linux kernel configuration options. If these options did not set, this variable will be just zero:
+First of all let's deal with the condition. The `acpi_ioapic` variable represents existence of [I/O APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs). It defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/acpi/boot.c). This variable set in the `acpi_set_irq_model_ioapic` function that called during the processing `Multiple APIC Description Table`. This occurs during initialization of the architecture-specific stuff in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) (more about it we will know in the other chapter about [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)). Note that the value of the `acpi_ioapic` variable depends on the `CONFIG_ACPI` and `CONFIG_X86_LOCAL_APIC` Linux kernel configuration options. If these options were not set, this variable will be just zero:
 
 ```C
 #define acpi_ioapic 0
@@ -430,7 +430,7 @@ extern int of_ioapic;
 #endif
 ```
 
-If the condition will return non-zero value we call the:
+If the condition returns non-zero value we call the:
 
 ```C
 setup_irq(2, &irq2);
@@ -465,7 +465,7 @@ Some time ago interrupt controller consisted of two chips and one was connected 
 * `IRQ 6`  - drive controller;
 * `IRQ 7`  - `LPT1`.
 
-The `setup_irq` function defined in the [kernel/irq/manage.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/manage.c) and takes two parameters:
+The `setup_irq` function is defined in the [kernel/irq/manage.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/manage.c) and takes two parameters:
 
 * vector number of an interrupt;
 * `irqaction` structure related with an interrupt.
@@ -476,7 +476,7 @@ This function initializes interrupt descriptor from the given vector number at t
 struct irq_desc *desc = irq_to_desc(irq);
 ```
 
-And call the `__setup_irq` function that setups given interrupt: 
+And call the `__setup_irq` function that sets up given interrupt:
 
 ```C
 chip_bus_lock(desc);
@@ -485,7 +485,7 @@ chip_bus_sync_unlock(desc);
 return retval;
 ```
 
-Note that the interrupt descriptor is locked during `__setup_irq` function will work. The `__setup_irq` function makes many different things: It creates a handler thread when a thread function is supplied and the interrupt does not nest into another interrupt thread, sets the flags of the chip, fills the `irqaction` structure and many many more.
+Note that the interrupt descriptor is locked during `__setup_irq` function will work. The `__setup_irq` function does many different things: it creates a handler thread when a thread function is supplied and the interrupt does not nest into another interrupt thread, sets the flags of the chip, fills the `irqaction` structure and many many more.
 
 All of the above it creates `/prov/vector_number` directory and fills it, but if you are using modern computer all values will be zero there:
 
@@ -493,16 +493,16 @@ All of the above it creates `/prov/vector_number` directory and fills it, but if
 $ cat /proc/irq/2/node
 0
 
-$cat /proc/irq/2/affinity_hint 
+$cat /proc/irq/2/affinity_hint
 00
 
-cat /proc/irq/2/spurious 
+cat /proc/irq/2/spurious
 count 0
 unhandled 0
 last_unhandled 0 ms
 ```
 
-because probably `APIC` handles interrupts on the our machine.
+because probably `APIC` handles interrupts on the machine.
 
 That's all.
 
