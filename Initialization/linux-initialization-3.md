@@ -29,10 +29,10 @@ Now let's look at `__va` macro. This macro defined in [init/main.c](https://gith
 #define __va(x)                 ((void *)((unsigned long)(x)+PAGE_OFFSET))
 ```
 
-where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of the `boot_params` structure and pass it to the `copy_bootdata` function, where we copy `real_mod_data` to the `boot_params` which is declared in the [arch/x86/include/asm/setup.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/setup.h)
+where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of variable `boot_params` which come along from real mode, and pass it to the `copy_bootdata` function, where we copy `real_mode_data` to the `boot_params` which is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/d9919d43cbf6790d2bc0c0a2743c51fc25f26919/arch/x86/kernel/setup.c)
 
 ```C
-extern struct boot_params boot_params;
+struct boot_params boot_params;
 ```
 
 Let's look at the `copy_boot_data` implementation:
