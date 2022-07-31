@@ -99,7 +99,7 @@ do_page_fault(struct pt_regs *regs, unsigned long error_code)
 }
 ```
 
-This register contains a linear address which caused `page fault`. In the next step we make a call of the `exception_enter` function from the [include/linux/context_tracking.h](https://github.com/torvalds/linux/blob/master/include/linux/context_tracking.h). The `exception_enter` and `exception_exit` are functions from context tracking subsystem in the Linux kernel used by the [RCU](https://en.wikipedia.org/wiki/Read-copy-update) to remove its dependency on the timer tick while a processor runs in userspace. Almost in the every exception handler we will see similar code:
+This register contains a linear address which caused `page fault`. In the next step we make a call of the `exception_enter` function from the [include/linux/context_tracking.h](https://github.com/torvalds/linux/blob/master/include/linux/context_tracking.h). The `exception_enter` and `exception_exit` are functions from context tracking subsystem in the Linux kernel used by the [RCU](https://en.wikipedia.org/wiki/Read-copy-update) to remove its dependency on the timer tick while a processor runs in userspace. Almost in every exception handler we will see similar code:
 
 ```C
 enum ctx_state prev_state;
@@ -182,7 +182,7 @@ or `0x00007ffffffff000`. Pay attention on `unlikely` macro. There are two macros
 #define unlikely(x)    __builtin_expect(!!(x), 0)
 ```
 
-You can [often](http://lxr.free-electrons.com/ident?i=unlikely) find these macros in the code of the Linux kernel. Main purpose of these macros is optimization. Sometimes this situation is that we need to check the condition of the code and we know that it will rarely be `true` or `false`. With these macros we can tell to the compiler about this. For example 
+You can [often](http://lxr.free-electrons.com/ident?i=unlikely) find these macros in the code of the Linux kernel. Main purpose of these macros is optimization. Sometimes this situation is that we need to check the condition of the code and we know that it will rarely be `true` or `false`. With these macros we can tell to the compiler about this. For example
 
 ```C
 static int proc_root_readdir(struct file *file, struct dir_context *ctx)
@@ -447,7 +447,7 @@ Links
 * [prefetchw](http://www.felixcloutier.com/x86/PREFETCHW.html)
 * [3DNow](https://en.wikipedia.org/?title=3DNow!)
 * [CPU caches](https://en.wikipedia.org/wiki/CPU_cache)
-* [VFS](https://en.wikipedia.org/wiki/Virtual_file_system) 
+* [VFS](https://en.wikipedia.org/wiki/Virtual_file_system)
 * [Linux kernel memory management](https://0xax.gitbook.io/linux-insides/summary/mm)
 * [Fix-Mapped Addresses and ioremap](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2)
 * [Extended Industry Standard Architecture](https://en.wikipedia.org/wiki/Extended_Industry_Standard_Architecture)

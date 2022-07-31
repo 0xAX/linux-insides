@@ -243,12 +243,12 @@ static inline int signal_pending_state(long state, struct task_struct *p)
                  return 0;
          if (!signal_pending(p))
                  return 0;
- 
+
          return (state & TASK_INTERRUPTIBLE) || __fatal_signal_pending(p);
 }
 ```
 
-We check that the `state` [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29) contains `TASK_INTERRUPTIBLE` or `TASK_WAKEKILL` bits and if the bitmask does not contain this bit we exit. At the next step we check that the given task has a pending signal and exit if there is no. In the end we just check `TASK_INTERRUPTIBLE` bit in the `state` bitmask again or the [SIGKILL](https://en.wikipedia.org/wiki/Unix_signal#SIGKILL) signal. So, if our task has a pending signal, we will jump at the `interrupted` label:
+We check that the `state` [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29) contains `TASK_INTERRUPTIBLE` or `TASK_WAKEKILL` bits and if the bitmask does not contain this bit we exit. At the next step we check that the given task has a pending signal and exit if there is not. In the end we just check `TASK_INTERRUPTIBLE` bit in the `state` bitmask again or the [SIGKILL](https://en.wikipedia.org/wiki/Unix_signal#SIGKILL) signal. So, if our task has a pending signal, we will jump at the `interrupted` label:
 
 ```C
 interrupted:
@@ -306,7 +306,7 @@ void up(struct semaphore *sem)
 EXPORT_SYMBOL(up);
 ```
 
-It looks almost the same as the `down` function. There are only two differences here. First of all we increment a counter of a `semaphore` if the list of waiters is empty. In other way we call the `__up` function from the same source code file. If the list of waiters is not empty we need to allow the first task from the list to acquire a lock: 
+It looks almost the same as the `down` function. There are only two differences here. First of all we increment a counter of a `semaphore` if the list of waiters is empty. In other way we call the `__up` function from the same source code file. If the list of waiters is not empty we need to allow the first task from the list to acquire a lock:
 
 ```C
 static noinline void __sched __up(struct semaphore *sem)
@@ -326,7 +326,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the third part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the two previous parts we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock` and used for a very short time locks. In this part we saw yet another synchronization primitive - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) which is used for long time locks as it leads to [context switch](https://en.wikipedia.org/wiki/Context_switch). In the next part we will continue to dive into synchronization primitives in the Linux kernel and will see next synchronization primitive - [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion). 
+This is the end of the third part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the two previous parts we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock` and used for a very short time locks. In this part we saw yet another synchronization primitive - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) which is used for long time locks as it leads to [context switch](https://en.wikipedia.org/wiki/Context_switch). In the next part we will continue to dive into synchronization primitives in the Linux kernel and will see next synchronization primitive - [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion).
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 

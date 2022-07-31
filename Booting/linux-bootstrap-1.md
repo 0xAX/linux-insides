@@ -73,7 +73,7 @@ The starting address is formed by adding the base address to the value in the EI
 '0xfffffff0'
 ```
 
-We get `0xfffffff0`, which is 16 bytes below 4GB. This point is called the [reset vector](https://en.wikipedia.org/wiki/Reset_vector). It's the memory location at which the CPU expects to find the first instruction to execute after reset. It contains a [jump](https://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction that usually points to the [BIOS](https://en.wikipedia.org/wiki/BIOS) (Basic Input/Output System) entry point. For example, if we look in the [coreboot](https://www.coreboot.org/) source code (`src/cpu/x86/16bit/reset16.inc`), we see:
+We get `0xfffffff0`, which is 16 bytes below 4GB. This point is called the [reset vector](https://en.wikipedia.org/wiki/Reset_vector). It's the memory location at which the CPU expects to find the first instruction to execute after reset. It contains a [jump](https://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction that usually points to the [BIOS](https://en.wikipedia.org/wiki/BIOS) (Basic Input/Output System) entry point. For example, if we look in the [coreboot](https://www.coreboot.org/) source code ([src/cpu/x86/16bit/reset16.inc](https://review.coreboot.org/plugins/gitiles/coreboot/+/refs/heads/4.11_branch/src/cpu/x86/16bit/reset16.inc)), we see:
 
 ```assembly
     .section ".reset", "ax", %progbits
@@ -87,7 +87,7 @@ _start:
 
 Here we can see the `jmp` instruction [opcode](http://ref.x86asm.net/coder32.html#xE9), which is `0xe9`, and its destination address at `_start16bit - ( . + 2)`.
 
-We also see that the `reset` section is `16` bytes and is compiled to start from the address `0xfffffff0` (`src/cpu/x86/16bit/reset16.ld`):
+We also see that the `reset` section is `16` bytes and is compiled to start from the address `0xfffffff0` ([src/cpu/x86/16bit/reset16.ld](https://review.coreboot.org/plugins/gitiles/coreboot/+/refs/heads/4.11_branch/src/cpu/x86/16bit/reset16.ld)):
 
 ```
 SECTIONS {

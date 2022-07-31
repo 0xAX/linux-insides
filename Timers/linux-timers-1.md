@@ -371,7 +371,7 @@ u64 get_jiffies_64(void)
 EXPORT_SYMBOL(get_jiffies_64);
 ```
 
-Note that the `get_jiffies_64` function does not implemented as `jiffies_read` for example:
+Note that the `get_jiffies_64` function is not implemented as `jiffies_read` for example:
 
 ```C
 static cycle_t jiffies_read(struct clocksource *cs)

@@ -13,7 +13,7 @@ So, let's start.
 Reader/Writer semaphore
 --------------------------------------------------------------------------------
 
-Actually there are two types of operations may be performed on the data. We may read data and make changes in data. Two fundamental operations - `read` and `write`. Usually (but not always), `read` operation is performed more often than `write` operation. In this case, it would be logical to we may lock data in such way, that some processes may read locked data in one time, on condition that no one will not change the data. The [readers/writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) allows us to get this lock.
+Actually there are two types of operations may be performed on the data. We may read data and make changes in data. Two fundamental operations - `read` and `write`. Usually (but not always), `read` operation is performed more often than `write` operation. In this case, it would be logical to lock data in such way, that some processes may read locked data in one time, on condition that no one will not change the data. The [readers/writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) allows us to get this lock.
 
 When a process which wants to write something into data, all other `writer` and `reader` processes will be blocked until the process which acquired a lock, will not release it. When a process reads data, other processes which want to read the same data too, will not be locked and will be able to do this. As you may guess, implementation of the `reader/writer semaphore` is based on the implementation of the `normal semaphore`. We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the third [part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-4) of this chapter. From the theoretical side everything looks pretty simple. Let's look how `reader/writer semaphore` is represented in the Linux kernel.
 
@@ -81,7 +81,7 @@ Reader/Writer semaphore API
 
 So, we know a little about `reader/writer semaphores` from theoretical side, let's look on its implementation in the Linux kernel. All `reader/writer semaphores` related [API](https://en.wikipedia.org/wiki/Application_programming_interface) is located in the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/rwsem.h) header file.
 
-As always Before we will consider an [API](https://en.wikipedia.org/wiki/Application_programming_interface) of the `reader/writer semaphore` mechanism in the Linux kernel, we need to know how to initialize the `rw_semaphore` structure. As we already saw in previous parts of this [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim), all [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) may be initialized in two ways:
+As always, before we consider an [API](https://en.wikipedia.org/wiki/Application_programming_interface) of the `reader/writer semaphore` mechanism in the Linux kernel, we need to know how to initialize the `rw_semaphore` structure. As we already saw in previous parts of this [chapter](https://0xax.gitbook.io/linux-insides/summary/syncprim), all [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) may be initialized in two ways:
 
 * `statically`;
 * `dynamically`.
@@ -103,7 +103,7 @@ As we may see, the `DECLARE_RWSEM` macro just expands to the definition of the `
         .wait_lock = __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock)  \
          __RWSEM_OPT_INIT(name)                                \
          __RWSEM_DEP_MAP_INIT(name)
-} 
+}
 ```
 
 and expands to the initialization of fields of `rw_semaphore` structure. First of all we initialize `count` field of the `rw_semaphore` structure to the `unlocked` state with `RWSEM_UNLOCKED_VALUE` macro from the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/rwsem.h) architecture specific header file:
@@ -193,7 +193,7 @@ void __sched down_write(struct rw_semaphore *sem)
 }
 ```
 
-We already met the `might_sleep` macro in the [previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-4). In short words, Implementation of the `might_sleep` macro depends on the `CONFIG_DEBUG_ATOMIC_SLEEP` kernel configuration option and if this option is enabled, this macro just prints a stack trace if it was executed in [atomic](https://en.wikipedia.org/wiki/Linearizability) context. As this macro is mostly for debugging purpose we will skip it and will go ahead. Additionally we will skip the next macro from the `down_read` function - `rwsem_acquire` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel, because this is topic of other part.
+We already met the `might_sleep` macro in the [previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-4). In short, implementation of the `might_sleep` macro depends on the `CONFIG_DEBUG_ATOMIC_SLEEP` kernel configuration option and if this option is enabled, this macro just prints a stack trace if it was executed in [atomic](https://en.wikipedia.org/wiki/Linearizability) context. As this macro is mostly for debugging purpose we will skip it and will go ahead. Additionally we will skip the next macro from the `down_read` function - `rwsem_acquire` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel, because this is topic of other part.
 
 The only two things that remained in the `down_write` function is the call of the `LOCK_CONTENDED` macro which is defined in the [include/linux/lockdep.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/lockdep.h) header file and setting of owner of a lock with the `rwsem_set_owner` function which sets owner to currently running process:
 
@@ -292,7 +292,7 @@ if (rwsem_optimistic_spin(sem))
       return sem;
 ```
 
-We will skip implementation of the `rwsem_optimistic_spin` function, as it is similar on the `mutex_optimistic_spin` function which we saw in the [previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-4). In short words we check existence other tasks ready to run that have higher priority in the `rwsem_optimistic_spin` function. If there are such tasks, the process will be added to the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) `waitqueue` and start to spin in the loop until a lock will be able to be acquired. If `optimistic spinning` is disabled, a process will be added to the and marked as waiting for write:
+We will skip implementation of the `rwsem_optimistic_spin` function, as it is similar on the `mutex_optimistic_spin` function which we saw in the [previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-4). In short words we check existence other tasks ready to run that have higher priority in the `rwsem_optimistic_spin` function. If there are such tasks, the process will be added to the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) `waitqueue` and start to spin in the loop until a lock will be able to be acquired. If `optimistic spinning` is disabled, a process will be added to the `wait_list` and marked as waiting for write:
 
 ```C
 waiter.task = current;
@@ -356,7 +356,7 @@ static inline void __down_read(struct rw_semaphore *sem)
 }
 ```
 
-which increments value of the given `rw_semaphore->count` and call the `call_rwsem_down_read_failed` if this value is negative. In other way we jump at the label `1:` and exit. After this `read` lock will be successfully acquired. Notice that we check a sign of the `count` value as it may be negative, because as you may remember most significant [word](https://en.wikipedia.org/wiki/Word_%28computer_architecture%29) of the `rw_semaphore->count` contains negated number of active writers.
+which increments value of the given `rw_semaphore->count` and calls the `call_rwsem_down_read_failed` if this value is negative. In other way we jump at the label `1:` and exit. After this `read` lock will be successfully acquired. Notice that we check a sign of the `count` value as it may be negative, because as you may remember most significant [word](https://en.wikipedia.org/wiki/Word_%28computer_architecture%29) of the `rw_semaphore->count` contains negated number of active writers.
 
 Let's consider case when a process wants to acquire a lock for `read` operation, but it is already locked. In this case the `call_rwsem_down_read_failed` function from the [arch/x86/lib/rwsem.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/rwsem.S)  assembly file will be called. If you will look at the implementation of this function, you will notice that it does the same that `call_rwsem_down_read_failed` function does. Except it calls the `rwsem_down_read_failed` function instead of `rwsem_dow_write_failed`. Now let's consider implementation of the `rwsem_down_read_failed` function. It starts from the adding a process to the `wait queue` and updating of value of the `rw_semaphore->counter`:
 

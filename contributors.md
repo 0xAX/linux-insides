@@ -135,3 +135,5 @@ Thank you to all contributors:
 * [Biao Ding](https://github.com/SmallPond)
 * [Arfy slowy](https://github.com/slowy07)
 * [Junbo Jiang](https://github.com/junbo42)
+* [Dexter Plameras](https://github.com/dexterp)
+* [Jun Duan](https://github.com/waltforme)

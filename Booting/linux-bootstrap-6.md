@@ -46,7 +46,7 @@ This function takes five parameters:
   * `input`;
   * `input_size`;
   * `output`;
-  * `output_isze`;
+  * `output_size`;
   * `virt_addr`.
 
 Let's try to understand what these parameters are. The first parameter, `input` is just the `input_data` parameter of the `extract_kernel` function from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/misc.c) source code file, cast to `unsigned long`:
@@ -146,7 +146,7 @@ Now, we call another function:
 initialize_identity_maps();
 ```
 
-The `initialize_identity_maps` function is defined in the [arch/x86/boot/compressed/kaslr_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr_64.c) source code file. This function starts by initialising an instance of the `x86_mapping_info` structure called `mapping_info`:
+The `initialize_identity_maps` function is defined in the [arch/x86/boot/compressed/kaslr_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr_64.c) source code file. This function starts by initializing an instance of the `x86_mapping_info` structure called `mapping_info`:
 
 ```C
 mapping_info.alloc_pgt_page = alloc_pgt_page;
@@ -195,7 +195,7 @@ The last goal of the `initialize_identity_maps` function is to initialize `pgdt_
 pgt_data.pgt_buf_offset = 0;
 ```
 
-`pgt_data.pgt_buf_size` will be set to `77824` or `69632` depending on which boot protocol was used by the bootloader (64-bit or 32-bit). The same is done for `pgt_data.pgt_buf`. If a bootloader loaded the kernel at `startup_32`, `pgdt_data.pgdt_buf` will point to the end of the already initialzed page table in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S) source code file:
+`pgt_data.pgt_buf_size` will be set to `77824` or `69632` depending on which boot protocol was used by the bootloader (64-bit or 32-bit). The same is done for `pgt_data.pgt_buf`. If a bootloader loaded the kernel at `startup_32`, `pgdt_data.pgdt_buf` will point to the end of the already initialized page table in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S) source code file:
 
 ```C
 pgt_data.pgt_buf = _pgtable + BOOT_INIT_PGT_SIZE;
@@ -212,7 +212,7 @@ As the buffer for new page tables is initialized, we may return to the `choose_r
 Avoiding Reserved Memory Ranges
 --------------------------------------------------------------------------------
 
-After the stuff related to identity page tables is initilized, we can choose a random memory location to extract the kernel image to. But as you may have guessed, we can't just choose any address. There are certain reserved memory regions which are occupied by important things like the [initrd](https://en.wikipedia.org/wiki/Initial_ramdisk) and the kernel command line which must be avoided. The `mem_avoid_init` function will help us do this:
+After the stuff related to identity page tables is initialized, we can choose a random memory location to extract the kernel image to. But as you may have guessed, we can't just choose any address. There are certain reserved memory regions which are occupied by important things like the [initrd](https://en.wikipedia.org/wiki/Initial_ramdisk) and the kernel command line which must be avoided. The `mem_avoid_init` function will help us do this:
 
 ```C
 mem_avoid_init(input, input_size, *output);
@@ -254,7 +254,7 @@ add_identity_map(mem_avoid[MEM_AVOID_ZO_RANGE].start,
 		 mem_avoid[MEM_AVOID_ZO_RANGE].size);
 ```
 
-THe `mem_avoid_init` function first tries to avoid memory regions currently used to decompress the kernel. We fill an entry from the `mem_avoid` array with the start address and the size of the relevant region and call the `add_identity_map` function, which  builds the identity mapped pages for this region. The `add_identity_map` function is defined in the [arch/x86/boot/compressed/kaslr_64.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/kaslr_64.c) source code file and looks like this:
+The `mem_avoid_init` function first tries to avoid memory regions currently used to decompress the kernel. We fill an entry from the `mem_avoid` array with the start address and the size of the relevant region and call the `add_identity_map` function, which  builds the identity mapped pages for this region. The `add_identity_map` function is defined in the [arch/x86/boot/compressed/kaslr_64.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/kaslr_64.c) source code file and looks like this:
 
 ```C
 void add_identity_map(unsigned long start, unsigned long size)
