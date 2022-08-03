@@ -4,9 +4,9 @@ Program startup process in userspace
 Introduction
 --------------------------------------------------------------------------------
 
-Despite the [linux-insides](https://www.gitbook.com/book/0xax/linux-insides/details) described mostly Linux kernel related stuff, I have decided to write this one part which mostly related to userspace.
+Despite the [linux-insides](https://www.gitbook.com/book/0xax/linux-insides/details) described mostly Linux kernel related stuff, I have decided to write this one part which mostly relates to userspace.
 
-There is already fourth [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4) of [System calls](https://en.wikipedia.org/wiki/System_call) chapter which describes what does the Linux kernel do when we want to start a program. In this part I want to explore what happens when we run a program on a Linux machine from userspace perspective.
+There is already fourth [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4) of [System calls](https://en.wikipedia.org/wiki/System_call) chapter which describes what the Linux kernel does when we want to start a program. In this part I want to explore what happens when we run a program on a Linux machine from userspace perspective.
 
 I don't know how about you, but in my university I learn that a `C` program starts executing from the function which is called `main`. And that's partly true. Whenever we are starting to write new program, we start our program from the following lines of code:
 
@@ -75,7 +75,7 @@ Note on `Entry point: 0x400430` line. Now we know the actual address of entry po
 (gdb) break *0x400430
 Breakpoint 1 at 0x400430
 (gdb) run
-Starting program: /home/alex/program 
+Starting program: /home/alex/program
 
 Breakpoint 1, 0x0000000000400430 in _start ()
 ```
@@ -135,7 +135,7 @@ SYSCALL_DEFINE3(execve,
 }
 ```
 
-It takes an executable file name, set of command line arguments, and set of environment variables. As you may guess, everything is done by the `do_execve` function. I will not describe the implementation of the `do_execve` function in detail because you can read about this in [here](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceed in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/arch/x86/kernel/process_64.c#L239) source code file.
+It takes an executable file name, set of command line arguments, and set of environment variables. As you may guess, everything is done by the `do_execve` function. I will not describe the implementation of the `do_execve` function in detail because you can read about this in [here](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceeded in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/arch/x86/kernel/process_64.c#L239) source code file.
 
 The `start_thread` function sets new value to [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation) and program execution address. From this point, our new process is ready to start. Once the [context switch](https://en.wikipedia.org/wiki/Context_switch) will be done, control will be returned to userspace with new values of registers and the new executable will be started to execute.
 
@@ -144,13 +144,13 @@ That's all from the kernel side. The Linux kernel prepares the binary image for 
 How does a program start in userspace
 --------------------------------------------------------------------------------
 
-In the previous paragraph we saw how an executable file is prepared to run by the Linux kernel. Let's look at the same, but from userspace side. We already know that the entry point of each program is its `_start` function. But where is this function from? It may came from a library. But if you remember correctly we didn't link our program with any libraries during compilation of our program:
+In the previous paragraph we saw how an executable file is prepared to run by the Linux kernel. Let's look at the same, but from userspace side. We already know that the entry point of each program is its `_start` function. But where is this function from? It may come from a library. But if you remember correctly we didn't link our program with any libraries during compilation of our program:
 
 ```
 $ gcc -Wall program.c -o sum
 ```
 
-You may guess that `_start` comes from the [standard library](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass the `-v` option to gcc which will enable `verbose mode`, you will see a long output. The full output is not interesting for us, let's look at the following steps: 
+You may guess that `_start` comes from the [standard library](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass the `-v` option to gcc which will enable `verbose mode`, you will see a long output. The full output is not interesting for us, let's look at the following steps:
 
 First of all, our program should be compiled with `gcc`:
 
@@ -217,10 +217,10 @@ $ gcc -nostdlib -lc -ggdb program.c -o program
 /usr/bin/ld: warning: cannot find entry symbol _start; defaulting to 0000000000400350
 ```
 
-Ok, the compiler does not complain about undefined reference of standard library functions anymore as we linked our program with `/usr/lib64/libc.so.6`, but the `_start` symbol isn't resolved yet. Let's return to the verbose output of `gcc` and look at the parameters of `collect2`. The most important thing that we may see is that our program is linked not only with the standard library, but also with some object files. The first object file is: `/lib64/crt1.o`. And if we look inside this object file with `objdump`, we will see the `_start` symbol: 
+Ok, the compiler does not complain about undefined reference of standard library functions anymore as we linked our program with `/usr/lib64/libc.so.6`, but the `_start` symbol isn't resolved yet. Let's return to the verbose output of `gcc` and look at the parameters of `collect2`. The most important thing that we may see is that our program is linked not only with the standard library, but also with some object files. The first object file is: `/lib64/crt1.o`. And if we look inside this object file with `objdump`, we will see the `_start` symbol:
 
 ```
-$ objdump -d /lib64/crt1.o 
+$ objdump -d /lib64/crt1.o
 
 /lib64/crt1.o:     file format elf64-x86-64
 
@@ -239,7 +239,7 @@ Disassembly of section .text:
   16:	48 c7 c1 00 00 00 00 	mov    $0x0,%rcx
   1d:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
   24:	e8 00 00 00 00       	callq  29 <_start+0x29>
-  29:	f4                   	hlt    
+  29:	f4                   	hlt
 ```
 
 As `crt1.o` is a shared object file, we see only stubs here instead of real calls. Let's look at the source code of the `_start` function. As this function is architecture specific, implementation for `_start` will be located in the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file.
@@ -285,11 +285,11 @@ We can get all the arguments we need for `__libc_start_main` function from the s
 ```
 +-----------------+
 |       NULL      |
-+-----------------+ 
++-----------------+
 |       ...       |
 |       envp      |
 |       ...       |
-+-----------------+ 
++-----------------+
 |       NULL      |
 +------------------
 |       ...       |
@@ -297,7 +297,7 @@ We can get all the arguments we need for `__libc_start_main` function from the s
 |       ...       |
 +------------------
 |       argc      | <- rsp
-+-----------------+ 
++-----------------+
 ```
 
 After we cleared `ebp` register and saved the address of the termination function in the `r9` register, we pop an element from the stack to the `rsi` register, so after this `rsp` will point to the `argv` array and `rsi` will contain count of command line arguments passed to the program:
@@ -305,11 +305,11 @@ After we cleared `ebp` register and saved the address of the termination functio
 ```
 +-----------------+
 |       NULL      |
-+-----------------+ 
++-----------------+
 |       ...       |
 |       envp      |
 |       ...       |
-+-----------------+ 
++-----------------+
 |       NULL      |
 +------------------
 |       ...       |
@@ -337,7 +337,7 @@ mov $__libc_csu_init, %RCX_LP
 mov $main, %RDI_LP
 ```
 
-After stack aligning we push the address of the stack, move the addresses of contstructor and destructor to the `r8` and `rcx` registers and address of the `main` symbol to the `rdi`. From this moment we can call the `__libc_start_main` function from the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD).
+After stack aligning we push the address of the stack, move the addresses of constructor and destructor to the `r8` and `rcx` registers and address of the `main` symbol to the `rdi`. From this moment we can call the `__libc_start_main` function from the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD).
 
 Before we look at the `__libc_start_main` function, let's add the `/lib64/crt1.o` and try to compile our program again:
 

@@ -39,7 +39,7 @@ The `lib.c` file contains:
 ```C
 int factorial(int base) {
 	int res,i = 1;
-	
+
 	if (base == 0) {
 		return 1;
 	}
@@ -107,8 +107,8 @@ Disassembly of section .text:
   20:	b8 00 00 00 00       	mov    $0x0,%eax
   25:	e8 00 00 00 00       	callq  2a <main+0x2a>
   2a:	b8 00 00 00 00       	mov    $0x0,%eax
-  2f:	c9                   	leaveq 
-  30:	c3                   	retq   
+  2f:	c9                   	leaveq
+  30:	c3                   	retq
 ```
 
 Here we are interested only in the two `callq` operations. The two `callq` operations contain `linker stubs`, or the function name and offset from it to the next instruction. These stubs will be updated to the real addresses of the functions. We can see these functions' names within the following `objdump` output:
@@ -169,7 +169,7 @@ factorial:     file format elf64-x86-64
 ...
 ```
 
-As we can see in the previous output, the address of the `main` function is `0x0000000000400506`. Why it does not start from `0x0`? You may already know that standard C programs are linked with the `glibc` C standard library (assuming the `-nostdlib` was not passed to the `gcc`). The compiled code for a program includes constructor functions to initialize data in the program when the program is started. These functions need to be called before the program is started, or in another words before the `main` function is called. To make the initialization and termination functions work, the compiler must output something in the assembler code to cause those functions to be called at the appropriate time. Execution of this program will start from the code placed in the special `.init` section. We can see this in the beginning of the objdump output:
+As we can see in the previous output, the address of the `main` function is `0x0000000000400506`. Why doesn't it start from `0x0`? You may already know that standard C programs are linked with the `glibc` C standard library (assuming the `-nostdlib` was not passed to the `gcc`). The compiled code for a program includes constructor functions to initialize data in the program when the program is started. These functions need to be called before the program is started, or in another words before the `main` function is called. To make the initialization and termination functions work, the compiler must output something in the assembler code to cause those functions to be called at the appropriate time. Execution of this program will start from the code placed in the special `.init` section. We can see this in the beginning of the objdump output:
 
 ```
 objdump -S factorial | less
@@ -215,7 +215,7 @@ $ gcc main.c lib.o -o factorial
 and after it we will get executable file - `factorial` as a result:
 
 ```
-./factorial 
+./factorial
 factorial of 5 is: 120
 ```
 
@@ -312,13 +312,13 @@ $ objdump -S /usr/lib/gcc/x86_64-linux-gnu/4.9/../../../x86_64-linux-gnu/crtn.o
 
 0000000000000000 <.init>:
    0:	48 83 c4 08          	add    $0x8,%rsp
-   4:	c3                   	retq   
+   4:	c3                   	retq
 
 Disassembly of section .fini:
 
 0000000000000000 <.fini>:
    0:	48 83 c4 08          	add    $0x8,%rsp
-   4:	c3                   	retq   
+   4:	c3                   	retq
 ```
 
 And the `crti.o` object file contains the `_init` and `_fini` symbols. Let's try to link again with these two object files:
@@ -344,14 +344,14 @@ $ ld \
 Finally we get an executable file, but if we try to run it, we will get strange results:
 
 ```
-$ ./factorial 
+$ ./factorial
 bash: ./factorial: No such file or directory
 ```
 
 What's the problem here? Let's look on the executable file with the [readelf](https://sourceware.org/binutils/docs/binutils/readelf.html) util:
 
 ```
-$ readelf -l factorial 
+$ readelf -l factorial
 
 Elf file type is EXEC (Executable file)
 Entry point 0x4003c0
@@ -378,13 +378,13 @@ Program Headers:
 
  Section to Segment mapping:
   Segment Sections...
-   00     
-   01     .interp 
-   02     .interp .note.ABI-tag .hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt .init .plt .text .fini .rodata .eh_frame 
-   03     .dynamic .got .got.plt .data 
-   04     .dynamic 
-   05     .note.ABI-tag 
-   06     
+   00
+   01     .interp
+   02     .interp .note.ABI-tag .hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt .init .plt .text .fini .rodata .eh_frame
+   03     .dynamic .got .got.plt .data
+   04     .dynamic
+   05     .note.ABI-tag
+   06
 ```
 
 Note on the strange line:
@@ -429,7 +429,7 @@ and after this we link object files of our program with the needed system object
 Useful command line options of the GNU linker
 ----------------------------------------------
 
-As I already wrote and as you can see in the manual of the `GNU linker`, it has big set of the command line options. We've seen a couple of options in this post: `-o <output>` - that tells `ld` to produce an output file called `output` as the result of linking, `-l<name>` that adds the archive or object file specified by the name, `-dynamic-linker` that specifies the name of the dynamic linker. Of course `ld` supports much more command line options, let's look at some of them.
+As I already wrote and as you can see in the manual of the `GNU linker`, it has a big set of command line options. We've seen a couple of options in this post: `-o <output>` - that tells `ld` to produce an output file called `output` as the result of linking, `-l<name>` that adds the archive or object file specified by the name, `-dynamic-linker` that specifies the name of the dynamic linker. Of course `ld` supports much more command line options, let's look at some of them.
 
 The first useful command line option is `@file`. In this case the `file` specifies filename where command line options will be read. For example we can create file with the name `linker.ld`, put there our command line arguments from the previous example and execute it with:
 
@@ -445,7 +445,7 @@ The next command line option is `--defsym`. Full format of this command line opt
 LDFLAGS_vmlinux = --defsym _kernel_bss_size=$(KBSS_SZ)
 ```
 
-As we already know, it defines the `_kernel_bss_size` symbol with the size of the `.bss` section in the output file. This symbol will be used in the first [assembly file](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/arm/boot/compressed/head.S) that will be executed during kernel decompressing:
+As we already know, it defines the `_kernel_bss_size` symbol with the size of the `.bss` section in the output file. This symbol will be used in the first [assembly file](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/arm/boot/compressed/head.S) that will be executed during kernel decompression:
 
 ```assembly
 ldr r5, =_kernel_bss_size
@@ -474,7 +474,7 @@ $ ld -M @linker.ld
                 0x000000000040041b                factorial
 ```
 
-Of course the `GNU linker` support standard command line options: `--help` and `--version` that print common help of the usage of the `ld` and its version. That's all about command line options of the `GNU linker`. Of course it is not the full set of command line options supported by the `ld` util. You can find the complete documentation of the `ld` util in the manual.
+Of course the `GNU linker` supports standard command line options: `--help` and `--version` that prints common help of the usage of the `ld` and its version. That's all about command line options of the `GNU linker`. Of course it is not the full set of command line options supported by the `ld` util. You can find the complete documentation of the `ld` util in the manual.
 
 Control Language linker
 ----------------------------------------------
@@ -524,7 +524,7 @@ Our program consists from two sections: `.text` contains code of the program and
 /*
  * Linker script for the factorial
  */
-OUTPUT(hello) 
+OUTPUT(hello)
 OUTPUT_FORMAT("elf64-x86-64")
 INPUT(hello.o)
 
@@ -607,14 +607,14 @@ SECTIONS
 }
 ```
 
-As you already may noted the syntax for expressions in the linker script language is identical to that of C expressions. Besides this the control language of the linking supports following builtin functions:
+As you already may have noted, the syntax for expressions in the linker script language is identical to that of C expressions. Besides this the control language of the linking supports following builtin functions:
 
 * `ABSOLUTE` - returns absolute value of the given expression;
 * `ADDR` - takes the section and returns its address;
 * `ALIGN` - returns the value of the location counter (`.` operator) that aligned by the boundary of the next expression after the given expression;
-* `DEFINED` - returns `1` if the given symbol placed in the global symbol table and `0` in other way;
+* `DEFINED` - returns `1` if the given symbol placed in the global symbol table and `0` otherwise;
 * `MAX` and `MIN` - return maximum and minimum of the two given expressions;
-* `NEXT` - returns the next unallocated address that is a multiple of the give expression;
+* `NEXT` - returns the next unallocated address that is a multiple of the given expression;
 * `SIZEOF` - returns the size in bytes of the given named section.
 
 That's all.

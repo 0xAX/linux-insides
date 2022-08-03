@@ -165,7 +165,7 @@ As result of compilation we can see the compressed kernel - `arch/x86/boot/bzIma
 Installing Linux kernel
 --------------------------------------------------------------------------------
 
-As I already wrote we will consider two ways how to launch new kernel: In the first case we can install and run the new version of the Linux kernel on the real hardware and the second is launch the Linux kernel on a virtual machine. In the previous paragraph we saw how to build the Linux kernel from source code and as a result we have got compressed image:
+As I already wrote we will consider two ways to launch new kernel: in the first case we can install and run the new version of the Linux kernel on the real hardware and the second is launch the Linux kernel on a virtual machine. In the previous paragraph we saw how to build the Linux kernel from source code and as a result we have got compressed image:
 
 ```
 ...
@@ -282,7 +282,7 @@ Consider using [ivandaviov/minimal](https://github.com/ivandavidov/minimal) or [
 Getting started with the Linux Kernel Development
 ---------------------------------------------------------------------------------
 
-The main point of this paragraph is to answer two questions: What to do and what not to do before sending your first patch to the Linux kernel. Please, do not confuse this `to do` with `todo`. I have no answer what you can fix in the Linux kernel. I just want to tell you my workflow during experimenting with the Linux kernel source code.
+The main point of this paragraph is to answer two questions: what to do and what not to do before sending your first patch to the Linux kernel. Please, do not confuse this `to do` with `todo`. I have no answer what you can fix in the Linux kernel. I just want to tell you my workflow during experimenting with the Linux kernel source code.
 
 First of all I pull the latest updates from Linus's repo with the following commands:
 
