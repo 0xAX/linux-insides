@@ -13,9 +13,9 @@ Types of Exceptions:
 * Traps - are precise exceptions reported on the boundary `following` the instruction causing the exception. The same with `%rip`;
 * Aborts - are imprecise exceptions. Because they are imprecise, aborts typically do not allow reliable program restart.
 
-`Maskable` interrupts trigger the interrupt-handling mechanism only when RFLAGS.IF=1. Otherwise they are held pending for as long as the RFLAGS.IF bit is cleared to 0.
+`Maskable` interrupts trigger the interrupt-handling mechanism only when `RFLAGS.IF=1`. Otherwise they are held pending for as long as the `RFLAGS.IF` bit is cleared to 0.
 
-`Nonmaskable` interrupts (NMI) are unaffected by the value of the rFLAGS.IF bit. However, the occurrence of an NMI masks further NMIs until an IRET instruction is executed.
+`Nonmaskable` interrupts (NMI) are unaffected by the value of the 'RFLAGS.IF' bit. However, the occurrence of an NMI masks further NMIs until an IRET instruction is executed.
 
 Specific exception and interrupt sources are assigned a fixed vector-identification number (also called an “interrupt vector” or simply “vector”). The interrupt vector is used by the interrupt-handling mechanism to locate the system-software service routine assigned to the exception or interrupt. Up to
 256 unique interrupt vectors are available. The first 32 vectors are reserved for predefined exception and interrupt conditions. They are defined in the [arch/x86/include/asm/traps.h](http://lxr.free-electrons.com/source/arch/x86/include/asm/traps.h#L121) header file:
