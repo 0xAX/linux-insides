@@ -137,3 +137,4 @@ Thank you to all contributors:
 * [Junbo Jiang](https://github.com/junbo42)
 * [Dexter Plameras](https://github.com/dexterp)
 * [Jun Duan](https://github.com/waltforme)
+* [Guochao Xie](https://github.com/XieGuochao)
