@@ -53,7 +53,7 @@ struct task_struct init_task = INIT_TASK(init_task);
 
 where `task_struct` stores all the information about a process. I will not explain this structure in this book because it's very big. You can find its definition in [include/linux/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/sched.h#L1278). At this moment `task_struct` contains more than `100` fields! Although you will not see the explanation of the `task_struct` in this book, we will use it very often since it is the fundamental structure which describes the `process` in the Linux kernel. I will describe the meaning of the fields of this structure as we meet them in practice.
 
-You can see the definition of the `init_task` and it initialized by the `INIT_TASK` macro. This macro is from [include/linux/init_task.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init_task.h) and it just fills the `init_task` with the values for the first process. For example it sets:
+You can see the definition of the `init_task` and it is initialized by the `INIT_TASK` macro. This macro is from [include/linux/init_task.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/init_task.h) and it just fills the `init_task` with the values for the first process. For example it sets:
 
 * init process state to zero or `runnable`. A runnable process is one which is waiting only for a CPU to run on;
 * init process flags - `PF_KTHREAD` which means - kernel thread;
