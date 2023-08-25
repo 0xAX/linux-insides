@@ -7,7 +7,7 @@ A book-in-progress about the linux kernel and its insides.
 
 **Questions/Suggestions**: Feel free about any questions or suggestions by pinging me at twitter [@0xAX](https://twitter.com/0xAX), adding an [issue](https://github.com/0xAX/linux-insides/issues/new) or just drop me an [email](mailto:anotherworldofworld@gmail.com).
 
-Generating eBooks and PDFs - [documentation](https://github.com/GitbookIO/gitbook/blob/master/docs/ebook.md)
+PDF, EPUB, and MOBI files can be downloaded from the [releases page](https://github.com/0xAX/linux-insides/releases).
 
 # Mailing List
 
