@@ -138,3 +138,4 @@ Thank you to all contributors:
 * [Dexter Plameras](https://github.com/dexterp)
 * [Jun Duan](https://github.com/waltforme)
 * [Guochao Xie](https://github.com/XieGuochao)
+* [Davide Benini](https://github.com/beninidavide/)
