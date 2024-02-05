@@ -504,7 +504,7 @@ Links
 * [mm vs active_mm](https://www.kernel.org/doc/Documentation/vm/active_mm.txt)
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [Supervisor mode access prevention](https://lwn.net/Articles/517475/)
-* [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks)
+* [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/kernel-stacks)
 * [TSS](http://en.wikipedia.org/wiki/Task_state_segment)
 * [IDT](http://en.wikipedia.org/wiki/Interrupt_descriptor_table)
 * [Memory mapped I/O](http://en.wikipedia.org/wiki/Memory-mapped_I/O)

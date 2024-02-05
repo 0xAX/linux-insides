@@ -286,7 +286,7 @@ The next exception is `#DF` or `Double fault`. This exception occurs when the pr
 set_intr_gate_ist(X86_TRAP_DF, &double_fault, DOUBLEFAULT_STACK);
 ```
 
-Note that this exception runs on the `DOUBLEFAULT_STACK` [Interrupt Stack Table](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks) which has index - `1`:
+Note that this exception runs on the `DOUBLEFAULT_STACK` [Interrupt Stack Table](https://www.kernel.org/doc/Documentation/x86/kernel-stacks) which has index - `1`:
 
 ```C
 #define DOUBLEFAULT_STACK 1
@@ -485,7 +485,7 @@ Links
 * [printk](https://en.wikipedia.org/wiki/Printk)
 * [coprocessor](https://en.wikipedia.org/wiki/Coprocessor)
 * [SIMD](https://en.wikipedia.org/wiki/SIMD)
-* [Interrupt Stack Table](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks)
+* [Interrupt Stack Table](https://www.kernel.org/doc/Documentation/x86/kernel-stacks)
 * [PID](https://en.wikipedia.org/wiki/Process_identifier)
 * [x87 FPU](https://en.wikipedia.org/wiki/X87)
 * [control register](https://en.wikipedia.org/wiki/Control_register)
