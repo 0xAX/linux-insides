@@ -319,9 +319,6 @@ it has been loaded at and the compile time physical address
 
 Now that we know where to start, let's get to it.
 
-Reload the segments if needed
---------------------------------------------------------------------------------
-
 As indicated above, we start in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly source code file. We first see the definition of a special section attribute before the definition of the `startup_32` function:
 
 ```assembly
