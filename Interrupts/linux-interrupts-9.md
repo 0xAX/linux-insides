@@ -24,7 +24,7 @@ There are three types of `deferred interrupts` in the Linux kernel:
 * `tasklets`;
 * `workqueues`;
 
-And we will see description of all of these types in this part. As I said, we saw only a little bit about this theme, so, now is time to dive deep into details about this theme.
+And we will see a description of all of these types in this part. As I said, we saw only a little bit about this theme, so, now is time to dive deep into details about this theme.
 
 Softirqs
 ----------------------------------------------------------------------------------
@@ -43,7 +43,7 @@ $ systemd-cgls -k | grep ksoft
 ├─  43 [ksoftirqd/7]
 ```
 
-The `spawn_ksoftirqd` function starts this these threads. As we can see this function called as early [initcall](https://kernelnewbies.org/Documents/InitcallMechanism):
+The `spawn_ksoftirqd` function starts these threads. As we can see this function called as early [initcall](https://kernelnewbies.org/Documents/InitcallMechanism):
 
 ```C
 early_initcall(spawn_ksoftirqd);
