@@ -1,5 +1,6 @@
-Thank you to all contributors:
-------------------------------
+# Contributors
+
+Special thanks to all the people who helped to develop this project:
 
 * [Akash Shende](https://github.com/akash0x53)
 * [Jakub Kramarz](https://github.com/jkramarz)
