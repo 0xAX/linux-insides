@@ -42,4 +42,4 @@ After you submit your PR, wait for the review. The project maintainers will eval
 
 ## Contributors 
 
-All contributions get credit in [Contributors](CONTRIBUTORS.md). Don't forget to add yourself there. 
+All contributions get credit in [Contributors](contributors.md). Don't forget to add yourself there. 
