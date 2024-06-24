@@ -103,7 +103,7 @@ Notification Chains
 
 Usually there are two sides in a publish/subscriber mechanisms. One side who wants to get notifications and other side(s) who generates these notifications. We will consider notification chains mechanism from both sides. We will consider `blocking notification chains` in this part, because of other types of notification chains are similar to it and differ mostly in protection mechanisms.
 
-Before a notification producer is able to produce notification, first of all it should initialize head of a notification chain. For example let's consider notification chains related to kernel [loadable modules](https://en.wikipedia.org/wiki/Loadable_kernel_module). If we will look in the [kernel/module.c](https://github.com/torvalds/linux/blob/master/kernel/module.c) source code file, we will see following definition:
+Before a notification producer is able to produce notification, first of all it should initialize head of a notification chain. For example let's consider notification chains related to kernel [loadable modules](https://en.wikipedia.org/wiki/Loadable_kernel_module). If we will look in the [kernel/module/main.c](https://github.com/torvalds/linux/blob/master/kernel/module/main.c) source code file, we will see following definition:
 
 ```C
 static BLOCKING_NOTIFIER_HEAD(module_notify_list);
