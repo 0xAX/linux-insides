@@ -270,7 +270,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 }
 ```
 
-Let's try to understand what does the `do_one_initcall` function does. First of all we increase [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) counter so that we can check it later to be sure that it is not imbalanced. After this step we can see the call of the `initcall_backlist` function which goes over the `blacklisted_initcalls` list which stores blacklisted `initcalls` and releases the given `initcall` if it is located in this list:
+Let's try to understand what does the `do_one_initcall` function does. First of all we increase [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) counter so that we can check it later to be sure that it is not imbalanced. After this step we can see the call of the `initcall_blacklisted` function which goes over the `blacklisted_initcalls` list which stores blacklisted `initcalls` and releases the given `initcall` if it is located in this list:
 
 ```C
 list_for_each_entry(entry, &blacklisted_initcalls, next) {
