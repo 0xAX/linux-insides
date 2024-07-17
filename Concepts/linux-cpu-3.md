@@ -98,7 +98,7 @@ To understand the `__define_initcall` macro, first of all let's look at the `ini
 typedef int (*initcall_t)(void);
 ```
 
-Now let's return to the `__define_initcall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces the definition of a given function, `__initcall_<function-name>_<id>`, which is located in the `.initcall <id> .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and marked with the `__user` [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attribute. If we look at [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/vmlinux.lds.h) header file, which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
+Now let's return to the `__define_initcall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces the definition of a given function, `__initcall_<function-name>_<id>`, which is located in the `.initcall <id> .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and marked with the `__used` attribute (see below). If we look at [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/vmlinux.lds.h) header file, which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
 
 ```C
 #define INIT_CALLS					\
@@ -134,7 +134,7 @@ ffffffff8320d0e0 t __initcall_nmi_warning_debugfs5
 ...
 ```
 
-The attribute `__used` is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/compiler-gcc.h) header file and it expands to the definition of the following `gcc` attribute:
+The attribute `__used` is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/compiler-gcc.h) header file and it expands to the definition of the following [`gcc`](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attribute:
 
 ```C
 #define __used   __attribute__((__used__))
