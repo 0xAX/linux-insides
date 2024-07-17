@@ -230,7 +230,7 @@ As we just saw, the `do_initcall_level` function takes one parameter - level of 
 
 * parses the `initcall_command_line` which is copy of usual kernel [command line](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/params.c) source code file;
 
-* call the `do_on_initcall` function for each level:
+* call the `do_one_initcall` function for each level:
 
 ```C
 for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
