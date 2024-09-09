@@ -43,19 +43,22 @@ Docker
 
 In order to run your own copy of the book with gitbook within a local container:
 
-1. Enable Docker experimental features with vim or another text editor
+1. (Optional) Enable Docker experimental features (if you want to `--squash` image layers) with vim or another text editor:
    ```bash
-    sudo vim /usr/lib/systemd/system/docker.service
+    EDITOR=vim sudoedit /etc/docker/daemon.json
    ```
 
-   Then add --experimental=true to the end of the ExecStart=/usr/bin/dockerd -H fd:// line and save.
+   Then add `"experimental": true` to the JSON and save. E.g. in case if you initially had empty `daemon.json` the result should be:
 
-   Eg: *ExecStart=/usr/bin/dockerd -H fd:// --experimental=true*
+   ```json
+   {
+      "experimental" : true
+   }
+   ```
 
-   Then, you need to reload and restart the Docker daemon:
+   Finally, restart the Docker daemon:
    ```bash
-    systemctl daemon-reload
-    systemctl restart docker.service
+    systemctl restart --now docker.service
    ```
 
 2. Run docker image
