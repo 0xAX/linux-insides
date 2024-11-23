@@ -190,7 +190,7 @@ If we look at the assembly output:
   400525:       48 01 d0                add    %rdx,%rax
 ```
 
-we will see that the `%rdx` register is overwritten with `0x64` or `100` and the result will be `110` instead of `10`. Now if we add the `%rdx` register to the list of `clobbered` registers:
+we will see that the `%rdx` register is overwritten with `0x64` or `100` and the result will be `110` instead of `15`. Now if we add the `%rdx` register to the list of `clobbered` registers:
 
 ```C
 __asm__("movq $100, %%rdx\t\n"
