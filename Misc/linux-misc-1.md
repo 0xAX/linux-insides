@@ -270,7 +270,7 @@ $ find . -print0 | cpio --null -ov --format=newc | gzip -9 > ~/dev/initrd_x86_64
 We can now run our kernel in the virtual machine. As I already wrote I prefer [qemu](https://en.wikipedia.org/wiki/QEMU) for this. We can run our kernel with the following command:
 
 ```
-$ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86_64/boot/bzImage -initrd ~/dev/initrd_x86_64.gz -append "root=/dev/sda1 ignore_loglevel"
+$ qemu-system-x86_64 -snapshot -m 8G -serial stdio -kernel ~/dev/linux/arch/x86_64/boot/bzImage -initrd ~/dev/initrd_x86_64.gz -append "root=/dev/sda1 ignore_loglevel"
 ```
 
 ![qemu](images/qemu.png)
