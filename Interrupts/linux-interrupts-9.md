@@ -283,7 +283,8 @@ As we can see this structure contains five fields, they are:
 * Main callback of the tasklet;
 * Parameter of the callback.
 
-In our case, we set only for initialize only two arrays of tasklets in the `softirq_init` function: the `tasklet_vec` and the `tasklet_hi_vec`. Tasklets and high-priority tasklets are stored in the `tasklet_vec` and `tasklet_hi_vec` arrays, respectively. So, we have initialized these arrays and now we can see two calls of the `open_softirq` function that is defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/softirq.c) source code file:
+In our case, we initialize only two per-CPU tasklet vectors: `tasklet_vec` for normal-priority tasklets and `tasklet_hi_vec` for high-priority tasklets. These vectors are implemented as linked lists, with each CPU maintaining its own instance.
+After setting up the tasklet vectors, we register two softirq handlers using the `open_softirq` function that is defined in the [kernel/softirq.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/softirq.c) source code file:
 
 ```C
 open_softirq(TASKLET_SOFTIRQ, tasklet_action);
