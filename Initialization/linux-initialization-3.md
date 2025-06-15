@@ -4,18 +4,18 @@ Kernel initialization. Part 3.
 Last preparations before the kernel entry point
 --------------------------------------------------------------------------------
 
-This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue to dive into the Linux kernel initialization process in the current part. Our next point is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we call the `start_kernel` function, we must do some preparations. So let's continue.
+This is the third part of the Linux kernel initialization process series. In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-2.md) we saw early interrupt and exception handling and will continue diving into the Linux kernel initialization process in the current part. Our next stop is 'kernel entry point' - `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. Yes, technically it is not kernel's entry point but the start of the generic kernel code which does not depend on certain architecture. But before we call the `start_kernel` function, we must do some preparations. So let's continue.
 
 boot_params again
 --------------------------------------------------------------------------------
 
-In the previous part we stopped at setting Interrupt Descriptor Table and loading it in the `IDTR` register. At the next step after this we can see a call of the `copy_bootdata` function:
+In the previous part we stopped at setting Interrupt Descriptor Table and loading it in the `IDTR` register. At the next step after this we can see a call to the `copy_bootdata` function:
 
 ```C
 copy_bootdata(__va(real_mode_data));
 ```
 
-This function takes one argument - virtual address of the `real_mode_data`. Remember that we passed the address of the `boot_params` structure from [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L114)  to the `x86_64_start_kernel` function as first argument in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
+This function takes one argument - virtual address of the `real_mode_data`. Remember that we passed the address of the `boot_params` structure from [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/bootparam.h#L114)  to the `x86_64_start_kernel` function as the first argument in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S):
 
 ```
 	/* rsi is pointer to real mode structure with interesting info.
@@ -23,13 +23,13 @@ This function takes one argument - virtual address of the `real_mode_data`. Reme
 	movq	%rsi, %rdi
 ```
 
-Now let's look at `__va` macro. This macro defined in [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c):
+Now let's look at the `__va` macro. This macro is defined in [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c):
 
 ```C
 #define __va(x)                 ((void *)((unsigned long)(x)+PAGE_OFFSET))
 ```
 
-where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of variable `boot_params` which come along from real mode, and pass it to the `copy_bootdata` function, where we copy `real_mode_data` to the `boot_params` which is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/d9919d43cbf6790d2bc0c0a2743c51fc25f26919/arch/x86/kernel/setup.c)
+where `PAGE_OFFSET` is `__PAGE_OFFSET` which is `0xffff880000000000` and the base virtual address of the direct mapping of all physical memory. So we're getting virtual address of the variable `boot_params` that comes along from real mode, and pass it to the `copy_bootdata` function, where we copy `real_mode_data` to the `boot_params` being defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/d9919d43cbf6790d2bc0c0a2743c51fc25f26919/arch/x86/kernel/setup.c)
 
 ```C
 struct boot_params boot_params;
@@ -53,9 +53,9 @@ static void __init copy_bootdata(char *real_mode_data)
 }
 ```
 
-First of all, note that this function is declared with `__init` prefix. It means that this function will be used only during the initialization and used memory will be freed.
+First of all, note that this function is declared with `__init` prefix. It means that this function will be used only during the initialization and memory used will be freed.
 
-We can see declaration of two variables for the kernel command line and copying `real_mode_data` to the `boot_params` with the `memcpy` function. The next call of the `sanitize_boot_params` function which fills some fields of the `boot_params` structure like `ext_ramdisk_image` and etc... if bootloaders which fail to initialize unknown fields in `boot_params` to zero. After this we're getting address of the command line with the call of the `get_cmd_line_ptr` function:
+We can see declarations of two variables for the kernel command line and copying `real_mode_data` to the `boot_params` using the `memcpy` function. The next call of the `sanitize_boot_params` function fills some fields of the `boot_params` structure such as `ext_ramdisk_image` etc. If there are unknown fields in `boot_params` to this bootloader, they are initialized to zero. After this we're getting address of the command line with a call of the `get_cmd_line_ptr` function:
 
 ```C
 unsigned long cmd_line_ptr = boot_params.hdr.cmd_line_ptr;
@@ -63,26 +63,26 @@ cmd_line_ptr |= (u64)boot_params.ext_cmd_line_ptr << 32;
 return cmd_line_ptr;
 ```
 
-which gets the 64-bit address of the command line from the kernel boot header and returns it. In the last step we check `cmd_line_ptr`, getting its virtual address and copy it to the `boot_command_line` which is just an array of bytes:
+that gets the 64-bit address of the command line from the kernel boot header and returns it. In the last step we check `cmd_line_ptr`, getting its virtual address and copy it to the `boot_command_line` which is just an array of bytes:
 
 ```C
 extern char __initdata boot_command_line[];
 ```
 
-After this we will have copied kernel command line and `boot_params` structure. In the next step we can see call of the `load_ucode_bsp` function which loads processor microcode, but we will not see it here.
+After this we will have copied kernel command line and `boot_params` structure. In the next step we can see a call of the `load_ucode_bsp` function that loads processor microcode, but we will not see it here.
 
-After microcode was loaded we can see the check of the `console_loglevel` and the `early_printk` function which prints `Kernel Alive` string. But you'll never see this output because `early_printk` is not initialized yet. It is a minor bug in the kernel and i sent the patch - [commit](http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=91d8f0416f3989e248d3a3d3efb821eda10a85d2) and you will see it in the mainline soon. So you can skip this code.
+After microcode has been loaded we can see the check of the `console_loglevel` and the `early_printk` function which prints `Kernel Alive` string. But you'll never see this output because `early_printk` is not initialized yet. It is a minor bug in the kernel and i sent the patch - [commit](http://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/commit/?id=91d8f0416f3989e248d3a3d3efb821eda10a85d2) and you will see it in the mainline soon. So you can skip this code.
 
-Move on init pages
+Move on to init pages
 --------------------------------------------------------------------------------
 
-In the next step, as we have copied `boot_params` structure, we need to move from the early page tables to the page tables for initialization process. We already set early page tables for switchover, you can read about it in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1) and dropped all it in the `reset_early_page_tables` function (you can read about it in the previous part too) and kept only kernel high mapping. After this we call:
+In the next step, as we have copied `boot_params` structure, we need to move from the early page tables to the page tables for the initialization process. We already set early page tables for switchover (you can read about it in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1)) and dropped it all in the `reset_early_page_tables` function (you can read about it in the previous part as well) and kept only kernel high mapping. After this we call:
 
 ```C
 	clear_page(init_level4_pgt);
 ```
 
-function and pass `init_level4_pgt` which also defined in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) and looks:
+function and pass `init_level4_pgt` which is also defined in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) and looks as follows:
 
 ```assembly
 NEXT_PAGE(init_level4_pgt)
@@ -93,7 +93,7 @@ NEXT_PAGE(init_level4_pgt)
 	.quad   level3_kernel_pgt - __START_KERNEL_map + _PAGE_TABLE
 ```
 
-which maps first 2 gigabytes and 512 megabytes for the kernel code, data and bss. `clear_page` function defined in the [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/clear_page_64.S) let's look on this function:
+which maps first 2 gigabytes and 512 megabytes for the kernel code, data and bss. `clear_page` function defined in the [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/clear_page_64.S) let's look at this function:
 
 ```assembly
 ENTRY(clear_page)
@@ -121,14 +121,14 @@ ENTRY(clear_page)
 	ENDPROC(clear_page)
 ```
 
-As you can understand from the function name it clears or fills with zeros page tables. First of all note that this function starts with the `CFI_STARTPROC` and `CFI_ENDPROC` which are expands to GNU assembly directives:
+As you can understand from the function name it clears or fills with zeros the page tables. First of all, note that this function starts with the `CFI_STARTPROC` and `CFI_ENDPROC` which expand to GNU assembly directives:
 
 ```C
 #define CFI_STARTPROC           .cfi_startproc
 #define CFI_ENDPROC             .cfi_endproc
 ```
 
-and used for debugging. After `CFI_STARTPROC` macro we zero out `eax` register and put 64 to the `ecx` (it will be a counter). Next we can see loop which starts with the `.Lloop` label and it starts from the `ecx` decrement. After it we put zero from the `rax` register to the `rdi` which contains the base address of the `init_level4_pgt` now and do the same procedure seven times but every time move `rdi` offset on 8. After this we will have first 64 bytes of the `init_level4_pgt` filled with zeros. In the next step we put the address of the `init_level4_pgt` with 64-bytes offset to the `rdi` again and repeat all operations until `ecx` reaches zero. In the end we will have `init_level4_pgt` filled with zeros.
+and are used for debugging. After `CFI_STARTPROC` macro we zero out the `eax` register and load 64 to the `ecx` (it will be a counter). Next, we can see a loop that starts with the `.Lloop` label and starts decrementing the `ecx` counter.  After it is done we move zero from the `rax` register to the `rdi` containing the base address of the `init_level4_pgt` now and do the same procedure seven times but every time move `rdi` offset by 8. After this, we will have first 64 bytes of the `init_level4_pgt` filled with zeros. In the next step we put the address of the `init_level4_pgt` at 64-bytes offset to the `rdi` again and repeat all operations until `ecx` reaches zero. In the end we will have `init_level4_pgt` filled with zeros.
 
 As we have `init_level4_pgt` filled with zeros, we set the last `init_level4_pgt` entry to kernel high mapping with the:
 
@@ -136,15 +136,15 @@ As we have `init_level4_pgt` filled with zeros, we set the last `init_level4_pgt
 init_level4_pgt[511] = early_top_pgt[511];
 ```
 
-Remember that we dropped all `early_top_pgt` entries in the `reset_early_page_table` function and kept only kernel high mapping there.
+Remember that we dropped all `early_top_pgt` entries in the `reset_early_page_table` function and kept only the kernel high mapping there.
 
-The last step in the `x86_64_start_kernel` function is the call of the:
+The last step in the `x86_64_start_kernel` function is the call to the:
 
 ```C
 x86_64_start_reservations(real_mode_data);
 ```
 
-function with the `real_mode_data` as argument. The `x86_64_start_reservations` function defined in the same source code file as the `x86_64_start_kernel` function and looks:
+function with the `real_mode_data` as argument. The `x86_64_start_reservations` function is defined in the same source code file as the `x86_64_start_kernel` function and looks as follows:
 
 ```C
 void __init x86_64_start_reservations(char *real_mode_data)
@@ -172,29 +172,29 @@ if (!boot_params.hdr.version)
 
 and if it is zero we call `copy_bootdata` function again with the virtual address of the `real_mode_data` (read about its implementation).
 
-In the next step we can see the call of the `reserve_ebda_region` function which defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head.c). This function reserves memory block for the `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area located in the top of conventional memory and contains data about ports, disk parameters and etc...
+In the next step we can see the call of the `reserve_ebda_region` function which is defined in the [arch/x86/kernel/head.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head.c). This function reserves a memory block for the `EBDA` or Extended BIOS Data Area. The Extended BIOS Data Area is located in the top of the conventional memory and contains data about ports, disk parameters and etc...
 
-Let's look on the `reserve_ebda_region` function. It starts from the checking is paravirtualization enabled or not:
+Let's look at the `reserve_ebda_region` function. It starts from checking whether paravirtualization is enabled or not:
 
 ```C
 if (paravirt_enabled())
 	return;
 ```
 
-we exit from the `reserve_ebda_region` function if paravirtualization is enabled because if it enabled the extended BIOS data area is absent. In the next step we need to get the end of the low memory:
+we exit from the `reserve_ebda_region` function if paravirtualization is enabled because in such case the extended BIOS data area is absent. In the next step we need to get the end of the low memory:
 
 ```C
 lowmem = *(unsigned short *)__va(BIOS_LOWMEM_KILOBYTES);
 lowmem <<= 10;
 ```
 
-We're getting the virtual address of the BIOS low memory in kilobytes and convert it to bytes with shifting it on 10 (multiply on 1024 in other words). After this we need to get the address of the extended BIOS data are with the:
+We're getting the virtual address of the BIOS low memory in kilobytes and convert it to bytes by shifting it 10 times (multiply by 1024 in other words). After this, we need to get the address of the extended BIOS data with
 
 ```C
 ebda_addr = get_bios_ebda();
 ```
 
-where `get_bios_ebda` function defined in the [arch/x86/include/asm/bios_ebda.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bios_ebda.h) and looks like:
+where `get_bios_ebda` function is defined in the [arch/x86/include/asm/bios_ebda.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/bios_ebda.h) and looks like:
 
 ```C
 static inline unsigned int get_bios_ebda(void)
@@ -224,9 +224,9 @@ only with one difference: we pass argument with the `phys_addr_t` which depends 
 #endif
 ```
 
-This configuration option is enabled by `CONFIG_PHYS_ADDR_T_64BIT`. After that we got virtual address of the segment which stores the base address of the extended BIOS data area, we shift it on 4 and return. After this `ebda_addr` variables contains the base address of the extended BIOS data area.
+This configuration option is enabled by `CONFIG_PHYS_ADDR_T_64BIT`. After that we got virtual address of the segment which stores the base address of the extended BIOS data area, we shift it by 4 and return. After this `ebda_addr` variables contains the base address of the extended BIOS data area.
 
-In the next step we check that address of the extended BIOS data area and low memory is not less than `INSANE_CUTOFF` macro
+In the next step we check that the address of the extended BIOS data area and low memory is not less than `INSANE_CUTOFF` macro
 
 ```C
 if (ebda_addr < INSANE_CUTOFF)
@@ -304,7 +304,7 @@ struct memblock {
 };
 ```
 
-and describes generic memory block. You can see that we initialize `_rgn` by assigning it to the address of the `memblock.reserved`. `memblock` is the global variable which looks:
+and describes a generic memory block. You can see that we initialize `_rgn` by assigning it to the address of the `memblock.reserved`. `memblock` is a global variable that looks as follows:
 
 ```C
 struct memblock memblock __initdata_memblock = {
@@ -324,7 +324,7 @@ struct memblock memblock __initdata_memblock = {
 };
 ```
 
-We will not dive into detail of this variable, but we will see all details about it in the parts about memory manager. Just note that `memblock` variable defined with the `__initdata_memblock` which is:
+We will not dive into details of this variable now, but rather dive into them later in the parts concerning the memory manager. Just note that `memblock` variable defined with the `__initdata_memblock` which is:
 
 ```C
 #define __initdata_memblock __meminitdata
@@ -363,7 +363,7 @@ After we filled our region we can see the call of the `memblock_set_region_node`
 * address of the filled memory region;
 * NUMA node id.
 
-where our regions represented by the `memblock_region` structure:
+where our regions are represented by the `memblock_region` structure:
 
 ```C
 struct memblock_region {
@@ -382,7 +382,7 @@ NUMA node id depends on `MAX_NUMNODES` macro which is defined in the [include/li
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
 ```
 
-where `NODES_SHIFT` depends on `CONFIG_NODES_SHIFT` configuration parameter and defined as:
+where `NODES_SHIFT` depends on `CONFIG_NODES_SHIFT` configuration parameter and is defined as:
 
 ```C
 #ifdef CONFIG_NODES_SHIFT
@@ -416,7 +416,7 @@ That's all for this part.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the third part about Linux kernel insides. In next part we will see the first initialization steps in the kernel entry point - `start_kernel` function. It will be the first step before we will see launch of the first `init` process.
+It is the end of the third part about Linux kernel insides. In next part we will see the first initialization steps in the kernel entry point - `start_kernel` function. It will be the first step before we will see the launch of the first `init` process.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
