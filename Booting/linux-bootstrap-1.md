@@ -4,7 +4,7 @@ Kernel booting process. Part 1.
 From the bootloader to the kernel
 --------------------------------------------------------------------------------
 
-If you read my previous [blog posts](https://0xax.github.io/categories/assembler/), you might have noticed that I  have been involved with low-level programming for some time. I wrote some posts about assembly programming for `x86_64` Linux and, at the same time, started to dive into the Linux kernel source code.
+If you read my previous [blog posts](https://github.com/0xAX/asm), you might have noticed that I  have been involved with low-level programming for some time. I wrote some posts about assembly programming for `x86_64` Linux and, at the same time, started to dive into the Linux kernel source code.
 
 I have a great interest in understanding how low-level things work, how programs run on my computer, how they are located in memory, how the kernel manages processes and memory, how the network stack works at a low level, and many many other things. So, I decided to write yet another series of posts about the Linux kernel for the **x86_64** architecture.
 
