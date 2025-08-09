@@ -611,7 +611,7 @@ This is the end of the fourth part of the Linux kernel booting process. If you h
 
 In the next part, we will learn about many things, including how kernel decompression works.
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send a PR to [linux-insides](https://github.com/0xAX/linux-internals).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send a PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------
