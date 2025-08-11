@@ -1,30 +1,20 @@
-Kernel booting process. Part 1.
-================================================================================
+# Kernel Booting Process — Part 1
 
-From the bootloader to the kernel
---------------------------------------------------------------------------------
+## From the bootloader to the kernel
 
-If you read my previous [blog posts](https://github.com/0xAX/asm), you might have noticed that I  have been involved with low-level programming for some time. I wrote some posts about assembly programming for `x86_64` Linux and, at the same time, started to dive into the Linux kernel source code.
+If you’ve read my earlier [blog posts](https://github.com/0xAX/asm) about programming using [assembly](https://en.wikipedia.org/wiki/Assembly_language) programming language, you know I’ve been working with low-level programming for quite a while. I’ve written set of articles on assembly programming for [x86_64](https://en.wikipedia.org/wiki/X86-64) Linux and, in parallel, I started exploring the Linux kernel source code. It always was interesting to me - understanding of how things work under the hood - how programs execute on a CPU, how they are laid in memory, how the kernel schedules processes and manages resources, how the network stack operates at a low level, and many many other things. This series is my way of sharing that journey: a set of posts about the Linux kernel for the *x86_64* architecture.
 
-I have a great interest in understanding how low-level things work, how programs run on my computer, how they are located in memory, how the kernel manages processes and memory, how the network stack works at a low level, and many many other things. So, I decided to write yet another series of posts about the Linux kernel for the **x86_64** architecture.
+> [!NOTE]
+> This is not official Linux kernel documentation, it is a learning project. I’m not a professional Linux kernel developer, and I don’t write kernel code as part of my job. Learning how the Linux kernel works is simply a hobby. If you find anything unclear, spot an error, or have questions or suggestions, feel free to reach out - you always can ping me on X [0xAX](https://twitter.com/0xAX), send me an [email](mailto:anotherworldofworld@gmail.com) or open a new [issue](https://github.com/0xAX/linux-insides/issues/new). Your feedback is always welcome and appreciated.
 
-Note that I'm not a professional kernel hacker and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on Twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). I appreciate it.
+The main goal of this set of posts - to have comprehensive guide to the Linux kernel. We will see and try to understand not only what the kernel does, but how and why it does this or that thing. Despite being considered to be understandable for anyone who is interested in Linux kernel, it is worth to have some prior knowledge before statring to read these notes. If you want to experiment with the kernel code, first of all it is desirable to have intalled on of the [Linux distribution](https://en.wikipedia.org/wiki/Linux_distribution). On these pages we will see much of [C](https://en.wikipedia.org/wiki/C_(programming_language)) and [assembly](https://en.wikipedia.org/wiki/Assembly_language) code, so the good understanding of these programming languages is highly required.
 
-All posts will also be accessible at [github repo](https://github.com/0xAX/linux-insides) and, if you find something wrong with my English or the post content, feel free to send a pull request.
+> [!IMPORTANT]
+> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in a progress of update the content to reflect modern kernels where possible — now focusing on v6.17+. I’ll continue revising the posts as the kernel evolves.
 
-*Note that this isn't official documentation, just learning and sharing knowledge.*
+That’s enough introduction — let’s dive into the Linux kernel!
 
-**Required knowledge**
-
-* Understanding C code
-* Understanding assembly code (AT&T syntax)
-
-Anyway, if you're just starting to learn such tools, I will try to explain some parts during this and the following posts. Alright, this is the end of the simple introduction. Let's start to dive into the Linux kernel and low-level stuff!
-
-I started writing these posts at the time of the `3.18` Linux kernel, and many things have changed since that time. If there are changes, I will update the posts accordingly.
-
-The Magical Power Button, What happens next?
---------------------------------------------------------------------------------
+## The Magical Power Button, What happens next?
 
 Although this is a series of posts about the Linux kernel, we won't start directly from the kernel code. As soon as you press the magical power button on your laptop or desktop computer, it starts working. The motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply) device. After receiving the signal, the power supply provides the proper amount of electricity to the computer. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to start the CPU. The CPU resets all leftover data in its registers and sets predefined values for each of them.
 
