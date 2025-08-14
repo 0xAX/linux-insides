@@ -1,0 +1,82 @@
+# Note: Indentation here is of 2 spaces.
+
+name: Generate release with ebooks
+
+
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch: {}  # For manual switch.
+# End of on.
+
+
+jobs:
+  release_ebooks:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          ref: master
+      
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "latest"
+
+      # HonKit is a maintained fork of GitBook.
+      - name: Install honkit
+        run: npm install honkit -g
+
+      # APT install can take a long time due to installing dependencies,
+      # so we will use caching.
+      - name: Install calibre for ebook-convert
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: calibre
+
+      # HonKit uses highlight.js for syntax highlighting, which doesn't have
+      # "assembly" option, but has "x86asm". Currently, there is a better
+      # "x86asmatt" option in main branch but it is unreleased.
+      - name: Change highlighting code for honkit
+        run: find . -type f -name "*.md" -exec sed -i 's/```assembly/```x86asm/g' {} \;
+
+      # Create environment variables for convenience.
+      # GITHUB_ENV stores the env variables between steps.
+      - name: Get commit hash and create filename prefix
+        run: |
+          commit="$(git rev-parse --short HEAD)"
+          echo "commit=$commit" >> $GITHUB_ENV
+          echo "filename_prefix='linux-insides_$commit'" >> $GITHUB_ENV
+
+      - name: Generate PDF
+        run: honkit pdf ./ "./$filename_prefix.pdf"
+
+      - name: Generate EPUB
+        run: honkit epub ./ "./$filename_prefix.epub"
+
+      - name: Generate MOBI
+        run: honkit mobi ./ "./$filename_prefix.mobi"
+
+      # Create a release on GitHub.
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "${{ env.filename_prefix }}.*"
+          generateReleaseNotes: true
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          tag: "${{ env.commit }}"
+          commit: "master"
+    # End of steps.
+  # End of release_ebooks.
+# End of jobs.
+
+
+# End of file.
