@@ -200,7 +200,7 @@ As we can read in the [documentation](https://github.com/torvalds/linux/blob/mas
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/setup.ld#L70-70 -->
 ```linker-script
-. = ASSERT(hdr == 0x1f1, "The setup header has the wrong offset!");
+	. = ASSERT(hdr == 0x1f1, "The setup header has the wrong offset!");
 ```
 
 The kernel [setup header](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) is split on two parts and the first part starts from the following fields:
