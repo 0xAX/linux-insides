@@ -1,0 +1,32 @@
+name: check code snippets
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check-code-snippets:
+    name: check-code-snippets
+    runs-on:
+      - ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Setup python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests  
+      - name: Validate code snippets
+        run: |
+          python ./scripts/check-code-snippets.py .
