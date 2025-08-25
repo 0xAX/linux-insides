@@ -1,37 +1,27 @@
-linux-insides
-===============
+# Linux insides
 
-A book-in-progress about the linux kernel and its insides.
+This repository contains a book-in-progress about the Linux kernel and its insides.
+
+The goal of this project is simple – to share knowledge about the Linux kernel internals and related low-level topics. If you’re curious about what’s under the hood, see the [Table of Contents](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md).
 
 > [!IMPORTANT]
-> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in the process of updating the content to reflect modern kernels where possible — now focusing on v6.16+. I’ll continue revising the posts as the kernel evolves.
+> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in progress of updating the content to reflect modern kernels (v6.16+). I’ll continue revising the posts as the kernel evolves.
 
-**The goal is simple** - to share my modest knowledge about the insides of the linux kernel and help people who are interested in linux kernel insides, and other low-level subject matter. Feel free to go through the book [Start here](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md)
+## Mailing list
 
-**Questions/Suggestions**: Feel free about any questions or suggestions by pinging me at twitter [@0xAX](https://twitter.com/0xAX), adding an [issue](https://github.com/0xAX/linux-insides/issues/new) or just drop me an [email](mailto:anotherworldofworld@gmail.com).
+There is a Google group mailing list (`kernelhacking@googlegroups.com`) for learning the kernel source code.
 
-Generating eBooks and PDFs - [documentation](https://github.com/GitbookIO/gitbook/blob/master/docs/ebook.md)
+To join the group, send an email to `kernelhacking+subscribe@googlegroups.com`. You will receive a confirmation email. After replying to it, you will be added to the mailing list.
 
-# Mailing List
+> [!TIP]
+> If you have a Google account, you can simply open the [archive page](https://groups.google.com/forum/#!forum/kernelhacking) and click **Apply to join group**. You will be approved automatically.
 
-We have a Google Group mailing list for learning the kernel source code. Here are some instructions about how to use it.
+## Translations
 
-#### Join
+Thanks to the volunteers, the posts about Linux are translated into different languages.
 
-Send an email with any subject/content to `kernelhacking+subscribe@googlegroups.com`. Then you will receive a confirmation email. Reply it with any content and then you are done.
-
-> If you have Google account, you can also open the [archive page](https://groups.google.com/forum/#!forum/kernelhacking) and click **Apply to join group**. You will be approved automatically.
-
-#### Send emails to mailing list
-
-Just send emails to `kernelhacking@googlegroups.com`. The basic usage is the same as other mailing lists powered by mailman.
-
-#### Archives
-
-https://groups.google.com/forum/#!forum/kernelhacking
-
-On other languages
--------------------
+> [!NOTE]
+> The translations may diverge from the original content.
 
   * [Brazilian Portuguese](https://github.com/mauri870/linux-insides)
   * [Chinese](https://github.com/MintCN/linux-insides-zh)
@@ -41,50 +31,18 @@ On other languages
   * [Spanish](https://github.com/leolas95/linux-insides)
   * [Turkish](https://github.com/ayyucedemirbas/linux-insides_Turkish)
 
-Docker
-------
+## Contribution
 
-In order to run your own copy of the book with gitbook within a local container:
+Read the [Contribution guide](./CONTRIBUTING.md) to learn how to contribute to the project. When contributing, make sure to follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
 
-1. Enable Docker experimental features with vim or another text editor
-   ```bash
-    sudo vim /usr/lib/systemd/system/docker.service
-   ```
+If you have any questions or suggestions, feel free to ping me at Twitter [@0xAX](https://twitter.com/0xAX), add an [issue](https://github.com/0xAX/linux-insides/issues/new), or drop me an [email](mailto:anotherworldofworld@gmail.com).
 
-   Then add --experimental=true to the end of the ExecStart=/usr/bin/dockerd -H fd:// line and save.
+## License
 
-   Eg: *ExecStart=/usr/bin/dockerd -H fd:// --experimental=true*
+This project is licensed under the [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-   Then, you need to reload and restart the Docker daemon:
-   ```bash
-    systemctl daemon-reload
-    systemctl restart docker.service
-   ```
+## Author
 
-2. Run docker image
-   ```bash
-   make run
-   ```
+The technical content is written by [@0xAX](https://x.com/0xAX).
 
-3. Open your local copy of linux insides book under this url
-   http://localhost:4000 or run `make browse`
-
-
-Contributions 
---------------
-
-Feel free to create issues or pull-requests if you have any problems.
-
-**Please read [CONTRIBUTING.md](https://github.com/0xAX/linux-insides/blob/master/CONTRIBUTING.md) before pushing any changes.**
-
-![linux-kernel](Assets/linux-kernel.png)
-
-Author
----------------
-
-[@0xAX](https://twitter.com/0xAX)
-
-LICENSE
--------------
-
-Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+Additional big thanks to [@klaudiagrz](https://github.com/klaudiagrz) for text improvements.
