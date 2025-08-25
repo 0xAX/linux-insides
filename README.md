@@ -7,14 +7,14 @@ The goal of this project is simple – to share knowledge about the Linux kernel
 > [!IMPORTANT]
 > I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in progress of updating the content to reflect modern kernels (v6.16+). I’ll continue revising the posts as the kernel evolves.
 
-## Mailing list
+## Requirements
 
-There is a Google group mailing list (`kernelhacking@googlegroups.com`) for learning the kernel source code.
-
-To join the group, send an email to `kernelhacking+subscribe@googlegroups.com`. You will receive a confirmation email. After replying to it, you will be added to the mailing list.
+- Prior knowledge about the [Assembly language](https://en.wikipedia.org/wiki/Assembly_language)
+- Proficiency with the [C programming language](https://en.wikipedia.org/wiki/C_(programming_language))
+- Additionally, you can find lots of useful information about x86_64 processors in [Intel Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html)
 
 > [!TIP]
-> If you have a Google account, you can simply open the [archive page](https://groups.google.com/forum/#!forum/kernelhacking) and click **Apply to join group**. You will be approved automatically.
+> You can get started with Assembler with my other series of posts about the [Assembly programming](https://github.com/0xAX/asm).
 
 ## Translations
 
@@ -36,6 +36,15 @@ Thanks to the volunteers, the posts about Linux are translated into different la
 Read the [Contribution guide](./CONTRIBUTING.md) to learn how to contribute to the project. When contributing, make sure to follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 If you have any questions or suggestions, feel free to ping me at Twitter [@0xAX](https://twitter.com/0xAX), add an [issue](https://github.com/0xAX/linux-insides/issues/new), or drop me an [email](mailto:anotherworldofworld@gmail.com).
+
+## Mailing list
+
+There is a Google group mailing list (`kernelhacking@googlegroups.com`) for learning the kernel source code.
+
+To join the group, send an email to `kernelhacking+subscribe@googlegroups.com`. You will receive a confirmation email. After replying to it, you will be added to the mailing list.
+
+> [!TIP]
+> If you have a Google account, you can simply open the [archive page](https://groups.google.com/forum/#!forum/kernelhacking) and click **Apply to join group**. You will be approved automatically.
 
 ## License
 
