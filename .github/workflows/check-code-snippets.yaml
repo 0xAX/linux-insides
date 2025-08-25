@@ -29,4 +29,4 @@ jobs:
           pip install requests  
       - name: Validate code snippets
         run: |
-          python ./scripts/check-code-snippets.py .
+          python ./scripts/check_code_snippets.py .
