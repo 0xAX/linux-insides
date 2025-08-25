@@ -1,0 +1,53 @@
+name: 🐛 Bug in a code example
+description: Report a bug in a code example
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to report a bug in a code example.
+
+        When contributing, make sure to follow Contributing guidelines and Code of Conduct.
+        Thank you for your contribution!
+
+  - type: checkboxes
+    attributes:
+      label: Existing issues
+      description: Is there an existing issue for this? Search open and closed issues to avoid duplicates.
+      options:
+        - label: I have searched the existing issues.
+          required: true
+
+  - type: input
+    attributes:
+      label: Affected code example
+      description: Name or paste a link to the affected code example
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Issue description
+      description: Explain what is wrong with the code example.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Actual vs expected result
+      description: Describe the result you got and how it's different from what you expected to see.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Suggested improvements
+      description: Share your ideas or suggestions on how this code example could be improved. Be as specific as possible.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Attachments
+      description: Include screenshots, links, or example's output if applicable.
+    validations:
+      required: false

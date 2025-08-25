@@ -1,0 +1,39 @@
+name: ❓ Questions and discussions
+description: Ask a question or start a discussion with other community members.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form to ask a question or start a discussion with other community members.
+
+        When contributing, make sure to follow Contributing guidelines and Code of Conduct.
+        Thank you for your contribution!
+
+  - type: checkboxes
+    attributes:
+      label: Existing issues
+      description: Is there an existing issue for this? Search open and closed issues to avoid duplicates.
+      options:
+        - label: I have searched the existing issues.
+          required: true
+
+  - type: textarea
+    attributes:
+      label: Question
+      description: Ask a question you would like to discuss with the community.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Discussion
+      description: Start a discussion topic.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Attachments
+      description: Include screenshots, links, or example's output if applicable.
+    validations:
+      required: false
