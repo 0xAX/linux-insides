@@ -11,7 +11,7 @@ The goal of this project is simple – to share knowledge about the Linux kernel
 
 - Prior knowledge about the [Assembly language](https://en.wikipedia.org/wiki/Assembly_language)
 - Proficiency with the [C programming language](https://en.wikipedia.org/wiki/C_(programming_language))
-- Additionally, you can find lots of useful information about x86_64 processors in [Intel Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html)
+- Additionally, you can find lots of useful information about x86_64 processors in [Intel Software Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html)
 
 > [!TIP]
 > You can get started with Assembler with my other series of posts about the [Assembly programming](https://github.com/0xAX/asm).
