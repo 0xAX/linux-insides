@@ -1,63 +1,53 @@
-Kernel booting process. Part 2.
-================================================================================
+# Kernel booting process - Part 2.
 
-First steps in the kernel setup
---------------------------------------------------------------------------------
+We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we have walked through the very early stages of the booting process and first assembly instructions of the Linux kernel code. Besides different mechanisms, this code was responsible to prepare environment for [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming langauge. At the end of chapter we reached a symbolic milestone - the very first call of a C function. This function has classical name - `main` and defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c) source code file.
 
-We started to dive into the Linux kernel's insides in the previous [part](linux-bootstrap-1.md) and saw the initial part of the kernel setup code. We stopped at the first call to the `main` function (which is the first function written in C) from [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c).
+From here on, we will start to see assembler code more and more rare, but it is not the end 🤓 We still will meet some assembly code on our way, but it will be more rare and rare. But now it is time for more "high level" logic!
 
-In this part, we will continue to research the kernel setup code and go over
-* what `protected mode` is,
-* the transition into it,
-* the initialization of the heap and the console,
-* memory detection, CPU validation and keyboard initialization
-* and much much more.
+In this part, we’ll keep digging through the kernel’s setup code and cover:
 
-So, let's go ahead.
+- What [protected mode](https://en.wikipedia.org/wiki/Protected_mode) is on x86 processors
+- Setup of early [heap](https://en.wikipedia.org/wiki/Memory_management#HEAP) and console
+- Detection of avialable memory
+- Validation of a CPU 
+- Initialization of a keyboard 
 
-Protected mode
---------------------------------------------------------------------------------
+Time to explore these steps in detail!
 
-Before we can move to the native Intel64 [Long Mode](http://en.wikipedia.org/wiki/Long_mode), the kernel must switch the CPU into protected mode.
+## Protected mode
 
-What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? Protected mode was first added to the x86 architecture in 1982 and was the main mode of Intel processors from the [80286](http://en.wikipedia.org/wiki/Intel_80286) processor until Intel 64 and long mode came.
+The Linux kernel for x86_64 operates in a special mode so-called - [long mode](http://en.wikipedia.org/wiki/Long_mode). One of the main goal of all the setup kernel code is to switch to this mode. But before we can move to this mode, the kernel must switch the CPU into [protected mode](https://en.wikipedia.org/wiki/Protected_mode).
 
-The main reason to move away from [Real mode](http://wiki.osdev.org/Real_Mode) is that there is very limited access to the RAM. As you may remember from the previous part, there are only 2<sup>20</sup> bytes or 1 Megabyte, sometimes even only 640 Kilobytes of RAM available in Real mode.
+What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the previous chpater we already know that currently CPU operates in [real mode](https://en.wikipedia.org/wiki/Real_mode). For us it is mostly means - memory segmentation. As a short reminder - to access a memory location, the combination of two CPU [registers](https://en.wikipedia.org/wiki/Processor_register) is used:
 
-Protected mode brought many changes, but the main one is the difference in memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs the 1 Megabyte in Real mode. Also, [paging](http://en.wikipedia.org/wiki/Paging) support was added, which you can read about in the next sections.
+- A segment register - `cs`, `ds`, `ss` and `es` which defines segment selector.
+- A general purpose register which specifies offset within the segment.
 
-Memory management in Protected mode is divided into two, almost independent parts:
+The main motivation for switching from real mode is its memory limitation. As we saw in the previous part, real mode can address only 2<sup>20</sup> bytes. This is just 1 MB of RAM. Obviosuly modern software including an operating system kernel need more. To break this constraints, the new processor mode was introduced - protected mode.
 
-* Segmentation
-* Paging
+Protected mode was instroduced to the x86 architecture in 1982 and became the primary operating mode of Intel processors, starting with the [80286](http://en.wikipedia.org/wiki/Intel_80286) until the introduction of x86_64 and long mode. This mode brought many changes and improvements, but one of the most crucial was in memory managment. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs the 1 Megabyte in real mode.
 
-Here we will only talk about segmentation. Paging will be discussed in the next sections.
+Memory management in protected mode is divided into two, mostly independent mechanisms:
 
-As you can read in the previous part, addresses consist of two parts in Real mode:
+- `Segmentation`
+- `Paging`
 
-* Base address of the segment
-* Offset from the segment base
+For now, our attention stays on segmentation. We’ll return to paging later, once we enter 64-bit long mode.
 
-And we can get the physical address if we know these two parts by:
+### Memory segmentation in protected mode
 
-```
-PhysicalAddress = Segment Base * 16 + Offset
-```
+In protected mode, memory segmentation was completely redesigned. Fixed 64 KB real mode segments are gone. Instead, each segment is now defined by a special data structure called a `Segment Descriptor` which specifies the properties of a segment. The segment descriptors are stored in another special structure called `Gloabal Descrptor Table` or `GDT`. Whenever a CPU needs to find an actual physical memory address, it consults GDT. The GDT itself is just a block of memory with address stored in the special CPU register called `gdtr`.  This is a 48-bit register and consists of two parts:
 
-Memory segmentation was completely redone in protected mode. There are no 64 Kilobyte fixed-size segments. Instead, the size and location of each segment is described by an associated data structure called the _Segment Descriptor_. These segment descriptors are stored in a data structure called the `Global Descriptor Table` (GDT).
+- The size of the global descriptor table
+- The address of the global descriptor table
 
-The GDT is a structure which resides in memory. It has no fixed place in the memory, so its address is stored in the special `GDTR` register. Later we will see how the GDT is loaded in the Linux kernel code. There will be an operation for loading it from memory, something like:
+Later, we will see exactly how the Linux kernel builds and loads its GDT. For now, it’s enough to know that the CPU provides a dedicated instruction to load the table’s address into the GDTR register:
 
 ```assembly
 lgdt gdt
 ```
 
-where the `lgdt` instruction loads the base address and limit(size) of the global descriptor table to the `GDTR` register. `GDTR` is a 48-bit register and consists of two parts:
-
- * the size(16-bit) of the global descriptor table;
- * the address(32-bit) of the global descriptor table.
-
-As mentioned above, the GDT contains `segment descriptors` which describe memory segments.  Each descriptor is 64-bits in size. The general scheme of a descriptor is:
+Now let's see how segment descripotrs look like. As mentioned above, the GDT contains `segment descriptors` which describe memory segments. Each descriptor is 64-bits in size. The general scheme of a descriptor is:
 
 ```
  63         56         51   48    45           39        32 
@@ -75,31 +65,29 @@ As mentioned above, the GDT contains `segment descriptors` which describe memory
 ------------------------------------------------------------
 ```
 
-Don't worry, I know it looks a little scary after Real mode, but it's easy. For example LIMIT 15:0 means that bits 0-15 of the segment limit are located at the beginning of the Descriptor. The rest of it is in LIMIT 19:16, which is located at bits 48-51 of the Descriptor. So, the size of Limit is 0-19 i.e 20-bits. Let's take a closer look at it:
+Do not worry! I know it may look a little bit intimidating at the first glance, especially in comparison to the relatively simple addressing in real mode, but we will go through it in details. We will start from the bottom, from right to left. 
 
-1. Limit[20-bits] is split between bits 0-15 and 48-51. It defines the `length_of_segment - 1`. It depends on the `G`(Granularity) bit.
+The first field is `LIMIT 15:0`. It represents the first 16 bits of the segment limit. The second part is located at the bits `51:48`. This field provides information about the size of a segment. Having 20-bit size of the limit field, it may seem that the max size of a memory segment can be 1 MB, but it is not like that. In addition, the max size of a segment depends on the 55th `G` bit:
 
-  * if `G` (bit 55) is 0 and the segment limit is 0, the size of the segment is 1 Byte
-  * if `G` is 1 and the segment limit is 0, the size of the segment is 4096 Bytes
-  * if `G` is 0 and the segment limit is 0xfffff, the size of the segment is 1 Megabyte
-  * if `G` is 1 and the segment limit is 0xfffff, the size of the segment is 4 Gigabytes
+- If `G=0` - the value of the `LIMIT` field is interpreted in bytes.
+- if `G=1` - the value of the `LIMIT` field is interpreted in 4 KB units called pages.
 
-  So, what this means is
-  * if G is 0, Limit is interpreted in terms of 1 Byte and the maximum size of the segment can be 1 Megabyte.
-  * if G is 1, Limit is interpreted in terms of 4096 Bytes = 4 KBytes = 1 Page and the maximum size of the segment can be 4 Gigabytes. Actually, when G is 1, the value of Limit is shifted to the left by 12 bits. So, 20 bits + 12 bits = 32 bits and 2<sup>32</sup> = 4 Gigabytes.
+Based on this, we can easily calculate that the max size of a segment is 4 GB.
 
-2. Base[32-bits] is split between bits 16-31, 32-39 and 56-63. It defines the physical address of the segment's starting location.
+The next field is `BASE`. We may see that it is split on three parts. The first part occupies bits from 16 to 31, the second part occupies bits from 32 to 39, and the last third part occupies bits from 56 to 63. The main goal of this field is to store the base address of a segment.
 
-3. Type/Attribute[5-bits] is represented by bits 40-44. It defines the type of segment and how it can be accessed.
-  * The `S` flag at bit 44 specifies the descriptor type. If `S` is 0 then this segment is a system segment, whereas if `S` is 1 then this is a code or data segment (Stack segments are data segments which must be read/write segments).
+The remaining of the fields in a segment descriptor represent flags which control different aspects of a segment, like for example access to a segment:
 
-To determine if the segment is a code or data segment, we can check its Ex(bit 43) Attribute (marked as 0 in the above diagram). If it is 0, then the segment is a Data segment, otherwise, it is a code segment.
+- `Type` - describes the kind of segment.
+- `S` - distinguishes system segments from code and data segments.
+- `DPL` - provides information about the priviledge level of a segment. It can be 0-3 where 0 is the most privileged level.
+- `P` - tells the CPU whether a segment presented in memory
 
 A segment can be of one of the following types:
 
 ```
 --------------------------------------------------------------------------------------
-|           Type Field        | Descriptor Type | Description                        |
+| Type Field                  | Descriptor Type | Description                        |
 |-----------------------------|-----------------|------------------------------------|
 | Decimal                     |                 |                                    |
 |             0    E    W   A |                 |                                    |
@@ -123,16 +111,7 @@ A segment can be of one of the following types:
 --------------------------------------------------------------------------------------
 ```
 
-As we can see the first bit(bit 43) is `0` for a _data_ segment and `1` for a _code_ segment. The next three bits (40, 41, 42) are either `EWA`(*E*xpansion *W*ritable *A*ccessible) or CRA(*C*onforming *R*eadable *A*ccessible).
-  * if E(bit 42) is 0, expand up, otherwise, expand down. Read more [here](http://www.sudleyplace.com/dpmione/expanddown.html).
-  * if W(bit 41)(for Data Segments) is 1, write access is allowed, and if it is 0, the segment is read-only. Note that read access is always allowed on data segments.
-  * A(bit 40) controls whether the segment can be accessed by the processor or not.
-  * C(bit 42) is the conforming bit(for code selectors). If C is 1, the segment code can be executed from a lower level privilege (e.g. user) level. If C is 0, it can only be executed from the same privilege level.
-  * R(bit 41) controls read access to code segments; when it is 1, the segment can be read from. Write access is never granted for code segments.
-
-4. DPL[2-bits] (Descriptor Privilege Level) comprises the bits 45-46. It defines the privilege level of the segment. It can be 0-3 where 0 is the most privileged level.
-
-5. The P flag(bit 47) indicates if the segment is present in memory or not. If P is 0, the segment will be presented as _invalid_ and the processor will refuse to read from this segment.
+TODO
 
 6. AVL flag(bit 52) - Available and reserved bits. It is ignored in Linux.
 
