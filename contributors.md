@@ -140,3 +140,4 @@ Special thanks to all the people who helped to develop this project:
 * [Jun Duan](https://github.com/waltforme)
 * [Guochao Xie](https://github.com/XieGuochao)
 * [Davide Benini](https://github.com/beninidavide/)
+* [kyselejsyrecek](https://github.com/kyselejsyrecek)
