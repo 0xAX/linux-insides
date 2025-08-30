@@ -1,6 +1,6 @@
 # Kernel booting process - Part 2.
 
-We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we have walked through the very early stages of the booting process and first assembly instructions of the Linux kernel code. Besides different mechanisms, this code was responsible to prepare environment for [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming langauge. At the end of chapter we reached a symbolic milestone - the very first call of a C function. This function has classical name - `main` and defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c) source code file.
+We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we have walked through the very early stages of the booting process and first assembly instructions of the Linux kernel code. Aside from different mechanisms, this code was responsible to prepare environment for [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming language. At the end of chapter we reached a symbolic milestone - the very first call of a C function. This function has classical name - `main` and defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file.
 
 From here on, we will start to see assembler code more and more rare, but it is not the end 🤓 We still will meet some assembly code on our way, but it will be more rare and rare. But now it is time for more "high level" logic!
 
@@ -8,7 +8,7 @@ In this part, we’ll keep digging through the kernel’s setup code and cover:
 
 - What [protected mode](https://en.wikipedia.org/wiki/Protected_mode) is on x86 processors
 - Setup of early [heap](https://en.wikipedia.org/wiki/Memory_management#HEAP) and console
-- Detection of avialable memory
+- Detection of available memory
 - Validation of a CPU 
 - Initialization of a keyboard 
 
@@ -16,16 +16,16 @@ Time to explore these steps in detail!
 
 ## Protected mode
 
-The Linux kernel for x86_64 operates in a special mode so-called - [long mode](http://en.wikipedia.org/wiki/Long_mode). One of the main goal of all the setup kernel code is to switch to this mode. But before we can move to this mode, the kernel must switch the CPU into [protected mode](https://en.wikipedia.org/wiki/Protected_mode).
+The Linux kernel for x86_64 operates in a special mode called - [long mode](http://en.wikipedia.org/wiki/Long_mode). One of the main goal of all the setup kernel code is to switch to this mode. But before we can move to this mode, the kernel must switch the CPU into [protected mode](https://en.wikipedia.org/wiki/Protected_mode).
 
-What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the previous chpater we already know that currently CPU operates in [real mode](https://en.wikipedia.org/wiki/Real_mode). For us it is mostly means - memory segmentation. As a short reminder - to access a memory location, the combination of two CPU [registers](https://en.wikipedia.org/wiki/Processor_register) is used:
+What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the previous chapter we already know that currently CPU operates in [real mode](https://en.wikipedia.org/wiki/Real_mode). For us it is mostly means - memory segmentation. As a short reminder - to access a memory location, the combination of two CPU [registers](https://en.wikipedia.org/wiki/Processor_register) is used:
 
 - A segment register - `cs`, `ds`, `ss` and `es` which defines segment selector.
 - A general purpose register which specifies offset within the segment.
 
-The main motivation for switching from real mode is its memory limitation. As we saw in the previous part, real mode can address only 2<sup>20</sup> bytes. This is just 1 MB of RAM. Obviosuly modern software including an operating system kernel need more. To break this constraints, the new processor mode was introduced - protected mode.
+The main motivation for switching from real mode is its memory limitation. As we saw in the previous part, real mode can address only 2<sup>20</sup> bytes. This is just 1 MB of RAM. Obviously modern software including an operating system kernel need more. To break this constraints, the new processor mode was introduced - protected mode.
 
-Protected mode was instroduced to the x86 architecture in 1982 and became the primary operating mode of Intel processors, starting with the [80286](http://en.wikipedia.org/wiki/Intel_80286) until the introduction of x86_64 and long mode. This mode brought many changes and improvements, but one of the most crucial was in memory managment. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs the 1 Megabyte in real mode.
+Protected mode was introduced to the x86 architecture in 1982 and became the primary operating mode of Intel processors, starting with the [80286](http://en.wikipedia.org/wiki/Intel_80286) until the introduction of x86_64 and long mode. This mode brought many changes and improvements, but one of the most crucial was in memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs the 1 Megabyte in real mode.
 
 Memory management in protected mode is divided into two, mostly independent mechanisms:
 
@@ -36,10 +36,10 @@ For now, our attention stays on segmentation. We’ll return to paging later, on
 
 ### Memory segmentation in protected mode
 
-In protected mode, memory segmentation was completely redesigned. Fixed 64 KB real mode segments are gone. Instead, each segment is now defined by a special data structure called a `Segment Descriptor` which specifies the properties of a segment. The segment descriptors are stored in another special structure called `Gloabal Descrptor Table` or `GDT`. Whenever a CPU needs to find an actual physical memory address, it consults GDT. The GDT itself is just a block of memory with address stored in the special CPU register called `gdtr`.  This is a 48-bit register and consists of two parts:
+In protected mode, memory segmentation was completely redesigned. Fixed 64 KB real mode segments are gone. Instead, each segment is now defined by a special data structure called a `Segment Descriptor` which specifies the properties of a memory segment. The segment descriptors are stored in another special structure called `Global Descriptor Table` or `GDT`. Whenever a CPU needs to find an actual physical memory address, it consults this table. The GDT itself is just a block of memory which address is stored in the special CPU register called `gdtr`.  This is a 48-bit register and consists of two parts:
 
-- The size of the global descriptor table
-- The address of the global descriptor table
+- The size of the Global Descriptor Table
+- The address of the Global Descriptor Table
 
 Later, we will see exactly how the Linux kernel builds and loads its GDT. For now, it’s enough to know that the CPU provides a dedicated instruction to load the table’s address into the GDTR register:
 
@@ -47,23 +47,9 @@ Later, we will see exactly how the Linux kernel builds and loads its GDT. For no
 lgdt gdt
 ```
 
-Now let's see how segment descripotrs look like. As mentioned above, the GDT contains `segment descriptors` which describe memory segments. Each descriptor is 64-bits in size. The general scheme of a descriptor is:
+As mentioned above, the GDT contains `segment descriptors` which describe memory segments. Now let's see how segment descriptors look like. Each descriptor is 64-bits in size. The general scheme of a descriptor is:
 
-```
- 63         56         51   48    45           39        32 
-------------------------------------------------------------
-|             | |B| |A|       | |   | |0|E|W|A|            |
-| BASE 31:24  |G|/|L|V| LIMIT |P|DPL|S|  TYPE | BASE 23:16 |
-|             | |D| |L| 19:16 | |   | |1|C|R|A|            |
-------------------------------------------------------------
-
- 31                         16 15                         0 
-------------------------------------------------------------
-|                             |                            |
-|        BASE 15:0            |       LIMIT 15:0           |
-|                             |                            |
-------------------------------------------------------------
-```
+![segment-descriptor](./images/segment-descriptor.svg)
 
 Do not worry! I know it may look a little bit intimidating at the first glance, especially in comparison to the relatively simple addressing in real mode, but we will go through it in details. We will start from the bottom, from right to left. 
 
@@ -76,322 +62,302 @@ Based on this, we can easily calculate that the max size of a segment is 4 GB.
 
 The next field is `BASE`. We may see that it is split on three parts. The first part occupies bits from 16 to 31, the second part occupies bits from 32 to 39, and the last third part occupies bits from 56 to 63. The main goal of this field is to store the base address of a segment.
 
-The remaining of the fields in a segment descriptor represent flags which control different aspects of a segment, like for example access to a segment:
+The remaining of the fields in a segment descriptor represent flags which control different aspects of a segment, like for example type of a memory. Let's take a look at the description of these flags:
 
-- `Type` - describes the kind of segment.
+- `Type` - describes the type of a memory segment.
 - `S` - distinguishes system segments from code and data segments.
-- `DPL` - provides information about the priviledge level of a segment. It can be 0-3 where 0 is the most privileged level.
-- `P` - tells the CPU whether a segment presented in memory
+- `DPL` - provides information about the privilege level of a segment. It can be a value from 0 to 3, where 0 is the most privileged level.
+- `P` - tells the CPU whether a segment presented in memory.
+- `AVL` - available and reserved bits. It is ignored by the Linux kernel.
+- `L` - indicates whether a code segment contains 64-bit code.
+- `D / B` - provides different meaning depends on the type of a segment.
+  - For a code segment: Controls the default operand and address size. If the bit is clear, it is a 16-bit code segment. Otherwise it is a 32-bit code segment.
+  - For a stack segment or in other words a data segment pointed by the `ss` register: Controls the default stack pointer size. If the bit is clear, it is a 16-bit stack segment and stack operations use `sp` register. Otherwise it is a 32-bit stack segment and stack operations use `esp` register.
+  - For a expand-down data segment: Specifies the upper bound of the segment. If the bit is clear, the upper bound is `0xFFFF` or 64 KB. Otherwise, it is `0xFFFFFFFF` or 4 GB.
 
-A segment can be of one of the following types:
+If the `S` flag of a segment descriptor is set, the descriptor describes either a code or a data segment, otherwise it is a system segment. If the highest order bit of the `Type` flags is clear - this descriptor describes a data segment, otherwise a code segment. Rest of the three bits of a data segment descriptor interpreted as:
 
+- `Accessed` - indicates whether a segment has been accessed since the last time the kernel cleared this bit.
+- `Write-Enable` - determines whether a segment is writable or read-only.
+- `Expansion-Direction` - determines whether addresses decreasing from the base address or not.
+
+For a code segment, these three bits interpreted as:
+
+- `Accessed` - indicates whether a segment has been accessed since the last time the kernel cleared this bit.
+- `Read-Enable` - determines whether a segment is execute-only or execute-read.
+- `Confirming` - determines how privilege level changes are handled when transferring execution to that segment.
+
+In the tables below you can find full information about possible states of the flags for a code and a data segments.
+
+A data segment `Type` field:
+
+| E (Expand-Down) | W (Writable) | A (Accessed) | Description                       |
+| --------------- | ------------ | ------------ | --------------------------------- |
+| 0               | 0            | 0            | Read-Only                         |
+| 0               | 0            | 1            | Read-Only, accessed               |
+| 0               | 1            | 0            | Read/Write                        |
+| 0               | 1            | 1            | Read/Write, accessed              |
+| 1               | 0            | 0            | Read-Only, expand-down            |
+| 1               | 0            | 1            | Read-Only, expand-down, accessed  |
+| 1               | 1            | 0            | Read/Write, expand-down           |
+| 1               | 1            | 1            | Read/Write, expand-down, accessed |
+
+A code segment `Type` field:
+
+| C (Conforming) | R (Readable) | A (Accessed) | Description                        |
+| -------------- | ------------ | ------------ | ---------------------------------- |
+| 0              | 0            | 0            | Execute-Only                       |
+| 0              | 0            | 1            | Execute-Only, accessed             |
+| 0              | 1            | 0            | Execute/Read                       |
+| 0              | 1            | 1            | Execute/Read, accessed             |
+| 1              | 0            | 0            | Execute-Only, conforming           |
+| 1              | 1            | 0            | Execute/Read, conforming           |
+| 1              | 0            | 1            | Execute-Only, conforming, accessed |
+| 1              | 1            | 1            | Execute/Read, conforming, accessed |
+
+So far, we’ve looked at how a segment descriptor defines the properties of a memory segment — its base, limit, type, and different flags. But how does the CPU actually refer to one of these descriptors during execution? Just like in real mode - using segment registers. In protected mode they contain segment selectors. However, in protected mode, a segment selector is handled differently. Each segment descriptor has an associated segment selector which is a 16-bit structure:
+
+![segment-selector](./images/segment-selector.svg)
+
+The meaning of the fields is:
+
+- `Index` - the entry number of the descriptor in the descriptor table.
+- `TI` - indicates where to search for the descriptor
+  - If the value of the bit is `0`, a descriptor will be searched in the Global Descriptor Table.
+  - If the value of this bit is `1`, a descriptor will be searched in the Local Descriptor Table.
+- `RPL` - the privilege level requested by the selector.
+
+When a program running in protected mode references a memory, the CPU need to calculate a proper physical address. The following steps are needed to get a physical address in protected mode:
+
+1. A segment selector is loaded into one of the segment registers.
+2. The CPU tries to find a associated segment descriptor in the Global Descriptor Table based on the `Index` value from the segment selector. If the descriptor was found, it is loaded into a special hidden part of this segment register.
+3. The physical address will be the base address from the segment descriptor plus offset from the instruction pointer or memory location referenced within an executed instruction.
+
+In the next part, we will see the transition into protected mode. But before the kernel can be switched to protected mode, we need to do some more preparations.
+
+Let's continue from the point where we have stopped in the previous chapter.
+
+## Back to the Kernel: Entering main.c
+
+As we already have mentioned in the beginning of this chapter, one of the kernel's first main goals is to switch the processor into protected mode. But before this can happen, the kernel need to do some preparations.
+
+If we look at the very beginning of the `main` function from the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c), the very first thing we will see is a call of the `init_default_io_ops` function.
+
+This function defined in the [arch/x86/boot/io.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/io.h) and looks like:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/io.h#L26-L31 -->
+```C
+static inline void init_default_io_ops(void)
+{
+	pio_ops.f_inb  = __inb;
+	pio_ops.f_outb = __outb;
+	pio_ops.f_outw = __outw;
+}
 ```
---------------------------------------------------------------------------------------
-| Type Field                  | Descriptor Type | Description                        |
-|-----------------------------|-----------------|------------------------------------|
-| Decimal                     |                 |                                    |
-|             0    E    W   A |                 |                                    |
-| 0           0    0    0   0 | Data            | Read-Only                          |
-| 1           0    0    0   1 | Data            | Read-Only, accessed                |
-| 2           0    0    1   0 | Data            | Read/Write                         |
-| 3           0    0    1   1 | Data            | Read/Write, accessed               |
-| 4           0    1    0   0 | Data            | Read-Only, expand-down             |
-| 5           0    1    0   1 | Data            | Read-Only, expand-down, accessed   |
-| 6           0    1    1   0 | Data            | Read/Write, expand-down            |
-| 7           0    1    1   1 | Data            | Read/Write, expand-down, accessed  |
-|                  C    R   A |                 |                                    |
-| 8           1    0    0   0 | Code            | Execute-Only                       |
-| 9           1    0    0   1 | Code            | Execute-Only, accessed             |
-| 10          1    0    1   0 | Code            | Execute/Read                       |
-| 11          1    0    1   1 | Code            | Execute/Read, accessed             |
-| 12          1    1    0   0 | Code            | Execute-Only, conforming           |
-| 14          1    1    0   1 | Code            | Execute-Only, conforming, accessed |
-| 13          1    1    1   0 | Code            | Execute/Read, conforming           |
-| 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed |
---------------------------------------------------------------------------------------
+
+This function initializes function pointers for:
+
+- reading a byte from an I/O port
+- writing a byte to an I/O port
+- writing a word (16-bit) to an I/O port
+
+These callbacks will be used to write data to the serial console which will be initialized at the one of the next steps. All the operations will be executed with the help of the `inb`, `outb`, and `outw` macros which defined in the same file:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/io.h#L37-L39 -->
+```C
+#define inb  pio_ops.f_inb
+#define outb pio_ops.f_outb
+#define outw pio_ops.f_outw
 ```
 
-TODO
+The `__inb`, `__outb`, and `__outw` themselves are inline functions from the [arch/x86/include/asm/shared/io.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/shared/io.h):
 
-6. AVL flag(bit 52) - Available and reserved bits. It is ignored in Linux.
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/shared/io.h#L7-L24 -->
+```C
+#define BUILDIO(bwl, bw, type)						\
+static __always_inline void __out##bwl(type value, u16 port)		\
+{									\
+	asm volatile("out" #bwl " %" #bw "0, %w1"			\
+		     : : "a"(value), "Nd"(port));			\
+}									\
+									\
+static __always_inline type __in##bwl(u16 port)				\
+{									\
+	type value;							\
+	asm volatile("in" #bwl " %w1, %" #bw "0"			\
+		     : "=a"(value) : "Nd"(port));			\
+	return value;							\
+}
 
-7. The L flag(bit 53) indicates whether a code segment contains native 64-bit code. If it is set, then the code segment executes in 64-bit mode.
-
-8. The D/B flag(bit 54)  (Default/Big flag) represents the operand size i.e 16/32 bits. If set, operand size is 32 bits. Otherwise, it is 16 bits.
-
-Segment registers contain segment selectors as in real mode. However, in protected mode, a segment selector is handled differently. Each Segment Descriptor has an associated Segment Selector which is a 16-bit structure:
-
+BUILDIO(b, b, u8)
+BUILDIO(w, w, u16)
+BUILDIO(l,  , u32)
 ```
- 15             3 2  1     0
------------------------------
-|      Index     | TI | RPL |
------------------------------
+
+All of these functions use `in` and `out` assembly instructions which send the given value to the given port or read the value from the given port. If the syntax is not familiar to you, you can read the chapter about [inline assembly](https://github.com/0xAX/linux-insides/blob/master/Theory/linux-theory-3.md).
+
+After initialization of callbacks for writing to a serial port, the next step is copying of the kernel setup header filled by a bootloader into the corresponding field of the C `boot_params` structure. This will make the fields from the kernel setup header more easily accessible. All the job by copying handled by the `copy_boot_params` function with the help of `memcpy`:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L39-L39 -->
+```C
+	memcpy(&boot_params.hdr, &hdr, sizeof(hdr));
 ```
 
-Where,
-* **Index** stores the index number of the descriptor in the GDT.
-* **TI**(Table Indicator) indicates where to search for the descriptor. If it is 0 then the descriptor is searched for in the Global Descriptor Table(GDT). Otherwise, it will be searched for in the Local Descriptor Table(LDT).
-* And **RPL** contains the Requester's Privilege Level.
+Do not mix this `memcpy` with the function from the C standard library - [memcpy](https://man7.org/linux/man-pages/man3/memcpy.3.html). During the time when the kernel is in the early initialization phase, there is no way to load any library. For this reason, an operating system kernel provides own implementation of such functions. The kernel's `memcpy` defined in the [copy.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S). If you already started to miss an assembly code, this is the high time to bring some back:
 
-Every segment register has a visible and a hidden part.
-* Visible - The Segment Selector is stored here.
-* Hidden -  The Segment Descriptor (which contains the base, limit, attributes & flags) is stored here.
-
-The following steps are needed to get a physical address in protected mode:
-
-* The segment selector must be loaded in one of the segment registers.
-* The CPU tries to find a segment descriptor at the offset `GDT address + Index` from the selector and then loads the descriptor into the *hidden* part of the segment register.
-* If paging is disabled, the linear address of the segment, or its physical address, is given by the formula: Base address (found in the descriptor obtained in the previous step) + Offset.
-
-Schematically it will look like this:
-
-![linear address](images/linear_address.png)
-
-The algorithm for the transition from real mode into protected mode is:
-
-* Disable interrupts
-* Describe and load the GDT with the `lgdt` instruction
-* Set the PE (Protection Enable) bit in CR0 (Control Register 0)
-* Jump to protected mode code
-
-We will see the complete transition to protected mode in the Linux kernel in the next part, but before we can move to protected mode, we need to do some more preparations.
-
-Let's look at [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c). We can see some routines there which perform keyboard initialization, heap initialization, etc... Let's take a look.
-
-Copying boot parameters into the "zeropage"
---------------------------------------------------------------------------------
-
-We will start from the `main` routine in "main.c". The first function which is called in `main` is [`copy_boot_params(void)`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c). It copies the kernel setup header into the corresponding field of the `boot_params` structure which is defined in the [arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/uapi/asm/bootparam.h) header file.
-
-The `boot_params` structure contains the `struct setup_header hdr` field. This structure contains the same fields as defined in the [linux boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) and is filled by the boot loader and also at kernel compile/build time. `copy_boot_params` does two things:
-
-1. It copies `hdr` from [header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L280) to the `setup_header` field in `boot_params` structure.
-
-2. It updates the pointer to the kernel command line if the kernel was loaded with the old command line protocol.
-
-Note that it copies `hdr` with the `memcpy` function, defined in the [copy.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/copy.S) source file. Let's have a look inside:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/copy.S#L18-L32 -->
 ```assembly
-GLOBAL(memcpy)
-    pushw   %si
-    pushw   %di
-    movw    %ax, %di
-    movw    %dx, %si
-    pushw   %cx
-    shrw    $2, %cx
-    rep; movsl
-    popw    %cx
-    andw    $3, %cx
-    rep; movsb
-    popw    %di
-    popw    %si
-    retl
-ENDPROC(memcpy)
+SYM_FUNC_START_NOALIGN(memcpy)
+	pushw	%si
+	pushw	%di
+	movw	%ax, %di
+	movw	%dx, %si
+	pushw	%cx
+	shrw	$2, %cx
+	rep movsl
+	popw	%cx
+	andw	$3, %cx
+	rep movsb
+	popw	%di
+	popw	%si
+	retl
+SYM_FUNC_END(memcpy)
 ```
 
-Yeah, we just moved to C code and now assembly again :) First of all, we can see that `memcpy` and other routines which are defined here, start and end with the two macros: `GLOBAL` and `ENDPROC`. `GLOBAL` is described in [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/asm/linkage.h) which defines the `globl` directive and its label. `ENDPROC` is described in [include/linux/linkage.h](https://github.com/torvalds/linux/blob/v4.16/include/linux/linkage.h) and marks the `name` symbol as a function name and ends with the size of the `name` symbol.
+First of all, we can see that `memcpy` and other routines which are defined there, start and end with the two macros - `SYM_FUNC_START_NOALIGN` and `SYM_FUNC_END`. The `SYM_FUNC_START_NOALIGN` just specifies the given symbol name as [.globl](https://sourceware.org/binutils/docs/as.html#Global) to make it visible for other functions. The `SYM_FUNC_END` just expands to an empty string in our case.
 
-The implementation of `memcpy` is simple. At first, it pushes values from the `si` and `di` registers to the stack to preserve their values because they will change during the `memcpy`. As we can see in the `REALMODE_CFLAGS` in `arch/x86/Makefile`, the kernel build system uses the `-mregparm=3` option of GCC, so functions get the first three parameters from `ax`, `dx` and `cx` registers.  Calling `memcpy` looks like this:
+Despite the implementation of this function is written in assembly language, the implementation of `memcpy` is relatively simple. At first, it pushes values from the `si` and `di` registers to the stack to preserve their values because they will change during the `memcpy` execution. At the next step we may see handling of the function's parameters. The parameters of this function are passed through the `ax`, `dx`, and `cx` registers. This is because the kernel setup code is built with `-mregparm=3` option. So:
 
-```c
-memcpy(&boot_params.hdr, &hdr, sizeof hdr);
-```
+- `ax` will contain the address of `boot_params.hdr`
+- `dx` will contain the address of `hdr`
+- `cx` will contain the size of `hdr` in bytes
 
-So,
-* `ax` will contain the address of `boot_params.hdr`
-* `dx` will contain the address of `hdr`
-* `cx` will contain the size of `hdr` in bytes.
+The `rep movsl` instruction copies bytes from the memory pointed by the `si` register to the memory location pointed by the `di` register. At each iteration 4 bytes copied. For this reason we divided the size of the setup header by 4 using `shrw` instruction. After this step we just copy rest of bytes that is not divided by 4.
 
-`memcpy` puts the address of `boot_params.hdr` into `di` and saves `cx` on the stack. After this it shifts the value right 2 times (or divides it by 4) and copies four bytes from the address at `si` to the address at `di`. After this, we restore the size of `hdr` again, align it by 4 bytes and copy the rest of the bytes from the address at `si` to the address at `di` byte by byte (if there is more). Now the values of `si` and `di` are restored from the stack and the copying operation is finished.
+From this point, the setup header is copied into a proper place and we can move forward.
 
-Console initialization
---------------------------------------------------------------------------------
+### Console initialization
 
-After `hdr` is copied into `boot_params.hdr`, the next step is to initialize the console by calling the `console_init` function,  defined in [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/early_serial_console.c).
+As soon as the kernel setup header is copied into the `boot_params.hdr`, the next step is to initialize the serial console by calling the `console_init` function. Very soon we will be able to print something from within the kernel code!
 
-It tries to find the `earlyprintk` option in the command line and if the search was successful, it parses the port address and baud rate of the serial port and initializes the serial port. The value of the `earlyprintk` command line option can be one of these:
+The `console_init` defined in [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c). At the very first step it tries to find the `earlyprintk` option in the kernel's command line. If the search was successful, it parses the port address and [baud rate](https://en.wikipedia.org/wiki/Baud) and executes the initialization of the serial port.
 
-* serial,0x3f8,115200
-* serial,ttyS0,115200
-* ttyS0,115200
+> [!NOTE]
+> If you want to know what else options you can pass in the kernel command line, you can find more information in the [The kernel's command-line parameters](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst) document.
 
-After serial port initialization we can see the first output:
+Let's take a look at these two steps in details.
 
+The possible values of the `earlyprintk` command line option are:
+
+- `serial,0x3f8,115200`
+- `serial,ttyS0,115200`
+- `ttyS0,115200`
+
+The parameters defines the name of a serial port, the port number and the baud rate. The pointer to the kernel command line is stored in the kernel setup header and can be accessed through `boot_params.hdr.cmd_line_ptr`. The `parse_earlyprintk` function tries to find the `earlyprintk` option in the kernel command line, parse it if it was found and initialize the serial console parameters with one of the values above. If the `earlyprintk` option is given and contains valid values, the initialization of the serial console takes place in the `early_serial_init` function. There is nothing specific to Linux kernel in the initialization of a serial console, so we will skip this part. If you want to dive deeper by yourself, more information you can find [here](https://wiki.osdev.org/Serial_Ports#Port_Addresses) and learn [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c) step by step.
+
+After the serial port initialization we can see the first output:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L142-L143 -->
 ```C
-if (cmdline_find_option_bool("debug"))
-    puts("early console in setup code\n");
+	if (cmdline_find_option_bool("debug"))
+		puts("early console in setup code\n");
 ```
 
-The definition of `puts` is in [tty.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/tty.c). As we can see it prints character by character in a loop by calling the `putchar` function. Let's look into the `putchar` implementation:
+The `puts` function uses the `inb` function that we have seen above during initialization of I/O callbacks.
 
+From this point we can print messages from the kernel setup code 🎉. Time to move to the next step.
+
+### Heap initialization
+
+We have seen the initialization of the `stack` and `bss` memory areas in the previous chapter. The next step is to initialize the [heap](https://en.wikipedia.org/wiki/Memory_management#HEAP) memory area. The heap initialization takes place in the `init_heap` function:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L118-131 -->
 ```C
-void __attribute__((section(".inittext"))) putchar(int ch)
+static void init_heap(void)
 {
-    if (ch == '\n')
-        putchar('\r');
+	char *stack_end;
 
-    bios_putchar(ch);
-
-    if (early_serial_base != 0)
-        serial_putchar(ch);
+	if (boot_params.hdr.loadflags & CAN_USE_HEAP) {
+		stack_end = (char *) (current_stack_pointer - STACK_SIZE);
+		heap_end = (char *) ((size_t)boot_params.hdr.heap_end_ptr + 0x200);
+		if (heap_end > stack_end)
+			heap_end = stack_end;
+	} else {
+		/* Boot protocol 2.00 only, no heap available */
+		puts("WARNING: Ancient bootloader, some functionality may be limited!\n");
+	}
 }
 ```
 
-`__attribute__((section(".inittext")))` means that this code will be in the `.inittext` section. We can find it in the linker file [setup.ld](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/setup.ld).
+First of all, `init_heap` checks the `CAN_USE_HEAP` flag from the kernel setup header. If it is not set, we'll see the warning message. If heap is enabled, the last address of it is set to the `boot_params.hdr.heap_end_ptr` filled by bootloader plus 512 bytes or to the end of the stack if the value specified by bootloader is above it. The beginning of the heap is right after the end of the `.bss` area. The stack size is 1024 bytes. Thereby, the memory map will look like:
 
-First of all, `putchar` checks for the `\n` symbol and if it is found, prints `\r` before. After that it prints the character on the VGA screen by calling the BIOS with the `0x10` interrupt call:
+![early-heap](./images/early-heap.svg)
 
+Now the heap is initialized, although we will see the usage of it in the next chapters.
+
+### CPU validation
+
+The next step is the validation of CPU on which the kernel is running. The kernel has to do it to make sure that the all required functionalities will work correctly on the given CPU.
+
+The `validate_cpu` function from [arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c) validates the CPU. This function calls the [`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c) which check the CPU model and its flags using the [cpuid](https://en.wikipedia.org/wiki/CPUID) instruction. The CPU's flags are checked like the presence of [long mode](http://en.wikipedia.org/wiki/Long_mode), checks the processor's vendor and makes preparations for certain vendors like turning on extensions like [SSE+SSE2](https://en.wikipedia.org/wiki/Single_instruction,_multiple_data):
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/cpu.c#L60-L73 -->
 ```C
-static void __attribute__((section(".inittext"))) bios_putchar(int ch)
+int validate_cpu(void)
 {
-    struct biosregs ireg;
+	u32 *err_flags;
+	int cpu_level, req_level;
 
-    initregs(&ireg);
-    ireg.bx = 0x0007;
-    ireg.cx = 0x0001;
-    ireg.ah = 0x0e;
-    ireg.al = ch;
-    intcall(0x10, &ireg, NULL);
+	check_cpu(&cpu_level, &req_level, &err_flags);
+
+	if (cpu_level < req_level) {
+		printf("This kernel requires an %s CPU, ",
+		       cpu_name(req_level));
+		printf("but only detected an %s CPU.\n",
+		       cpu_name(cpu_level));
+		return -1;
+	}
+```
+
+If the level of CPU is less than the required level specified by the `CONFIG_X86_MINIMUM_CPU_FAMILY` kernel configuration option, the function returns the error and the kernel setup process is aborted.
+
+### Memory detection
+
+After the kernel became sure that the CPU which it is running on is suitable, the next stage is to detect available memory in the system. This task is handled by the `detect_memory` function, which queries the system firmware to obtain a map of physical memory regions. To do this, the kernel uses the special BIOS service - `0xE820`, but kernel can fallback to legacy BIOS services like `0xE801` or `0x88`. In this chapter, we will see only the implementation of the `0xE820` interface.
+
+The `detect_memory` function defined in the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c) and as just mentioned, tries to get the information about available memory:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/memory.c#L116-L123 -->
+```C
+void detect_memory(void)
+{
+	detect_memory_e820();
+
+	detect_memory_e801();
+
+	detect_memory_88();
 }
 ```
 
-Here `initregs` takes the `biosregs` structure and first fills `biosregs` with zeros using the `memset` function and then fills it with register values.
+Let's look at the crucial part of the implementation of the `detect_memory_e820` function. First of all, the `detect_memory_e820` function initializes the `biosregs` structure with the special values related to the `0xE820` BIOS interface:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/memory.c#L25-L29 -->
 ```C
-    memset(reg, 0, sizeof *reg);
-    reg->eflags |= X86_EFLAGS_CF;
-    reg->ds = ds();
-    reg->es = ds();
-    reg->fs = fs();
-    reg->gs = gs();
-```
-
-Let's look at the implementation of [memset](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/copy.S#L36):
-
-```assembly
-GLOBAL(memset)
-    pushw   %di
-    movw    %ax, %di
-    movzbl  %dl, %eax
-    imull   $0x01010101,%eax
-    pushw   %cx
-    shrw    $2, %cx
-    rep; stosl
-    popw    %cx
-    andw    $3, %cx
-    rep; stosb
-    popw    %di
-    retl
-ENDPROC(memset)
-```
-
-As you can read above, it uses the same calling conventions as the `memcpy` function, which means that the function gets its parameters from the `ax`, `dx` and `cx` registers.
-
-The implementation of `memset` is similar to that of memcpy. It saves the value of the `di` register on the stack and puts the value of`ax`, which stores the address of the `biosregs` structure, into `di` . Next is the `movzbl` instruction, which copies the value of `dl` to the lowermost byte of the `eax` register. The remaining 3 high bytes of `eax` will be filled with zeros.
-
-The next instruction multiplies `eax` with `0x01010101`. It needs to because `memset` will copy 4 bytes at the same time. For example, if we need to fill a structure whose size is 4 bytes with the value `0x7` with memset, `eax` will contain the `0x00000007`. So if we multiply `eax` with `0x01010101`, we will get `0x07070707` and now we can copy these 4 bytes into the structure. `memset` uses the `rep; stosl` instruction to copy `eax` into `es:di`.
-
-The rest of the `memset` function does almost the same thing as `memcpy`.
-
-After the `biosregs` structure is filled with `memset`, `bios_putchar` calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which prints a character. Afterwards it checks if the serial port was initialized or not and writes a character there with [serial_putchar](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/tty.c) and `inb/outb` instructions if it was set.
-
-Heap initialization
---------------------------------------------------------------------------------
-
-After the stack and bss section have been prepared in [header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S) (see previous [part](linux-bootstrap-1.md)), the kernel needs to initialize the [heap](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c) with the [`init_heap`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c) function.
-
-First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/include/uapi/asm/bootparam.h#L24) flag from the [`loadflags`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S#L320) structure in the kernel setup header and calculates the end of the stack if this flag was set:
-
-```C
-    char *stack_end;
-
-    if (boot_params.hdr.loadflags & CAN_USE_HEAP) {
-        asm("leal %P1(%%esp),%0"
-            : "=r" (stack_end) : "i" (-STACK_SIZE));
-```
-
-or in other words `stack_end = esp - STACK_SIZE`.
-
-Then there is the `heap_end` calculation:
-
-```C
-     heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
-```
-
-which means `heap_end_ptr` or `_end` + `512` (`0x200h`). The last check is whether `heap_end` is greater than `stack_end`. If it is then `stack_end` is assigned to `heap_end` to make them equal.
-
-Now the heap is initialized and we can use it using the `GET_HEAP` method. We will see what it is used for, how to use it and how it is implemented in the next posts.
-
-CPU validation
---------------------------------------------------------------------------------
-
-The next step as we can see is cpu validation through the `validate_cpu` function from [arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/cpu.c) source code file.
-
-It calls the [`check_cpu`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/cpucheck.c) function and passes cpu level and required cpu level to it and checks that the kernel launches on the right cpu level.
-
-```C
-check_cpu(&cpu_level, &req_level, &err_flags);
-if (cpu_level < req_level) {
-    ...
-    return -1;
-}
-```
-
-The `check_cpu` function checks the CPU's flags, the presence of [long mode](http://en.wikipedia.org/wiki/Long_mode) in the case of x86_64(64-bit) CPU, checks the processor's vendor and makes preparations for certain vendors like turning on SSE+SSE2 for AMD if they are missing, etc.
-
-at the next step, we may see a call to the `set_bios_mode` function after setup code found that a CPU is suitable. As we may see, this function is implemented only for the `x86_64` mode:
-
-```C
-static void set_bios_mode(void)
-{
-#ifdef CONFIG_X86_64
-	struct biosregs ireg;
-
 	initregs(&ireg);
-	ireg.ax = 0xec00;
-	ireg.bx = 2;
-	intcall(0x15, &ireg, NULL);
-#endif
-}
+	ireg.ax  = 0xe820;
+	ireg.cx  = sizeof(buf);
+	ireg.edx = SMAP;
+	ireg.di  = (size_t)&buf;
 ```
 
-The `set_bios_mode` function executes the `0x15` BIOS interrupt to tell the BIOS that [long mode](https://en.wikipedia.org/wiki/Long_mode) (if `bx == 2`) will be used.
+- `ax` register contains the number of the BIOS service
+- `cx` register contains the size of the buffer which will contain the data about available memory
+- `di` register contain the address of the buffer which will contain memory data
+- `edx` register contains the `SMAP` magic number
 
-Memory detection
---------------------------------------------------------------------------------
+After registers filled with the needed values, the kernel can ask the `0xE820` BIOS interface about available memory. The kernel does it by the invoking `0x15` [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call) which returns information about one memory region. The kernel repeats this operation in the loop until information about all the memory regions is not collected.
 
-The next step is memory detection through the `detect_memory` function. `detect_memory` basically provides a map of available RAM to the CPU. It uses different programming interfaces for memory detection like `0xe820`, `0xe801` and `0x88`. We will see only the implementation of the **0xE820** interface here.
-
-Let's look at the implementation of the `detect_memory_e820` function from the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/memory.c) source file. First of all, the `detect_memory_e820` function initializes the `biosregs` structure as we saw above and fills registers with special values for the `0xe820` call:
-
-```assembly
-    initregs(&ireg);
-    ireg.ax  = 0xe820;
-    ireg.cx  = sizeof buf;
-    ireg.edx = SMAP;
-    ireg.di  = (size_t)&buf;
-```
-
-* `ax` contains the number of the function (0xe820 in our case)
-* `cx` contains the size of the buffer which will contain data about the memory
-* `edx` must contain the `SMAP` magic number
-* `es:di` must contain the address of the buffer which will contain memory data
-* `ebx` has to be zero.
-
-Next is a loop where data about the memory will be collected. It starts with a call to the `0x15` BIOS interrupt, which writes one line from the address allocation table. For getting the next line we need to call this interrupt again (which we do in the loop). Before the next call `ebx` must contain the value returned previously:
-
-```C
-    intcall(0x15, &ireg, &oreg);
-    ireg.ebx = oreg.ebx;
-```
-
-Ultimately, this function collects data from the address allocation table and writes this data into the `e820_entry` array:
-
-* start of memory segment
-* size  of memory segment
-* type of memory segment (whether the particular segment is usable or reserved)
-
-You can see the result of this in the `dmesg` output, something like:
+After the information is called, the kernel print message about the available memory regions. You can find it in the [dmesg](https://en.wikipedia.org/wiki/Dmesg) output:
 
 ```
 [    0.000000] e820: BIOS-provided physical RAM map:
@@ -403,87 +369,79 @@ You can see the result of this in the `dmesg` output, something like:
 [    0.000000] BIOS-e820: [mem 0x00000000fffc0000-0x00000000ffffffff] reserved
 ```
 
-Keyboard initialization
---------------------------------------------------------------------------------
+### Keyboard initialization
 
-The next step is the initialization of the keyboard with a call to the [`keyboard_init`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c) function. At first `keyboard_init` initializes registers using the `initregs` function. It then calls the [0x16](http://www.ctyme.com/intr/rb-1756.htm) interrupt to query the status of the keyboard.
+Once memory detection is complete, the kernel proceeds with initializing the keyboard using the `keyboard_init`:
 
-```c
-    initregs(&ireg);
-    ireg.ah = 0x02;     /* Get keyboard status */
-    intcall(0x16, &ireg, &oreg);
-    boot_params.kbd_status = oreg.al;
-```
-
-After this it calls [0x16](http://www.ctyme.com/intr/rb-1757.htm) again to set the repeat rate and delay.
-
-```c
-    ireg.ax = 0x0305;   /* Set keyboard repeat rate */
-    intcall(0x16, &ireg, NULL);
-```
-
-Querying
---------------------------------------------------------------------------------
-
-The next couple of steps are queries for different parameters. We will not dive into details about these queries but we will get back to them in later parts. Let's take a short look at these functions:
-
-The first step is getting [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep) information by calling the `query_ist` function. It checks the CPU level and if it is correct, calls `0x15` to get the info and saves the result to `boot_params`.
-
-Next, the [query_apm_bios](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/apm.c#L21) function gets [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management) information from the BIOS. `query_apm_bios` calls the `0x15` BIOS interruption too, but with `ah` = `0x53` to check `APM` installation. After `0x15` finishes executing, the `query_apm_bios` functions check the `PM` signature (it must be `0x504d`), the carry flag (it must be 0 if `APM` supported) and the value of the `cx` register (if it's 0x02, the protected mode interface is supported).
-
-Next, it calls `0x15` again, but with `ax = 0x5304` to disconnect the `APM` interface and connect the 32-bit protected mode interface. In the end, it fills `boot_params.apm_bios_info` with values obtained from the BIOS.
-
-Note that `query_apm_bios` will be executed only if the `CONFIG_APM` or `CONFIG_APM_MODULE` compile time flag was set in the configuration file:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L64-L76 -->
 ```C
+static void keyboard_init(void)
+{
+	struct biosregs ireg, oreg;
+
+	initregs(&ireg);
+
+	ireg.ah = 0x02;		/* Get keyboard status */
+	intcall(0x16, &ireg, &oreg);
+	boot_params.kbd_status = oreg.al;
+
+	ireg.ax = 0x0305;	/* Set keyboard repeat rate */
+	intcall(0x16, &ireg, NULL);
+}
+```
+
+This function performs two tasks using [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call) `0x16`:
+
+1. Gets the state of a keyboard which contains information about state of certain modifier keys, like for example Caps Lock active or not.
+2. Sets the keyboard repeat rate which determines how long a key must hold down before it begins repeating
+
+### Gathering system information
+
+After we went though the most essential hardware interfaces like CPU, I/O, memory map, keyboard, the next a couple of steps are to query the BIOS for additional information about the system. The information which kernel is going to gather is not strictly required for entering protected mode, but it provides useful details that later parts of the kernel may rely on. 
+
+The following information is going to be collected:
+
+- Information about [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
+- Information about [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management)
+- Information about [Enhanced Disk Drive](https://en.wikipedia.org/wiki/INT_13H)
+
+At this moment we will not dive into details about each of this query, but will get back to them in the next parts when we will use this information. For now, just let's take a short look at these functions:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L163-L174 -->
+```C
+	/* Query Intel SpeedStep (IST) information */
+	query_ist();
+
+	/* Query APM information */
 #if defined(CONFIG_APM) || defined(CONFIG_APM_MODULE)
-    query_apm_bios();
+	query_apm_bios();
+#endif
+
+	/* Query EDD information */
+#if defined(CONFIG_EDD) || defined(CONFIG_EDD_MODULE)
+	query_edd();
 #endif
 ```
 
-The last is the [`query_edd`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/edd.c#L122) function, which queries `Enhanced Disk Drive` information from the BIOS. Let's look at how `query_edd` is implemented.
+The first one is getting information about the [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep). This information is obtained by the calling the `0x15` BIOS interrupt and store the result in the `boot_params` structure. The returned information describes the support of the Intel SpeedStep and settings around it. If it is supported, this information will be passed later by the kernel to the power management subsystems.
 
-First of all, it reads the [edd](https://github.com/torvalds/linux/blob/v4.16/Documentation/admin-guide/kernel-parameters.rst) option from the kernel's command line and if it was set to `off` then `query_edd` just returns.
+The next one is getting information about the [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management). The logic of this function is pretty similar to the one described above. It uses the same `0x15` BIOS interrupt to obtain information and store it in the `boot_params` structure. The returned information describes the support of the `APM` which was power management sub-system before [ACPI](https://en.wikipedia.org/wiki/ACPI) started to be a standard.
 
-If EDD is enabled, `query_edd` goes over BIOS-supported hard disks and queries EDD information in the following loop:
+The last one function gets information about the `Enhanced Disk Drive` from the BIOS. The same `0x13` BIOS interrupt is used to obtain this information. The returned information describes the disks and their characteristics like geometry and mapping information.
 
-```C
-for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
-    if (!get_edd_info(devno, &ei) && boot_params.eddbuf_entries < EDDMAXNR) {
-        memcpy(edp, &ei, sizeof ei);
-        edp++;
-        boot_params.eddbuf_entries++;
-    }
-    ...
-    ...
-    ...
-    }
-```
+## Conclusion
 
-where `0x80` is the first hard drive and the value of the `EDD_MBR_SIG_MAX` macro is 16. It collects data into an array of [edd_info](https://github.com/torvalds/linux/blob/v4.16/include/uapi/linux/edd.h) structures. `get_edd_info` checks that EDD is present by invoking the `0x13` interrupt with `ah` as `0x41` and if EDD is present, `get_edd_info` again calls the `0x13` interrupt, but with `ah` as `0x48` and `si` containing the address of the buffer where EDD information will be stored.
+This is the end of the second part about Linux kernel insides. If you have questions or suggestions, feel free ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part, we will continue to deal with the preparations before transitioning into protected mode and the transitioning itself.
 
-Conclusion
---------------------------------------------------------------------------------
+## Links
 
-This is the end of the second part about the insides of the Linux kernel. In the next part, we will see video mode setting and the rest of the preparations before the transition to protected mode and directly transitioning into it.
+Here is the list of the links that you may find useful during reading of this chapter:
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
-
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me a PR to [linux-insides](https://github.com/0xAX/linux-insides).**
-
-Links
---------------------------------------------------------------------------------
-
-* [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)
-* [Protected mode](http://wiki.osdev.org/Protected_Mode)
-* [Long mode](http://en.wikipedia.org/wiki/Long_mode)
-* [Nice explanation of CPU Modes with code](http://www.codeproject.com/Articles/45788/The-Real-Protected-Long-mode-assembly-tutorial-for)
-* [How to Use Expand Down Segments on Intel 386 and Later CPUs](http://www.sudleyplace.com/dpmione/expanddown.html)
-* [earlyprintk documentation](https://github.com/torvalds/linux/blob/v4.16/Documentation/x86/earlyprintk.txt)
-* [Kernel Parameters](https://github.com/torvalds/linux/blob/v4.16/Documentation/admin-guide/kernel-parameters.rst)
-* [Serial console](https://github.com/torvalds/linux/blob/v4.16/Documentation/admin-guide/serial-console.rst)
-* [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
-* [APM](https://en.wikipedia.org/wiki/Advanced_Power_Management)
-* [EDD specification](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
-* [TLDP documentation for Linux Boot Process](http://www.tldp.org/HOWTO/Linux-i386-Boot-Code-HOWTO/setup.html) (old)
-* [Previous Part](linux-bootstrap-1.md)
+- [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)
+- [Long mode](http://en.wikipedia.org/wiki/Long_mode)
+- [The kernel's command-line parameters](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst)
+- [Linux serial console](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/serial-console.rst)
+- [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call)
+- [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
+- [APM](https://en.wikipedia.org/wiki/Advanced_Power_Management)
+- [EDD specification](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
