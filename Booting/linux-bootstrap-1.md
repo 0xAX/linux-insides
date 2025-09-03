@@ -76,21 +76,18 @@ In real mode, the base address is normally formed by shifting the 16-bit segment
 '0xfffffff0'
 ```
 
-We got `0xFFFFFFF0`, which is 16 bytes below 4GB. This is the very first address where the CPU starts the execution after reset. This address has special name - [reset vector](https://en.wikipedia.org/wiki/Reset_vector). It is the memory location at which the CPU expects to find the first instruction to execute after reset. Usually it contains a [jump](https://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction which points to the [BIOS](https://en.wikipedia.org/wiki/BIOS) or [UEFI](https://en.wikipedia.org/wiki/UEFI) entry point.
+We got `0xFFFFFFF0`, which is 16 bytes below 4GB. This is the very first address where the CPU starts the execution after reset. This address has special name - [reset vector](https://en.wikipedia.org/wiki/Reset_vector). It is the memory location at which the CPU expects to find the first instruction to execute after reset. Usually it contains a [jump](https://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction which points to the [BIOS](https://en.wikipedia.org/wiki/BIOS) or [UEFI](https://en.wikipedia.org/wiki/UEFI) entry point. For example, if we take a look at the [source code](https://github.com/coreboot/coreboot/blob/main/src/cpu/x86/reset16.S) of the [coreboot](https://www.coreboot.org/), we will see it there:
 
-For example, if we take a look at the [source code](https://github.com/coreboot/coreboot/blob/main/src/cpu/x86/reset16.S) of the [coreboot](https://www.coreboot.org/), we will see it there:
-
-<!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/main/src/cpu/x86/reset16.S#L3-L8 -->
+<!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/main/src/cpu/x86/entry16.S#L155-L159 -->
 ```assembly
-	.section ".reset", "ax", %progbits
-	.code16
-.globl	_start
+  /* This is the first instruction the CPU runs when coming out of reset. */
+.section ".reset", "ax", %progbits
+.globl _start
 _start:
-	.byte  0xe9
-	.int   _start16bit - ( . + 2 )
+	jmp		_start16bit
 ```
 
-That `.byte 0xE9` is the [opcode](http://ref.x86asm.net/coder32.html#xE9) for a near jump instruction. The line below is destination of the jump. To prove that this code is located at the `0xFFFFFFF0` address, we may take a look at the [linker script](https://github.com/coreboot/coreboot/blob/master/src/arch/x86/bootblock.ld):
+To prove that this code is located at the `0xFFFFFFF0` address, we may take a look at the [linker script](https://github.com/coreboot/coreboot/blob/master/src/arch/x86/bootblock.ld):
 
 <!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/master/src/arch/x86/bootblock.ld#L72-L78 -->
 ```linker-script
