@@ -42,7 +42,7 @@ jobs:
           path: artifacts/*
           if-no-files-found: error
           # Change the retention period here if necessary.
-          retention-days: 90
+          retention-days: 7
 
       - name: Add a comment with a link to the generated artifacts.
         # For forked PRs the token is read-only; skip commenting to avoid failures.
