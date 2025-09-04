@@ -1,14 +1,4 @@
 {
     "title": "Linux Insides",
-    "author" : "0xAX",
-    "pdf": {
-        "paperSize": "a5",
-        "margin":
-        {
-            "top": 48,
-            "bottom": 48,
-            "right": 28,
-            "left": 28
-        }
-    }
+    "author" : "0xAX"
 }

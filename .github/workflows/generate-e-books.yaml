@@ -1,0 +1,63 @@
+name: Generate e-books
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch: {}  # For manual runs.
+
+jobs:
+  build-for-pr:
+    # For every PR, build the same artifacts and make them accessible from the PR.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Export all supported book formats from the Docker container
+        run: |
+          make run
+          make export
+
+      - name: Copy generated files to host system
+        run: |
+          make cp
+          mkdir -p artifacts/
+          mv "Linux Inside - 0xAX.epub" \
+             "Linux Inside - 0xAX.mobi" \
+             "Linux Inside - 0xAX.pdf" \
+             "Linux Inside - 0xAX (A5).pdf" \
+             artifacts/
+
+      - name: Upload PR artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ebooks-${{ github.sha }}
+          path: artifacts/*
+          if-no-files-found: error
+          # Change the retention period here if necessary.
+          retention-days: 7
+
+      - name: Add a comment with a link to the generated artifacts.
+        # For forked PRs the token is read-only; skip commenting to avoid failures.
+        if: ${{ github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name }}
+        uses: actions/github-script@v7
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const body = [
+              `E-books generated for this pull request available at: ${process.env.RUN_URL}`
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body
+            });

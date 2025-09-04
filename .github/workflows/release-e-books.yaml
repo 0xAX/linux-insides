@@ -1,0 +1,63 @@
+name: Release e-books
+
+on:
+  push:
+    tags:
+      - 'v*.*' # Create a release only when a new tag matching v*.* is pushed.
+    # To also create a release for each push to the main branch, uncomment the following 2 lines:
+    # branches:
+    #   - master
+  workflow_dispatch: {}  # For manual runs.
+
+jobs:
+  release-ebooks:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Export all supported book formats from the Docker container
+        run: |
+          make run
+          make export
+
+      - name: Copy generated files to host system
+        run: |
+          make cp
+          mkdir -p artifacts/
+          mv "Linux Inside - 0xAX.epub" \
+             "Linux Inside - 0xAX.mobi" \
+             "Linux Inside - 0xAX.pdf" \
+             "Linux Inside - 0xAX (A5).pdf" \
+             artifacts/
+          cp LICENSE artifacts/
+
+      - name: Prepare release metadata
+        # Use tag name when running on a tag, otherwise fall back to the short commit hash.
+        id: meta
+        env:
+          GITHUB_REF_TYPE: ${{ github.ref_type }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          DATE_UTC="$(date -u '+%m/%d/%Y %H:%M')"
+          if [ "${GITHUB_REF_TYPE}" = "tag" ] && [ -n "${GITHUB_REF_NAME}" ]; then
+            LABEL="${GITHUB_REF_NAME}"
+          else
+            LABEL="$(git rev-parse --short HEAD)"
+          fi
+          echo "release_name=${DATE_UTC} (${LABEL})" >> "$GITHUB_OUTPUT"
+          echo "tag_name=${LABEL}" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          name: ${{ steps.meta.outputs.release_name }}
+          tag_name: ${{ steps.meta.outputs.tag_name }}
+          target_commitish: ${{ github.sha }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
