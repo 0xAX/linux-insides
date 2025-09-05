@@ -47,7 +47,7 @@ jobs:
       - name: Add a comment with a link to the generated artifacts.
         # For forked PRs the token is read-only; skip commenting to avoid failures.
         if: ${{ github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name }}
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         with:
