@@ -22,7 +22,7 @@ image: ## docker image build ...
 
 .PHONY: sh
 sh: ## run interactive shell inside an already running docker container ...
-	docker exec -it linux-insides-book sh
+	docker exec -it linux-insides-book bash
 
 .PHONY: rm
 rm: ## remove the docker container ...
@@ -35,7 +35,18 @@ logs: ## gather logs from the docker container ...
 
 .PHONY: export
 export: ## run e-book generation inside an already running docker container ...
-	docker exec linux-insides-book /bin/bash -c " \
+	docker exec linux-insides-book /bin/bash -c ' \
+	find . -type f -name '*.svg' -a ! \( -path "./.github/*" -o -path "./_book/*" \) -print0 | while IFS= read -r -d "" svg_file; do \
+    output_file="$${svg_file%.svg}.png"; \
+    chapter_dir=$$(dirname $$(dirname "$$svg_file")); \
+    svg_relative_path="$${svg_file#$$chapter_dir/}"; \
+    output_relative_path="$${output_file#$$chapter_dir/}"; \
+    inkscape --export-png="$$output_file" \
+             --export-area-page \
+             --export-dpi=150 \
+             "$$svg_file"; \
+    find "$$chapter_dir" -maxdepth 1 -type f -name "*.md" -print0 | xargs -0 sed -i "s|\\([/ \\t\\(]\\)$${svg_relative_path}|\\1$${output_relative_path}|g"; \
+	done; \
 	gitbook epub; \
 	gitbook mobi; \
 	gitbook pdf; \
@@ -43,7 +54,7 @@ export: ## run e-book generation inside an already running docker container ...
 	mv book-A5.json book.json; \
 	gitbook pdf; \
 	mv book.pdf book-A5.pdf; \
-	mv book-A4.pdf book.pdf"
+	mv book-A4.pdf book.pdf'
 
 .PHONY: cp
 cp: ## copy all exported e-book formats to current working directory ...
