@@ -1,26 +1,69 @@
-Kernel booting process. Part 3.
-================================================================================
+# Kernel booting process. Part 3.
 
-Video mode initialization and transition to protected mode
---------------------------------------------------------------------------------
+In the previous [part](./linux-bootstrap-2.md#kernel-booting-process-part-2), we have seen first pieces of C code that run in the Linux kernel. One of the main goal of this stage is to switch into the [protected mode](https://en.wikipedia.org/wiki/Protected_mode), but before this, we have seen some early setup code which executes early initialization procedures, such as:
 
-This is the third part of the `Kernel booting process` series. In the previous [part](linux-bootstrap-2.md#kernel-booting-process-part-2), we stopped right before the call to the `set_video` routine from [main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c).
+- Setup of console to be able to print messages from the kernel's setup code
+- Validation of CPU
+- Detection of available memory
+- Initialization of keyboard
 
-In this part, we will look at:
+In this part we will continue to explore the next steps before we will see the transition into the protected mode.
 
-* Video mode initialization in the kernel setup code,
-* the preparations made before switching into protected mode,
-* the transition to protected mode
+## Video mode setup
 
-**NOTE** If you don't know anything about protected mode, you can find some information about it in the previous [part](linux-bootstrap-2.md#protected-mode). Also, there are a couple of [links](linux-bootstrap-2.md#links) which can help you.
+Previously, we stopped right at the point where the kernel setup code was about to initialize the video mode. 
 
-As I wrote above, we will start from the `set_video` function which is defined in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/video.c) source code file. We can see that it starts by first getting the video mode from the `boot_params.hdr` structure:
+The setup code is located in the [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c) and implemented by the `set_video` function. Now let's take a look at the implementation of the `set_video` function:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/video.c#L317-L343 -->
+```C
+void set_video(void)
+{
+	u16 mode = boot_params.hdr.vid_mode;
+
+	RESET_HEAP();
+
+	store_mode_params();
+	save_screen();
+	probe_cards(0);
+
+	for (;;) {
+		if (mode == ASK_VGA)
+			mode = mode_menu();
+
+		if (!set_mode(mode))
+			break;
+
+		printf("Undefined video mode number: %x\n", mode);
+		mode = ASK_VGA;
+	}
+	boot_params.hdr.vid_mode = mode;
+	vesa_store_edid();
+	store_mode_params();
+
+	if (do_restore)
+		restore_screen();
+}
+```
+
+Let's try to understand what this function does in the next sections.
+
+### Video modes
+
+The implementation of the `set_video` function starts by getting the video mode from the `boot_params.hdr` structure:
 
 ```C
 u16 mode = boot_params.hdr.vid_mode;
 ```
 
-which we filled in the `copy_boot_params` function (you can read about it in the previous post). `vid_mode` is an obligatory field which is filled by the bootloader. You can find information about it in the kernel `boot protocol`:
+> [!NOTE] 
+> Instead of old good standard C data types like `int`, `short`, `unsigned short`, Linux kernel provides own data types for numeric values. Here is the table that will help you to remember them:
+>
+> | Type | char | short | int | long | u8 | u16 | u32 | u64 |
+> |------|------|-------|-----|------|----|-----|-----|-----|
+> | Size |  1   |   2   |  4  |   8  |  1 |  2  |  4  |  8  |
+
+The initial value of the video mode can be filled by the bootloader. This header field defined in the Linux kernel boot protocol:
 
 ```
 Offset	Proto	Name		Meaning
@@ -28,7 +71,7 @@ Offset	Proto	Name		Meaning
 01FA/2	ALL	    vid_mode	Video mode control
 ```
 
-As we can read from the Linux kernel boot protocol:
+Information about potential values for this field can be also found in the Linux kernel boot protocol document:
 
 ```
 vga=<mode>
@@ -40,60 +83,86 @@ vga=<mode>
 	line is parsed.
 ```
 
-So we can add the `vga` option to the grub (or another bootloader's) configuration file and it will pass this option to the kernel command line. This option can have different values as mentioned in the description. For example, it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you will see a menu like this:
+This tells us that we can add the `vga` option to the GRUB (or another bootloader's) configuration file and it will pass this option to the kernel command line. This option can have different values as mentioned in the description above. For example, it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you will see a menu with the possible video modes. We can test it using [QEMU](https://www.qemu.org/) virtual machine:
 
-![video mode setup menu](images/video_mode_setup_menu.png)
+```bash
+sudo qemu-system-x86_64 -kernel ./linux/arch/x86/boot/bzImage                \
+                        -nographic                                           \
+                        -append "console=ttyS0 nokaslr vga=ask"              \
+                        -initrd /boot/initramfs-6.17.0-rc3-g1b237f190eb3.img 
+```
 
-which will ask to select a video mode. We will look at its implementation, but before diving into the implementation we have to look at some other things.
+If you did everything correctly, after the kernel is loaded it will ask you to press the `ENTER`. By pressing on it you should see something like this:
 
-Kernel data types
---------------------------------------------------------------------------------
+```
+Booting from ROM...
+Probing EDD (edd=off to disable)... ok
+Press <ENTER> to see video modes available, <SPACE> to continue, or wait 30 sec
+Mode: Resolution:  Type: Mode: Resolution:  Type: Mode: Resolution:  Type: 
+0 F00   80x25      VGA   1 F01   80x50      VGA   2 F02   80x43      VGA   
+3 F03   80x28      VGA   4 F05   80x30      VGA   5 F06   80x34      VGA   
+6 F07   80x60      VGA   7 340  320x200x32  VESA  8 341  640x400x32  VESA  
+9 342  640x480x32  VESA  a 343  800x600x32  VESA  b 344 1024x768x32  VESA  
+c 345 1280x1024x32 VESA  d 347 1600x1200x32 VESA  e 34C 1152x864x32  VESA  
+f 377 1280x768x32  VESA  g 37A 1280x800x32  VESA  h 37D 1280x960x32  VESA  
+i 380 1440x900x32  VESA  j 383 1400x1050x32 VESA  k 386 1680x1050x32 VESA  
+l 389 1920x1200x32 VESA  m 38C 2560x1600x32 VESA  n 38F 1280x720x32  VESA  
+o 392 1920x1080x32 VESA  p 300  640x400x8   VESA  q 301  640x480x8   VESA  
+r 303  800x600x8   VESA  s 305 1024x768x8   VESA  t 307 1280x1024x8  VESA  
+u 30D  320x200x15  VESA  v 30E  320x200x16  VESA  w 30F  320x200x24  VESA  
+x 310  640x480x15  VESA  y 311  640x480x16  VESA  z 312  640x480x24  VESA  
+  313  800x600x15  VESA    314  800x600x16  VESA    315  800x600x24  VESA  
+  316 1024x768x15  VESA    317 1024x768x16  VESA    318 1024x768x24  VESA  
+  319 1280x1024x15 VESA    31A 1280x1024x16 VESA    31B 1280x1024x24 VESA  
+  31C 1600x1200x8  VESA    31D 1600x1200x15 VESA    31E 1600x1200x16 VESA  
+  31F 1600x1200x24 VESA    346  320x200x8   VESA    348 1152x864x8   VESA  
+  349 1152x864x15  VESA    34A 1152x864x16  VESA    34B 1152x864x24  VESA  
+  375 1280x768x16  VESA    376 1280x768x24  VESA    378 1280x800x16  VESA  
+  379 1280x800x24  VESA    37B 1280x960x16  VESA    37C 1280x960x24  VESA  
+  37E 1440x900x16  VESA    37F 1440x900x24  VESA    381 1400x1050x16 VESA  
+  382 1400x1050x24 VESA    384 1680x1050x16 VESA    385 1680x1050x24 VESA  
+  387 1920x1200x16 VESA    388 1920x1200x24 VESA    38A 2560x1600x16 VESA  
+  38B 2560x1600x24 VESA    38D 1280x720x16  VESA    38E 1280x720x24  VESA  
+  390 1920x1080x16 VESA    391 1920x1080x24 VESA    393 1600x900x16  VESA  
+  394 1600x900x24  VESA    395 1600x900x32  VESA    396 2560x1440x16 VESA  
+  397 2560x1440x24 VESA    398 2560x1440x32 VESA    399 3840x2160x16 VESA  
+  200   40x25      VESA    201   40x25      VESA    202   80x25      VESA  
+  203   80x25      VESA    207   80x25      VESA    213  320x200x8   VESA  
+Enter a video mode or "scan" to scan for additional modes: 
+```
 
-Earlier we saw definitions of different data types like `u16` etc. in the kernel setup code. Let's look at a couple of data types provided by the kernel:
+### Early heap API
 
+Before proceeding further to investigate what the `set_video` function does, it will be useful to take a look at the API for the management of the kernel's early heap. 
 
-| Type | char | short | int | long | u8 | u16 | u32 | u64 |
-|------|------|-------|-----|------|----|-----|-----|-----|
-| Size |  1   |   2   |  4  |   8  |  1 |  2  |  4  |  8  |
+After getting the video mode set by the bootloader, we can see reseting the heap value by the `RESET_HEAP` macro. The definition of this macro is in the [arch/x86/boot/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h):
 
-If you read the source code of the kernel, you'll see these very often and so it will be good to remember them.
-
-Heap API
---------------------------------------------------------------------------------
-
-After we get `vid_mode` from `boot_params.hdr` in the `set_video` function, we can see the call to the `RESET_HEAP` function. `RESET_HEAP` is a macro which is defined in [arch/x86/boot/boot.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/boot.h) header file.
-
-This macro is defined as:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/boot.h#L174-L174 -->
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-If you have read the second part, you will remember that we initialized the heap with the [`init_heap`](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c) function. We have a couple of utility macros and functions for managing the heap which are defined in `arch/x86/boot/boot.h` header file.
+If you have read the [part](./linux-bootstrap-2.md#kernel-booting-process-part-2), you should remember that we have seen initialization of the heap memory area.The kernel setup code provides a couple of utility macros and functions for managing the early heap. Let's take a look at some of them, especially at ones which we will meet in this chapter.
 
-They are:
+The `RESET_HEAP` macro resets the heap by setting the `HEAP` variable to the `_end` which represents the end of the early setup kernel's `text` (or code) section. By doing this we just set the heap pointer to the very beginning of the heap.
 
-```C
-#define RESET_HEAP()
-```
+The next useful macro is:
 
-As we saw just above, it resets the heap by setting the `HEAP` variable to `_end`, where `_end` is just `extern char _end[];`
-
-Next is the `GET_HEAP` macro:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/boot.h#L184-L185 -->
 ```C
 #define GET_HEAP(type, n) \
 	((type *)__get_heap(sizeof(type),__alignof__(type),(n)))
 ```
 
-for heap allocation. It calls the internal function `__get_heap` with 3 parameters:
+The goal of this macro is to allocate memory on the early heap. This macro calls the `__get_heap` function from the same header file with the following three parameters:
 
-* the size of the datatype to be allocated for
-* `__alignof__(type)` specifies how variables of this type are to be aligned
-* `n` specifies how many items to allocate
+- The size of the datatype to be allocated for
+- Specifies how variables of this type are to be aligned
+- How many items specified by the first parameter to allocate
 
 The implementation of `__get_heap` is:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/boot.h#L175-L183 -->
 ```C
 static inline char *__get_heap(size_t s, size_t a, size_t n)
 {
@@ -106,64 +175,27 @@ static inline char *__get_heap(size_t s, size_t a, size_t n)
 }
 ```
 
-and we will further see its usage, something like:
+Let's try to understand how the `__get_heap` function works. First of all we can see here that `HEAP` pointer is assigned to the [aligned](https://en.wikipedia.org/wiki/Data_structure_alignment) address of the memory. The address is aligned based on the size of data type for which we want to allocate memory. After we have got the initial aligned address, we just move the `HEAP` pointer by the requested size.
 
-```C
-saved.data = GET_HEAP(u16, saved.x * saved.y);
-```
+The last but not least API of the early heap that we will see is the `heap_free` function which checks the availability of the given size of memory on the heap:
 
-Let's try to understand how `__get_heap` works. We can see here that `HEAP` (which is equal to `_end` after `RESET_HEAP()`) is assigned the address of the aligned memory according to the `a` parameter. After this we save the memory address from `HEAP` to the `tmp` variable, move `HEAP` to the end of the allocated block and return `tmp` which is the start address of allocated memory.
-
-And the last function is:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/boot.h#L187-L190 -->
 ```C
 static inline bool heap_free(size_t n)
 {
-	return (int)(heap_end - HEAP) >= (int)n;
+	return (int)(heap_end-HEAP) >= (int)n;
 }
 ```
 
-which subtracts value of the `HEAP` pointer from the `heap_end` (we calculated it in the previous [part](linux-bootstrap-2.md)) and returns 1 if there is enough memory available for `n`.
+As you may see, the implementation of this function is pretty trivial. It just subtracts the current value of the heap pointer from the address which represents the end of heap memory area. The function returns `true` if there is enough memory for `n` or `false` otherwise.
 
-That's all. Now we have a simple API for heap and can setup video mode.
+### Return to the setup of the video mode
 
-Set up video mode
---------------------------------------------------------------------------------
+Since the heap pointer is in the right place, we can move directly to video mode initialization. The next step after this is the call to  `store_mode_params` function which stores currently available video mode parameters in the `boot_params.screen_info`. This structure defined in the [include/uapi/linux/screen_info.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/screen_info.hh) header file and provides basic information about the screen and video mode. Such as current position of the cursor, the BIOS video mode number that was set when the kernel was loaded, the number of text rows and columns and so on. The `store_mode_params` function asks the BIOS services about this information and stores it in this structure for later usage.
 
-Now we can move directly to video mode initialization. We stopped at the `RESET_HEAP()` call in the `set_video` function. Next is the call to  `store_mode_params` which stores video mode parameters in the `boot_params.screen_info` structure which is defined in [include/uapi/linux/screen_info.h](https://github.com/torvalds/linux/blob/v4.16/include/uapi/linux/screen_info.h) header file.
+The next step is save the current contents of the screen to the heap by calling the `save_screen` function. This function collects all the data which we got in the previous functions (like the rows and columns, and stuff) and stores it in the `saved_screen` structure, which is defined as:
 
-If we look at the `store_mode_params` function, we can see that it starts with a call to the `store_cursor_position` function. As you can understand from the function name, it gets information about the cursor and stores it.
-
-First of all, `store_cursor_position` initializes two variables which have type `biosregs` with `AH = 0x3`, and calls the `0x10` BIOS interruption. After the interruption is successfully executed, it returns row and column in the `DL` and `DH` registers. Row and column will be stored in the `orig_x` and `orig_y` fields of the `boot_params.screen_info` structure.
-
-After `store_cursor_position` is executed, the `store_video_mode` function will be called. It just gets the current video mode and stores it in `boot_params.screen_info.orig_video_mode`.
-
-After this, `store_mode_params` checks the current video mode and sets the `video_segment`. After the BIOS transfers control to the boot sector, the following addresses are for video memory:
-
-```
-0xB000:0x0000 	32 Kb 	Monochrome Text Video Memory
-0xB800:0x0000 	32 Kb 	Color Text Video Memory
-```
-
-So we set the `video_segment` variable to `0xb000` if the current video mode is MDA, HGC, or VGA in monochrome mode and to `0xb800` if the current video mode is in color mode. After setting up the address of the video segment, the font size needs to be stored in `boot_params.screen_info.orig_video_points` with:
-
-```C
-set_fs(0);
-font_size = rdfs16(0x485);
-boot_params.screen_info.orig_video_points = font_size;
-```
-
-First of all, we put 0 in the `FS` register with the `set_fs` function. We already saw functions like `set_fs` in the previous part. They are all defined in [arch/x86/boot/boot.h](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/boot.h). Next, we read the value which is located at address `0x485` (this memory location is used to get the font size) and save the font size in `boot_params.screen_info.orig_video_points`.
-
-```C
-x = rdfs16(0x44a);
-y = (adapter == ADAPTER_CGA) ? 25 : rdfs8(0x484)+1;
-```
-
-Next, we get the amount of columns by address `0x44a` and rows by address `0x484` and store them in `boot_params.screen_info.orig_video_cols` and `boot_params.screen_info.orig_video_lines`. After this, execution of `store_mode_params` is finished.
-
-Next we can see the `save_screen` function which just saves the contents of the screen to the heap. This function collects all the data which we got in the previous functions (like the rows and columns, and stuff) and stores it in the `saved_screen` structure, which is defined as:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/video.c#L233-L237 -->
 ```C
 static struct saved_screen {
 	int x, y;
@@ -172,25 +204,25 @@ static struct saved_screen {
 } saved;
 ```
 
-It then checks whether the heap has free space for it with:
-
-```C
-if (!heap_free(saved.x*saved.y*sizeof(u16)+512))
-		return;
-```
-
-and allocates space in the heap if it is enough and stores `saved_screen` in it.
-
-The next call is `probe_cards(0)` from [arch/x86/boot/video-mode.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/video-mode.c) source code file. It goes over all video_cards and collects the number of modes provided by the cards. Here is the interesting part, we can see the loop:
+After the contents of the screen is saved, the next step is to collect currently available video modes in the system. This job is done by the `probe_cards` function defined in the [arch/x86/boot/video-mode.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video-mode.c). It goes over all `video_cards` and collects the information about them:
 
 ```C
 for (card = video_cards; card < video_cards_end; card++) {
-  /* collecting number of modes here */
+  /* collecting the number of video modes */
 }
 ```
 
-but `video_cards` is not declared anywhere. The answer is simple: every video mode presented in the x86 kernel setup code has a definition that looks like this:
+The `video_cards` is an array defined as:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/video.h#L81-L82 -->
+```C
+#define __videocard struct card_info __section(".videocards") __attribute__((used))
+extern struct card_info video_cards[], video_cards_end[];
+```
+
+The `__videocard` macro allows to define structures which describe video cards and the linker will put them into the `video_cards` array. Example of such structure can be found in the [arch/x86/boot/video-vga.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video-vga.c):
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/video-vga.c#L282-L286 -->
 ```C
 static __videocard video_vga = {
 	.card_name	= "VGA",
@@ -199,50 +231,18 @@ static __videocard video_vga = {
 };
 ```
 
-where `__videocard` is a macro:
+After the `probe_cards` function executes we have a bunch of structures in our `video_cards` array and the known number of video modes they provide. At the next step the kernel setup code will print menu with available video modes if the `vid_mode=ask` option was passed to the kernel command line and set up the video mode having all the parameters that we have gathered at the previous steps. The video mode is set by the `set_mode` function is defined in [video-mode.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video-mode.c). This function expects one parameter - the video mode identifier. This identifier is set by the bootloader or set based on the choice of the video modes menu. The `set_mode` function goes over all available video cards defined in the `video_cards` array and if the given mode belongs to the given card, the `card->set_mode()` callback is called to setup the video mode.
 
-```C
-#define __videocard struct card_info __attribute__((used,section(".videocards")))
-```
+Let's take a look at the example of setting up [VGA](https://en.wikipedia.org/wiki/Video_Graphics_Array) video mode:
 
-which means that the `card_info` structure:
-
-```C
-struct card_info {
-	const char *card_name;
-	int (*set_mode)(struct mode_info *mode);
-	int (*probe)(void);
-	struct mode_info *modes;
-	int nmodes;
-	int unsafe;
-	u16 xmode_first;
-	u16 xmode_n;
-};
-```
-
-is in the `.videocards` segment. Let's look in the [arch/x86/boot/setup.ld](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/setup.ld) linker script, where we can find:
-
-```
-	.videocards	: {
-		video_cards = .;
-		*(.videocards)
-		video_cards_end = .;
-	}
-```
-
-It means that `video_cards` is just a memory address and all `card_info` structures are placed in this segment. It means that all `card_info` structures are placed between `video_cards` and `video_cards_end`, so we can use a loop to go over all of it. After `probe_cards` executes we have a bunch of structures like `static __videocard video_vga` with the `nmodes` (the number of video modes) filled in.
-
-After the `probe_cards` function is done, we move to the main loop in the `set_video` function. There is an infinite loop which tries to set up the video mode with the `set_mode` function or prints a menu if we passed `vid_mode=ask` to the kernel command line or if video mode is undefined.
-
-The `set_mode` function is defined in [video-mode.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/video-mode.c) and gets only one parameter, `mode`, which is the number of video modes (we got this value from the menu or in the start of `setup_video`, from the kernel setup header).
-
-The `set_mode` function checks the `mode` and calls the `raw_set_mode` function. The `raw_set_mode` calls the selected card's `set_mode` function, i.e. `card->set_mode(struct mode_info*)`. We can get access to this function from the `card_info` structure. Every video mode defines this structure with values filled depending upon the video mode (for example for `vga` it is the `video_vga.set_mode` function. See the above example of the `card_info` structure for `vga`). `video_vga.set_mode` is `vga_set_mode`, which checks the vga mode and calls the respective function:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/video-vga.c#L191-L224 -->
 ```C
 static int vga_set_mode(struct mode_info *mode)
 {
+	/* Set the basic mode */
 	vga_set_basic_mode();
 
+	/* Override a possibly broken BIOS */
 	force_x = mode->x;
 	force_y = mode->y;
 
@@ -268,53 +268,60 @@ static int vga_set_mode(struct mode_info *mode)
 		vga_set_80x60();
 		break;
 	}
+
 	return 0;
 }
 ```
 
-Every function which sets up video mode just calls the `0x10` BIOS interrupt with a certain value in the `AH` register.
+The `vga_set_mode` function is responsible for configuring the VGA display to a specific text mode, based on the settings which we collected in the previous steps. The `vga_set_basic_mode` function resets the VGA hardware into a standard text mode. The next statement sets up the video mode based on the video mode that was selected. Most of these functions have very similar implementation based on the `0x10` BIOS interrupt.
 
-After we have set the video mode, we pass it to `boot_params.hdr.vid_mode`.
+After this step, the video mode is configured and we save all the information about it again for later use. Having done this, the video mode setup is complete and now we can take a look at the last preparation before we will see the switch into the protected mode.
 
-Next, `vesa_store_edid` is called. This function simply stores the [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) (**E**xtended **D**isplay **I**dentification **D**ata) information for kernel use. After this `store_mode_params` is called again. Lastly, if `do_restore` is set, the screen is restored to an earlier state.
+## Last preparation before transition into protected mode
 
-Having done this, the video mode setup is complete and now we can switch to the protected mode.
+Returning to the [`main`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) function of the early kernel setup code, we finally can see:
 
-Last preparation before transition into protected mode
---------------------------------------------------------------------------------
-
-We can see the last function call - `go_to_protected_mode` - in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/main.c). As the comment says: `Do the last things and invoke protected mode`, so let's see what these last things are and switch into protected mode.
-
-The `go_to_protected_mode` function is defined in [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/pm.c). It contains some functions which make the last preparations before we can jump into protected mode, so let's look at it and try to understand what it does and how it works.
-
-First is the call to the `realmode_switch_hook` function in `go_to_protected_mode`. This function invokes the real mode switch hook if it is present and disables [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt). Hooks are used if the bootloader runs in a hostile environment. You can read more about hooks in the [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**).
-
-The `realmode_switch` hook presents a pointer to the 16-bit real mode far subroutine which disables non-maskable interrupts. After the `realmode_switch` hook (it isn't present for me) is checked, Non-Maskable Interrupts(NMI) is disabled:
-
-```assembly
-asm volatile("cli");
-outb(0x80, 0x70);	/* Disable NMI */
-io_delay();
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L179-L180 -->
+```C
+	/* Do the last things and invoke protected mode */
+	go_to_protected_mode();
 ```
 
-At first, there is an inline assembly statement with a `cli` instruction which clears the interrupt flag (`IF`). After this, external interrupts are disabled. The next line disables NMI (non-maskable interrupt).
+As the comment says: `Do the last things and invoke protected mode`, so let's see what these last things are and switch into protected mode.
 
-An interrupt is a signal to the CPU which is emitted by hardware or software. After getting such a signal, the CPU suspends the current instruction sequence, saves its state and transfers control to the interrupt handler. After the interrupt handler has finished its work, it transfers control back to the interrupted instruction. Non-maskable interrupts (NMI) are interrupts which are always processed, independently of permission. They cannot be ignored and are typically used to signal for non-recoverable hardware errors. We will not dive into the details of interrupts now but we will be discussing them in the coming posts.
+The `go_to_protected_mode` function is defined in [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c). It contains some routines which make the last preparations before we can jump into protected mode, so let's look at it and try to understand what it does and how it works.
 
-Let's get back to the code. We can see in the second line that we are writing the byte `0x80` (disabled bit) to `0x70` (the CMOS Address register). After that, a call to the `io_delay` function occurs. `io_delay` causes a small delay and looks like:
+The very first function that we may see in the `go_to_protected_mode` is the `realmode_switch_hook` function.  This function invokes the real mode switch hook if it is present or disables [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt) otherwise. The hooks are used if the bootloader runs in a hostile environment. You can read more about hooks in the [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**). Interrupts must be disabled before switching to protected mode because otherwise the CPU could receive an interrupt when there is no valid interrupt table or handlers. Once the kernel will set up the protected-mode interrupt infrastructure, interrupts will be disabled again.
 
+We will consider only more-less standard use case, when the bootloader does not provide any hooks. So we just disable non-maskable interrupts:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L28-L30 -->
+```assembly
+		asm volatile("cli");
+		outb(0x80, 0x70); /* Disable NMI */
+		io_delay();
+```
+
+At the first line, there is an [inline assembly](../Theory/linux-theory-3.md) statement with the `cli` instruction which clears the [interrupt flag](https://en.wikipedia.org/wiki/Interrupt_flag). After this, external interrupts are disabled. The next line disables NMI (non-maskable interrupt). An interrupt is a signal to the CPU which is emitted by hardware or software. After getting such a signal, the CPU suspends the current instruction sequence, saves its state and transfers control to the interrupt handler. After the interrupt handler has finished its work, it transfers control back to the interrupted instruction. Non-maskable interrupts (NMI) are interrupts which are always processed, independently of permission. They cannot be ignored and are typically used to signal for non-recoverable hardware errors. We will not dive into the details of interrupts now but we will be discussing them in the next posts.
+
+Let's get back to the code. We can see in the second line that we are writing the byte `0x0` to the port `0x80`. After that, a call to the `io_delay` function occurs. `io_delay` causes a small delay and looks like:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/boot.h#L39-L43 -->
 ```C
 static inline void io_delay(void)
 {
 	const u16 DELAY_PORT = 0x80;
-	asm volatile("outb %%al,%0" : : "dN" (DELAY_PORT));
+	outb(0, DELAY_PORT);
 }
 ```
 
-To output any byte to the port `0x80` should delay exactly 1 microsecond. So we can write any value (the value from `AL` in our case) to the `0x80` port. After this delay the `realmode_switch_hook` function has finished execution and we can move to the next function.
+To output any byte to the port `0x80` should delay exactly 1 microsecond. This delay is needed to be sure that the change of the NMI mask has fully taken effect. After this delay, the `realmode_switch_hook` function has finished execution and we can be sure that all interrupts are disabled.
 
-The next function is `enable_a20`, which enables the [A20 line](http://en.wikipedia.org/wiki/A20_line). This function is defined in [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/a20.c) and it tries to enable the A20 gate with different methods. The first is the `a20_test_short` function which checks if A20 is already enabled or not with the `a20_test` function:
+The next step is the `enable_a20` function, which enables the [A20 line](http://en.wikipedia.org/wiki/A20_line). Enabling of this line allows kernel to have access above 1 MB.
 
+The `enable_a20` function is defined in [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/a20.c) and tries to enable the `A20` gate using the different approaches. The first is the `a20_test_short` function which checks if `A20` is already enabled or not using the `a20_test` function:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/a20.c#L54-L74 -->
 ```C
 static int a20_test(int loops)
 {
@@ -339,46 +346,60 @@ static int a20_test(int loops)
 }
 ```
 
-First of all, we put `0x0000` in the `FS` register and `0xffff` in the `GS` register. Next, we read the value at the address `A20_TEST_ADDR` (it is `0x200`) and put this value into the variables `saved` and `ctr`.
+To verify whether the `A20` line is already enabled or not, the kernel performs a simple memory test. It begins by setting the `FS` register to `0x0000` and the `GS` register to `0xffff` values. By doing this, an access to `FS:0x200` (`A20_TEST_ADDR`) points into the very beginning of memory, while an access to `GS:0x2010` refers to a location just past the one-megabyte boundary. If the `A20` line is disabled, the latter will wrap around and point to the same physical address.
 
-Next, we write an updated `ctr` value into `fs:A20_TEST_ADDR` or `fs:0x200` with the `wrfs32` function, then delay for 1ms, and then read the value from the `GS` register into the address `A20_TEST_ADDR+0x10`. In a case when `a20` line is disabled, the address will be overlapped, in other case if it's not zero `a20` line is already enabled the A20 line.
+If the `A20` gate is disabled, the kernel will try to enable it using different methods which you can find in `enable_a20` function. For example, it can be done with a call to the `0x15` BIOS interrupt with `AH` register set to `0x2041`. If this function finished with a failure, print an error message and call the function `die` which will stop the process of the kernel setup.
 
-If A20 is disabled, we try to enable it with a different method which you can find in `a20.c`. For example, it can be done with a call to the `0x15` BIOS interrupt with `AH=0x2041`.
+After the `A20` gate is successfully enabled, the `reset_coprocessor` function is called:
 
-If the `enable_a20` function finished with a failure, print an error message and call the function `die`. You can remember it from the first source code file where we started - [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/header.S):
-
-```assembly
-die:
-	hlt
-	jmp	die
-	.size	die, .-die
-```
-
-After the A20 gate is successfully enabled, the `reset_coprocessor` function is called:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L48-L54 -->
 ```C
-outb(0, 0xf0);
-outb(0, 0xf1);
+static void reset_coprocessor(void)
+{
+	outb(0, 0xf0);
+	io_delay();
+	outb(0, 0xf1);
+	io_delay();
+}
 ```
 
-This function clears the Math Coprocessor by writing `0` to `0xf0` and then resets it by writing `0` to `0xf1`.
+This function resets the [math coprocessor](https://en.wikipedia.org/wiki/Floating-point_unit) to be sure it is in a clean state by writing `0` to `0xF0` and then resets it by writing `0` to `0xF1`.
 
-After this, the `mask_all_interrupts` function is called:
+The next step is the `mask_all_interrupts` function:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L37-L43 -->
 ```C
-outb(0xff, 0xa1);       /* Mask all interrupts on the secondary PIC */
-outb(0xfb, 0x21);       /* Mask all but cascade on the primary PIC */
+static void mask_all_interrupts(void)
+{
+	outb(0xff, 0xa1);	/* Mask all interrupts on the secondary PIC */
+	io_delay();
+	outb(0xfb, 0x21);	/* Mask all but cascade on the primary PIC */
+	io_delay();
+}
 ```
 
-This masks all interrupts on the secondary PIC (Programmable Interrupt Controller) and primary PIC except for IRQ2 on the primary PIC.
+This function masks or in other words forbids all interrupts on the primary and secondary [PICs](https://en.wikipedia.org/wiki/Programmable_interrupt_controller). This is needed for safeness, we forbid all the interrupts from the `PIC` so nothing can interrupt the CPU while the kernel is doing transition into protected mode.
 
-And after all of these preparations, we can see the actual transition into protected mode.
+All the operations before this point, were executed for safe transition to the protected mode. The next operations will prepare the transition to the protected mode. Let's take a look at them.
 
-Set up the Interrupt Descriptor Table
---------------------------------------------------------------------------------
+## Entering Protected Mode
 
-Now we set up the Interrupt Descriptor table (IDT) in the `setup_idt` function:
+At this point, we are very close to see the switching into protected mode of the Linux kernel. 
 
+Only two steps remain:
+
+- Setting up the Interrupt Descriptor Table
+- Setting up the Global Descriptor Table
+
+And that’s all! Once these two structures will be configured, the Linux kernel can make the jump into protected mode.
+
+### Set up the Interrupt Descriptor Table
+
+Before the CPU can safely enter protected mode, it needs to know where to find the handlers that will be triggered in a case of [interrupts and exceptions](https://en.wikipedia.org/wiki/Interrupt). In real mode, the CPU relies on the [Interrupt Vector Table](https://en.wikipedia.org/wiki/Interrupt_vector_table). In the protected mode this mechanism changes to the Interrupt Descriptor Table. 
+
+This is a special structure located in memory which contains descriptors that describes where CPU can find handlers for interrupts and exceptions. The full description of Interrupt Description Table and its entries we will see later, because for now we anyway disabled all the interrupts at the previous steps. Let's take a look at the function which setups zero filled Interrupt Descriptor Table:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L94-L98 -->
 ```C
 static void setup_idt(void)
 {
@@ -387,8 +408,9 @@ static void setup_idt(void)
 }
 ```
 
-which sets up the Interrupt Descriptor Table (describes interrupt handlers and etc.). For now, the IDT is not installed (we will see it later), but now we just load the IDT with the `lidtl` instruction. `null_idt` contains the address and size of the IDT, but for now they are just zero. `null_idt` is a `gdt_ptr` structure, it is defined as:
+As we may see, it just load the IDT which is filled with zero using the `lidtl` instruction. The `null_idt` has type `gdt_ptr` which is structure defined in the same source code file:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L60-L63 -->
 ```C
 struct gdt_ptr {
 	u16 len;
@@ -396,239 +418,172 @@ struct gdt_ptr {
 } __attribute__((packed));
 ```
 
-where we can see the 16-bit length(`len`) of the IDT and the 32-bit pointer to it (More details about the IDT and interruptions will be seen in the next posts). ` __attribute__((packed))` means that the size of `gdt_ptr` is the minimum required size. So the size of the `gdt_ptr` will be 6 bytes here or 48 bits. (Next we will load the pointer to the `gdt_ptr` to the `GDTR` register and you might remember from the previous post that it is 48-bits in size).
+This structure provides information about the pointer to the Interrupt Descriptor Table.
 
-Set up Global Descriptor Table
---------------------------------------------------------------------------------
+### Set up Global Descriptor Table
 
-Next is the setup of the Global Descriptor Table (GDT). We can see the `setup_gdt` function which sets up the GDT (you can read about it in the post [Kernel booting process. Part 2.](linux-bootstrap-2.md#protected-mode)). There is a definition of the `boot_gdt` array in this function, which contains the definition of the three segments:
+The next is the setup of the Global Descriptor Table. As you may remember, the memory access is based on `segment:offset` addressing in real mode. The protected mode introduces the different model based on the `Global Descriptor Table`. If you forgot the details about the Global Description Table structure, you can find more information in the [previous chapter](./linux-bootstrap-2.md#protected-mode). Instead of fixed segment bases and limits, the CPU now looks for memory regions defined by descriptors located in the Global Descriptor Table. The goal of kernel is to setup these descriptors.
 
+All the job will be done by the `setup_gdt` function which is defined in the same source code file. Let's take a look at the definition of this function:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L65-L89 -->
 ```C
-static const u64 boot_gdt[] __attribute__((aligned(16))) = {
-	[GDT_ENTRY_BOOT_CS] = GDT_ENTRY(0xc09b, 0, 0xfffff),
-	[GDT_ENTRY_BOOT_DS] = GDT_ENTRY(0xc093, 0, 0xfffff),
-	[GDT_ENTRY_BOOT_TSS] = GDT_ENTRY(0x0089, 4096, 103),
-};
-```
-
-for code, data and TSS (Task State Segment). We will not use the task state segment for now, it was added there to make Intel VT happy as we can see in the comment line (if you're interested you can find the commit which describes it - [here](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31)). Let's look at `boot_gdt`. First of all note that it has the `__attribute__((aligned(16)))` attribute. It means that this structure will be aligned by 16 bytes.
-
-Let's look at a simple example:
-
-```C
-#include <stdio.h>
-
-struct aligned {
-	int a;
-}__attribute__((aligned(16)));
-
-struct nonaligned {
-	int b;
-};
-
-int main(void)
+static void setup_gdt(void)
 {
-	struct aligned    a;
-	struct nonaligned na;
+	/* There are machines which are known to not boot with the GDT
+	   being 8-byte unaligned.  Intel recommends 16 byte alignment. */
+	static const u64 boot_gdt[] __attribute__((aligned(16))) = {
+		/* CS: code, read/execute, 4 GB, base 0 */
+		[GDT_ENTRY_BOOT_CS] = GDT_ENTRY(DESC_CODE32, 0, 0xfffff),
+		/* DS: data, read/write, 4 GB, base 0 */
+		[GDT_ENTRY_BOOT_DS] = GDT_ENTRY(DESC_DATA32, 0, 0xfffff),
+		/* TSS: 32-bit tss, 104 bytes, base 4096 */
+		/* We only have a TSS here to keep Intel VT happy;
+		   we don't actually use it for anything. */
+		[GDT_ENTRY_BOOT_TSS] = GDT_ENTRY(DESC_TSS32, 4096, 103),
+	};
+	/* Xen HVM incorrectly stores a pointer to the gdt_ptr, instead
+	   of the gdt_ptr contents.  Thus, make it static so it will
+	   stay in memory, at least long enough that we switch to the
+	   proper kernel GDT. */
+	static struct gdt_ptr gdt;
 
-	printf("Not aligned - %zu \n", sizeof(na));
-	printf("Aligned - %zu \n", sizeof(a));
+	gdt.len = sizeof(boot_gdt)-1;
+	gdt.ptr = (u32)&boot_gdt + (ds() << 4);
 
-	return 0;
+	asm volatile("lgdtl %0" : : "m" (gdt));
 }
 ```
 
-Technically a structure which contains one `int` field must be 4 bytes in size, but an `aligned` structure will need 16 bytes to store in memory:
+The initial memory descriptors specified by the items of the `boot_gdt` array. The `setup_gdt` function just loads the pointer to the Global Descriptor Table filled with these items using the `lgdtl` instruction. Let's take a closer look at the memory descriptors definition.
 
-```
-$ gcc test.c -o test && test
-Not aligned - 4
-Aligned - 16
-```
+Initially, the 3 memory descriptors specified:
 
-The `GDT_ENTRY_BOOT_CS` has index - 2 here, `GDT_ENTRY_BOOT_DS` is `GDT_ENTRY_BOOT_CS + 1` and etc. It starts from 2, because the first is a mandatory null descriptor (index - 0) and the second is not used (index - 1).
+- Code segment
+- Memory segment
+- Task state segment
 
-`GDT_ENTRY` is a macro which takes flags, base, limit and builds a GDT entry. For example, let's look at the code segment entry. `GDT_ENTRY` takes the following values:
+We will skip the description of the task state segment for now as it was added there to make [Intel VT](https://en.wikipedia.org/wiki/X86_virtualization#Intel_virtualization_(VT-x)) happy. The other two segments belongs to the memory for kernel code and data sections. Both memory descriptors defined using the `GDT_ENTRY` macro. This macro defined in the [arch/x86/include/asm/segment.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/segment.h) and expects to get three arguments:
 
-* base  - 0
-* limit - 0xfffff
-* flags - 0xc09b
+- `flags`
+- `base`
+- `limit`
 
-What does this mean? The segment's base address is 0, and the limit (size of segment) is - `0xfffff` (1 MB). Let's look at the flags. It is `0xc09b` and it will be:
-
-```
-1100 0000 1001 1011
-```
-
-in binary. Let's try to understand what every bit means. We will go through all bits from left to right:
-
-* 1    - (G) granularity bit
-* 1    - (D) if 0 16-bit segment; 1 = 32-bit segment
-* 0    - (L) executed in 64-bit mode if 1
-* 0    - (AVL) available for use by system software
-* 0000 - 4-bit length 19:16 bits in the descriptor
-* 1    - (P) segment presence in memory
-* 00   - (DPL) - privilege level, 0 is the highest privilege
-* 1    - (S) code or data segment, not a system segment
-* 101  - segment type execute/read/
-* 1    - accessed bit
-
-You can read more about every bit in the previous [post](linux-bootstrap-2.md) or in the [Intel® 64 and IA-32 Architectures Software Developer's Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html).
-
-After this we get the length of the GDT with:
+Let's take a look at the definition of the code memory segment:
 
 ```C
-gdt.len = sizeof(boot_gdt)-1;
+[GDT_ENTRY_BOOT_CS] = GDT_ENTRY(DESC_CODE32, 0, 0xfffff),
 ```
 
-We get the size of `boot_gdt` and subtract 1 (the last valid address in the GDT).
+The base address of this memory segment is defined as `0` and limit as `0xFFFFF` or 1 Megabyte. The `DESC_CODE32` describes the flags of this segment. If we take a look at the flags, we will see that granularity (bit `G`) of this segment is set to 4 KB units. This means that the segment covers addresses `0x00000000–0xFFFFFFFF` - entire 4 GB linear address space. The same base address and limit will be defined for the data segment. It is done this way because Linux kernel using so-called [flat memory model](https://en.wikipedia.org/wiki/Flat_memory_model).
 
-Next we get a pointer to the GDT with:
+Besides the granularity bit, the `DESC_CODE32` specifies other flags. Among them you can find, the this a 32-bit segment which is readable, executable and present in memory. The privilege level is set to the highest value as kernel needs.
 
-```C
-gdt.ptr = (u32)&boot_gdt + (ds() << 4);
-```
+Looking at the documentation of the Global Descriptor Table and its entries you can check all the initial segments by yourself. It is not so hard.
 
-Here we just get the address of `boot_gdt` and add it to the address of the data segment left-shifted by 4 bits (remember we're in real mode now).
+## Transition into protected mode
 
-Lastly we execute the `lgdtl` instruction to load the GDT into the GDTR register:
+We are standing right before it. Interrupts are disabled, the Interrupt Descriptor Table and Global Descriptor Table are initialized. Finally, the kernel can execute jump into protected mode. But despite good news, we need to return to assembly again 😅
 
-```C
-asm volatile("lgdtl %0" : : "m" (gdt));
-```
+The transition to the protected mode we can find in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S). Let's take a look at it:
 
-Actual transition into protected mode
---------------------------------------------------------------------------------
-
-This is the end of the `go_to_protected_mode` function. We loaded the IDT and GDT, disabled interrupts and now can switch the CPU into protected mode. The last step is calling the `protected_mode_jump` function with two parameters:
-
-```C
-protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
-```
-
-which is defined in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/pmjump.S).
-
-It takes two parameters:
-
-* address of the protected mode entry point
-* address of `boot_params`
-
-Let's look inside `protected_mode_jump`. As I wrote above, you can find it in `arch/x86/boot/pmjump.S`. The first parameter will be in the `eax` register and the second one is in `edx`.
-
-First of all, we put the address of `boot_params` in the `esi` register and the address of the code segment register `cs` in `bx`. 
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L24-L39 -->
 ```assembly
-GLOBAL(protected_mode_jump)
-	movl	%edx, %esi	# Pointer to boot_params table
+SYM_FUNC_START_NOALIGN(protected_mode_jump)
+	movl	%edx, %esi		# Pointer to boot_params table
 
 	xorl	%ebx, %ebx
 	movw	%cs, %bx
-```
-
-After this, we shift `bx` by 4 bits and add it to the memory location labeled `2` (which is `(cs << 4) + in_pm32`, the physical address to jump after transitioned to 32-bit mode) and jump to label `1`. 
-
-```assembly
 	shll	$4, %ebx
-	addl	%ebx, 2f 	# Add %ebx to the value stored at label 2
-	jmp	1f		# Short jump to serialize on 386/486
-```
+	addl	%ebx, 2f
+	jmp	1f			# Short jump to serialize on 386/486
+1:
 
-So after this `in_pm32` in label `2` will be overwritten with `(cs << 4) + in_pm32`.
-
-Next we put the data segment and the task state segment in the `cx` and `di` registers with:
-
-```assembly
 	movw	$__BOOT_DS, %cx
 	movw	$__BOOT_TSS, %di
-```
 
-As you can read above `GDT_ENTRY_BOOT_CS` has index 2 and every GDT entry is 8 byte, so `CS` will be `2 * 8 = 16`, `__BOOT_DS` is 24 etc.
-
-Next, we set the `PE` (Protection Enable) bit in the `CR0` control register:
-
-```assembly
 	movl	%cr0, %edx
-	orb	$X86_CR0_PE, %dl
+	orb	$X86_CR0_PE, %dl	# Protected mode
 	movl	%edx, %cr0
 ```
 
-and make a long jump to protected mode:
+First of all, we preserve the address of `boot_params` structure in the `esi` register. After this, we compute the real-mode segment base of the current code and add it to the value pointed to by the `2f` label which is the entry point to the protected mode. This is needed because as you remember at the previous step, the code memory segment starts from `0`, so the jump instruction must contain absolute linear address of the entry point.
 
+At the next steps we save the segment addresses of the data and task state in general purpose registers `cx` and `di` and set the `PE` bit in the control `cr0` register. From this point, the protected mode is turned on, and we need just to jump into it, to set proper value of the code segment:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L41-L44 -->
 ```assembly
-	.byte	0x66, 0xea
-2:	.long	in_pm32
-	.word	__BOOT_CS
+	# Transition to 32-bit mode
+	.byte	0x66, 0xea		# ljmpl opcode
+2:	.long	.Lin_pm32		# offset
+	.word	__BOOT_CS		# segment
 ```
 
-where:
+The kernel is in protected mode now 🥳🥳🥳
 
-* `0x66` is the operand-size prefix which allows us to mix 16-bit and 32-bit code
-* `0xea` - is the jump opcode
-* `in_pm32` is the segment offset under protect mode, which has value `(cs << 4) + in_pm32` derived from real mode
-* `__BOOT_CS` is the code segment we want to jump to.
-
-After this we are finally in protected mode:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L47-L49 -->
 ```assembly
-.code32
-.section ".text32","ax"
+	.code32
+	.section ".text32","ax"
+SYM_FUNC_START_LOCAL_NOALIGN(.Lin_pm32)
 ```
 
-Let's look at the first steps taken in protected mode. First of all we set up the data segment with:
+Let's look at the first steps taken in the protected mode. First of all we set up the data segment with the data segment address that we preserved in the `cx` register at the previous step:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L50-L55 -->
 ```assembly
-movl	%ecx, %ds
-movl	%ecx, %es
-movl	%ecx, %fs
-movl	%ecx, %gs
-movl	%ecx, %ss
+	# Set up data segments for flat 32-bit mode
+	movl	%ecx, %ds
+	movl	%ecx, %es
+	movl	%ecx, %fs
+	movl	%ecx, %gs
+	movl	%ecx, %ss
 ```
 
-If you paid attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. Now we fill it with all segment registers besides `cs` (`cs` is already `__BOOT_CS`).
+Since we are in the protected mode, our segment bases point to zero. Because of this, the stack pointer will point somewhere below the code, so we need to adjust it, at least for debugging purposes:
 
-And setup a valid stack for debugging purposes:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L58-L58 -->
 ```assembly
-addl	%ebx, %esp
+	addl	%ebx, %esp
 ```
 
-The last step before the jump into 32-bit entry point is to clear the general purpose registers:
+The last step before the jump into actual 32-bit entry point is to clear the general purpose registers:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L65-L69 -->
 ```assembly
-xorl	%ecx, %ecx
-xorl	%edx, %edx
-xorl	%ebx, %ebx
-xorl	%ebp, %ebp
-xorl	%edi, %edi
+	xorl	%ecx, %ecx
+	xorl	%edx, %edx
+	xorl	%ebx, %ebx
+	xorl	%ebp, %ebp
+	xorl	%edi, %edi
 ```
 
-And jump to the 32-bit entry point in the end:
+Now everything is ready. The kernel is in the protected mode and we can jump to the next code, address of which was passed in the `eax` register:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L74-L74 -->
+```assembly
+	jmpl	*%eax			# Jump to the 32-bit entrypoint
 ```
-jmpl	*%eax
-```
 
-Remember that `eax` contains the address of the 32-bit entry (we passed it as the first parameter into `protected_mode_jump`).
+## Conclusion
 
-That's all. We're in protected mode and stop at its entry point. We will see what happens next in the next part.
+This is the end of the third part about Linux kernel insides. If you have questions or suggestions, feel free ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). 
 
-Conclusion
---------------------------------------------------------------------------------
+## Links
 
-This is the end of the third part about Linux kernel insides. In the next part, we will look at the first steps we take in protected mode and transition into [long mode](http://en.wikipedia.org/wiki/Long_mode).
+Here is the list of the links that you may find useful during reading of this chapter:
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
-
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes, please send me a PR with corrections at [linux-insides](https://github.com/0xAX/linux-insides).**
-
-Links
---------------------------------------------------------------------------------
-
-* [VGA](http://en.wikipedia.org/wiki/Video_Graphics_Array)
-* [VESA BIOS Extensions](http://en.wikipedia.org/wiki/VESA_BIOS_Extensions)
-* [Data structure alignment](http://en.wikipedia.org/wiki/Data_structure_alignment)
-* [Non-maskable interrupt](http://en.wikipedia.org/wiki/Non-maskable_interrupt)
-* [A20](http://en.wikipedia.org/wiki/A20_line)
-* [GCC designated inits](https://gcc.gnu.org/onlinedocs/gcc-4.1.2/gcc/Designated-Inits.html)
-* [GCC type attributes](https://gcc.gnu.org/onlinedocs/gcc/Type-Attributes.html)
-* [Previous part](linux-bootstrap-2.md)
+- [QEMU](https://www.qemu.org/)
+- [VGA](http://en.wikipedia.org/wiki/Video_Graphics_Array)
+- [VESA BIOS Extensions](http://en.wikipedia.org/wiki/VESA_BIOS_Extensions)
+- [Data structure alignment](http://en.wikipedia.org/wiki/Data_structure_alignment)
+- [Non-maskable interrupt](http://en.wikipedia.org/wiki/Non-maskable_interrupt)
+- [A20](http://en.wikipedia.org/wiki/A20_line)
+- [Math coprocessor](https://en.wikipedia.org/wiki/Floating-point_unit)
+- [PIC](https://en.wikipedia.org/wiki/Programmable_interrupt_controller)
+- [Interrupts and exceptions](https://en.wikipedia.org/wiki/Interrupt)
+- [Interrupt Vector Table](https://en.wikipedia.org/wiki/Interrupt_vector_table)
+- [Protected mode](https://en.wikipedia.org/wiki/Protected_mode)
+- [Intel VT](https://en.wikipedia.org/wiki/X86_virtualization#Intel_virtualization_(VT-x))
+- [Flat memory model](https://en.wikipedia.org/wiki/Flat_memory_model)
+- [Previous part](linux-bootstrap-2.md)
