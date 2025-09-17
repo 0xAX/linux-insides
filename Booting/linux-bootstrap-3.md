@@ -1,6 +1,6 @@
 # Kernel booting process. Part 3.
 
-In the previous [part](./linux-bootstrap-2.md#kernel-booting-process-part-2), we have seen first pieces of C code that run in the Linux kernel. One of the main goal of this stage is to switch into the [protected mode](https://en.wikipedia.org/wiki/Protected_mode), but before this, we have seen some early setup code which executes early initialization procedures, such as:
+In the previous [part](./linux-bootstrap-2.md), we have seen first pieces of C code that run in the Linux kernel. One of the main goal of this stage is to switch into the [protected mode](https://en.wikipedia.org/wiki/Protected_mode), but before this, we have seen some early setup code which executes early initialization procedures, such as:
 
 - Setup of console to be able to print messages from the kernel's setup code
 - Validation of CPU
