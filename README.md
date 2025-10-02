@@ -1,3 +1,16 @@
+<div align="center" markdown="1">
+   <sup>Special thanks for supporting linux-insides to:</sup>
+   <br>
+   <br>
+   <a href="https://go.warp.dev/linux-insides">
+      <img alt="Warp sponsorship" width="400" src="https://raw.githubusercontent.com/warpdotdev/brand-assets/refs/heads/main/Github/Sponsor/Warp-Github-LG-03.png">
+   </a>
+
+### [Warp, built for coding with multiple AI agents.](https://www.warp.dev/linux-insides)
+[Available for MacOS, Linux, & Windows](https://www.warp.dev/linux-insides)<br>
+</div>
+<hr>
+
 # Linux insides
 
 This repository contains a book-in-progress about the Linux kernel and its insides.
