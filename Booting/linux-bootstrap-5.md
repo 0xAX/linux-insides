@@ -212,10 +212,10 @@ void load_stage2_idt(void)
 
 We can skip the part of the code wrapped with the `CONFIG_AMD_MEM_ENCRYPT` as it is not the main interest for us, but try to understand the rest of the function's body. It is similar to the first stage `Interrupt Descriptor Table`. It loads entries of this table using the `lidt` instruction which we have seen during the loading of the first step. The only single difference is that it sets up two interrupt handlers:
 
-- `PF` - Program fault interrupt
+- `PF` - Page fault interrupt
 - `NMI` - Non-maskable interrupt
 
-The first interrupt handler is set because the `initialize_identity_maps` function which we will see very soon many need it. The second interrupt handler needed to prevent triple-fault if such interrupt will appear during kernel decompression. So at least dummy NMI is needed.
+The first interrupt handler is set because the `initialize_identity_maps` function which we will see very soon many need it. It can be used in a case [Address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization) is enabled and such random physical and virtual addresses were choosen for which mapping does not exist in the current page tables. The second interrupt handler needed to prevent triple-fault if such interrupt will appear during kernel decompression. So at least dummy NMI is needed.
 
 After the `Interrupt Descriptor Table` is re-loaded, the `initialize_identity_maps` function is called:
 
