@@ -36,7 +36,7 @@ jobs:
              artifacts/
 
       - name: Upload PR artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ebooks-${{ github.sha }}
           path: artifacts/*
