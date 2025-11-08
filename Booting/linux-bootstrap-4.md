@@ -380,7 +380,7 @@ As we mentioned in the beginning of this chapter - on `x86_64`, the processor mu
 
 - `PML4` - top level table, each entry points to `PDPT`
 - `PDPT` - 3rd level table, each entry points to `PD`
-- `PD` - 2nd level table, each entry poitns to `PT`
+- `PD` - 2nd level table, each entry points to `PT`
 - `PT` - 1st level table, each entry points to a 4 killobyte physical page
 
 The physical address of the top level table must be stored in the `cr3` register.

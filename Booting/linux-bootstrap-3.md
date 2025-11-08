@@ -135,7 +135,7 @@ Enter a video mode or "scan" to scan for additional modes:
 
 Before proceeding further to investigate what the `set_video` function does, it will be useful to take a look at the API for the management of the kernel's early heap. 
 
-After getting the video mode set by the bootloader, we can see reseting the heap value by the `RESET_HEAP` macro. The definition of this macro is in the [arch/x86/boot/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h):
+After getting the video mode set by the bootloader, we can see resetting the heap value by the `RESET_HEAP` macro. The definition of this macro is in the [arch/x86/boot/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h):
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/boot.h#L174-L174 -->
 ```C

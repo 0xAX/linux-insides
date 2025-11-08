@@ -228,7 +228,7 @@ int blocking_notifier_call_chain(struct blocking_notifier_head *nh,
 }
 ```
 
-and as we may see it just returns result of the `__blocking_notifier_call_chain` function. As we may see, the `blocking_notifer_call_chain` takes three parameters:
+and as we may see it just returns result of the `__blocking_notifier_call_chain` function. As we may see, the `blocking_notifier_call_chain` takes three parameters:
 
 * `nh` - head of notification chain list;
 * `val` - type of a notification;
@@ -247,7 +247,7 @@ int __blocking_notifier_call_chain(struct blocking_notifier_head *nh,
 }
 ```
 
-Where `nr_to_call` and `nr_calls` are number of notifier functions to be called and number of sent notifications. As you may guess the main goal of the `__blocking_notifer_call_chain` function and other functions for other notification types is to call callback function when an event occurs. Implementation of the `__blocking_notifier_call_chain` is pretty simple, it just calls the `notifier_call_chain` function from the same source code file protected with read/write semaphore:
+Where `nr_to_call` and `nr_calls` are number of notifier functions to be called and number of sent notifications. As you may guess the main goal of the `__blocking_notifier_call_chain` function and other functions for other notification types is to call callback function when an event occurs. Implementation of the `__blocking_notifier_call_chain` is pretty simple, it just calls the `notifier_call_chain` function from the same source code file protected with read/write semaphore:
 
 ```C
 int __blocking_notifier_call_chain(struct blocking_notifier_head *nh,

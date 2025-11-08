@@ -451,7 +451,7 @@ Here we compare the value of the `ss` and `ds` registers. According to the comme
 	sti			# Now we should have a working stack
 ```
 
-`dx` register stores stack pointer value whish should point to the top of the stack. The value of the stack pointer is `0x9000`. GRUB 2 bootloader sets it during loading of the Linux kernel image and the address is defined by the:
+`dx` register stores stack pointer value which should point to the top of the stack. The value of the stack pointer is `0x9000`. GRUB 2 bootloader sets it during loading of the Linux kernel image and the address is defined by the:
 
 <!-- https://raw.githubusercontent.com/rhboot/grub2/refs/heads/master/include/grub/i386/linux.h#L34-L34 -->
 ```C

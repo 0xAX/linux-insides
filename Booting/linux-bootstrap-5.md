@@ -108,7 +108,7 @@ SYM_DATA_START_LOCAL(gdt)
 SYM_DATA_END_LABEL(gdt, SYM_L_LOCAL, gdt_end)
 ```
 
-After the new `Global Desciptor Table` was loaded, the next step is to load new `Interrupt Descriptor Table`:
+After the new `Global Descriptor Table` was loaded, the next step is to load new `Interrupt Descriptor Table`:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L369-L376 -->
 ```assembly
@@ -122,7 +122,7 @@ After the new `Global Desciptor Table` was loaded, the next step is to load new 
 	call	load_stage1_idt
 ```
 
-The `load_stage1_idt` function is defined in the [arch/x86/boot/compressed/idt_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/idt_64.c) and uses the `lidt` instruction to load address of the new `Interrupt Desciptor Table` . For this moment, the `Interrupt Descriptor Table` has `NULL` entries to avoid interrupts. The valid interrupt handlers will be loaded after kernel relocation.
+The `load_stage1_idt` function is defined in the [arch/x86/boot/compressed/idt_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/idt_64.c) and uses the `lidt` instruction to load address of the new `Interrupt Descriptor Table` . For this moment, the `Interrupt Descriptor Table` has `NULL` entries to avoid interrupts. The valid interrupt handlers will be loaded after kernel relocation.
 
 The next steps after this will be highly related to the setup of `5-level` paging if it is configured using the `CONFIG_PGTABLE_LEVELS=5` kernel configuration option. This feature extends the virtual address space beyond the traditional 4-level paging scheme, but it is still relatively uncommon in practice and not essential for understanding the mainline boot flow. For clarity and focus, we’ll set it aside and continue with the standard 4-level paging case.
 
@@ -215,7 +215,7 @@ We can skip the part of the code wrapped with the `CONFIG_AMD_MEM_ENCRYPT` as it
 - `PF` - Page fault interrupt
 - `NMI` - Non-maskable interrupt
 
-The first interrupt handler is set because the `initialize_identity_maps` function which we will see very soon many need it. It can be used in a case [Address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization) is enabled and such random physical and virtual addresses were choosen for which mapping does not exist in the current page tables. The second interrupt handler needed to prevent triple-fault if such interrupt will appear during kernel decompression. So at least dummy NMI is needed.
+The first interrupt handler is set because the `initialize_identity_maps` function which we will see very soon many need it. It can be used in a case [Address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization) is enabled and such random physical and virtual addresses were chosen for which mapping does not exist in the current page tables. The second interrupt handler needed to prevent triple-fault if such interrupt will appear during kernel decompression. So at least dummy NMI is needed.
 
 After the `Interrupt Descriptor Table` is re-loaded, the `initialize_identity_maps` function is called:
 
