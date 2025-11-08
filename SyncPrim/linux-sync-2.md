@@ -341,7 +341,7 @@ Notice that we did not touch `queue` yet. We do not need it, because for two thr
 queue:
 	node = this_cpu_ptr(&qnodes[0].mcs);
 	idx = node->count++;
-	tail = encode_tail(smp_processer_id(), idx);
+	tail = encode_tail(smp_processor_id(), idx);
 
 	node = grab_mcs_node(node, idx);
 ```
