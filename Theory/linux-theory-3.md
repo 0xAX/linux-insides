@@ -449,11 +449,11 @@ int main(void)
 }
 ```
 
-Now we see that value of the `a` variable will be stored in the `%rax` register:
+Now we see that value of the `a` variable will be stored in the `%rdx` register:
 
 ```assembly
 0000000000400400 <main>:
-  4004aa:       48 8b 05 6f 0b 20 00    mov    0x200b6f(%rip),%rax        # 601020 <a>
+  4004aa:       48 8b 05 6f 0b 20 00    mov    0x200b6f(%rip),%rdx        # 601020 <a>
 ```
 
 The `f` and `t` constraints represent any floating point stack register - `%st` and the top of the floating point stack respectively. The `u` constraint represents the second value from the top of the floating point stack.
