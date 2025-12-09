@@ -444,16 +444,18 @@ int a = 1;
 int main(void)
 {
         int b;
-        __asm__ ("movq %1,%0" : "=r"(b) : "d"(a));
+        __asm__ ("movl %1,%0" : "=r"(b) : "d"(a));
         return b;
 }
 ```
 
-Now we see that value of the `a` variable will be stored in the `%rax` register:
+Now we see that value of the `a` variable will be stored in the `%edx` register:
 
 ```assembly
 0000000000400400 <main>:
-  4004aa:       48 8b 05 6f 0b 20 00    mov    0x200b6f(%rip),%rax        # 601020 <a>
+  40044a:       8b 05 b4 2b 00 00       mov    0x2bb4(%rip),%eax        # 403004 <a>
+  400450:       89 c2                   mov    %eax,%edx
+  400452:       89 d0                   mov    %edx,%eax
 ```
 
 The `f` and `t` constraints represent any floating point stack register - `%st` and the top of the floating point stack respectively. The `u` constraint represents the second value from the top of the floating point stack.
