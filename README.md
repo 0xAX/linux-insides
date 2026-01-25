@@ -5,7 +5,7 @@ This repository contains a book-in-progress about the Linux kernel and its insid
 The goal of this project is simple – to share knowledge about the Linux kernel internals and related low-level topics. If you’re curious about what’s under the hood, see the [Table of Contents](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md).
 
 > [!IMPORTANT]
-> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in progress of updating the content to reflect modern kernels (v6.16+). I’ll continue revising the posts as the kernel evolves.
+> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in progress of updating the content to reflect modern kernels (v6.18+). I’ll continue revising the posts as the kernel evolves.
 
 ## Requirements
 

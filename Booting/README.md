@@ -9,4 +9,4 @@ This chapter describes the Linux kernel boot process. Here you will see a series
 * [Kernel Decompression](linux-bootstrap-5.md) - describes preparation before kernel decompression and details of direct decompression.
 * [Kernel load address randomization](linux-bootstrap-6.md) - describes randomization of the Linux kernel load address.
 
-This chapter coincides with `Linux kernel v4.17`.
+This chapter coincides with `Linux kernel v6.18`.
