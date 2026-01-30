@@ -367,7 +367,7 @@ The bootloader has now loaded the Linux kernel and the kernel setup code into me
 
 Technically, the kernel itself hasn't run yet but only early kernel setup code. First, the kernel setup part must switch from the real mode to [protected mode](https://en.wikipedia.org/wiki/Protected_mode), and after this switch to the [long mode](https://en.wikipedia.org/wiki/Long_mode), to configure the kernel decompressor, and finally decompress the kernel and jump to it. Execution of the kernel setup code starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the `_start` symbol:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L246-L252 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L246-L256 -->
 ```assembly
 _start:
 		# Explicitly enter this as bytes, or the assembler
@@ -376,30 +376,57 @@ _start:
 		.byte	0xeb		# short (2-byte) jump
 		.byte	start_of_setup-1f
 1:
+
+	# Part 2 of the header, from the old setup.S
+
+		.ascii	"HdrS"		# header signature
 ```
 
-The very first instruction we encounter here is the jump specified by the `0xEB` opcode. The second byte is the distance where to jump. If you’ve never met the `Nf` syntax before, `1f` means the next label `1` that will appear in the code. And immediately after those two bytes is the label `1` which is located right before the beginning of the second part of the kernel setup header. Right after the second part of the setup header, we see the `.entrytext` section, which starts at the `start_of_setup` label. This is exactly the place where the execution will be continued. But from where we are jumping? After the kernel setup code receives control from the bootloader, the first `jmp` instruction is located at the `0x200` bytes offset from the start of the loaded kernel image. This can be seen in both the Linux kernel boot protocol and the GRUB 2 [source code](https://github.com/rhboot/grub2/blob/master/grub-core/loader/i386/pc/linux.c):
+The very first instruction we encounter here is [jmp](https://en.wikipedia.org/wiki/JMP_(x86_instruction)) specified by the `0xEB` opcode. The second byte defines the offset to jump to. As described in the [Intel® 64 and IA-32 Architectures Software Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html):
+
+> The target operand specifies either an absolute offset (that is an offset from the base of the code segment) or a relative offset (a signed displacement relative to the current value of the instruction pointer in the EIP register).
+
+If you’ve never met the `Nf` syntax before, `1f` means the next label `1` that will appear in the code. Immediately after those two bytes, we can see the label `1` located right before the beginning of the second part of the kernel setup header.
+
+After the second part of the kernel setup header, we can see the `.entrytext` section, which starts with the `start_of_setup` label. This is exactly the place where the execution will be continued:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L544-L547 -->
+```assembly
+# End of setup header #####################################################
+
+	.section ".entrytext", "ax"
+start_of_setup:
+```
+
+But from which point are we jumping? After the kernel setup code receives control from the bootloader, the first `jmp` instruction is located at the `0x200` bytes offset from the start of the loaded kernel image. This is mentioned in the Linux kernel boot protocol:
+
+> The kernel is started by jumping to the kernel entry point, which is located at *segment* offset 0x20 from the start of the real mode kernel.
+
+This applies also to the GRUB 2 bootloader. We can see in its [source code](https://github.com/rhboot/grub2/blob/master/grub-core/loader/i386/pc/linux.c):
 
 ```C
 segment = grub_linux_real_target >> 4;
 state.gs = state.fs = state.es = state.ds = state.ss = segment;
+state.sp = GRUB_LINUX_SETUP_STACK;
 state.cs = segment + 0x20;
 state.ip = 0;
 ```
 
-Here, `grub_linux_real_target` is the physical load address of the setup code. As we have seen in the previous section, this address is usually `0x90000`. Shifting it right by four divides it by `16`, converting a physical address into a segment value - that’s how real mode memory segmentation works. Then GRUB adds `0x20` to `cs` before starting execution. Why `0x20`? Let's remember that in real mode, physical addresses are computed as:
+Here, `grub_linux_real_target` is the physical address where the kernel setup code will be loaded. As we saw in the [previous section](#the-magic-power-button---what-happens-next), this address was `0x90000`. Shifting it right by four divides it by `16`, converting a physical address into a segment value - that’s how real mode memory segmentation works.
+
+Then, GRUB sets the code segment specified by the `CS` register to `segment + 0x20` before starting execution. Why `0x20`? Let's remember that in real mode, physical addresses are computed as:
 
 ```
 Physical = (cs << 4) + ip
 ```
 
-With `ip = 0` and `cs` increased by `0x20`, the offset from the start of the loaded image is:
+With `segment = 0x9000`, setting `cs = 0x9000 + 0x20 = 0x9020` and `ip = 0` gives us:
 
 ```
-0x20 << 4 = 0x200
+Physical = (0x9020 << 4) + 0 = 0x90200
 ```
 
-This is 512 bytes — exactly the offset where our jump instruction resides in the image.
+This means execution starts at physical address `0x90200` which is exactly `512` bytes offset from where the setup code was loaded. In other words - the offset to the address where the `jump` instruction resides in the image.
 
 After the jump to the `start_of_setup` label, the kernel setup code enters the very first phase of its real work:
 
@@ -412,7 +439,11 @@ In the next sections, we’ll walk through each of these steps in detail.
 
 ### Aligning the segment registers
 
-First of all, the kernel setup code ensures that the `ds` and `es` segment registers point to the same address. Next, it clears the [direction flag](https://en.wikipedia.org/wiki/Direction_flag) using the `cld` instruction:
+Reading the Linux kernel boot protocol for `x86_64`, we can see:
+
+> At entry, ds = es = ss should point to the start of the real-mode kernel code...
+
+This is the first operation we can see after the `start_of_setup` label. First, the kernel setup code ensures that the `ds` and `es` segment registers point to the same address. Next, it clears the [direction flag](https://en.wikipedia.org/wiki/Direction_flag) using the `cld` instruction:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L546-L551 -->
 ```assembly
@@ -430,15 +461,22 @@ We need to do both of these two things to clear the [bss](https://en.wikipedia.o
 
 We need to prepare for C language environment. The next step is to setup the stack. Let's take a look at the next lines of the code:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L558-L561 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L553-L561 -->
 ```assembly
+# Apparently some ancient versions of LILO invoked the kernel with %ss != %ds,
+# which happened to work by accident for the old code.  Recalculate the stack
+# pointer if %ss is invalid.  Otherwise leave it alone, LOADLIN sets up the
+# stack behind its own code, so we can't blindly put it directly past the heap.
+
 	movw	%ss, %dx
 	cmpw	%ax, %dx	# %ds == %ss?
 	movw	%sp, %dx
 	je	2f		# -> assume %sp is reasonably set
 ```
 
-Here we compare the value of the `ss` and `ds` registers. According to the comment around this code, only old versions of the [LILO](https://en.wikipedia.org/wiki/LILO_(bootloader)) bootloader may set these registers to different values. So we will skip all the "edge cases" and consider only single case when the value of the `ss` register equal to `ds`. Since the values of these registers are equal, we jump to the `2` label:
+Here we compare the value of the `ss` and `ds` registers to be sure that they are equal or to fix the `ss` otherwise. 
+
+According to the comment to this code, only old versions of the [LILO](https://en.wikipedia.org/wiki/LILO_(bootloader)) bootloader can set these registers to different values. So we will skip all the "edge cases" and consider only a single case when the value of the `ss` register is equal to `ds`. Since the values of these registers are equal, we jump to the `2` label:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L572-L578 -->
 ```assembly
@@ -451,7 +489,7 @@ Here we compare the value of the `ss` and `ds` registers. According to the comme
 	sti			# Now we should have a working stack
 ```
 
-`dx` register stores stack pointer value which should point to the top of the stack. The value of the stack pointer is `0x9000`. GRUB 2 bootloader sets it during loading of the Linux kernel image and the address is defined by the:
+At this point, the `dx` register stores the stack pointer value, which should point to the top of the stack. The value of the stack pointer is `0x9000`. GRUB 2 bootloader sets it during the loading of the Linux kernel image. The address is defined by:
 
 <!-- https://raw.githubusercontent.com/rhboot/grub2/refs/heads/master/include/grub/i386/linux.h#L34-L34 -->
 ```C
