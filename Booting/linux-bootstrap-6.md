@@ -1,4 +1,4 @@
-# Kernel booting process. Part 6.
+# Kernel booting process. Part 6
 
 In the [previous part](./linux-bootstrap-5.md), we finally leaved the setup code and reached the Linux kernel itself. We explored the last steps of the early boot process - from the kernel decompression to the hand-off to the Linux kernel entrypoint - `start_kernel` function. It might be considered as the end of the set of posts about the Linux kernel booting process, but I'd like to stop one more time in the early setup code and look at the one more important part of it - `kASLR` or Kernel Address Space Layout Randomization.
 

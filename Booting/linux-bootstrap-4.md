@@ -1,4 +1,4 @@
-# Kernel booting process. Part 4.
+# Kernel booting process. Part 4
 
 In the previous [part](./linux-bootstrap-3.md), we saw the transition from the [real mode](https://en.wikipedia.org/wiki/Real_mode) into [protected mode](http://en.wikipedia.org/wiki/Protected_mode). At this point, the two crucial things were changed - the processor can address up to 4 gigabytes of memory and the privilege levels were set for the memory access. Despite this, the kernel is still in its early setup mode. There are many different things that has to be prepared and configured before we will reach the main kernel's entry point. Since we are learning the Linux kernel for `x86_64` processors, the protected mode is not the main mode where the processor should operate. The next crucial step is to switch to the native mode for `x86_64` - [long mode](https://en.wikipedia.org/wiki/Long_mode).
 
