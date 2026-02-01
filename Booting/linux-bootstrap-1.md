@@ -295,14 +295,14 @@ qemu-img create hdd.img 64M
 parted hdd.img --script mklabel msdos
 parted hdd.img --script mkpart primary ext2 1MiB 100%
 parted hdd.img --script set 1 boot on
-sudo losetup -fP hdd.img
-sudo mkfs.ext2 /dev/loop0p1
-sudo mount /dev/loop0p1 /mnt/tmp
+sudo losetup -P /dev/loop5 hdd.img
+sudo mkfs.ext2 /dev/loop5p1
+sudo mount /dev/loop5p1 /mnt/tmp
 sudo mkdir -p /mnt/tmp/boot/grub
 sudo grub2-install \
   --target=i386-pc \
   --boot-directory=/mnt/tmp/boot \
-  /dev/loop0
+  /dev/loop5
 sudo cp ./arch/x86/boot/bzImage /mnt/tmp/boot/
 sudo tee /mnt/tmp/boot/grub/grub.cfg > /dev/null <<EOF
 terminal_input serial
@@ -312,11 +312,11 @@ set default=0
 set debug=linux
 
 menuentry "Linux" {
-    linux /boot/bzImage
+    linux /boot/bzImage earlyprintk=serial,0x3f8,115200
 }
 EOF
 sudo umount /mnt/tmp
-sudo losetup -d /dev/loop0
+sudo losetup -d /dev/loop5
 ```
 
 Now we can run qemu virtual machine with our image:
@@ -504,10 +504,10 @@ From this point we have a correct stack and starts from `0x9000:0x9000` and grow
 
 ### BSS Setup
 
-Before the kernel can switch to C code, two final tasks must be done:
+Before the kernel's setup code can switch to C code, two final tasks must be done:
 
-- Verify the “magic” signature.
-- Clear the `.bss` section.
+- Verify the "magic" signature
+- Clear the `.bss` section
 
 The first is the signature checking:
 
@@ -531,11 +531,11 @@ With the magic number confirmed, and knowing our segment registers and stack are
 	rep stosl
 ```
 
-The main goal of this code is to clear or in other words to fill with zeros the memory area between `__bss_start` and `_end`. To fill this memory area with zeros, the `rep stos` instruction is used. This instruction puts the value of the `eax` register to the destination pointed by the `es:di`. That is why we unified the values of the `ds` and `es` registers. The `rep` prefix specifies the repetition of the `stos` instruction based on the value of the `cx` register.
+The main goal of this code is to clear, or in other words, to fill with zeros the memory area between `__bss_start` and `_end`. To fill this memory area with zeros, the `rep stos` instruction is used. This instruction puts the value of the `eax` register into the destination pointed to by `es:di`. That is why we unified the values of the `ds` and `es` registers at the beginning of the kernel setup code. The `rep` prefix specifies the repetition of the `stos` instruction based on the value of the `cx` register.
 
-To clear this memory area, at first we set the borders of this area - from the [__bss_start](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/setup.ld) to `_end + 3`. We add `3` bytes to the `_end` address because we are going to write zeros in double words or 4 bytes at a time). Adding three bytes ensures that when we later divide by four, any reminder at the end of the memory area still get covered. After we setup the borders of the memory area and fill the `eax` with 0 using the `xor` instruction, the `rep stosl` does its job.
+To clear this memory area, at first we set the borders of this area - from the [__bss_start](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/setup.ld) to `_end + 3`. We add `3` bytes to the `_end` address because we are going to write zeros in double words, meaning four bytes at a time. Adding three bytes ensures that when we later divide by four, any reminder at the end of the memory area is still covered. After we set up the borders of the memory area and fill the `eax` with zero using the `xor` instruction, the `rep stosl` does its job.
 
-The effect of this code is that zeros are written through the all memory from `__bss_start` to `_end`. To know exact addresses of them we can inspect `setup.elf` file with [readelf](https://en.wikipedia.org/wiki/Readelf) utility:
+The effect of this code is that zeros are written through the entire memory from `__bss_start` to `_end`. To know their exact addresses, we can inspect the `setup.elf` file with the [readelf](https://en.wikipedia.org/wiki/Readelf) utility:
 
 ```bash
 $ readelf -a arch/x86/boot/setup.elf  | grep bss
@@ -547,16 +547,47 @@ $ readelf -a arch/x86/boot/setup.elf  | grep bss
 
 These offsets inside the setup segment. Since in our case the kernel image is loaded at physical address `0x90000`, the symbols translate to:
 
-- __bss_start = 0x90000 + 0x3f00 = 0x93F00
-- __bss_end = 0x90000 + 0x5280 = 0x95280
+- __bss_start - `0x90000 + 0x3f00 = 0x93F00`
+- __bss_end - `0x90000 + 0x5280 = 0x95280`
 
 The following diagram illustrates how the setup image, `.bss`, and the stack region are laid out in memory:
 
 ![bss](./images/early-bss.svg)
 
+> [!IMPORTANT]
+> The addresses of the `__bss_start` and `__bss_end` may differ on your machine and depend on the Linux kernel version.
+
+We can confirm it by running an experiment. Add a simple change to the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file, build the kernel with our change, and run the Linux kernel in the qemu virtual machine as we did before in this part. The change is:
+
+```diff
+modified   arch/x86/boot/main.c
+@@ -11,6 +11,7 @@
+  * Main module for the real-mode kernel code
+  */
+ #include <linux/build_bug.h>
++#include <asm/sections.h>
+
+ #include "boot.h"
+ #include "string.h"
+@@ -173,6 +174,8 @@ void main(void)
+	query_edd();
+ #endif
+
++        printf("BSS start: %p. BSS end: %p\n", __bss_start, _end);
++
+	/* Set the video mode */
+	set_video();
+```
+
+If you did everything correctly, you will see an output similar to:
+
+```
+BSS start: 00003F00. BSS end: 00005280
+```
+
 ### Jump to C code
 
-At this point we have initialized the [stack](#stack-setup) and [.bss](#bss-setup) sections. The last instruction of the early kernel setup assembly is to jump to C code:
+At this point, we initialized the [stack](#stack-setup) and [.bss](#bss-setup) sections. The last assembly instruction is a jump to C code:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L600-L600 -->
 ```assembly
