@@ -1,12 +1,14 @@
-# Kernel booting process - Part 2.
+# Kernel booting process - Part 2
 
-We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we have walked through the very early stages of the booting process and first assembly instructions of the Linux kernel code. Aside from different mechanisms, this code was responsible to prepare environment for [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming language. At the end of chapter we reached a symbolic milestone - the very first call of a C function. This function has classical name - `main` and defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file.
+We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we walked through the very early stages of the booting process and first assembly instructions of the Linux kernel code. Aside from different mechanisms, this code was responsible for preparing the environment for the [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming language. At the end of the chapter, we reached a symbolic milestone - the very first call of a C function. This function has a classical name - `main` - and is defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file.
 
-From here on, we will start to see assembler code more and more rare, but it is not the end 🤓 We still will meet some assembly code on our way, but it will be more rare and rare. But now it is time for more "high level" logic!
+From here on, we will still see some assembly code on our way, but it will be more and more rare 🤓 Now it is time for more "high-level" logic!
+
+From the previous part, we know that the kernel setup code is still running in [real mode](https://en.wikipedia.org/wiki/Real_mode). Its primary task is to move the processor first into [protected mode](https://en.wikipedia.org/wiki/Protected_mode), and then into [long mode](https://en.wikipedia.org/wiki/Long_mode). Almost all of the C code we will see in the next chapters exists for this purpose - to prepare and complete these transitions.
 
 In this part, we’ll keep digging through the kernel’s setup code and cover:
 
-- What [protected mode](https://en.wikipedia.org/wiki/Protected_mode) is on x86 processors
+- What protected mode is on x86 processors
 - Setup of early [heap](https://en.wikipedia.org/wiki/Memory_management#HEAP) and console
 - Detection of available memory
 - Validation of a CPU 
@@ -23,9 +25,9 @@ What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the
 - A segment register - `cs`, `ds`, `ss` and `es` which defines segment selector.
 - A general purpose register which specifies offset within the segment.
 
-The main motivation for switching from real mode is its memory limitation. As we saw in the previous part, real mode can address only 2<sup>20</sup> bytes. This is just 1 MB of RAM. Obviously modern software including an operating system kernel need more. To break this constraints, the new processor mode was introduced - protected mode.
+The main motivation for switching from real mode is its memory addressing limitation. As we saw in the previous part, real mode can address only 2<sup>20</sup> bytes. This is just 1 MB of RAM. Obviously, modern software, including an operating system kernel, needs more. To break these constraints, the new processor mode was introduced - `protected mode`.
 
-Protected mode was introduced to the x86 architecture in 1982 and became the primary operating mode of Intel processors, starting with the [80286](http://en.wikipedia.org/wiki/Intel_80286) until the introduction of x86_64 and long mode. This mode brought many changes and improvements, but one of the most crucial was in memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory vs the 1 Megabyte in real mode.
+Protected mode was introduced to the x86 architecture in 1982 and became the primary operating mode of Intel processors, starting with the [80286](http://en.wikipedia.org/wiki/Intel_80286) until the introduction of x86_64 and long mode. This mode brought many changes and improvements, but one of the most crucial was the memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory in comparison to the 1 Megabyte in real mode.
 
 Memory management in protected mode is divided into two, mostly independent mechanisms:
 
@@ -36,7 +38,7 @@ For now, our attention stays on segmentation. We’ll return to paging later, on
 
 ### Memory segmentation in protected mode
 
-In protected mode, memory segmentation was completely redesigned. Fixed 64 KB real mode segments are gone. Instead, each segment is now defined by a special data structure called a `Segment Descriptor` which specifies the properties of a memory segment. The segment descriptors are stored in another special structure called `Global Descriptor Table` or `GDT`. Whenever a CPU needs to find an actual physical memory address, it consults this table. The GDT itself is just a block of memory which address is stored in the special CPU register called `gdtr`.  This is a 48-bit register and consists of two parts:
+In protected mode, memory segmentation is completely redesigned. Fixed 64 KB real mode segments are gone. Instead, each segment is now defined by a special data structure called a `Segment Descriptor` which specifies the properties of a memory segment. The segment descriptors are stored in a special structure called the `Global Descriptor Table` or `GDT`. Whenever a CPU needs to find an actual physical memory address, it consults this table. The GDT itself is just a block of memory. Its address is stored in the special CPU register called `gdtr`.  This is a 48-bit register and consists of two parts:
 
 - The size of the Global Descriptor Table
 - The address of the Global Descriptor Table
@@ -60,13 +62,13 @@ The first field is `LIMIT 15:0`. It represents the first 16 bits of the segment 
 
 Based on this, we can easily calculate that the max size of a segment is 4 GB.
 
-The next field is `BASE`. We may see that it is split on three parts. The first part occupies bits from 16 to 31, the second part occupies bits from 32 to 39, and the last third part occupies bits from 56 to 63. The main goal of this field is to store the base address of a segment.
+The next field is `BASE`. We can see that it is split into three parts. The first part occupies bits from `16` to `31`, the second part occupies bits from `32` to `39`, and the last third part occupies bits from `56` to `63`. The main goal of this field is to store the base address of a segment.
 
-The remaining of the fields in a segment descriptor represent flags which control different aspects of a segment, like for example type of a memory. Let's take a look at the description of these flags:
+The remaining fields in a segment descriptor represent flags that control different aspects of a segment, such as the type of memory. Let's take a look at the description of these flags:
 
 - `Type` - describes the type of a memory segment.
 - `S` - distinguishes system segments from code and data segments.
-- `DPL` - provides information about the privilege level of a segment. It can be a value from 0 to 3, where 0 is the most privileged level.
+- `DPL` - provides information about the privilege level of a segment. It can be a value from `0` to `3`, where `0` is the level with the highest privileges.
 - `P` - tells the CPU whether a segment presented in memory.
 - `AVL` - available and reserved bits. It is ignored by the Linux kernel.
 - `L` - indicates whether a code segment contains 64-bit code.
