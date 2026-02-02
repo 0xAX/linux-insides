@@ -255,7 +255,9 @@ The possible values of the `earlyprintk` command line option are:
 - `serial,ttyS0,115200`
 - `ttyS0,115200`
 
-The parameters defines the name of a serial port, the port number and the baud rate. The pointer to the kernel command line is stored in the kernel setup header and can be accessed through `boot_params.hdr.cmd_line_ptr`. The `parse_earlyprintk` function tries to find the `earlyprintk` option in the kernel command line, parse it if it was found and initialize the serial console parameters with one of the values above. If the `earlyprintk` option is given and contains valid values, the initialization of the serial console takes place in the `early_serial_init` function. There is nothing specific to Linux kernel in the initialization of a serial console, so we will skip this part. If you want to dive deeper by yourself, more information you can find [here](https://wiki.osdev.org/Serial_Ports#Port_Addresses) and learn [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c) step by step.
+These parameters define the name of a serial port, the port number, and the [baud](https://en.wikipedia.org/wiki/Baud) rate.
+
+The pointer to the kernel command line is stored in the kernel setup header that was copied in the previous section. The kernel setup code accesses it using `boot_params.hdr.cmd_line_ptr`. The `parse_earlyprintk` function tries to find the `earlyprintk` option in the kernel command line, parse it, and initialize the serial console with the given parameters. If the `earlyprintk` option is given and contains valid values, the initialization of the serial console takes place in the `early_serial_init` function. There is nothing specific to the Linux kernel in the initialization of a serial console, so we will skip this part. If you want to dive deeper, you can find more information [here](https://wiki.osdev.org/Serial_Ports#Port_Addresses) and learn [arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c) step by step.
 
 After the serial port initialization we can see the first output:
 
