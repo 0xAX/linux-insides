@@ -295,14 +295,15 @@ qemu-img create hdd.img 64M
 parted hdd.img --script mklabel msdos
 parted hdd.img --script mkpart primary ext2 1MiB 100%
 parted hdd.img --script set 1 boot on
-sudo losetup -P /dev/loop5 hdd.img
-sudo mkfs.ext2 /dev/loop5p1
-sudo mount /dev/loop5p1 /mnt/tmp
+LO_DEVICE=$(losetup -f)
+sudo losetup -P "${LO_DEVICE}" hdd.img
+sudo mkfs.ext2 "${LO_DEVICE}"p1
+sudo mount "${LO_DEVICE}"p1 /mnt/tmp
 sudo mkdir -p /mnt/tmp/boot/grub
 sudo grub2-install \
   --target=i386-pc \
   --boot-directory=/mnt/tmp/boot \
-  /dev/loop5
+  "${LO_DEVICE}"
 sudo cp ./arch/x86/boot/bzImage /mnt/tmp/boot/
 sudo tee /mnt/tmp/boot/grub/grub.cfg > /dev/null <<EOF
 terminal_input serial
@@ -316,7 +317,7 @@ menuentry "Linux" {
 }
 EOF
 sudo umount /mnt/tmp
-sudo losetup -d /dev/loop5
+sudo losetup -d "${LO_DEVICE}"
 ```
 
 Now we can run qemu virtual machine with our image:
@@ -359,7 +360,62 @@ rip            0x0                 0x0
 cs             0x9020              36896
 ```
 
-If you continue to execute `s i` commands in the debugger CLI, you will go step by step by the early kernel setup code. If you exit from debugger you will see the continuation of the kernel loading procedure.
+If you continue to execute `s i` commands in the debugger CLI, you will go step by step through the early kernel setup code. If you exit from the debugger, you will see the continuation of the kernel loading procedure.
+
+In addition, we can confirm this address using the same approach as in the example with QEMU above. We know that according to the Linux kernel boot protocol, the protected mode kernel is loaded at the `100000` address. We can set a breakpoint at this address and create a memory dump. To do this, run the QEMU virtual machine using the same command:
+
+```bash
+qemu-system-x86_64 -drive format=raw,file=hdd.img -m 256M -s -S -no-reboot -no-shutdown -vga virtio
+```
+
+At the next step, attach with gdb to the virtual machine:
+
+```
+(gdb) target remote localhost:1234
+Remote debugging using localhost:1234
+0x000000000000fff0 in ?? ()
+(gdb) break *0x100000
+Breakpoint 1 at 0x100000
+(gdb) c
+Continuing.
+```
+
+At the beginning, the breakpoint stops us at the GRUB code itself. Because of this, we need to continue in the debugger with the `c` command. Return to the QEMU window now, and execute these commands:
+
+```
+set pager=1
+set debug=all
+linux /boot/bzImage
+boot
+```
+
+During the boot process, the debugger stops us the second time at the breakpoint which we set at the `100000` address:
+
+```
+Breakpoint 1, 0x0000000000100000 in ?? ()
+(gdb) c
+Continuing.
+```
+
+This time, we are at the entry point of the Linux kernel in protected mode. Execute the next command in the debugger shell to get a memory dump:
+
+```
+dump binary memory /tmp/dump 0x0000 0x200000
+```
+
+Now we can inspect the memory dump at the `0x90000` address:
+
+```bash
+~$ hexdump -C /tmp/dump | grep 00090000
+00090000  4d 5a 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |MZ..............|
+```
+
+We can see the same `MZ` header from which the Linux kernel setup head starts. In addition, we can inspect the memory at the `0x90200` offset to see that there is a kernel setup header:
+
+```bash
+~$ hexdump -C /tmp/dump | grep 00090200
+00090200  eb 6a 48 64 72 53 0f 02  00 00 00 00 00 10 00 43  |.jHdrS.........C|
+```
 
 ## The Beginning of the Kernel Setup Stage
 
