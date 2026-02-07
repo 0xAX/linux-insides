@@ -391,9 +391,24 @@ Let's look at the crucial part of the implementation of the `detect_memory_e820`
 - `di` register contain the address of the buffer which will contain memory data
 - `edx` register contains the `SMAP` magic number
 
-After registers filled with the needed values, the kernel can ask the `0xE820` BIOS interface about available memory. The kernel does it by the invoking `0x15` [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call) which returns information about one memory region. The kernel repeats this operation in the loop until information about all the memory regions is not collected.
+After registers are filled with the needed values, the kernel can ask the `0xE820` BIOS interface about the available memory. To do so, the kernel invokes `0x15` [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call), which returns information about one memory region. The kernel repeats this operation in a loop until it collects information about all available memory regions into the array of `boot_e820_entry` structures. This structure contains information about:
 
-After the information is called, the kernel print message about the available memory regions. You can find it in the [dmesg](https://en.wikipedia.org/wiki/Dmesg) output:
+- beginning address of the memory region
+- size of the memory region
+- type of the memory region
+
+The structure is defined in [arch/x86/include/uapi/asm/setup_data.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/setup_data.h):
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/uapi/asm/setup_data.h#L45-L49 -->
+```C
+struct boot_e820_entry {
+	__u64 addr;
+	__u64 size;
+	__u32 type;
+} __attribute__((packed));
+```
+
+After the information is called, the kernel prints a message about the available memory regions. You can find it in the [dmesg](https://en.wikipedia.org/wiki/Dmesg) output:
 
 ```
 [    0.000000] e820: BIOS-provided physical RAM map:
@@ -430,6 +445,8 @@ This function performs two tasks using [BIOS interrupt](https://en.wikipedia.org
 
 1. Gets the state of a keyboard which contains information about state of certain modifier keys, like for example Caps Lock active or not.
 2. Sets the keyboard repeat rate which determines how long a key must hold down before it begins repeating
+
+After the BIOS interrupt was executed, the keyboard should be initialized. If you are wondering why we need a working keyboard at such an early stage, the answer is - it can be used during the selection of the video mode. We will see more details in the [next chapter](linux-bootstrap-3.md).
 
 ### Gathering system information
 
