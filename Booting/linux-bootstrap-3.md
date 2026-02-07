@@ -6,6 +6,7 @@ In the previous [part](./linux-bootstrap-2.md), we have seen first pieces of C c
 - Validation of CPU
 - Detection of available memory
 - Initialization of keyboard
+- Platform information
 
 In this part we will continue to explore the next steps before we will see the transition into the protected mode.
 
@@ -46,9 +47,17 @@ void set_video(void)
 }
 ```
 
-Let's try to understand what this function does in the next sections.
+Let's try to understand in the next section - what is a video mode and how this function initializes one.
 
 ### Video modes
+
+A video mode is a predefined configuration of a screen that tells the video hardware information about:
+
+- resolution
+- color depth
+- text or graphic mode
+
+The next goal of the kernel is to collect this information and initialize a suitable video mode. After this will be done, kernel will be able to use a special API to print messages on the screen.
 
 The implementation of the `set_video` function starts by getting the video mode from the `boot_params.hdr` structure:
 
