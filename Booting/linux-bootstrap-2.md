@@ -293,7 +293,39 @@ static void init_heap(void)
 }
 ```
 
-First of all, `init_heap` checks the `CAN_USE_HEAP` flag from the kernel setup header. If it is not set, we'll see the warning message. If heap is enabled, the last address of it is set to the `boot_params.hdr.heap_end_ptr` filled by bootloader plus 512 bytes or to the end of the stack if the value specified by bootloader is above it. The beginning of the heap is right after the end of the `.bss` area. The stack size is 1024 bytes. Thereby, the memory map will look like:
+First of all, `init_heap` checks the `CAN_USE_HEAP` flag from the kernel setup header. We can find information about this flag in the kernel boot protocol:
+
+>   Bit 7 (write): CAN_USE_HEAP
+>
+>	Set this bit to 1 to indicate that the value entered in the
+>	heap_end_ptr is valid.  If this field is clear, some setup code
+>	functionality will be disabled.
+
+If this bit is not set, we'll see the warning message. Otherwise, the heap memory area is initialized. The beginning of the heap is defined by the `HEAP` pointer, which points to the end of the kernel setup image:
+
+```C
+char *HEAP = _end;
+```
+
+Now we need to initialize the size of the heap. There is another small hint in the Linux kernel boot protocol:
+
+> ============	==================
+> Field name:	heap_end_ptr
+> Type:		write (obligatory)
+> Offset/size:	0x224/2
+> Protocol:	2.01+
+> ============	==================
+>
+>  Set this field to the offset (from the beginning of the real-mode
+>  code) of the end of the setup stack/heap, minus 0x0200.
+
+The GRUB bootloader sets this value to:
+
+```C
+#define GRUB_LINUX_HEAP_END_OFFSET	(0x9000 - 0x200)
+```
+
+Based on these values, the end of the heap pointed by the `heap_end` will be at the `0x9000` offset from the end of the kernel setup image. To avoid the case when the heap and stack overlap, there is an additional check. It sets the end of the heap equal to the end of the stack if the first one is greater than the second. Having this, the heap memory area will be located above the `bss` area till the stack. So, the memory map will look like:
 
 ![early-heap](./images/early-heap.svg)
 
