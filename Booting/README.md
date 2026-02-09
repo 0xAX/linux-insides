@@ -39,4 +39,4 @@ During reading this and other chapters, you may encounter special notation:
 
 ## Kernel version
 
-This chapter corresponds to `Linux kernel v6.18`.
+This chapter corresponds to `Linux kernel v6.19`.
