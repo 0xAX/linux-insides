@@ -189,7 +189,7 @@ The next step in the randomization process is to build a map of forbidden memory
 
 collects such memory regions into the `mem_avoid` array which has `mem_vector` type:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/misc.h#L96-L99 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/misc.h#L97-L100 -->
 ```C
 struct mem_vector {
 	u64 start;
