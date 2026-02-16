@@ -1,15 +1,22 @@
 # Kernel booting process. Part 4
 
-In the previous [part](./linux-bootstrap-3.md), we saw the transition from the [real mode](https://en.wikipedia.org/wiki/Real_mode) into [protected mode](http://en.wikipedia.org/wiki/Protected_mode). At this point, the two crucial things were changed - the processor can address up to 4 gigabytes of memory and the privilege levels were set for the memory access. Despite this, the kernel is still in its early setup mode. There are many different things that has to be prepared and configured before we will reach the main kernel's entry point. Since we are learning the Linux kernel for `x86_64` processors, the protected mode is not the main mode where the processor should operate. The next crucial step is to switch to the native mode for `x86_64` - [long mode](https://en.wikipedia.org/wiki/Long_mode).
+In the previous [part](./linux-bootstrap-3.md), we saw the transition from the [real mode](https://en.wikipedia.org/wiki/Real_mode) into [protected mode](http://en.wikipedia.org/wiki/Protected_mode). At this point, the two crucial things were changed: 
 
-The main characteristic of this new mode, as with all the earlier modes - the way it defines the memory model. In real mode, the memory model was relatively simple and each memory location was formed based on the base address specified in a segment register and plus some offset. In protected mode, introduced Global and Local descriptor table with descriptors which describe memory areas. All the memory accesses in long mode are based on the new mechanism called [paging](https://en.wikipedia.org/wiki/Memory_paging). One of the crucial goal of the kernel before it can switch to the long mode is to setup paging. This and all other details needed to switch to long mode we will see in this chapter.
+- The processor now can address up to four gigabytes of memory
+- The privilege levels were set for the memory access 
+
+Despite this, the kernel is still in its early setup mode. There are many different things that the early setup code should prepare before we reach the main kernel's entry point. Right now, the processor operates in protected mode. However, protected mode is not the main mode in which `x86_64` processors should operate – it exists only for backward compatibility. The next crucial step is to switch to the native mode for `x86_64` - [long mode](https://en.wikipedia.org/wiki/Long_mode).
+
+The main characteristic of this new mode (as with all the earlier modes) is the way it defines the memory model. In real mode, the memory model was relatively simple, and each memory location was formed based on the base address specified in a segment register, plus some offset. In protected mode, the global and local descriptor tables contain descriptors that describe memory areas. All the memory accesses in long mode are based on the new mechanism called [paging](https://en.wikipedia.org/wiki/Memory_paging). One of the crucial goals of the kernel setup code before it can switch to the long mode is to set up paging.
+
+In this chapter, we will see how the kernel switches to long mode in detail.
 
 > [!NOTE]
-> There will be lots of assembly code in this part, so if you are not familiar with that, you might want to consult a book about it or read another set of my [posts](https://github.com/0xAX/asm) about assembly programming.
+> There will be lots of assembly code in this part, so if you are not familiar with that, read another set of my [posts about assembly programming](https://github.com/0xAX/asm).
 
 ## The 32-bit kernel entry point location
 
-The last point where we stopped was the [jump](https://en.wikipedia.org/wiki/Branch_(computer_science)#Implementation) to the kernel's entry point in protected mode. This jump is defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) and looks like this:
+The last point where we stopped was the [jump](https://en.wikipedia.org/wiki/Branch_(computer_science)#Implementation) instruction to the kernel's entry point in protected mode. This jump was located in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) and looks like this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L74-L74 -->
 ```assembly
@@ -116,7 +123,7 @@ Now we know where we are, so let's take a look at the code and proceed with lear
 
 ## First steps in the protected mode
 
-The `32-bit` entry point is defined in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
+The `32-bit` entry point is defined in [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L81-L82 -->
 ```assembly
@@ -124,17 +131,17 @@ The `32-bit` entry point is defined in the [arch/x86/boot/compressed/head_64.S](
 SYM_FUNC_START(startup_32)
 ```
 
-First of all, it is worth to know is the directory named `compressed`? The answer to that is that the kernel is in the [`bzImage`](https://en.wikipedia.org/wiki/Vmlinux#bzImage) file. This file is a compressed package consisting of kernel image and the kernel setup code. In all previous chapters we were researching the kernel setup code. The next two big steps which remaining before we will see the entrypoint of the kernel are:
+First of all, it is worth knowing why the directory is named `compressed`. It's because the kernel is in the [`bzImage`](https://en.wikipedia.org/wiki/Vmlinux#bzImage) file, which is a compressed package that contains the kernel image and kernel setup code. In all previous chapters, we were researching the kernel setup code. The next two big steps, which the kernel's setup code should do before we see the entry point of the kernel itself, are:
 
-- switch to long mode
-- decompress the kernel image and jump to its entrypoint
+- Switch to long mode
+- Decompress the kernel image and jump to its entry point
 
-In this part we will focus at the first big step and the steps leading to the kernel decompression and the decompression itself we will see in the next chapters. Returning to the current kernel code, you may find the two following files in the [arch/x86/boot/compressed](https://github.com/torvalds/linux/tree/master/arch/x86/boot/compressed) directory:
+In this part, we will focus only on switching to long mode. The kernel image decompression will be covered in the next chapters. Returning to the current kernel code, you can find the following two files in the [arch/x86/boot/compressed](https://github.com/torvalds/linux/tree/master/arch/x86/boot/compressed) directory:
 
-- [head_32.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_32.S)
-- [head_64.S](https://github.com/torvalds/linux/blob/v4.16/arch/x86/boot/compressed/head_64.S)
+- [head_32.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_32.S)
+- [head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)
 
-In our case, we will consider only the `head_64.S` file. Yes, the file named with the `64` suffix despite the kernel is in the 32-bit protected mode for this moment. The explanation for this situation is simple. Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile). We may see the following `make` goal here:
+We will focus only on the `head_64.S` file. Yes, the file name contains the `64` suffix, despite the kernel being in the 32-bit protected mode at the moment. The explanation for this situation is simple. Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile). We can see the following `make` goal here:
 
 ```Makefile
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/kernel_info.o $(obj)/head_$(BITS).o \
@@ -142,7 +149,7 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/kernel_info.o $(obj)/head_$(BITS).o 
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
 
-The first line contains this the following target - `$(obj)/head_$(BITS).o`. This means, that `make` will select the file during kernel build process based on the value of the `$(BITS)`. This `make` variable defined in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) make file and its value depends on the kernel configuration:
+The first line contains the following target - `$(obj)/head_$(BITS).o`. This means that `make` will select the file during the kernel build process based on the `$(BITS)` value. This `make` variable is defined in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) Makefile and its value depends on the kernel's configuration:
 
 ```Makefile
 ifeq ($(CONFIG_X86_32),y)
@@ -160,11 +167,11 @@ Since we are consider the kernel for `x86_64` architecture, we assume that the `
 
 ### Reload the segments if needed
 
-As we already know, our start is in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file. The entry point is defined by the `startup_32` symbol.
+As we already know, our start is in [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file. The entry point is defined by the `startup_32` symbol.
 
-In the beginning of the `startup_32`, we can see the `cld` instruction which clears the `DF` or [direction flag](https://en.wikipedia.org/wiki/Direction_flag) bit in the [flags](https://en.wikipedia.org/wiki/FLAGS_register) register:
+At the beginning of the `startup_32`, we can see the `cld` instruction, which clears the `DF` or [direction flag](https://en.wikipedia.org/wiki/Direction_flag) bit in the [flags](https://en.wikipedia.org/wiki/FLAGS_register) register:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L81-L89 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L81-L90 -->
 ```assembly
 	.code32
 SYM_FUNC_START(startup_32)
@@ -175,11 +182,12 @@ SYM_FUNC_START(startup_32)
 	 * all need to be under the 4G limit.
 	 */
 	cld
+	cli
 ```
 
-When the direction flag is clear, all string operations which usually used for copying data, like for example [stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html), [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html) and others, will increment the index registers `esi` or `edi`. We need to clear the direction flag because later we will use strings operations to perform various operations such as clearing space for page tables or copying data.
+When the direction flag is clear, all string or copy-like operations used for copying data, like for example [stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html) or [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html), will increment the index registers `esi` or `edi`. We need to clear the direction flag because later we will use string operations for tasks such as clearing space for page tables or copying data.
 
-The next instruction is to disable interrupts - `cli`. We already have seen it in previous chapter. The interrupts are disabled "twice" because modern bootloaders can load the kernel starting from this point but not only one that we have seen in the [first chapter](./linux-bootstrap-1.md).
+The next instruction is to disable interrupts - `cli`. We have already seen it in the previous chapter. The interrupts are disabled "twice" because modern bootloaders can load the kernel starting from this point, but not only one that we have seen in the [first chapter](./linux-bootstrap-1.md).
 
 After these two simple instructions, the next step is to calculate the difference between where the kernel is compiled to run, and where it actually was loaded. If we will take a look at the linker [script](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S), we will see the following definition:
 
@@ -208,9 +216,9 @@ Disassembly of section .head.text:
    1:   fa                      cli
 ```
 
-We may see that and the linker script and the `objdump` utility tells us that the address of the `startup_32` function is `0` but it is not where the kernel was loaded. This is only the address that the code was compiled for, also called link-time address. Why it was done like that? The answer is for simplicity. By telling the linker to set the address of the very first symbol to zero, each next symbol becomes a simple offset from 0. As we already know, the kernel was loaded at the `0x100000` address. The difference between this address and zero called relocation delta. Once that delta is known, the code can reach any variable or function by adding this delta to their compile-time addresses.
+We can see that both the linker script and the `objdump` utility indicate that the address of the `startup_32` function is `0`, but this is not where the kernel was loaded. This is the address that the code was compiled for, also known as the link-time address. Why was it done like that? The answer is – for simplicity. By telling the linker to set the address of the very first symbol to zero, each next symbol becomes a simple offset from 0. As we already know, the kernel was loaded at the `0x100000` address. The difference between the address where the kernel was loaded and the address with which the kernel was compiled is called the relocation delta. Once the delta is known, the code can reach any variable or function by adding this delta to their compile-time addresses.
 
-We know these addresses and as the result the value of delta based on experiment we have seen above. Now let's take a look how the kernel calculates this difference:
+We know both these addresses based on the experiment above, and as a result, we know the value of the delta. Now let's take a look at how the kernel calculates this difference:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L100-L104 -->
 ```assembly
@@ -220,11 +228,24 @@ We know these addresses and as the result the value of delta based on experiment
 	subl	$ rva(1b), %ebp
 ```
 
-The `call` instruction is used to get the real address of the kernel. This trick works because after the `call` instruction is executed, the stack should have return address on its top. In the code above we setup a temporary mini stack to get the address of the kernel and execute the call to the nearest label `1`. Since the top of the stack contains the return address, we put it into the `ebp` register. Using the last instruction we subtract the difference between the address of the label `1` and `strtup_32` address from the return address that we got at the previous step:
+The `call` instruction is used to get the physical address where the kernel is actually loaded. This trick works because after the `call` instruction is executed, the stack should have the return address on top. This return address will be exactly the address of the label `1`. 
+
+In the code above, the kernel sets up a temporary mini stack where the return address will be stored after the `call` instruction. Right after the call, we pop this address from the stack and save it in the `ebp` register. Using the last instruction, we subtract the difference between the address of the label `1` and the `startup_32` physical address using the `rva` macro and `subl` instruction, and store the result in the `ebp` register.
+
+The `rva` macro is defined in the same source code file and looks like this:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L79-L79 -->
+```assembly
+#define rva(X) ((X) - startup_32)
+```
+
+Schematically, it can be represented like this:
 
 ![startup_32](./images/startup_32.svg)
 
-Starting from this moment, the `ebp` register will contain the address of the beginning of the kernel image and using it we can calculate offset to any other symbols or structures in memory. And the first such structure that we will access is the Global Descriptor Table. To switch to long mode, we need to update the previously loaded Global Descriptor Table with `64-bit` segments:
+Starting from this moment, the `ebp` register contains the physical address of the `startup_32` symbol. Next, it will be used to calculate the offset to any other symbols or structures in memory.
+
+The very first such structure that we need to access is the Global Descriptor Table. To switch to long mode, we need to update the previously loaded Global Descriptor Table with `64-bit` segments:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L106-L109 -->
 ```assembly
@@ -233,7 +254,9 @@ Starting from this moment, the `ebp` register will contain the address of the be
 	lgdt	(%eax)
 ```
 
-Where the new Global Descriptor Table is:
+Knowing now that the `ebp` register contains the physical address of the beginning of the kernel in protected mode, we calculate the offset to the `gdt` structure using it at the first line of code shown above. In the last two lines, we write this address to the `gdt` structure with offset `2`, and load the new Global Descriptor Table with the `lgdt` instruction.
+
+The new Global Descriptor Table looks like this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L495-L504 -->
 ```assembly
@@ -251,15 +274,15 @@ SYM_DATA_END_LABEL(gdt, SYM_L_LOCAL, gdt_end)
 
 The new Global Descriptor table contains five descriptors: 
 
-- `32-bit` kernel code segment
-- `64-bit` kernel code segment
-- `32-bit` kernel data segment
+- 32-bit kernel code segment
+- 64-bit kernel code segment
+- 32-bit kernel data segment
 - Task state descriptor
 - Second task state descriptor
 
-We already saw the loading the Global Descriptor Table in the previous [part](./linux-bootstrap-3.md#set-up-global-descriptor-table), and now we're doing almost the same here, but we set descriptors to use `CS.L = 1` and `CS.D = 0` for execution in 64 bit mode.
+We already saw loading the Global Descriptor Table in the previous [part](./linux-bootstrap-3.md#set-up-global-descriptor-table), and now we're doing almost the same, but we set descriptors to use `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode.
 
-After the new Global Descriptor Table is loaded, the kernel can setup the new stack:
+After the new Global Descriptor Table is loaded, the next step is to set up the stack:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L111-L119 -->
 ```assembly
@@ -274,9 +297,9 @@ After the new Global Descriptor Table is loaded, the kernel can setup the new st
 	leal	rva(boot_stack_end)(%ebp), %esp
 ```
 
-At the previous step we loaded new Global Descriptor Table, but all the segment registers may have selectors from old table. If those selectors point to invalid entries in the new Global Descriptor Table, next memory access can cause [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault). Setting them to the `__BOOT_DS` which is a known-good descriptor should fix this potential fault and allow us to set proper stack pointed by the `boot_stack_end`.
+In the previous step, we loaded a new Global Descriptor Table; however, all the segment registers may still have selectors from the old table. If those selectors point to invalid entries in the new Global Descriptor Table, the next memory access can cause [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault). Setting them to `__BOOT_DS`, which is a well-known descriptor, should fix this potential fault and allow us to set the proper stack pointed by `boot_stack_end`.
 
-The last action after we loaded the new Global Descriptor Table is to reload `cs` descriptor:
+The last action after we loaded the new Global Descriptor Table is to reload the `cs` descriptor:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L121-L125 -->
 ```assembly
@@ -287,9 +310,9 @@ The last action after we loaded the new Global Descriptor Table is to reload `cs
 1:
 ```
 
-Since we can not change segment registers using simple `mov` instruction, we need to apply a trick with the `lretl` instruction. This instruction fetches the two values from the top of the stack and put the first value into the `eip` register and the second value to the `cs` register. Since this moment we have proper kernel code selector and instruction pointer values.
+Since we can not change segment registers using the `mov` instruction, a trick with the `lretl` instruction is used to set the `cs` with the correct value. This instruction fetches two values from the top of the stack, then puts the first value into the `eip` register and the second value into the `cs` register. Since this moment, we have a proper kernel code selector and instruction pointer values.
 
-Just a couple of steps separate us from the transition into the long mode. As it was mentioned in the beginning of this chapter, one of the most crucial is to setup `paging`. But before this task, the kernel needs to do last preparations which we will see in the next sections.
+Just a couple of steps separate us from transitioning into the long mode. As mentioned at the beginning of this chapter, one of the most crucial steps is to set up `paging`. But before that, the kernel needs to do the last preparations, which we will see in the next sections.
 
 ## Last steps before paging setup
 
