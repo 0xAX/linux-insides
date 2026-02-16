@@ -1,10 +1,10 @@
 # Kernel booting process. Part 5
 
-In the previous [part](./linux-bootstrap-4.md), we saw the transition from the [protected mode](https://en.wikipedia.org/wiki/Protected_mode) into [long mode](https://en.wikipedia.org/wiki/Long_mode) but what we have in memory is not yet the full kernel image ready to run. We are still in the kernel setup code. The kernel itself is already loaded by the bootloader but it is in a compressed form. Before we can reach the real kernel entry point, this compressed blob must be unpacked into memory and prepared for execution. The next step before we will see the Linux kernel entrypoint is kernel decompression.
+In the previous [part](./linux-bootstrap-4.md), we saw the transition from the [protected mode](https://en.wikipedia.org/wiki/Protected_mode) into [long mode](https://en.wikipedia.org/wiki/Long_mode), but what we have in memory is not yet the the kernel image ready to run. We are still in the kernel setup code which should decompress the kernel and pass control to it. The next step before we will see the Linux kernel entrypoint is kernel decompression.
 
-## Preparing to Decompress the Kernel
+## First steps in the long mode
 
-The point where we stopped in the previous chapter is the [jump](https://en.wikipedia.org/wiki/Branch_(computer_science)#Implementation) to the `64-bit` entry point which is located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
+The point where we stopped in the previous chapter is the [lret](https://www.felixcloutier.com/x86/ret) instruction which performed "jump" to the `64-bit` entry point which is located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L276-L278 -->
 ```assembly
@@ -12,6 +12,18 @@ The point where we stopped in the previous chapter is the [jump](https://en.wiki
 	.org 0x200
 SYM_CODE_START(startup_64)
 ```
+
+This is the first 64-bit code which we see. Before the kernel will be decompressed, there are still last steps to be done by the kernel. These steps are:
+
+- Disabling the interrupts
+- Unification of the segment registers
+- Calculation of the kernel relocation address
+- Reload of the Global Descriptor Table
+- Load of the Interrupt Descriptor Table
+
+All of this we will see in the next sections.
+
+### Disabling the interrupts
 
 The `64-bit` entrypoint starts with the same two instructions that `32-bit`:
 
@@ -21,9 +33,15 @@ The `64-bit` entrypoint starts with the same two instructions that `32-bit`:
 	cli
 ```
 
-As you already may know from the previous part, the first instruction clears the [direction flag](https://en.wikipedia.org/wiki/Direction_flag) bit in the [flags](https://en.wikipedia.org/wiki/FLAGS_register) register and the second instruction disables [interrupts](https://en.wikipedia.org/wiki/Interrupt). The same as the bootloader can load the Linux kernel and jump to the `32-bit` entrypoint immediately after load, in the same way the bootloader can switch the processor into `64-bit` long mode and jump on this entrypoint right after the kernel is loaded. These two instructions have to be executed in a case if the bootloader didn't do it before jumping to the kernel. The `direction flag` allows us to use memory copying operations in a correct direction and disabled interrupts will not break or interrupt the kernel decompression process.
+As you already should know from the previous part, the first instruction clears the [direction flag](https://en.wikipedia.org/wiki/Direction_flag) bit in the [flags](https://en.wikipedia.org/wiki/FLAGS_register) register and the second instruction disables [interrupts](https://en.wikipedia.org/wiki/Interrupt). 
 
-After these two instructions are executed for safeness, the next step is to unify data segments:
+The same as the bootloader can load the Linux kernel at the `32-bit` entrypoint instead of [16-bit entry point](linux-bootstrap-1.md#the-beginning-of-the-kernel-setup-stage), in the same way the bootloader can switch the processor into `64-bit` long mode by itself and load the kernel starting from the `64-bit` entry point. 
+
+These two instructions have to be executed in a case if the bootloader didn't do it before jumping to the kernel. The `direction flag` allows us to use memory copying operations in a correct direction and disabled interrupts will not break or interrupt the kernel decompression process.
+
+### Unification of the segment registers
+
+After these two instructions are executed, the next step is to unify segment registers:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L294-L299 -->
 ```assembly
@@ -35,7 +53,9 @@ After these two instructions are executed for safeness, the next step is to unif
 	movl	%eax, %gs
 ```
 
-Since we have loaded a new `Global Descriptor Table` before we jumped into long mode all the data segment registers have to be unified and set to zero as Linux kernel uses [flat memory model](https://en.wikipedia.org/wiki/Flat_memory_model):
+Segment registers are not used in long mode, so the kernel resets them to zero.
+
+### Calculation of the kernel relocation address
 
 The next step is to compute the difference between the location the kernel was compiled to be loaded at and the location where it is actually loaded:
 
@@ -60,16 +80,41 @@ The next step is to compute the difference between the location the kernel was c
 	addq	%rbp, %rbx
 ```
 
-This operation is very similar to what we have already seen in the [Calculation of the kernel relocation address](./linux-bootstrap-4.md#calculation-of-the-kernel-relocation-address) section of the previous chapter. This piece of code is almost 1:1 copy to what we have seen in the protected mode. The only one difference that now kernel can use `rip` based addressing to get the address of the `startup_32` in memory. All other is just the same what we already have seen in the previous chapter and done only for the same reason - if bootloader is loaded kernel starting from the `64-bit` mode. As the result the `rbx` register will contain the physical address where the decompressor will be relocated.
+This operation is very similar to what we have seen already in the [Calculation of the kernel relocation address](./linux-bootstrap-4.md#calculation-of-the-kernel-relocation-address) section of the previous chapter.
 
-After this address obtained, we can setup the stack for decompressor code:
+> [!TIP]
+> It is very highly recommend to read carefuly [Calculation of the kernel relocation address](./linux-bootstrap-4.md#calculation-of-the-kernel-relocation-address) before a try to understand this code.
+
+This piece of code is almost 1:1 copy of what we have seen in the protected mode and if you understood it, there should not be problems to understand it here. The main purpose of this code is to set up the `rbp` and `ebx` registers with the base address of where the kernel will be decompressed and the address of where the kernel image with decompressor code should be relocated for safe decompression.
+
+The only one difference with the similar code from protected mode is that now, kernel can use `rip` based addressing to get the address of the `startup_32` in memory. So it does not need to do magic tricks with `call` and `popl` instructions like in the protected mode. All other is just the same what we already have seen in the previous chapter and done only for the same reason - if bootloader is loaded kernel starting from the `64-bit` mode and the protected mode code was skipped.
+
+After these addresses obtained, kernel sets up the stack for decompressor code:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L334-L334 -->
 ```assembly
 	leaq	rva(boot_stack_end)(%rbx), %rsp
 ```
 
-The next step is to setup new `Global Descriptor Table`. Yes, one more time 😊 There are at least two reasons to do this. The first reason you already may guess is that bootloader may load the Linux kernel starting from the `64-bit` entrypoint and the kernel needs to setup own Global Descriptor Table in a case one from bootloader is not suitable. The second reason is that the kernel might be configured with support for the [5-level](https://en.wikipedia.org/wiki/Intel_5-level_paging) paging and in this case, kernel needs to jump to `32-bit` mode again to setup it safely. So the `gdt64` will have `32-bit` code segment:
+### Reload of the Global Descriptor Table
+
+The next step is to setup new Global Descriptor Table. Yes, one more time 😊 There are at least two reasons to do this. 
+
+1. The first reason you already may easily guess - a bootloader may load the Linux kernel starting from the `64-bit` entrypoint and the kernel needs to setup own Global Descriptor Table in a case the one from bootloader is not suitable. 
+2. The second reason is that the kernel might be configured with support for the [5-level](https://en.wikipedia.org/wiki/Intel_5-level_paging) paging and in this case, the kernel needs to jump to `32-bit` mode again to setup it safely. 
+
+The "new" Global Descriptor Table has the same entries but pointed by the `gdt64`:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L489-L493 -->
+```assembly
+	.data
+SYM_DATA_START_LOCAL(gdt64)
+	.word	gdt_end - gdt - 1
+	.quad   gdt - gdt64
+SYM_DATA_END(gdt64)
+```
+
+The single difference is that `lgdt` in `64-bit` mode loads `GDTR` register with size `10` bytes in comparison to `32-bit` where `GDTR` is `6` bytes. To load the new Global Descriptor Table, the kernel writes its address to the `GDTR` register using the `lgdt` instruction:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L357-L368 -->
 ```assembly
@@ -87,28 +132,9 @@ The next step is to setup new `Global Descriptor Table`. Yes, one more time 😊
 .Lon_kernel_cs:
 ```
 
-The definition of `gdt64` you can find in the same [file](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S#L490) and basically contains the same fields what the Global Descriptor Table for `32-bit` mode, with the single difference is that `lgdt` in `64-bit` mode loads `GDTR` with size `10` bytes in comparison to `32-bit` where `GDTR` is `6` bytes:
+### Load of the Interrupt Descriptor Table
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L490-L504 -->
-```assembly
-SYM_DATA_START_LOCAL(gdt64)
-	.word	gdt_end - gdt - 1
-	.quad   gdt - gdt64
-SYM_DATA_END(gdt64)
-	.balign	8
-SYM_DATA_START_LOCAL(gdt)
-	.word	gdt_end - gdt - 1
-	.long	0
-	.word	0
-	.quad	0x00cf9a000000ffff	/* __KERNEL32_CS */
-	.quad	0x00af9a000000ffff	/* __KERNEL_CS */
-	.quad	0x00cf92000000ffff	/* __KERNEL_DS */
-	.quad	0x0080890000000000	/* TS descriptor */
-	.quad   0x0000000000000000	/* TS continued */
-SYM_DATA_END_LABEL(gdt, SYM_L_LOCAL, gdt_end)
-```
-
-After the new `Global Descriptor Table` was loaded, the next step is to load new `Interrupt Descriptor Table`:
+After the new Global Descriptor Table was loaded, the next step is to load new `Interrupt Descriptor Table`:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L369-L376 -->
 ```assembly
@@ -122,9 +148,11 @@ After the new `Global Descriptor Table` was loaded, the next step is to load new
 	call	load_stage1_idt
 ```
 
-The `load_stage1_idt` function is defined in the [arch/x86/boot/compressed/idt_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/idt_64.c) and uses the `lidt` instruction to load address of the new `Interrupt Descriptor Table` . For this moment, the `Interrupt Descriptor Table` has `NULL` entries to avoid interrupts. The valid interrupt handlers will be loaded after kernel relocation.
+The `load_stage1_idt` function is defined in the [arch/x86/boot/compressed/idt_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/idt_64.c) and uses the `lidt` instruction to load address of the new `Interrupt Descriptor Table` . For this moment, the `Interrupt Descriptor Table` has `NULL` entries to avoid handling of the interrupts. As you can remember, the interrupts are disabled at this moment anyway. The valid interrupt handlers will be loaded after kernel relocation.
 
 The next steps after this will be highly related to the setup of `5-level` paging if it is configured using the `CONFIG_PGTABLE_LEVELS=5` kernel configuration option. This feature extends the virtual address space beyond the traditional 4-level paging scheme, but it is still relatively uncommon in practice and not essential for understanding the mainline boot flow. For clarity and focus, we’ll set it aside and continue with the standard 4-level paging case.
+
+TODO
 
 Since the Linux kernel has now valid stack, the kernel setup code can copy the compressed kernel image to the address that we calculated above and stored in the `rbx` register.
 
