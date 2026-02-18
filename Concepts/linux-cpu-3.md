@@ -98,7 +98,7 @@ To understand the `__define_initcall` macro, first of all let's look at the `ini
 typedef int (*initcall_t)(void);
 ```
 
-Now let's return to the `__define_initcall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces the definition of a given function, `__initcall_<function-name>_<id>`, which is located in the `.initcall <id> .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and marked with the `__user` [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attribute. If we look at [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/vmlinux.lds.h) header file, which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
+Now let's return to the `__define_initcall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces the definition of a given function, `__initcall_<function-name>_<id>`, which is located in the `.initcall <id> .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and marked with the `__used` attribute (see below). If we look at [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/vmlinux.lds.h) header file, which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
 
 ```C
 #define INIT_CALLS					\
@@ -134,7 +134,7 @@ ffffffff8320d0e0 t __initcall_nmi_warning_debugfs5
 ...
 ```
 
-The attribute `__used` is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/compiler-gcc.h) header file and it expands to the definition of the following `gcc` attribute:
+The attribute `__used` is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/compiler-gcc.h) header file and it expands to the definition of the following [`gcc`](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attribute:
 
 ```C
 #define __used   __attribute__((__used__))
@@ -230,7 +230,7 @@ As we just saw, the `do_initcall_level` function takes one parameter - level of 
 
 * parses the `initcall_command_line` which is copy of usual kernel [command line](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/params.c) source code file;
 
-* call the `do_on_initcall` function for each level:
+* call the `do_one_initcall` function for each level:
 
 ```C
 for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
@@ -270,7 +270,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 }
 ```
 
-Let's try to understand what does the `do_one_initcall` function does. First of all we increase [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) counter so that we can check it later to be sure that it is not imbalanced. After this step we can see the call of the `initcall_backlist` function which goes over the `blacklisted_initcalls` list which stores blacklisted `initcalls` and releases the given `initcall` if it is located in this list:
+Let's try to understand what does the `do_one_initcall` function does. First of all we increase [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) counter so that we can check it later to be sure that it is not imbalanced. After this step we can see the call of the `initcall_blacklisted` function which goes over the `blacklisted_initcalls` list which stores blacklisted `initcalls` and releases the given `initcall` if it is located in this list:
 
 ```C
 list_for_each_entry(entry, &blacklisted_initcalls, next) {
