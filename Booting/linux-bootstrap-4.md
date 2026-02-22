@@ -326,7 +326,7 @@ In the next sections we will take a look at these steps.
 
 ### CPU verification
 
-Before we the kernel can switch to long mode, it needs to check that it runs on the suitable `x86_64` processor. This is done by the next piece of code:
+Before the kernel can switch to long mode, it checks that it runs on a suitable `x86_64` processor by running this piece of code:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L132-L136 -->
 ```assembly
@@ -336,7 +336,7 @@ Before we the kernel can switch to long mode, it needs to check that it runs on 
 	jnz	.Lno_longmode
 ```
 
-The `verify_cpu` function defined in the [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) and executes the [cpuid](https://en.wikipedia.org/wiki/CPUID) instruction to check the details of the processors on which kernel is running on. In our case, the most crucial check is for `long mode` and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) support. and sets the `eax` register to `0` on success and `1` on failure. If the long mode is not supported by the current processor, the kernel jumps to the `no_longmode` label which just stops the CPU with the `hlt` instruction:
+The `verify_cpu` function is defined in [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) and executes the [CPUID](https://en.wikipedia.org/wiki/CPUID) instruction to check the details of the processors on which the kernel is running. In our case, the most crucial check is for long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) support. This function returns the result in the `eax` register. Its value is `0` on success and `1` on failure. If long mode is not supported by the current processor, the kernel jumps to the `no_longmode` label, which stops the CPU with the `hlt` instruction:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L478-L483 -->
 ```assembly
@@ -352,12 +352,57 @@ If everything is ok, the kernel proceeds its work.
 
 ### Calculation of the kernel relocation address
 
-The next step is to calculate the address for the kernel decompression. The kernel consists of two parts:
+The next step is to calculate the address for the kernel decompression. The kernel image mainly consists of two parts:
 
-- Relatively small decompressor code
+- Kernel's setup and decompressor code
 - Chunk of compressed kernel code
 
-Obviously, the final decompressed kernel code will be bigger than compressed image. The memory area where the decompressed kernel should locate may overlap with the area where the compressed image is located. In this case, the compressed image could be overwritten during decompression process. To avoid this, the the kernel will copy the compressed part for safe decompression. This is done by the following code:
+We can see it looking at the [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) linker script:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/vmlinux.lds.S#L19-L39 -->
+```linker-script
+SECTIONS
+{
+	/* Be careful parts of head_64.S assume startup_32 is at
+	 * address 0.
+	 */
+	. = 0;
+	.head.text : {
+		_head = . ;
+		HEAD_TEXT
+		_ehead = . ;
+	}
+	.rodata..compressed : {
+		*(.rodata..compressed)
+	}
+	.text :	{
+		_text = .; 	/* Text */
+		*(.text)
+		*(.text.*)
+		*(.noinstr.text)
+		_etext = . ;
+	}
+```
+
+There are three sections at the beginning of the linker script above:
+
+- `.head.text` - section where we are now
+- `.rodaya..compressed` - section with the compressed kernel image
+- `.text` - section with the decompressor code
+
+The kernel decompression happens in-place, which is the same place where the compressed kernel is. This means that the parts of the decompressed kernel image will overwrite the parts of the compressed image during the decompression process. It may sound dangerous – if the decompressed part overwrites the decompressor code or the part of the compressed kernel image that is not decompressed yet, this will lead to code or image corruption.
+
+One way to avoid this problem is to allocate a buffer for the decompressed kernel image and copy the compressed image outside of it. But this is not the most effective way in terms of memory consumption, and may not work on devices with not enough memory to hold both kernel images.
+
+The second way to avoid this problem is to allocate a buffer for the decompressed kernel image, but copy the compressed image to the end of this buffer and leave some room at the beginning of this buffer for the parts of the decompressed kernel. Of course, the kernel decompressor must choose the right parameters, so the pointer to the end of the decompressed part does not move faster than the pointer to the part that is currently compressed.
+
+Schematically, it can be represented like this:
+
+![kernel-relocation](./images/kernel-relocation.svg)
+
+The buffer for the decompressed kernel starts at the address specified by the `LOAD_PHYSICAL_ADDR` macro, which by default expands to the `0x1000000` address. Since we loaded this address below (at `0x100000`), the kernel setup code should copy itself, the compressed kernel image, and the decompressor code at this address. In addition, to have some room for the safe in-place decompression, it should calculate a special offset from the beginning of this buffer.
+
+We can see this calculation in the following code:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L146-L161 -->
 ```assembly
@@ -379,11 +424,26 @@ Obviously, the final decompressed kernel code will be bigger than compressed ima
 	subl	$ rva(_end), %ebx
 ```
 
-The `ebp` register contains current address of the beginning of the kernel image. We put this address to the `ebx` register and aligned it by the `2MB` border. If the resulted address equal or bigger than `LOAD_PHYSICAL_ADDRESS` which is `0x1000000` we use it as is, otherwise we set it to `0x1000000`. Since we have the beginning of the address where to move the compressed kernel image, we add to it `BP_init_size` which is the size of decompressed kernel image. This will allow us to copy compressed kernel image behind the memory area where the kernel will be decompressed. In the end we just subtract the address of the `_end` from the value in the `ebx` to get the new base address of the decompressor kernel code.
+Despite it may look scary, it is not as complex as it may seem. Let's take a closer look at it and try to understand what it does.
+
+The `ebp` register contains the physical address where the protected kernel mode was loaded. We know that this address is `0x100000`. This address is aligned to the two-megabyte boundary, and the result value is compared with the `LOAD_PHYSICAL_ADDRESS`:
+
+- If this value is equal to or greater than `LOAD_PHYSICAL_ADDRESS`, we leave it as is. 
+- Otherwise, we put the value of the `LOAD_PHYSICAL_ADDRESS` (which is `0x1000000`) into the `ebx` register. 
+
+At this moment, we have the pointer to the beginning of the buffer where the kernel image is relocated and decompressed in the `ebx` register.
+
+The last two lines are the most interesting. Using them, the kernel calculates the offset where to move the compressed kernel image with the decompressor for safe in-place decompression. At first, we add the `BP_init_size` to the `ebx` register. The `BP_init_size` is the maximum value between the size of the uncompressed kernel image code (from `_text` to `_end`) and the size of the kernel setup code + compressed kernel image + decompressor code. At this moment, the `ebx` register points to the end of the decompression buffer. On the last line of the code, we move this pointer back to the new place of the `startup_32` symbol within the decompression buffer.
+
+As a result, we get something like this:
+
+![kernel-relocation](./images/kernel-relocation-2.svg)
+
+The decompressor code decompresses the compressed kernel image starting from the beginning of the buffer and gradually overwrites the compressed kernel image. As mentioned above, the size of the gap between the beginning of the decompression buffer and `startup_32` must be safe enough not to overwrite still-compressed parts of the image with the decompressed ones. The calculation of this gap highly depends on the compression method the kernel uses and is encoded in `BP_init_size`. Here I will skip all the details about this calculation, but if you are interested, you can find more details in the comment located in the [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) file.
 
 ### Enabling PAE mode
 
-The next step is to setup so-called `PAE` mode:
+The next step before the kernel can switch the processor into the long mode is to set up the so-called [`PAE`](https://en.wikipedia.org/wiki/Physical_Address_Extension) mode:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L167-L170 -->
 ```assembly
@@ -393,28 +453,87 @@ The next step is to setup so-called `PAE` mode:
 	movl	%eax, %cr4
 ```
 
-We doing it by setting the `X86_CR4_PAE` bit in the `cr4` [control register](https://en.wikipedia.org/wiki/Control_register). This tells to CPU that the page table entries that we will see soon will be enlarged from `32` to `64` bits.
+Kernel does it by setting the `X86_CR4_PAE` bit in the `cr4` [control register](https://en.wikipedia.org/wiki/Control_register). This tells the processor that the page table entries will be enlarged from `32` to `64` bits. We will see this process soon.
 
-## Setup paging
+## Set up paging
 
-At this moment we are almost finished with the preparations needed to switch the processor into the 64-bit mode. One of the last step, is to build [page tables](https://en.wikipedia.org/wiki/Page_table). But before we will take a look at the process of page tables setup, let's try briefly understand what is it.
+At this moment, we almost finished the preparations needed to switch the processor into 64-bit long mode. The next crucial step is to build [page tables](https://en.wikipedia.org/wiki/Page_table). But before we take a look at the process of page table setup, let's try to briefly understand what it is.
 
-As we mentioned in the beginning of this chapter - on `x86_64`, the processor must have paging enabled to use long mode. Paging lets the processor translate [virtual addresses](https://en.wikipedia.org/wiki/Virtual_address_space) or addresses used by the code, into a [physical addresses](https://en.wikipedia.org/wiki/Physical_address). The translation of virtual addresses into physical done using the special structure - page tables. All the memory considered as array of sequential blocks called pages. Each page is described by the special descriptor in the page table called `PTE` or page table entry. The page table entries are stored in the special structure called page tables. The page table is a structure with predefined hierarchy:
+In protected mode, each memory access is interpreted through a segment descriptor stored in the Global Descriptor Table. The situation changes significantly in long mode.
 
-- `PML4` - top level table, each entry points to `PDPT`
-- `PDPT` - 3rd level table, each entry points to `PD`
-- `PD` - 2nd level table, each entry points to `PT`
-- `PT` - 1st level table, each entry points to a 4 killobyte physical page
+In 64-bit mode, segmentation is disabled. The base and limit fields of most segment descriptors are ignored, and the processor treats the address space as a flat linear range. Of course, code, data, and stack segments still exist, but only formally. The processor still requires valid segment selectors, but they no longer perform address translation in the traditional sense.
 
-The physical address of the top level table must be stored in the `cr3` register.
+Instead, memory translation in long mode relies almost entirely on the mechanism called `paging`.
 
-When the processor needs to translate a virtual address into the corresponding physical address, it splits the virtual address to the next parts:
+Each program operates now with addresses that are called `virtual`. When a program references a virtual address, the processor interprets the address as a 64-bit linear address and translates it through the multi-level structure called page tables.
+
+> [!NOTE]
+> Modern x86_64 processors support five-level paging, but we will skip it in this post and focus on four-level paging.
+
+Let’s briefly see what happens when the processor needs to translate a virtual address into a physical one.
+
+In four-level paging mode, a virtual address is 64 bits long. However, only the `48` bits are actually used for translation to a physical address. These `48` bits are divided into several parts:
 
 ![early-page-table.svg](./images/early-page-table.svg)
 
-Knowing the index of the corresponding entry in each table, CPU obtains the physical address.
+Each group of `9` bits selects an entry in one level of the page-table hierarchy. Since `9` bits can represent `512` values, each page table contains exactly `512` entries. Each entry of a page table occupies `8` bytes, so a single page table fits into one 4-kilobyte page.
 
-The next goal of the kernel is to build a structure similar to the description above to switch to long mode. Let's take a look how it is implemented in the kernel. First of all we need to fill the current page table structure specified by the [pgtable](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S#L533) with zeros for safeness:
+When the processor translates a virtual address, it performs the following steps:
+
+1. It reads the `cr3` control register to obtain the physical address of the top-level page table called `PML4`.
+2. It extracts bits `47–39` of the virtual address and uses them as an index of the `PML4` page table.
+3. The selected `PML4` entry contains the physical address of the next-level table called `PDPT`.
+4. Bits `38–30` are selected to find an entry in the `PDPT`.
+5. Bits `29–21` are selected to find an entry in the `PD`.
+6. Bits `20–12` select an entry in the `PT`.
+7. Bits `11–0` provide the offset inside the resulting physical page.
+
+In addition to a physical address of the next-level table, each page table entry contains flags in first `12` bits. These flags are:
+
+| Bit   | Name                     | Description                                                                                                                                        |
+|-------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `P`   | Present                  | Indicates whether the page or page table entry is valid and exists in memory. If cleared, accessing the corresponding address causes a page fault. |
+| `RW`  | Read/Write               | Determines whether write operations are permitted. If cleared, the page is read-only; if set, writes are allowed (subject to privilege rules).     |
+| `US`  | User/Supervisor          | Controls privilege-level access. If cleared, the page is accessible only in supervisor mode. If set, it may also be accessed from user mode.       |
+| `PWT` | Page-Level Write-Through | Controls the caching policy. If set, write-through caching is used; otherwise, write-back caching is typically applied.                            |
+| `PCD` | Page Cache Disable       | Disables caching for the referenced page when set. Commonly used for memory-mapped I/O regions.                                                    |
+| `A`   | Accessed                 | Set automatically by the processor when the page-table entry is used during address translation. Useful for page replacement decisions.            |
+| `D`   | Dirty                    | Set automatically by the processor when a write operation occurs to a mapped page. Indicates that the page has been modified.                      |
+| `PS`  | Page Size                | Determines whether the entry maps a large page (e.g., 2 MiB or 1 GiB) instead of pointing to a lower-level page table.                             |
+| `NX`  | No-Execute               | Prevents instruction execution from the referenced page when set. Used to enforce executable/non-executable memory protections.                    |
+       
+You might wonder how an 8-byte entry can contain both a 64-bit physical address of the next-level page table and flags at the same time. The reason is that each page table is aligned on a four-kilobyte boundary. As a result, the lower 12 bits of its physical address are always zero. These 12 bits are therefore used to store the flags.
+
+Now that we know how the processor translates a virtual address to a physical address using paging, it is time to take a look at the structure of page tables.
+
+A page table in x86_64 is a four-kilobyte memory area that contains 512 entries. Each entry occupies `8` bytes. In four-level paging mode with four-kilobyte pages, four such tables participate in the translation of a virtual address:
+
+| Level | Name   | Description                                                                                                                 |
+|-------|--------|-----------------------------------------------------------------------------------------------------------------------------|
+| 4     | `PML4` | The top-level page table. Each entry points to a Page Directory Pointer Table (`PDPT`).                                     |
+| 3     | `PDPT` | The third-level table. Each entry points to a Page Directory (`PD`) or, if the `PS` bit is set, directly maps a 1 GiB page. |
+| 2     | `PD`   | The second-level table. Each entry points to a Page Table (`PT`) or, if the `PS` bit is set, directly maps a 2 MiB page.    |
+| 1     | `PT`   | The first-level table. Each entry points directly to a 4 KiB physical memory page.                                          |
+
+Each table has the same internal structure. The only difference between them is how their entries are interpreted. As we already know, an entry in a page table is 64 bits wide. It contains two types of information:
+
+- A physical address of either the next-level page table or a physical memory page
+- A set of control flags that define access permissions and status information 
+
+If you are interested in this topic, you can find more information about page tables and page table entries structure in the [Intel® 64 and IA-32 Architectures Software Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html).
+
+Now that we know a little about paging, we can return to the kernel and update our knowledge by looking at the real code. Now we will see how the kernel builds the early page table to switch to long mode. But before we jump directly to the code, we need to remember one important thing. The kernel will be relocated to the address stored in the `ebx` register, as seen above. So, all structures, including the page tables, should be aligned to this address.
+
+The page table structure for boot is defined in the same source code file and looks like this:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L531-L533 -->
+```assembly
+	.section ".pgtable","aw",@nobits
+	.balign 4096
+SYM_DATA_LOCAL(pgtable,		.fill BOOT_PGT_SIZE, 1, 0)
+```
+
+The kernel needs to fill this structure with the proper page table entries for early 64-bit code. First of all, it fills the whole memory area occupied by the page tables with zeros for safety:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L200-L203 -->
 ```assembly
@@ -424,7 +543,13 @@ The next goal of the kernel is to build a structure similar to the description a
 	rep	stosl
 ```
 
-After we cleaned the memory area for the page tables, we can start to fill it. First of all, we need to fill the top-level page entry:
+At the beginning, we set the address of the top of the page table to the `edi` register. After this, the kernel fills with zeros the memory area that will be occupied by the page table. The boot page table will have the following structure:
+
+- 1 level4 table
+- 1 level3 table
+- 4 level2 table that maps everything with 2M pages
+
+After the kernel clears the memory region reserved for the page tables, it starts populating it with entries. At the start, it fills the first and single entry of the top-level page table. The following snippet shows this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L206-L209 -->
 ```assembly
@@ -434,27 +559,13 @@ After we cleaned the memory area for the page tables, we can start to fill it. F
 	addl	%edx, 4(%edi)
 ```
 
-This adds the first entry to the top-level page table. This entry will contain a reference to the first entry of the lower-level table. The offset to it is `0x1000` bytes. The `0x7` are flags of the page table entry:
+In the code above, the kernel fills the first entry of the top-level page table with the address of the next-level page table, which is located at the `pgtable + 0x1000` address and has `0x7` flags. In our case, the flags `0x7` are:
 
 - Present
 - Read/Write
 - User
 
-Each page entry is `64-bit` structure, no matter if it is a `PML4`, `PDPT`, `PD` or `PT` entry. The format is almost the same among all the levels. The difference is only in the address field which stores the physical address of the next page table by hierarchy. Besides the address field, a page table entry contains flags like:
-
-- `P` - present bit
-- `RW` - read/write bit
-- `US` - user/supervisor bit
-- `PWT` - Page-level Write-Through bit controlling caching of the page
-- `PCD` - Page Cache Disable bit controlling caching of the page
-- `A` - accessed page bit
-- `D` - dirty page bit
-- `PS` - page size bit
-- `NX` - No-Execute bit
-
-More information about the page tables and page table entries structure you can find in the [Intel® 64 and IA-32 Architectures Software Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html).
-
-In the next step we will build four `Page Directory` entries in the `Page Directory Pointer` table with the same `Present+Read/Write/User` flags:
+In the next step, the kernel builds four `Page Directory` entries in the `Page Directory Pointer` table with the same `Present+Read/Write/User` flags:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L212-L220 -->
 ```assembly
@@ -469,7 +580,7 @@ In the next step we will build four `Page Directory` entries in the `Page Direct
 	jnz	1b
 ```
 
-In the code above, we may see filling of the first four entries of the 3rd level page table. The first entry is located at the offset `0x1000` from the beginning of the page table. The value of the `eax` register is similar to the 4th level page table entry. Next we just fill the four entries of this table in the "loop" while value of the `ecx` will not be zero. As soon as this table entries are filled, the next turn of the next level page table:
+In the code above, we can see the filling of the first four entries of the 3rd-level page table. The first entry of the 3rd level page table is located at the offset `0x1000` from the beginning of the top-level page table. The value of the `eax` register is similar to the 4th-level page table entry, with the difference that now it points to the 2nd-level page table. Next, the kernel fills the four entries of the 3rd-level page table in the "loop" until the value of the `ecx` register is not zero. As soon as these page table entries are filled, the kernel proceeds to the next-level page table:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L223-L231 -->
 ```assembly
@@ -484,11 +595,19 @@ In the code above, we may see filling of the first four entries of the 3rd level
 	jnz	1b
 ```
 
-Here we already fill 4 page directories with 2048 entries. The first entry is located at the offset `0x2000` from the beginning of the page table. Each entry maps a 2 megabytes chunk of memory with the same `Present/Read/Write/Large Page` flags but in addition there is `Global` flag. This additional flag tells the processor to keep [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entry across reload of the value of the `cr3` register.
+Here we already fill four page directory tables with `2048` entries. The first entry is located at the offset `0x2000` from the beginning of the top-level page table. Each entry maps a two-megabyte chunk of memory with the following flags:
 
-This was the last page table entries which kernel fills. There is no need for this moment to fill the 4th level `PT` tables because every at the 2nd level page table was filled with the `Large Page` bit, so each such entry directly maps a 2 megabytes region. During the address transition, the page-walk procedure stops at the `PD` level going through `PML4 → PDPT → PD`, and the lower `21` bits of the virtual address will be used as the offset inside that 2 megabytes page.
+- Present
+- Read/Write
+- User
+- Page Cache Disable
+- Large Page 
 
-Now we can enable the paging by storing the address of the page table in the `cr3` register:
+The two additional flags tell the processor to keep [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entry across reload of the value of the `cr3` register and use two-megabyte pages.
+
+There is no need to populate the lowest-level page tables yet. Every entry in the 2nd-level page directory has the `Large Page` bit set, which means each entry directly maps a two-megabyte region of physical memory. During the address translation, the page-walk procedure stops at the 2nd-level page table, and the lower `21` bits of the virtual address are used as the offset inside that two-megabyte page.
+
+The page tables are now fully prepared. The last remaining step is to actually enable paging. To do this, the processor must know where the top-level page table resides. As we know, this is done by loading the physical address of the top-level page table into the `cr3` control register:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L234-L235 -->
 ```assembly
@@ -496,11 +615,11 @@ Now we can enable the paging by storing the address of the page table in the `cr
 	movl	%eax, %cr3
 ```
 
-The page tables is ready and paging is enabled starting from this moment. Now the kernel is prepared for transition into the long mode.
+From this moment, page tables that cover four gigabytes of memory are ready, and paging is enabled. The kernel is ready for transition into the long mode.
 
 ## The transition into 64-bit mode
 
-Only the last steps are remaining before the Linux kernel can switch CPU into the long mode. The first one is setting the `EFER.LME` flag in the special [model specific register](http://en.wikipedia.org/wiki/Model-specific_register) to the predefined value `0xC0000080`:
+Only the last steps remain before the Linux kernel can switch the processor into the long mode. The first one is setting the `EFER.LME` flag in the special [model-specific register](http://en.wikipedia.org/wiki/Model-specific_register) to the predefined value `0xC0000080`:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L238-L241 -->
 ```assembly
@@ -510,9 +629,9 @@ Only the last steps are remaining before the Linux kernel can switch CPU into th
 	wrmsr
 ```
 
-This is the `Long Mode Enable` bit and it is mandatory action to set this bit to enable `64-bit` mode.
+This is the `Long Mode Enable` bit, and it is mandatory to set this bit to enable long mode.
 
-In the next step, we may see the preparation of the jump on the long mode entrypoint. To do this jump, the kernel stores the base address of the kernel segment code along with the address of the long mode entrypoint on the stack:
+In the next step, we can see the preparation for the jump on the long mode entrypoint. To do this jump, the kernel stores the base address of the kernel segment code along with the address of the long mode entrypoint on the stack:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L264-L266 -->
 ```assembly
@@ -521,14 +640,14 @@ In the next step, we may see the preparation of the jump on the long mode entryp
 	pushl	%eax
 ```
 
-Everything is ready. Since our stack contains the base of the kernel code segment and the address of the entrypoint, kernel executes the last instruction in protected mode:
+Since the stack contains the base of the kernel code segment and the address of the entrypoint, the kernel executes the last instruction in protected mode:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L273-L273 -->
 ```assembly
 	lret
 ```
 
-The CPU extracts the address of the `startup_64` from the stack and jumps there:
+The CPU extracts the address of `startup_64`, which is the long mode entrypoint from the stack, and jumps there:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L276-L278 -->
 ```assembly
@@ -537,8 +656,7 @@ The CPU extracts the address of the `startup_64` from the stack and jumps there:
 SYM_CODE_START(startup_64)
 ```
 
-The Linux kernel now in 64-bit mode 🎉
-
+The Linux kernel is now in 64-bit mode! 🎉
 
 ## Conclusion
 
