@@ -97,7 +97,7 @@ Actual default maximum number of the legacy interrupts represented by the `NR_IR
 #define NR_IRQS_LEGACY                    16
 ```
 
-In the loop we are accessing the `vecto_irq` per-cpu array with the `per_cpu` macro by the `IRQ0_VECTOR + i` index and write the legacy vector number there. The `IRQ0_VECTOR` macro defined in the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/irq_vectors.h) header file and expands to the `0x30`:
+In the loop we are accessing the `vector_irq` per-cpu array with the `per_cpu` macro by the `IRQ0_VECTOR + i` index and write the legacy vector number there. The `IRQ0_VECTOR` macro defined in the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/irq_vectors.h) header file and expands to the `0x30`:
 
 ```C
 #define FIRST_EXTERNAL_VECTOR           0x20
@@ -105,7 +105,7 @@ In the loop we are accessing the `vecto_irq` per-cpu array with the `per_cpu` ma
 #define IRQ0_VECTOR                     ((FIRST_EXTERNAL_VECTOR + 16) & ~15)
 ```
 
-Why is `0x30` here? You can remember from the first [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-1) of this chapter that first 32 vector numbers from `0` to `31` are reserved by the processor and used for the processing of architecture-defined exceptions and interrupts. Vector numbers from `0x30` to `0x3f` are reserved for the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture). So, it means that we fill the `vector_irq` from the `IRQ0_VECTOR` which is equal to the `32` to the `IRQ0_VECTOR + 16` (before the `0x30`).
+Why is `0x30` here? You can remember from the first [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-1) of this chapter that first 32 vector numbers from `0` to `31` are reserved by the processor and used for the processing of architecture-defined exceptions and interrupts. Vector numbers from `0x30` to `0x3f` are reserved for the [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture). So, it means that we fill the `vector_irq` from the `IRQ0_VECTOR` which is equal to the `0x30` to the `IRQ0_VECTOR + 16` (before the `0x40`).
 
 In the end of the `init_IRQ` function we can see the call of the following function:
 
