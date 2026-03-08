@@ -42,7 +42,7 @@ Thanks to the volunteers, the posts about Linux are translated into different la
 > The translations may diverge from the original content.
 
   * [Brazilian Portuguese](https://github.com/mauri870/linux-insides)
-  * [Chinese](https://github.com/MintCN/linux-insides-zh)
+  * [Chinese](https://github.com/hust-open-atom-club/linux-insides-zh)
   * [Japanese](https://github.com/tkmru/linux-insides-ja)
   * [Korean](https://github.com/junsooo/linux-insides-ko)
   * [Russian](https://github.com/proninyaroslav/linux-insides-ru)
