@@ -1,54 +1,313 @@
-Kernel initialization. Part 1.
-================================================================================
+# Kernel Initialization — Part 1
 
-First steps in the kernel code
---------------------------------------------------------------------------------
+The previous [post](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-6.md) was the final part of the chapter describing the Linux kernel [booting process](https://github.com/0xAX/linux-insides/tree/master/Booting). In that chapter, we looked at the kernel boot process path step by step, starting from the very first instructions executed after the system powers on, through the bootloader, and finally into the Linux kernel setup code.
 
-The previous [post](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-6) was a last part of the Linux kernel [booting process](https://0xax.gitbook.io/linux-insides/summary/booting) chapter and now we are starting to dive into initialization process of the Linux kernel. After the image of the Linux kernel is decompressed and placed in a correct place in memory, it starts to work. All previous parts describe the work of the Linux kernel setup code which does preparation before the first bytes of the Linux kernel code will be executed. From now we are in the kernel and all parts of this chapter will be devoted to the initialization process of the kernel before it will launch process with [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. There are many things to do before the kernel will start first `init` process. Hope we will see all of the preparations before kernel will start in this big chapter. We will start from the kernel entry point, which is located in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) and will move further and further. We will see first preparations like early page tables initialization, switch to a new descriptor in kernel space and many many more, before we will see the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) will be called.
+Now we are entering the next stage of the journey - the initialization of the Linux kernel.
 
-In the last [part](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-6) of the previous [chapter](https://0xax.gitbook.io/linux-insides/summary/booting) we stopped at the jmp instruction from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
+Everything we have seen so far happened before the kernel really started running. The setup code prepared the environment:
 
+- switched CPU modes: from [real mode](https://en.wikipedia.org/wiki/Real_mode) to [protected mode](https://en.wikipedia.org/wiki/Protected_mode), and to [long mode](https://en.wikipedia.org/wiki/Long_mode) from there
+- temporary page tables were built
+- the kernel was relocated and decompressed
+
+Only after all of these steps are complete, we are finally inside the Linux kernel!
+
+By the time we reach this point, the compressed kernel image has already been decompressed and placed at the correct location in memory. The decompressor code has finished its job, and the temporary environment created during early boot is no longer needed. For now, the control was transferred to the kernel code.
+
+All upcoming parts of this chapter will be dedicated to exploring how the kernel initializes itself before launching the very first userspace process with [PID](https://en.wikipedia.org/wiki/Process_identifier) `1`. It can be hard to believe, but even after so much code we already have seen, there is really still a lot to do. The kernel must initialize all core subsystems, finish setting up memory management, detect hardware and load drivers for it, and perform many other tasks before userspace code will be able to run.
+
+Our journey begins at the kernel entry point located in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S). From there we will move step by step through the early initialization code, looking at the first actions performed by the kernel:
+
+- preparing the execution environment
+- setting up early page tables
+- switching to the proper kernel descriptors
+
+And many others actions before we will see the famous `start_kernel` function from [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c), which begins the main initialization sequence of the Linux kernel.
+
+## First steps in the kernel
+
+At the end of the previous chapter, we reached the moment when the kernel decompressor finished its job. The `decompress_kernel` function from [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) returned the address of the decompressed kernel image, this address was placed in the `rax` register, and execution flow switched directly to it:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L475-L475 -->
 ```assembly
 jmp	*%rax
 ```
 
-At this moment the `rax` register contains address of the Linux kernel entry point which was obtained as a result of the call of the `decompress_kernel` function from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) source code file. So, our last instruction in the kernel setup code is a jump on the kernel entry point. We already know where the entry point of the Linux kernel is defined, so we are able to start to learn what Linux kernel does after the start.
+In other words, control has now been transferred from the temporary decompressor environment to the actual Linux kernel code.
 
-First steps in the kernel
---------------------------------------------------------------------------------
+The entry point of the decompressed kernel image is defined in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) assembly source file. This file contains the very first instructions executed by the 64-bit Linux kernel:
 
-Okay, we got the address of the decompressed kernel image from the `decompress_kernel` function into `rax` register and just jumped there. As we already know the entry point of the decompressed kernel image starts in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) assembly source code file and at the beginning of it, we can see following definitions:
-
+<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L36-L38 -->
 ```assembly
-    .text
-	__HEAD
+	__INIT
 	.code64
-	.globl startup_64
-startup_64:
-	...
-	...
-	...
+SYM_CODE_START_NOALIGN(startup_64)
 ```
 
-We can see definition of the `startup_64` routine that is defined in the `__HEAD` section, which is just a macro which expands to the definition of executable `.head.text` section:
+The `startup_64` symbol represents the entry point of the kernel image. Its definition is preceded by the `__INIT` macro, which says that this code into a special section in the kernel image. The `__INIT` macro expands to the definition of the `.init.text` section:
 
 ```C
-#define __HEAD		.section	".head.text","ax"
+#define __INIT		.section	".init.text","ax"
 ```
 
-We can see definition of this section in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) linker script:
+The `.init.text` section contains code that is executed only during the early stages of kernel startup. Once initialization is complete, this memory can be reclaimed because the code in this section is no longer needed. The layout of this section is described in the kernel linker script which is used during the compilation and linking of the kernel. We can find the corresponding definition in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) linker script:
 
-```
-.text : AT(ADDR(.text) - LOAD_OFFSET) {
-	_text = .;
-	...
-	...
-	...
-} :text = 0x9090
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/vmlinux.lds.S#L217-L217 -->
+```linker-script
+	INIT_TEXT_SECTION(PAGE_SIZE)
 ```
 
-The ADDR keyword above returns the absolute address (here means virtual address) of the named section. The AT keyword above specifies the load address (here means physical address) of the section. The full syntax of section definition is defined in the [Using ld The GNU linker](https://ftp.gnu.org/old-gnu/Manuals/ld-2.9.1/html_node/ld_21.html). 
+The `INIT_TEXT_SECTION` macro defined in [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) and looks like this:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/asm-generic/vmlinux.lds.h#L1154-L1160 -->
+```C
+#define INIT_TEXT_SECTION(inittext_align)				\
+	. = ALIGN(inittext_align);					\
+	.init.text : AT(ADDR(.init.text) - LOAD_OFFSET) {		\
+		_sinittext = .;						\
+		INIT_TEXT						\
+		_einittext = .;						\
+	}
+```
+
+This macro defines the `.init.text` section and its memory location. The linker first aligns the section to the page size boundary (4096 bytes) and then places all initialization code between the `_sinittext` and `_einittext` symbols. Each section can have at least two addresses associated with it:
+
+- `VMA` or virtual memory address - an address of a section in runtime
+- `LMA` or load memory address - where a section must be placed in a binary
+
+The `ADDR` directive in the linker script above, returns `VMA` or virtual memory address of the `.init.text` section assigned to this section during linking. We can see it using the following command:
+
+```bash
+objdump -h vmlinux | grep -E "(Idx Name|init\.text)"
+Idx Name          Size      VMA               LMA               File off  Algn
+ 19 .init.text    000af4c4  ffffffff83ce7000  0000000003ce7000  02ee7000  2**5
+```
+
+The `AT` directive tells the linker where the section should be placed in the kernel image. The `LOAD_OFFSET` represents the base of the kernel virtual address space and equal to `0xffffffff80000000`. In other words, the section is linked to execute at a high kernel virtual address, but the loader places it in memory at a lower physical address. Subtracting the `LOAD_OFFSET` converts the virtual address assigned by the linker into the correct load address used during early boot.
+
+If you are interested to know more details about the linker script syntax and keywords, you can take a look at the [official GNU linker](https://ftp.gnu.org/old-gnu/Manuals/ld-2.9.1/html_node/ld_21.html) documentation.
+
+At this point, we know where the kernel's entry point is located. But how do we know that the entry point of the kernel is `startup_64` and not something else? From the previous chapter we already know that the kernel image was decompressed at the `0x1000000` adddress, at least if the address randomization was disabled. Although the kernels' entry point is not in the beginning of the kernel image, but has some offset from it. We can check it using the `readelf` utility:
+
+```bash
+readelf -h vmlinux | grep "Entry point address"
+  Entry point address:               0x2e9f1b0
+```
+
+This is the offset of the kernel's entry point and where the kernel jumps after the decompression. You can remember that this offset was returned from the `parse_elf` function in [arc/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c):
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/misc.c#L331-L331 -->
+```C
+	return ehdr.e_entry - LOAD_PHYSICAL_ADDR;
+```
+
+It was added to the base address of the decompression buffer after the kernel was decompressed in the `extract_kernel` function:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/misc.c#L536-L536 -->
+```C
+	return output + entry_offset;
+```
+
+Now let's  check the address of the `startup_64` symbol to be sure that it is the entry point:
+
+```bash
+printf "0x%x\n" $(( $(nm vmlinux | grep -w "startup_64" | cut -d' ' -f1 | sed 's/^/0x/') - 0xffffffff80000000 ))
+0x2e9f1b0
+```
+
+The `startup_64` has the same address which we have seen above in the output of the `readelf`. Now when we are sure that we are really found the correct entry point of the Linux kernel, let's take a look at the first instructions executed there.
+
+The very first instruction that we can see is:
+
+<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L59-L59 -->
+```assembly
+	mov	%rsi, %r15
+```
+
+This instruction stores the pointer to the `boot_params` structure in the `r15` register to preserve it for later use.
+
+After the `boot_params` pointer is handled, the next step is the stack setup:
+
+<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L62-L62 -->
+```assembly
+	leaq	__top_init_kernel_stack(%rip), %rsp
+```
+
+This instruction loads the address of `__top_init_kernel_stack` into the `rsp` register, which is the stack pointer in 64-bit mode. We can find the definition of the `__top_init_kernel_stack` in the same [linker script]() that we already saw above:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/vmlinux.lds.S#L183-L183 -->
+```linker-script
+		__top_init_kernel_stack = __end_init_stack - TOP_OF_KERNEL_STACK_PADDING - PTREGS_SIZE;
+```
+
+The top of the stack is located at the address specified by the symbol `__end_init_stack` which is defined in the `.data` section of the kernel:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/vmlinux.lds.S#L183-L183 -->
+```C
+#define INIT_TASK_DATA(align)						\
+	. = ALIGN(align);						\
+	__start_init_stack = .;						\
+	init_thread_union = .;						\
+	init_stack = .;							\
+	KEEP(*(.data..init_thread_info))				\
+	. = __start_init_stack + THREAD_SIZE;				\
+	__end_init_stack = .;
+```
+
+The top of the stack is at the `__end_init_stack` address minus:
+
+- The padding defined by the `TOP_OF_KERNEL_STACK_PADDING` which for this moment is reserved for [Intel FRED](https://www.intel.com/content/www/us/en/content-details/779982/flexible-return-and-event-delivery-fred-specification.html)
+- The registers which pushed on the top of the stack during interrupt handling
+
+The size of the init stack is `16384` bytes.
+
+After this instruction executes, the early kernel code has a valid stack and can continue with further initialization:
+
+<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L69-L72 -->
+```assembly
+	movl	$MSR_GS_BASE, %ecx
+	xorl	%eax, %eax
+	xorl	%edx, %edx
+	wrmsr
+```
+
+This code writes a value to a [model-specific register](https://en.wikipedia.org/wiki/Model-specific_register). These registers are special CPU registers used to control various processor features and are accessed with the `rdmsr` (to read a value from a register) and wrmsr (to write a value to a register) instructions. In our case, the `wrmsr` instruction writes a 64-bit value to an MSR specified in the `ecx` register. The value itself is taken from the `edx:eax` register pair. As a result of the code above, the `gs` base register is initialized to zero.
+
+This register plays a very important role. The `gs` segment is used for accessing [per-CPU data structures](../Concepts/linux-cpu-1.md). Clearing it here ensures that the register starts in a known state before the kernel sets up the proper per-CPU base during initialization.
+
+## Setup of the kernel GDT
+
+The next step is the setup of the kernel [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table). Yes, yes. I can imagine how you'll exclaim - how, again? Yes, again. The Global Descriptor Table (specified by the `gdt64` symbol) that we saw in the part about the [Linux kernel boot process](../Booting/linux-bootstrap-5.md) is a temporary table used only during decompression. At this moment, the kernel will load per-CPU Global Descriptor Table defined in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c), which contains the full set of the segments needed by the kernel.
+
+According to the [Intel® 64 and IA-32 Architectures Software Developer’s Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html):
+
+> In 64-bit mode, segmentation is generally (but not completely) disabled, creating a flat 64-bit linear-address space. The processor treats the segment base of CS, DS, ES, SS as zero, creating a linear address that is equal to the effective address.
+
+Despite this, the kernel loads the following segment descriptors:
+
+- `GDT_ENTRY_KERNEL_CS` - The kernel code segment.
+- `GDT_ENTRY_KERNEL_DS` - The kernel data segment, mainly used for stack access.
+- `GDT_ENTRY_KERNEL32_CS` - The 32-bit kernel segment used when switching to protected mode, for example during reboot, switching between four-level and five-level page tables, or booting secondary CPUs.
+- `GDT_ENTRY_DEFAULT_USER_CS` - The userspace code segment.
+- `GDT_ENTRY_DEFAULT_USER_DS` - The userspace data segment, used for stack and data segment access.
+- `GDT_ENTRY_DEFAULT_USER32_CS` - The 32-bit userspace segment used for running 32-bit userspace programs.
+
+The main reason to load these descriptors is how they are used in the long mode. Despite the base and limit values of the code segment are ignored and in general are not used any more for address calculations, the other fields functions normally, for example the checks of the privileges are still executed.
+
+The other two reasons to reload the Global Descriptor Table are:
+
+- Each CPU needs its own GDT because each CPU requires its own TSS descriptor, and the TSS contains per-CPU data such as the kernel stack pointer and Interrupt Stack Table entries
+- The current GDT resides at low identity-mapped addresses, which will soon be unmapped and become userspace memory
+
+The loading of the new Global Descriptor table performed by the:
+
+<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L62-L62 -->
+```assembly
+	call	__pi_startup_64_setup_gdt_idt
+```
+
+The one interesting moment about this function is that you will not find the definition of this function if you will try "to grep" the Linux kernel source code:
+
+```bash
+rg __pi_startup_64_setup_gdt_idt
+arch/x86/kernel/head_64.S
+74:	call	__pi_startup_64_setup_gdt_idt
+```
+
+The actual definition of this function we can find in [arch/x86/boot/startup/gdt_idt.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/startup/gdt_idt.c), but it will be without the `__pi_` prefix:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/startup/gdt_idt.c#L49-L49 -->
+```C
+void __init startup_64_setup_gdt_idt(void)
+```
+
+All symbols from this directory prefixed with the `__pi_` prefix using `objcopy`:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/startup/Makefile#L42-L49 -->
+```make
+# Confine the startup code by prefixing all symbols with __pi_ (for position
+# independent). This ensures that startup code can only call other startup
+# code, or code that has explicitly been made accessible to it via a symbol
+# alias.
+#
+$(obj)/%.pi.o: OBJCOPYFLAGS := --prefix-symbols=__pi_
+$(obj)/%.pi.o: $(obj)/%.o FORCE
+	$(call if_changed,objcopy)
+```
+
+This is done to prevent compiler to generate any absolute address references. As you can remember from the last parts of the previous chapter, the kernel uses identity-mapping page tables for this moment. This page tables map 1:1 the first four gigabytes of memory. From other side, the kernel is linked to the high memory virtual addresses strting from the `0xffffffff80000000` address. In this case, any absolute address reference would fail.
+
+Now let's take a closer look at the `startup_64_setup_gdt_idt` function:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/startup/gdt_idt.c#L49-L71 -->
+```C
+void __init startup_64_setup_gdt_idt(void)
+{
+	struct gdt_page *gp = rip_rel_ptr((void *)(__force unsigned long)&gdt_page);
+	void *handler = NULL;
+
+	struct desc_ptr startup_gdt_descr = {
+		.address = (unsigned long)gp->gdt,
+		.size    = GDT_SIZE - 1,
+	};
+
+	/* Load GDT */
+	native_load_gdt(&startup_gdt_descr);
+
+	/* New GDT is live - reload data segment registers */
+	asm volatile("movl %%eax, %%ds\n"
+		     "movl %%eax, %%ss\n"
+		     "movl %%eax, %%es\n" : : "a"(__KERNEL_DS) : "memory");
+
+	if (IS_ENABLED(CONFIG_AMD_MEM_ENCRYPT))
+		handler = rip_rel_ptr(vc_no_ghcb);
+
+	startup_64_load_idt(handler);
+}
+```
+
+This function loads the new Global Descriptor Table using the `lgdt` instruction which we already saw in the previous chapter. The Global Descriptor Table is specified with the `gdt_page` which provides the memory descritpors that we mentioned above:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/cpu/common.c#L210-L225 -->
+```C
+DEFINE_PER_CPU_PAGE_ALIGNED(struct gdt_page, gdt_page) = { .gdt = {
+#ifdef CONFIG_X86_64
+	/*
+	 * We need valid kernel segments for data and code in long mode too
+	 * IRET will check the segment types  kkeil 2000/10/28
+	 * Also sysret mandates a special GDT layout
+	 *
+	 * TLS descriptors are currently at a different place compared to i386.
+	 * Hopefully nobody expects them at a fixed place (Wine?)
+	 */
+	[GDT_ENTRY_KERNEL32_CS]		= GDT_ENTRY_INIT(DESC_CODE32, 0, 0xfffff),
+	[GDT_ENTRY_KERNEL_CS]		= GDT_ENTRY_INIT(DESC_CODE64, 0, 0xfffff),
+	[GDT_ENTRY_KERNEL_DS]		= GDT_ENTRY_INIT(DESC_DATA64, 0, 0xfffff),
+	[GDT_ENTRY_DEFAULT_USER32_CS]	= GDT_ENTRY_INIT(DESC_CODE32 | DESC_USER, 0, 0xfffff),
+	[GDT_ENTRY_DEFAULT_USER_DS]	= GDT_ENTRY_INIT(DESC_DATA64 | DESC_USER, 0, 0xfffff),
+	[GDT_ENTRY_DEFAULT_USER_CS]	= GDT_ENTRY_INIT(DESC_CODE64 | DESC_USER, 0, 0xfffff),
+```
+
+After the new Global Descriptor Table is loaded, the kernel traditionally reload the segment registers and load the new Interrupt Descriptor Table. For this moment, we will not pay too much attention on this table, since it is empty if the support for [AMD Secure Memory Encryption](https://www.amd.com/en/developer/sev.html) is not enabled.
+
+Since the kernel loaded the new Global Descriptor Table, the next action is to reload the code segment register to use the __KERNEL_CS selector from the new GDT:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L77-L80 -->
+```assembly
+	pushq	$__KERNEL_CS
+	leaq	.Lon_kernel_cs(%rip), %rax
+	pushq	%rax
+	lretq
+```
+
+The `lretq` instruction pops two values from the stack:
+
+- The first into `rip` register
+- The second into `cs` register
+
+After execution, the CPU continues at `.Lon_kernel_cs` symbol, ensuring the kernel is running with the correct code segment from its own GDT.
+
+TODO
 
 Besides the definition of the `.text` section, we can understand default virtual and physical addresses from the linker script. Note that address of the `_text` is location counter which is defined as:
 
