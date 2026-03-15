@@ -255,7 +255,7 @@ hexdump -C /tmp/dump | grep MZ
 
 Linux kernel image starts from `4D 5A` bytes as you may see in the beginning of the kernel setup code:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L42-46 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L42-L46 -->
 ```assembly
 	.code16
 	.section ".bstext", "ax"
