@@ -1,5 +1,4 @@
-Kernel initialization. Part 2.
-================================================================================
+# Linux kernel initialization - Part 2
 
 Early interrupt and exception handling
 --------------------------------------------------------------------------------
