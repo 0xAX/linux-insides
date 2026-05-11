@@ -212,7 +212,7 @@ void __init startup_64_setup_gdt_idt(void)
 
 The `gdt_page` itself is defined in [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c) and contains the segment descriptors we mentioned above:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/cpu/common.c#L210-L225 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/cpu/common.c#L211-L226 -->
 ```C
 DEFINE_PER_CPU_PAGE_ALIGNED(struct gdt_page, gdt_page) = { .gdt = {
 #ifdef CONFIG_X86_64
