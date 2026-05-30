@@ -151,7 +151,7 @@ After getting the video mode set by the bootloader, we can see resetting the hea
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-If you have read [part 2](./linux-bootstrap-2.md#kernel-booting-process-part-2), you should remember the initialization of the heap memory area. This memory area starts right after the end of [BSS](https://en.wikipedia.org/wiki/.bss) and lasts till the stack.
+If you have read [part 2](./linux-bootstrap-2.md), you should remember the initialization of the heap memory area. This memory area starts right after the end of [BSS](https://en.wikipedia.org/wiki/.bss) and lasts till the stack.
 
 The kernel setup code provides a couple of utility macros and functions for managing the early heap. Let's take a look at some of them, especially at those relevant for this chapter.
 
