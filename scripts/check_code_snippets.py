@@ -22,7 +22,7 @@ def __fetch_raw__(source: str) -> str:
     r = requests.get(source, timeout=5.0)
     return r.text
 
-def __handle_md__(md: str):
+def __handle_md__(md: str, path: str):
     in_code = False
     code = ''
     content = ''
@@ -49,7 +49,7 @@ def __handle_md__(md: str):
 
         if code != '':
             if code.rstrip() != content:
-                print("Error in", sys.argv[1])
+                print("Error in", path)
                 print("Code in book:")
                 print(code)
                 print("Code from github:")
@@ -61,9 +61,15 @@ def __handle_md__(md: str):
             continue
 
 def __main__():
+    path = ''
     md_files = []
 
-    for root, _dirs, files in os.walk(sys.argv[1]):
+    if len(sys.argv) == 1:
+        path = '.'
+    else:
+        path = sys.argv[1]
+
+    for root, _dirs, files in os.walk(path):
         for name in files:
             if name.endswith('.md'):
                 md_files.append(os.path.join(root, name))
@@ -78,7 +84,7 @@ def __main__():
         with open(md, "r", encoding="utf-8") as f:
             md = f.read()
 
-        __handle_md__(md)
+        __handle_md__(md, path)
 
 if __name__ == "__main__":
     __main__()
