@@ -11,6 +11,11 @@ Each part of this chapter focuses on one boot phase. Read in order the first tim
 ```bash
 git clone git@github.com:torvalds/linux.git
 ```
+You can also obtain the source code through the Github CLI:
+
+```bash
+gh repo clone torvalds/linux
+```
 
 ## Notation used
 
