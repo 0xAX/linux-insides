@@ -230,7 +230,7 @@ pid_hash = alloc_large_system_hash("PID", sizeof(*pid_hash), 0, 18,
 ```
 
 The number of elements of the `pid_hash` depends on the `RAM` configuration, but it can be between `2^4` and `2^12`. The `pidhash_init` computes the size
-and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h). The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
+and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h)). The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
 
 The result we can see in the `dmesg` output:
 
