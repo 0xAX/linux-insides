@@ -44,4 +44,4 @@ During reading this and other chapters, you may encounter special notation:
 
 ## Kernel version
 
-This chapter corresponds to `Linux kernel v7.0.0`.
+This chapter corresponds to `Linux kernel v7.1.0`.
