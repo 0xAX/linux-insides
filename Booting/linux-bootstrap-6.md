@@ -37,7 +37,7 @@ Before the kernel's decompressor actually begins to decompress the kernel image,
 
 This function is defined in [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c) and does nothing if the `kaslr` option is not passed to the kernel command line:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L861-L872 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L862-L873 -->
 ```C
 void choose_random_location(unsigned long input,
 			    unsigned long input_size,
@@ -141,7 +141,7 @@ At this point, we have examined all the parameters passed to the `choose_random_
 
 As it was mentioned above, the first thing that this function does is check whether ASLR disabled using the `nokaslr` option in the kernel's command line:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L869-L872 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L870-L873 -->
 ```C
 	if (cmdline_find_option_bool("nokaslr")) {
 		warn("KASLR disabled: 'nokaslr' on cmdline.");
@@ -153,14 +153,14 @@ If this option is specified in the kernel command line, the function does nothin
 
 The very first step is to set a mark in the boot parameters that ASLR is enabled. This is done by setting a specific flag in the kernel’s boot header:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L874-L874 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L875-L875 -->
 ```C
 	boot_params_ptr->hdr.loadflags |= KASLR_FLAG;
 ```
 
 After marking that ASLR is enabled, the next task is to determine the upper memory limit which system can use:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L876-L879 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L877-L880 -->
 ```C
 	if (IS_ENABLED(CONFIG_X86_32))
 		mem_limit = KERNEL_IMAGE_SIZE;
@@ -170,6 +170,7 @@ After marking that ASLR is enabled, the next task is to determine the upper memo
 
 Since we consider only `x86_64` systems, the memory limit is `MAXMEM`, which is a macro defined in [arch/x86/include/asm/pgtable_64_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/pgtable_64_types.h):
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/pgtable_64_types.h#L96-L96
 ```C
 #define MAXMEM			(1UL << MAX_PHYSMEM_BITS)
 ```
@@ -182,7 +183,7 @@ With the `mem_limit` value set, the decompressor and kernel code responsible for
 
 The next step in the randomization process is to build a map of forbidden memory regions to prevent the kernel image from overwriting memory areas that are already in use. These may include, for example, the [initial ramdisk](https://en.wikipedia.org/wiki/Initial_ramdisk) or the kernel command line. To gather this information, we use this function:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L882-L882 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L883-L883 -->
 ```C
 	mem_avoid_init(input, input_size, *output);
 ```
@@ -214,7 +215,7 @@ enum mem_avoid_index {
 
 Let's look at the implementation of the `mem_avoid_init` function. As we know, the main goal of this function is to store information about reserved memory regions to avoid them when choosing a random address for the kernel image. There are no complex calculations in this function, and most of the reserved memory areas are known, as they are set by the bootloader or were already calculated at the previous steps during kernel setup. A typical example of the process of gathering information about the memory reserved regions looks like this:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L369-L374 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L370-L375 -->
 ```C
 	initrd_start  = (u64)boot_params_ptr->ext_ramdisk_image << 32;
 	initrd_start |= boot_params_ptr->hdr.ramdisk_image;
@@ -245,7 +246,7 @@ You can remember that at this point, the kernel uses identity-mapped page tables
 
 Before generating any random offset, the decompressor determines the lowest possible base address that the kernel can use:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L889-L891 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L890-L892 -->
 ```C
 	min_addr = min(*output, 512UL << 20);
 	/* Make sure minimum is aligned. */
@@ -254,7 +255,7 @@ Before generating any random offset, the decompressor determines the lowest poss
 
 This address is the minimal aligned value between `512` megabytes and the starting address of the output buffer passed to the `extract_kernel` function. After obtaining this value, the kernel calls the next function, which returns a random physical address:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L894-L901 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L895-L902 -->
 ```C
 	random_addr = find_random_phys_addr(min_addr, output_size);
 	if (!random_addr) {
@@ -268,7 +269,7 @@ This address is the minimal aligned value between `512` megabytes and the starti
 
 The `find_random_phys_addr` function is defined in the same [arch/x86/boot/compressed/kaslr.c](https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c) source code file as the `choose_random_location` function. This function starts from the sanity checks. The first check is that the kernel image will not get behind the memory limit:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L812-L813 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L813-L814 -->
 ```C
 	if (minimum + image_size > mem_limit)
 		return 0;
@@ -276,7 +277,7 @@ The `find_random_phys_addr` function is defined in the same [arch/x86/boot/compr
 
 The next check is to verify that the number of memory regions specified via `memmap` kernel command line option is not excessive:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L816-L819 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L817-L820 -->
 ```C
 	if (memmap_too_large) {
 		debug_putstr("Aborted memory entries scan (more than 4 memmap= args)!\n");
@@ -286,7 +287,7 @@ The next check is to verify that the number of memory regions specified via `mem
 
 After these sanity checks, the decompressor code begins scanning the system's available memory regions to find suitable candidates for the randomized address to decompress the kernel image. This is done with the help of the following functions:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L825-L828 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L826-L829 -->
 ```C
 	if (!process_kho_entries(minimum, image_size) &&
 	    !process_efi_entries(minimum, image_size))
@@ -301,7 +302,7 @@ The scanning consists of three potential stages:
 
 All the memory regions that were found and accepted as suitable will be stored in the `slot_areas` array represented by the following structure:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L452-L455 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L453-L456 -->
 ```C
 struct slot_area {
 	u64 addr;
@@ -311,7 +312,7 @@ struct slot_area {
 
 The kernel will select a random index from this array to decompress kernel to. The selection of the random index happens in the `slots_fetch_random` function:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L527-L549 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L528-L550 -->
 ```C
 static u64 slots_fetch_random(void)
 {
@@ -350,7 +351,7 @@ After obtaining the random value, the code goes through the `slot_areas` array t
 
 The kernel checks the result of the `find_random_phys_addr` function and prints a warning message if this operation was not successful, otherwise it assigned the obtained address to the `output`:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L895-L901 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L896-L902 -->
 ```C
 	if (!random_addr) {
 		warn("Physical KASLR disabled: no suitable memory region!");
@@ -367,7 +368,7 @@ At this point, the kernel has successfully picked a random physical address. The
 
 With the physical address chosen, the decompressor now knows where to decompress the kernel image. Once the decompressed kernel starts running, it switches from the early-boot page tables to the full paging setup. The next and last step is to randomize the virtual base address:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L905-L907 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L906-L908 -->
 ```C
 	if (IS_ENABLED(CONFIG_X86_64))
 		random_addr = find_random_virt_addr(LOAD_PHYSICAL_ADDR, output_size);
@@ -376,7 +377,7 @@ With the physical address chosen, the decompressor now knows where to decompress
 
 The function `find_random_virt_addr` is located in the same source code file and looks like this:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L840-L855 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L841-L856 -->
 ```C
 static unsigned long find_random_virt_addr(unsigned long minimum,
 					   unsigned long image_size)
