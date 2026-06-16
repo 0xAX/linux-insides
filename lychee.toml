@@ -12,7 +12,8 @@ exclude = [
     "twitter\\.com",
     "x\\.com",
     "osdev\\.org",
-    "intel.com/*"
+    "intel.com/*",
+    "gnu\\.org"
 ]
 
 # Accept status codes as valid
