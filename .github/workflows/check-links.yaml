@@ -19,7 +19,7 @@ jobs:
       - ubuntu-22.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Check links with lychee
         uses: lycheeverse/lychee-action@v2
