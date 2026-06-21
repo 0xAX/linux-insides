@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="360px" viewBox="0 0 820 360"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box   { fill: #fdf6e3; stroke: #000000; stroke-width: 1; }
+    .hi    { fill: #eee8d5; stroke: none; }
+    .div   { stroke: #000000; stroke-width: 1; }
+    .dash  { stroke: #000000; stroke-width: 1; stroke-dasharray: 5 3; }
+    .ttl   { fill: #000000; font-size: 13px; text-anchor: middle; font-weight: bold; }
+    .lbl   { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .lblL  { fill: #000000; font-size: 12px; text-anchor: end; }
+    .lblR  { fill: #000000; font-size: 12px; text-anchor: start; }
+    .val   { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace; }
+    .valL  { fill: #000000; font-size: 12px; text-anchor: end;    font-family: monospace; }
+    .valR  { fill: #000000; font-size: 12px; text-anchor: start;  font-family: monospace; }
+    .dim   { fill: #000000; font-size: 12px; text-anchor: middle; }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#000000"/>
+    </marker>
+  </defs>
+
+  <!-- ===== column titles ===== -->
+  <text class="ttl" x="240" y="40">Virtual address space</text>
+  <text class="ttl" x="575" y="40">Physical memory</text>
+
+  <!-- ===== virtual bar (direct mapping window) ===== -->
+  <rect class="box" x="160" y="60" width="160" height="240"/>
+  <!-- offset highlight: from __PAGE_OFFSET up to the faulting address -->
+  <rect class="hi"  x="161" y="200" width="158" height="99"/>
+  <!-- faulting address marker -->
+  <line class="dash" x1="160" y1="200" x2="320" y2="200"/>
+
+  <text class="lbl" x="240" y="120">direct mapping of</text>
+  <text class="lbl" x="240" y="136">all physical memory</text>
+  <text class="dim" x="240" y="254">offset</text>
+
+  <!-- faulting address label (left) -->
+  <text class="lblL" x="150" y="190">faulting address</text>
+  <text class="valL" x="150" y="206">0xffff888001000000</text>
+
+  <!-- __PAGE_OFFSET label (base of the window) -->
+  <text class="lbl"  x="240" y="318">__PAGE_OFFSET</text>
+  <text class="val"  x="240" y="334">0xffff888000000000</text>
+
+  <!-- ===== physical bar ===== -->
+  <rect class="box" x="495" y="60" width="160" height="240"/>
+  <rect class="hi"  x="496" y="200" width="158" height="99"/>
+  <line class="dash" x1="495" y1="200" x2="655" y2="200"/>
+
+  <text class="dim" x="575" y="254">same offset</text>
+
+  <!-- physaddr label (right) -->
+  <text class="lblR" x="665" y="190">physical address</text>
+  <text class="valR" x="665" y="206">0x0000000001000000</text>
+
+  <!-- physical 0 at the base -->
+  <text class="lbl"  x="575" y="318">physical address 0</text>
+  <text class="val"  x="575" y="334">0x0000000000000000</text>
+
+  <!-- ===== mapping arrows ===== -->
+  <!-- base of window maps to physical 0 -->
+  <line class="div" x1="322" y1="299" x2="493" y2="299" marker-end="url(#arrow)"/>
+  <text class="lbl" x="407" y="293">maps to</text>
+  <!-- faulting address maps to its physical address -->
+  <line class="div" x1="322" y1="200" x2="493" y2="200" marker-end="url(#arrow)"/>
+  <text class="lbl" x="407" y="194">maps to</text>
+</svg>

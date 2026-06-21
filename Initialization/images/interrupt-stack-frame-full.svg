@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="540px" height="720px" viewBox="0 0 540 720"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box     { fill: #fdf6e3; stroke: #000000; stroke-width: 1; }
+    .div     { stroke: #000000; stroke-width: 1; }
+    .divthick{ stroke: #000000; stroke-width: 2; }
+    .reg     { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .desc    { fill: #000000; font-size: 12px; text-anchor: start; }
+    .addr    { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .off     { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .ptr     { fill: #000000; font-size: 12px; text-anchor: middle; font-weight: bold; }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 z" fill="#000000"/>
+    </marker>
+  </defs>
+
+  <!-- address direction -->
+  <text class="addr" x="200" y="40">higher addresses</text>
+  <text class="addr" x="200" y="698">lower addresses</text>
+
+  <!-- offset column header -->
+  <text class="off" x="60" y="40">offset</text>
+
+  <!-- frame box: 21 slots of struct pt_regs -->
+  <rect class="box" x="120" y="50" width="160" height="630"/>
+  <line class="div"      x1="120" y1="80"  x2="280" y2="80"/>
+  <line class="div"      x1="120" y1="110" x2="280" y2="110"/>
+  <line class="div"      x1="120" y1="140" x2="280" y2="140"/>
+  <line class="div"      x1="120" y1="170" x2="280" y2="170"/>
+  <line class="div"      x1="120" y1="200" x2="280" y2="200"/>
+  <line class="divthick" x1="120" y1="230" x2="280" y2="230"/>
+  <line class="div"      x1="120" y1="260" x2="280" y2="260"/>
+  <line class="div"      x1="120" y1="290" x2="280" y2="290"/>
+  <line class="div"      x1="120" y1="320" x2="280" y2="320"/>
+  <line class="div"      x1="120" y1="350" x2="280" y2="350"/>
+  <line class="div"      x1="120" y1="380" x2="280" y2="380"/>
+  <line class="div"      x1="120" y1="410" x2="280" y2="410"/>
+  <line class="div"      x1="120" y1="440" x2="280" y2="440"/>
+  <line class="div"      x1="120" y1="470" x2="280" y2="470"/>
+  <line class="div"      x1="120" y1="500" x2="280" y2="500"/>
+  <line class="div"      x1="120" y1="530" x2="280" y2="530"/>
+  <line class="div"      x1="120" y1="560" x2="280" y2="560"/>
+  <line class="div"      x1="120" y1="590" x2="280" y2="590"/>
+  <line class="div"      x1="120" y1="620" x2="280" y2="620"/>
+  <line class="div"      x1="120" y1="650" x2="280" y2="650"/>
+
+  <!-- register names -->
+  <text class="reg" x="200" y="69">%ss</text>
+  <text class="reg" x="200" y="99">%rsp</text>
+  <text class="reg" x="200" y="129">%rflags</text>
+  <text class="reg" x="200" y="159">%cs</text>
+  <text class="reg" x="200" y="189">%rip</text>
+  <text class="reg" x="200" y="219">error code</text>
+  <text class="reg" x="200" y="249">%rdi</text>
+  <text class="reg" x="200" y="279">%rsi</text>
+  <text class="reg" x="200" y="309">%rdx</text>
+  <text class="reg" x="200" y="339">%rcx</text>
+  <text class="reg" x="200" y="369">%rax</text>
+  <text class="reg" x="200" y="399">%r8</text>
+  <text class="reg" x="200" y="429">%r9</text>
+  <text class="reg" x="200" y="459">%r10</text>
+  <text class="reg" x="200" y="489">%r11</text>
+  <text class="reg" x="200" y="519">%rbx</text>
+  <text class="reg" x="200" y="549">%rbp</text>
+  <text class="reg" x="200" y="579">%r12</text>
+  <text class="reg" x="200" y="609">%r13</text>
+  <text class="reg" x="200" y="639">%r14</text>
+  <text class="reg" x="200" y="669">%r15</text>
+
+  <!-- offsets from %rsp (%r15 at +0) -->
+  <text class="off" x="60" y="69">+160</text>
+  <text class="off" x="60" y="99">+152</text>
+  <text class="off" x="60" y="129">+144</text>
+  <text class="off" x="60" y="159">+136</text>
+  <text class="off" x="60" y="189">+128</text>
+  <text class="off" x="60" y="219">+120</text>
+  <text class="off" x="60" y="249">+112</text>
+  <text class="off" x="60" y="279">+104</text>
+  <text class="off" x="60" y="309">+96</text>
+  <text class="off" x="60" y="339">+88</text>
+  <text class="off" x="60" y="369">+80</text>
+  <text class="off" x="60" y="399">+72</text>
+  <text class="off" x="60" y="429">+64</text>
+  <text class="off" x="60" y="459">+56</text>
+  <text class="off" x="60" y="489">+48</text>
+  <text class="off" x="60" y="519">+40</text>
+  <text class="off" x="60" y="549">+32</text>
+  <text class="off" x="60" y="579">+24</text>
+  <text class="off" x="60" y="609">+16</text>
+  <text class="off" x="60" y="639">+8</text>
+  <text class="off" x="60" y="669">+0</text>
+
+  <!-- descriptions for the CPU-pushed exception frame -->
+  <text class="desc" x="296" y="69">old stack segment</text>
+  <text class="desc" x="296" y="99">old stack pointer</text>
+  <text class="desc" x="296" y="129">flags register</text>
+  <text class="desc" x="296" y="159">old code segment</text>
+  <text class="desc" x="296" y="189">return instruction pointer</text>
+  <text class="desc" x="296" y="219">error code (0 if none)</text>
+
+  <!-- bracket grouping the general purpose registers -->
+  <line class="div" x1="293" y1="234" x2="300" y2="234"/>
+  <line class="div" x1="300" y1="234" x2="300" y2="676"/>
+  <line class="div" x1="293" y1="676" x2="300" y2="676"/>
+  <text class="desc" x="308" y="449">general-purpose registers</text>
+  <text class="desc" x="308" y="465">pushed by the handler</text>
+
+  <!-- stack pointer after all registers are saved -->
+  <text class="ptr" x="97" y="657">%rsp</text>
+  <line class="div" x1="78" y1="665" x2="116" y2="665" marker-end="url(#arrow)"/>
+</svg>

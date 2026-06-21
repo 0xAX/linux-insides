@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="760px" height="275px" viewBox="0 0 760 275"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1; }
+    .div  { stroke: #000000; stroke-width: 1; }
+    .name { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .bit  { fill: #000000; font-size: 11px; }
+    .bitL { fill: #000000; font-size: 11px; text-anchor: start; }
+    .bitR { fill: #000000; font-size: 11px; text-anchor: end; }
+  </style>
+
+  <!-- Row 1 : bits 127..96 (Reserved) -->
+  <text class="bitL" x="22"  y="13">127</text>
+  <text class="bitR" x="738" y="13">96</text>
+  <rect class="box" x="20" y="18" width="720" height="44"/>
+  <text class="name" x="380" y="44">Reserved</text>
+
+  <!-- Row 2 : bits 95..64 (Offset 63..32) -->
+  <text class="bitL" x="22"  y="77">95</text>
+  <text class="bitR" x="738" y="77">64</text>
+  <rect class="box" x="20" y="82" width="720" height="44"/>
+  <text class="name" x="380" y="108">Offset 63..32</text>
+
+  <!-- Row 3 : bits 63..32 -->
+  <text class="bitL" x="22"  y="141">63</text>
+  <text class="bitR" x="316" y="141">48</text>
+  <text class="bitL" x="323" y="141">47</text>
+  <text class="bitL" x="369" y="141">46</text>
+  <text class="bitL" x="425" y="141">44</text>
+  <text class="bitL" x="459" y="141">43</text>
+  <text class="bitL" x="529" y="141">39</text>
+  <text class="bitL" x="599" y="141">36</text>
+  <text class="bitL" x="633" y="141">35</text>
+  <text class="bitL" x="667" y="141">34</text>
+  <text class="bitR" x="738" y="141">32</text>
+  <rect class="box" x="20" y="146" width="720" height="50"/>
+  <!-- inner dividers -->
+  <line class="div" x1="320" y1="146" x2="320" y2="196"/>
+  <line class="div" x1="366" y1="146" x2="366" y2="196"/>
+  <line class="div" x1="422" y1="146" x2="422" y2="196"/>
+  <line class="div" x1="456" y1="146" x2="456" y2="196"/>
+  <line class="div" x1="526" y1="146" x2="526" y2="196"/>
+  <line class="div" x1="596" y1="146" x2="596" y2="196"/>
+  <line class="div" x1="630" y1="146" x2="630" y2="196"/>
+  <line class="div" x1="664" y1="146" x2="664" y2="196"/>
+  <!-- field labels -->
+  <text class="name" x="170" y="175">Offset 31..16</text>
+  <text class="name" x="343" y="175">P</text>
+  <text class="name" x="394" y="175">DPL</text>
+  <text class="name" x="439" y="175">0</text>
+  <text class="name" x="491" y="175">Type</text>
+  <text class="name" x="561" y="175">0 0 0</text>
+  <text class="name" x="613" y="175">0</text>
+  <text class="name" x="647" y="175">0</text>
+  <text class="name" x="702" y="175">IST</text>
+
+  <!-- Row 4 : bits 31..0 -->
+  <text class="bitL" x="22"  y="211">31</text>
+  <text class="bitR" x="376" y="211">16</text>
+  <text class="bitL" x="384" y="211">15</text>
+  <text class="bitR" x="738" y="211">0</text>
+  <rect class="box" x="20" y="216" width="720" height="44"/>
+  <line class="div" x1="380" y1="216" x2="380" y2="260"/>
+  <text class="name" x="200" y="242">Segment Selector</text>
+  <text class="name" x="560" y="242">Offset 15..0</text>
+</svg>

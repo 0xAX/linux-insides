@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="540px" height="250px" viewBox="0 0 540 250"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1; }
+    .div  { stroke: #000000; stroke-width: 1; }
+    .cell { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .lbl  { fill: #000000; font-size: 12px; text-anchor: start; }
+    .ttl  { fill: #000000; font-size: 12px; text-anchor: middle; }
+  </style>
+  <defs>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="#000000"/>
+    </marker>
+  </defs>
+
+  <!-- title -->
+  <text class="ttl" x="120" y="48">early_top_pgt</text>
+
+  <!-- the PGD: 512 entries -->
+  <rect class="box" x="40" y="60" width="160" height="160"/>
+  <line class="div" x1="40" y1="100" x2="200" y2="100"/>
+  <line class="div" x1="40" y1="140" x2="200" y2="140"/>
+  <line class="div" x1="40" y1="180" x2="200" y2="180"/>
+
+  <text class="cell" x="120" y="84">Entry 0</text>
+  <text class="cell" x="120" y="124">...</text>
+  <text class="cell" x="120" y="164">Entry 510</text>
+  <text class="cell" x="120" y="204">Entry 511</text>
+
+  <!-- annotation for the cleared entries -->
+  <text class="lbl" x="220" y="120">empty or identity mapping</text>
+
+  <!-- last entry points to the kernel image page table -->
+  <line class="div" x1="200" y1="200" x2="318" y2="200" marker-end="url(#arrow)"/>
+  <rect class="box" x="320" y="180" width="180" height="40"/>
+  <text class="cell" x="410" y="196">next page table</text>
+  <text class="cell" x="410" y="212">(maps the kernel image)</text>
+</svg>
