@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="520px" height="300px" viewBox="0 0 520 300"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1; }
+    .opt  { fill: #fdf6e3; stroke: #000000; stroke-width: 1; stroke-dasharray: 4 3; }
+    .div  { stroke: #000000; stroke-width: 1; }
+    .reg  { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .desc { fill: #000000; font-size: 12px; text-anchor: start; }
+    .addr { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .off  { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .ptr  { fill: #000000; font-size: 12px; text-anchor: middle; font-weight: bold; }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 z" fill="#000000"/>
+    </marker>
+  </defs>
+
+  <!-- address direction -->
+  <text class="addr" x="200" y="36">higher addresses</text>
+  <text class="addr" x="200" y="282">lower addresses</text>
+
+  <!-- offset column header -->
+  <text class="off" x="60" y="36">offset</text>
+
+  <!-- mandatory part of the frame: %ss .. %rip -->
+  <rect class="box" x="120" y="46" width="160" height="180"/>
+  <line class="div" x1="120" y1="82"  x2="280" y2="82"/>
+  <line class="div" x1="120" y1="118" x2="280" y2="118"/>
+  <line class="div" x1="120" y1="154" x2="280" y2="154"/>
+  <line class="div" x1="120" y1="190" x2="280" y2="190"/>
+
+  <!-- optional error code (only for some exceptions) -->
+  <rect class="opt" x="120" y="226" width="160" height="36"/>
+
+  <!-- register names -->
+  <text class="reg" x="200" y="68">%ss</text>
+  <text class="reg" x="200" y="104">%rsp</text>
+  <text class="reg" x="200" y="140">%rflags</text>
+  <text class="reg" x="200" y="176">%cs</text>
+  <text class="reg" x="200" y="212">%rip</text>
+  <text class="reg" x="200" y="248">error code</text>
+
+  <!-- offsets from %rsp (error code at +0) -->
+  <text class="off" x="60" y="68">+40</text>
+  <text class="off" x="60" y="104">+32</text>
+  <text class="off" x="60" y="140">+24</text>
+  <text class="off" x="60" y="176">+16</text>
+  <text class="off" x="60" y="212">+8</text>
+  <text class="off" x="60" y="248">+0</text>
+
+  <!-- stack pointer on entry to the handler -->
+  <text class="ptr" x="97" y="237">%rsp</text>
+  <line class="div" x1="78" y1="246" x2="116" y2="246" marker-end="url(#arrow)"/>
+
+  <!-- descriptions -->
+  <text class="desc" x="296" y="68">old stack segment</text>
+  <text class="desc" x="296" y="104">old stack pointer</text>
+  <text class="desc" x="296" y="140">flags register</text>
+  <text class="desc" x="296" y="176">old code segment</text>
+  <text class="desc" x="296" y="212">return instruction pointer</text>
+  <text class="desc" x="296" y="248">optional, only for some exceptions</text>
+
+</svg>

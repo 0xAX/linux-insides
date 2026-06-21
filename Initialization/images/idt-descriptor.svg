@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="760px" height="110px" viewBox="0 0 760 110"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1; }
+    .div  { stroke: #000000; stroke-width: 1; }
+    .name { fill: #000000; font-size: 12px; text-anchor: middle; }
+    .bitL { fill: #000000; font-size: 11px; text-anchor: start; }
+    .bitR { fill: #000000; font-size: 11px; text-anchor: end; }
+  </style>
+
+  <!-- bits 79..0 : IDTR pseudo-descriptor -->
+  <text class="bitL" x="22"  y="40">79</text>
+  <text class="bitR" x="592" y="40">16</text>
+  <text class="bitL" x="600" y="40">15</text>
+  <text class="bitR" x="738" y="40">0</text>
+
+  <rect class="box" x="20" y="45" width="720" height="50"/>
+  <line class="div" x1="596" y1="45" x2="596" y2="95"/>
+
+  <text class="name" x="308" y="75">Base Address (64 bits)</text>
+  <text class="name" x="668" y="75">Limit</text>
+</svg>
