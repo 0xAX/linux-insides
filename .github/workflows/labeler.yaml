@@ -1,0 +1,39 @@
+name: labeler
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+jobs:
+  sync-labels:
+    name: sync-labels
+    runs-on:
+      - ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+      - name: Sync labels from .github/labels.yml
+        uses: crazy-max/ghaction-github-labeler@v5
+        with:
+          yaml-file: .github/labels.yml
+          skip-delete: true
+
+  label-pr:
+    name: label-pr
+    runs-on:
+      - ubuntu-24.04
+    needs: sync-labels
+    steps:
+      - name: Apply labels
+        uses: actions/labeler@v5
+        with:
+          configuration-path: .github/labeler.yml
+          sync-labels: true
