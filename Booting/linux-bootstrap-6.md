@@ -399,7 +399,7 @@ static unsigned long find_random_virt_addr(unsigned long minimum,
 
 As we can see, this function uses the same `kaslr_get_random_long` call to get a random memory slot.
 
-At this point, both the physical and virtual base addresses are determined — randomized, aligned, and guaranteed to fit in available memory.
+At this point, both the physical and virtual base addresses are determined - randomized, aligned, and guaranteed to fit in available memory.
 
 ## Conclusion
 

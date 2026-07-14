@@ -18,12 +18,12 @@ The goal of this project is simple – to share knowledge about the Linux kernel
 - [ ] Memory management (pending v6.18.0 review)
 - [ ] Cgroups (pending v6.18.0 review)
 - [ ] SMP (pending v6.18.0 review)
-- [ ] Concepts (pending v6.18.0 review)
+- [ ] Kernel mechanisms (pending v6.18.0 review)
 - [ ] Data Structures in the Linux Kernel (pending v6.18.0 review)
-- [ ] Theory (pending v6.18.0 review)
+- [ ] x86 fundamentals (pending v6.18.0 review)
+- [ ] Toolchain and binaries (pending v6.18.0 review)
 - [ ] Initial ram disk (pending v6.18.0 review)
 - [ ] Misc (pending v6.18.0 review)
-- [ ] KernelStructures (pending v6.18.0 review)
 
 ## Requirements
 
