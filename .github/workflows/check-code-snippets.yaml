@@ -15,7 +15,7 @@ jobs:
   check-code-snippets:
     name: check-code-snippets
     runs-on:
-      - ubuntu-22.04
+      - ubuntu-24.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
