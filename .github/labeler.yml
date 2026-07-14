@@ -1,0 +1,83 @@
+area:booting:
+  - changed-files:
+    - any-glob-to-any-file: 'Booting/**'
+
+area:initialization:
+  - changed-files:
+    - any-glob-to-any-file: 'Initialization/**'
+
+area:interrupts:
+  - changed-files:
+    - any-glob-to-any-file: 'Interrupts/**'
+
+area:syscalls:
+  - changed-files:
+    - any-glob-to-any-file: 'SysCall/**'
+
+area:timers:
+  - changed-files:
+    - any-glob-to-any-file: 'Timers/**'
+
+area:sync-primitives:
+  - changed-files:
+    - any-glob-to-any-file: 'SyncPrim/**'
+
+area:mm:
+  - changed-files:
+    - any-glob-to-any-file: 'MM/**'
+
+area:cgroups:
+  - changed-files:
+    - any-glob-to-any-file: 'Cgroups/**'
+
+area:concepts:
+  - changed-files:
+    - any-glob-to-any-file: 'Concepts/**'
+
+area:data-structures:
+  - changed-files:
+    - any-glob-to-any-file: 'DataStructures/**'
+
+area:toolchain:
+  - changed-files:
+    - any-glob-to-any-file: 'Toolchain/**'
+
+area:x86:
+  - changed-files:
+    - any-glob-to-any-file: 'X86/**'
+
+area:misc:
+  - changed-files:
+    - any-glob-to-any-file: 'Misc/**'
+
+ci:
+  - changed-files:
+    - any-glob-to-any-file: '.github/**'
+
+tooling:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'scripts/**'
+      - 'Makefile'
+      - 'Dockerfile'
+      - 'lychee.toml'
+
+e-book:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'book.json'
+      - 'book-A5.json'
+      - 'cover.jpg'
+      - 'SUMMARY.md'
+      - 'Assets/**'
+
+meta:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'README.md'
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'CODEOWNERS'
+      - 'LICENSE'
+      - 'contributors.md'
+      - 'LINKS.md'

@@ -1,0 +1,156 @@
+# Label definitions synced to the repo by the labeler workflow.
+# Colors are 6-digit hex without the leading '#'.
+
+# Chapter areas
+
+- name: area:booting
+  color: "fff9c4"
+  description: "Relates to the Booting chapter"
+
+- name: area:initialization
+  color: "fff9c4"
+  description: "Relates to the Initialization chapter"
+
+- name: area:interrupts
+  color: "fff9c4"
+  description: "Relates to the Interrupts chapter"
+
+- name: area:syscalls
+  color: "fff9c4"
+  description: "Relates to the SysCall chapter"
+
+- name: area:timers
+  color: "fff9c4"
+  description: "Relates to the Timers chapter"
+
+- name: area:sync-primitives
+  color: "fff9c4"
+  description: "Relates to the SyncPrim chapter"
+
+- name: area:mm
+  color: "fff9c4"
+  description: "Relates to the MM (memory management) chapter"
+
+- name: area:cgroups
+  color: "fff9c4"
+  description: "Relates to the Cgroups chapter"
+
+- name: area:concepts
+  color: "fff9c4"
+  description: "Relates to the Concepts chapter"
+
+- name: area:data-structures
+  color: "fff9c4"
+  description: "Relates to the DataStructures chapter"
+
+- name: area:toolchain
+  color: "fff9c4"
+  description: "Relates to the Toolchain chapter"
+
+- name: area:x86
+  color: "fff9c4"
+  description: "Relates to the X86 chapter"
+
+- name: area:misc
+  color: "fff9c4"
+  description: "Relates to the Misc chapter"
+
+# Repository infrastructure
+
+- name: ci
+  color: "c5def5"
+  description: "CI and GitHub workflow changes"
+
+- name: tooling
+  color: "fbca04"
+  description: "Scripts, Makefile and other tooling changes"
+
+- name: e-book
+  color: "bfd4f2"
+  description: "Relates to exporting the book (PDF, ePub, etc.)"
+
+- name: meta
+  color: "ededed"
+  description: "README, contributing guidelines and other repository meta files"
+
+- name: dependencies
+  color: "0366d6"
+  description: "Pull requests that update a dependency file"
+
+- name: gitbook
+  color: "278450"
+  description: "Relates to GitBook rendering or configuration"
+
+- name: repo-usability
+  color: "f0fff0"
+  description: "Improves repository structure, tooling, or workflow"
+
+- name: structure
+  color: "64df89"
+  description: "The issue or PR related to a book structure"
+
+# Issue triage
+
+- name: inaccuracy
+  color: "d73a4a"
+  description: "Technical inaccuracy in the content"
+
+- name: outdated
+  color: "f9d0c4"
+  description: "Content is outdated and needs refreshing"
+
+- name: typo
+  color: "fef2c0"
+  description: "Spelling, grammar or formatting fixes"
+
+- name: enhancement
+  color: "119b0a"
+  description: "New content or improvement request"
+
+- name: question
+  color: "cc317c"
+  description: "Further information is requested or something is not fully clear"
+
+- name: discussion
+  color: "a83610"
+  description: "Open-ended discussion, no immediate action required"
+
+- name: need-clarification
+  color: "fff0f5"
+  description: "Requires more details from the author before proceeding"
+
+- name: wait-for-issue-creator
+  color: "fa8072"
+  description: "An author of an issue was asked for clarification but for some reasons disappeared"
+
+- name: todo
+  color: "deb887"
+  description: "Planned work not yet started"
+
+- name: duplicate
+  color: "cccccc"
+  description: "This issue or PR already exists"
+
+- name: good first issue
+  color: "7057ff"
+  description: "Good for newcomers"
+
+- name: help wanted
+  color: "f7b054"
+  description: "Extra attention or contribution is needed"
+
+- name: translation
+  color: "2272b7"
+  description: "Relates to translating the book into other languages"
+
+- name: links-validity
+  color: "f0fff0"
+  description: "Relates to valid content but wrong or outdated links"
+
+- name: not-a-topic-of-linux-insides
+  color: "9C4F3D"
+  description: "Out of scope for this book"
+
+- name: wontfix
+  color: "ee5811"
+  description: "This will not be worked on"
