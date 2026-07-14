@@ -1,669 +1,496 @@
-Process of the Linux kernel building
+Program startup process in userspace
 ================================================================================
 
 Introduction
 --------------------------------------------------------------------------------
 
-I won't tell you how to build and install a custom Linux kernel on your machine. If you need help with this, you can find many [resources](https://encrypted.google.com/search?q=building+linux+kernel#q=building+linux+kernel+from+source+code) that will help you do it. Instead, we will learn what occurs when you execute `make` in the root directory of the Linux kernel source code.
+Despite the [linux-insides](https://www.gitbook.com/book/0xax/linux-insides/details) described mostly Linux kernel related stuff, I have decided to write this one part which mostly relates to userspace.
 
-When I started to study the source code of the Linux kernel, the [makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) was the first file that I opened. And it was scary :). The [makefile](https://en.wikipedia.org/wiki/Make_%28software%29) contained `1591` lines of code when I wrote this part and the kernel was the [4.2.0-rc3](https://github.com/torvalds/linux/commit/52721d9d3334c1cb1f76219a161084094ec634dc) release.
+There is already fourth [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4) of [System calls](https://en.wikipedia.org/wiki/System_call) chapter which describes what the Linux kernel does when we want to start a program. In this part I want to explore what happens when we run a program on a Linux machine from userspace perspective.
 
-This makefile is the top makefile in the Linux kernel source code and the kernel building starts here. Yes, it is big, but moreover, if you've read the source code of the Linux kernel you may have noted that all directories containing source code has its own makefile. Of course it is not possible to describe how each source file is compiled and linked, so we will only study the standard compilation case. You will not find here building of the kernel's documentation, cleaning of the kernel source code, [tags](https://en.wikipedia.org/wiki/Ctags) generation, [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler) related stuff, etc... We will start from the `make` execution with the standard kernel configuration file and will finish with the building of the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage).
-
-It would be better if you're already familiar with the [make](https://en.wikipedia.org/wiki/Make_%28software%29) util, but I will try to describe every piece of code in this part anyway.
-
-So let's start.
-
-Preparation before the kernel compilation
----------------------------------------------------------------------------------
-
-There are many things to prepare before the kernel compilation can be started. The main point here is to find and configure
-the type of compilation, to parse command line arguments that are passed to `make`, etc... So let's dive into the top `Makefile` of Linux kernel.
-
-The top `Makefile` of Linux kernel is responsible for building two major products: [vmlinux](https://en.wikipedia.org/wiki/Vmlinux) (the resident kernel image) and the modules (any module files). The [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) of the Linux kernel starts with the definition of following variables:
-
-```Makefile
-VERSION = 4
-PATCHLEVEL = 2
-SUBLEVEL = 0
-EXTRAVERSION = -rc3
-NAME = Hurr durr I'm a sheep
-```
-
-These variables determine the current version of Linux kernel and are used in different places, for example in the forming of the `KERNELVERSION` variable in the same `Makefile`:
-
-```Makefile
-KERNELVERSION = $(VERSION)$(if $(PATCHLEVEL),.$(PATCHLEVEL)$(if $(SUBLEVEL),.$(SUBLEVEL)))$(EXTRAVERSION)
-```
-
-After this we can see a couple of `ifeq` conditions that check some of the parameters passed to `make`. The Linux kernel `makefiles` provides a special `make help` target that prints all available targets and some of the command line arguments that can be passed to `make`. For example : `make V=1` => verbose build. The first `ifeq` checks whether the `V=n` option is passed to `make`:
-
-```Makefile
-ifeq ("$(origin V)", "command line")
-  KBUILD_VERBOSE = $(V)
-endif
-ifndef KBUILD_VERBOSE
-  KBUILD_VERBOSE = 0
-endif
-
-ifeq ($(KBUILD_VERBOSE),1)
-  quiet =
-  Q =
-else
-  quiet=quiet_
-  Q = @
-endif
-
-export quiet Q KBUILD_VERBOSE
-```
-
-If this option is passed to `make`, we set the `KBUILD_VERBOSE` variable to the value of `V` option. Otherwise we set the `KBUILD_VERBOSE` variable to zero. After this we check the value of `KBUILD_VERBOSE` variable and set values of the `quiet` and `Q` variables depending on the value of `KBUILD_VERBOSE` variable. The `@` symbols suppress the output of command. And if it is present before a command the output will be something like this: `CC scripts/mod/empty.o` instead of `Compiling .... scripts/mod/empty.o`. In the end we just export all of these variables. The next `ifeq` statement checks that `O=/dir` option was passed to the `make`. This option allows to locate all output files in the given `dir`:
-
-```Makefile
-ifeq ($(KBUILD_SRC),)
-
-ifeq ("$(origin O)", "command line")
-  KBUILD_OUTPUT := $(O)
-endif
-
-ifneq ($(KBUILD_OUTPUT),)
-saved-output := $(KBUILD_OUTPUT)
-KBUILD_OUTPUT := $(shell mkdir -p $(KBUILD_OUTPUT) && cd $(KBUILD_OUTPUT) \
-								&& /bin/pwd)
-$(if $(KBUILD_OUTPUT),, \
-     $(error failed to create output directory "$(saved-output)"))
-
-sub-make: FORCE
-	$(Q)$(MAKE) -C $(KBUILD_OUTPUT) KBUILD_SRC=$(CURDIR) \
-	-f $(CURDIR)/Makefile $(filter-out _all sub-make,$(MAKECMDGOALS))
-
-skip-makefile := 1
-endif # ifneq ($(KBUILD_OUTPUT),)
-endif # ifeq ($(KBUILD_SRC),)
-```
-
-We check the `KBUILD_SRC` that represents the top directory of the kernel source code and whether it is empty (it is empty when the makefile is executed for the first time). We then set the `KBUILD_OUTPUT` variable to the value passed with the `O` option (if this option was passed). In the next step we check this `KBUILD_OUTPUT` variable and if it is set, we do following things:
-
-* Store the value of `KBUILD_OUTPUT` in the temporary `saved-output` variable;
-* Try to create the given output directory;
-* Check that directory created, in other way print error message;
-* If the custom output directory was created successfully, execute `make` again with the new directory (see the `-C` option).
-
-The next `ifeq` statements check that the `C` or `M` options passed to `make`:
-
-```Makefile
-ifeq ("$(origin C)", "command line")
-  KBUILD_CHECKSRC = $(C)
-endif
-ifndef KBUILD_CHECKSRC
-  KBUILD_CHECKSRC = 0
-endif
-
-ifeq ("$(origin M)", "command line")
-  KBUILD_EXTMOD := $(M)
-endif
-```
-
-The `C` option tells the `makefile` that we need to check all `c` source code with a tool provided by the `$CHECK` environment variable, by default it is [sparse](https://en.wikipedia.org/wiki/Sparse). The second `M` option provides build for the external modules (will not see this case in this part). We also check whether the `KBUILD_SRC` variable is set, and if it isn't, we set the `srctree` variable to `.`:
-
-```Makefile
-ifeq ($(KBUILD_SRC),)
-        srctree := .
-endif
-
-objtree	:= .
-src		:= $(srctree)
-obj		:= $(objtree)
-
-export srctree objtree VPATH
-```
-
-That tells `Makefile` that the kernel source tree will be in the current directory where `make` was executed. We then set `objtree` and other variables to this directory and export them. The next step is to get value for the `SUBARCH` variable that represents what the underlying architecture is:
-
-```Makefile
-SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
-				  -e s/sun4u/sparc64/ \
-				  -e s/arm.*/arm/ -e s/sa110/arm/ \
-				  -e s/s390x/s390/ -e s/parisc64/parisc/ \
-				  -e s/ppc.*/powerpc/ -e s/mips.*/mips/ \
-				  -e s/sh[234].*/sh/ -e s/aarch64.*/arm64/ )
-```
-
-As you can see, it executes the [uname](https://en.wikipedia.org/wiki/Uname) util that prints information about machine, operating system and architecture. As it gets the output of `uname`, it parses the output and assigns the result to the `SUBARCH` variable. Now that we have `SUBARCH`, we set the `SRCARCH` variable that provides the directory of the certain architecture and `hdr-arch` that provides the directory for the header files:
-
-```Makefile
-ifeq ($(ARCH),i386)
-        SRCARCH := x86
-endif
-ifeq ($(ARCH),x86_64)
-        SRCARCH := x86
-endif
-
-hdr-arch  := $(SRCARCH)
-```
-
-Note `ARCH` is an alias for `SUBARCH`. In the next step we set the `KCONFIG_CONFIG` variable that represents path to the kernel configuration file and if it was not set before, it is set to `.config` by default:
-
-```Makefile
-KCONFIG_CONFIG	?= .config
-export KCONFIG_CONFIG
-```
-
-and the [shell](https://en.wikipedia.org/wiki/Shell_%28computing%29) that will be used during kernel compilation:
-
-```Makefile
-CONFIG_SHELL := $(shell if [ -x "$$BASH" ]; then echo $$BASH; \
-	  else if [ -x /bin/bash ]; then echo /bin/bash; \
-	  else echo sh; fi ; fi)
-```
-
-The next set of variables are related to the compilers used during Linux kernel compilation. We set the host compilers for the `c` and `c++` and the flags to be used with them:
-
-```Makefile
-HOSTCC       = gcc
-HOSTCXX      = g++
-HOSTCFLAGS   = -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89
-HOSTCXXFLAGS = -O2
-```
-
-Next we get to the `CC` variable that represents compiler too, so why do we need the `HOST*` variables? `CC` is the target compiler that will be used during kernel compilation, but `HOSTCC` will be used during compilation of the set of the `host` programs (we will see it soon). After this we can see the definition of `KBUILD_MODULES` and `KBUILD_BUILTIN` variables that are used to determine what to compile (modules, kernel, or both):
-
-```Makefile
-KBUILD_MODULES :=
-KBUILD_BUILTIN := 1
-
-ifeq ($(MAKECMDGOALS),modules)
-  KBUILD_BUILTIN := $(if $(CONFIG_MODVERSIONS),1)
-endif
-```
-
-Here we can see definition of these variables and the value of `KBUILD_BUILTIN` variable will depend on the `CONFIG_MODVERSIONS` kernel configuration parameter if we pass only `modules` to `make`. The next step is to include the `kbuild` file.
-
-```Makefile
-include scripts/Kbuild.include
-```
-
-The [Kbuild](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/kbuild.txt) or `Kernel Build System` is a special infrastructure to manage building the kernel and its modules. `kbuild` files have the same syntax as makefiles. The [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/Kbuild.include) file provides some generic definitions for the `kbuild` system. After including this `kbuild` file (back in [makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile)) we can see the definitions of the variables that are related to the different tools used during kernel and module compilation (like linker, compilers, utils from the [binutils](http://www.gnu.org/software/binutils/), etc...):
-
-```Makefile
-AS		= $(CROSS_COMPILE)as
-LD		= $(CROSS_COMPILE)ld
-CC		= $(CROSS_COMPILE)gcc
-CPP		= $(CC) -E
-AR		= $(CROSS_COMPILE)ar
-NM		= $(CROSS_COMPILE)nm
-STRIP		= $(CROSS_COMPILE)strip
-OBJCOPY		= $(CROSS_COMPILE)objcopy
-OBJDUMP		= $(CROSS_COMPILE)objdump
-AWK		= awk
-...
-...
-...
-```
-
-We then define two other variables: `USERINCLUDE` and `LINUXINCLUDE`, which specify paths to header file directories (public for users in the first case and for kernel in the second case):
-
-```Makefile
-USERINCLUDE    := \
-		-I$(srctree)/arch/$(hdr-arch)/include/uapi \
-		-Iarch/$(hdr-arch)/include/generated/uapi \
-		-I$(srctree)/include/uapi \
-		-Iinclude/generated/uapi \
-        -include $(srctree)/include/linux/kconfig.h
-
-LINUXINCLUDE    := \
-		-I$(srctree)/arch/$(hdr-arch)/include \
-		...
-```
-
-And the standard flags for the C compiler:
-
-```Makefile
-KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common \
-		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -std=gnu89
-```
-
-These are not the final compilation flags, as they can be updated in other makefiles (for example kbuilds from `arch/`). After all of these, all variables will be exported to be available in the other makefiles. The `RCS_FIND_IGNORE` and the `RCS_TAR_IGNORE` variables contain files that will be ignored in the version control system:
-
-```Makefile
-export RCS_FIND_IGNORE := \( -name SCCS -o -name BitKeeper -o -name .svn -o    \
-			  -name CVS -o -name .pc -o -name .hg -o -name .git \) \
-			  -prune -o
-export RCS_TAR_IGNORE := --exclude SCCS --exclude BitKeeper --exclude .svn \
-			 --exclude CVS --exclude .pc --exclude .hg --exclude .git
-```
-
-With that, we have finished all preparations. The next step is building the `vmlinux` target.
-
-Directly to the kernel build
---------------------------------------------------------------------------------
-
-We have now finished all the preparations, and next step in the main makefile is related to the kernel build. Before this moment, nothing has been printed to the terminal by `make`. But now the first steps of the compilation are started. We need to go to line [598](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile#L598) of the Linux kernel top makefile and we will find the `vmlinux` target there:
-
-```Makefile
-all: vmlinux
-	include arch/$(SRCARCH)/Makefile
-```
-
-Don't worry that we have missed many lines in Makefile that are between `export RCS_FIND_IGNORE.....` and `all: vmlinux.....`. This part of the makefile is responsible for the `make *.config` targets and as I wrote in the beginning of this part we will see only building of the kernel in a general way.
-
-The `all:` target is the default when no target is given on the command line. You can see here that we include architecture specific makefile there (in our case it will be [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile)). From this moment we will continue from this makefile. As we can see `all` target depends on the `vmlinux` target that is defined a little lower in the top makefile:
-
-```Makefile
-vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
-```
-
-The `vmlinux` is the Linux kernel in a statically linked executable file format. The [scripts/link-vmlinux.sh](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/link-vmlinux.sh) script links and combines different compiled subsystems into vmlinux. The second target is the `vmlinux-deps` that defined as:
-
-```Makefile
-vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_INIT) $(KBUILD_VMLINUX_MAIN)
-```
-
-and consists from the set of the `built-in.o` from each top directory of the Linux kernel. Later, when we will go through all directories in the Linux kernel, the `Kbuild` will compile all the `$(obj-y)` files.  It then calls `$(LD) -r` to merge these files into one `built-in.o` file. For this moment we have no `vmlinux-deps`, so the `vmlinux` target will not be executed now. For me `vmlinux-deps` contains following files:
-
-```
-arch/x86/kernel/vmlinux.lds arch/x86/kernel/head_64.o
-arch/x86/kernel/head64.o    arch/x86/kernel/head.o
-init/built-in.o             usr/built-in.o
-arch/x86/built-in.o         kernel/built-in.o
-mm/built-in.o               fs/built-in.o
-ipc/built-in.o              security/built-in.o
-crypto/built-in.o           block/built-in.o
-lib/lib.a                   arch/x86/lib/lib.a
-lib/built-in.o              arch/x86/lib/built-in.o
-drivers/built-in.o          sound/built-in.o
-firmware/built-in.o         arch/x86/pci/built-in.o
-arch/x86/power/built-in.o   arch/x86/video/built-in.o
-net/built-in.o
-```
-
-The next target that can be executed is following:
-
-```Makefile
-$(sort $(vmlinux-deps)): $(vmlinux-dirs) ;
-$(vmlinux-dirs): prepare scripts
-	$(Q)$(MAKE) $(build)=$@
-```
-
-As we can see `vmlinux-dirs` depends on two targets: `prepare` and `scripts`. `prepare` is defined in the top `Makefile` of the Linux kernel and executes three stages of preparations:
-
-```Makefile
-prepare: prepare0
-prepare0: archprepare FORCE
-	$(Q)$(MAKE) $(build)=.
-archprepare: archheaders archscripts prepare1 scripts_basic
-
-prepare1: prepare2 $(version_h) include/generated/utsrelease.h \
-                   include/config/auto.conf
-	$(cmd_crmodverdir)
-prepare2: prepare3 outputmakefile asm-generic
-```
-
-The first `prepare0` expands to the `archprepare` that expands to the `archheaders` and `archscripts` that defined in the `x86_64` specific [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile). Let's look on it. The `x86_64` specific makefile starts from the definition of the variables that are related to the architecture-specific configs ([defconfig](https://github.com/torvalds/linux/tree/master/arch/x86/configs), etc...). After this it defines flags for the compiling of the [16-bit](https://en.wikipedia.org/wiki/Real_mode) code, calculating of the `BITS` variable that can be `32` for `i386` or `64` for the `x86_64` flags for the assembly source code, flags for the linker and many many more (all definitions you can find in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile)). The first target is `archheaders` in the makefile and it generates syscall table:
-
-```Makefile
-archheaders:
-	$(Q)$(MAKE) $(build)=arch/x86/entry/syscalls all
-```
-
-And the second target is `archscripts` in this makefile is:
-
-```Makefile
-archscripts: scripts_basic
-	$(Q)$(MAKE) $(build)=arch/x86/tools relocs
-```
-
-We can see that it depends on the `scripts_basic` target from the top [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile). At the first we can see the `scripts_basic` target that executes make for the [scripts/basic](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/basic/Makefile) makefile:
-
-```Makefile
-scripts_basic:
-	$(Q)$(MAKE) $(build)=scripts/basic
-```
-
-The `scripts/basic/Makefile` contains targets for compilation of the two host programs: `fixdep` and `bin2`:
-
-```Makefile
-hostprogs-y	:= fixdep
-hostprogs-$(CONFIG_BUILD_BIN2C)     += bin2c
-always		:= $(hostprogs-y)
-
-$(addprefix $(obj)/,$(filter-out fixdep,$(always))): $(obj)/fixdep
-```
-
-First program is `fixdep` - optimizes list of dependencies generated by [gcc](https://gcc.gnu.org/) that tells make when to remake a source code file. The second program is `bin2c`, which depends on the value of the `CONFIG_BUILD_BIN2C` kernel configuration option and is a very little C program that allows to convert a binary on stdin to a C include on stdout. You can note here a strange notation: `hostprogs-y`, etc... This notation is used in the all `kbuild` files and you can read more about it in the [documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/makefiles.txt). In our case `hostprogs-y` tells `kbuild` that there is one host program named `fixdep` that will be built from `fixdep.c` that is located in the same directory where the `Makefile` is. The first output after we execute `make` in our terminal will be result of this `kbuild` file:
-
-```
-$ make
-  HOSTCC  scripts/basic/fixdep
-```
-
-As `script_basic` target was executed, the `archscripts` target will execute `make` for the [arch/x86/tools](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/tools/Makefile) makefile with the `relocs` target:
-
-```Makefile
-$(Q)$(MAKE) $(build)=arch/x86/tools relocs
-```
-
-The `relocs_32.c` and the `relocs_64.c` will be compiled that will contain [relocation](https://en.wikipedia.org/wiki/Relocation_%28computing%29) information and we will see it in the `make` output:
-
-```Makefile
-  HOSTCC  arch/x86/tools/relocs_32.o
-  HOSTCC  arch/x86/tools/relocs_64.o
-  HOSTCC  arch/x86/tools/relocs_common.o
-  HOSTLD  arch/x86/tools/relocs
-```
-
-There is checking of the `version.h` after compiling of the `relocs.c`:
-
-```Makefile
-$(version_h): $(srctree)/Makefile FORCE
-	$(call filechk,version.h)
-	$(Q)rm -f $(old_version_h)
-```
-
-We can see it in the output:
-
-```
-CHK     include/config/kernel.release
-```
-
-and the building of the `generic` assembly headers with the `asm-generic` target from the `arch/x86/include/generated/asm` that generated in the top Makefile of the Linux kernel. After the `asm-generic` target the `archprepare` will be done, so the `prepare0` target will be executed. As I wrote above:
-
-```Makefile
-prepare0: archprepare FORCE
-	$(Q)$(MAKE) $(build)=.
-```
-
-Note on the `build`. It defined in the [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/Kbuild.include) and looks like this:
-
-```Makefile
-build := -f $(srctree)/scripts/Makefile.build obj
-```
-
-Or in our case it is current source directory - `.`:
-
-```Makefile
-$(Q)$(MAKE) -f $(srctree)/scripts/Makefile.build obj=.
-```
-
-The [scripts/Makefile.build](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/Makefile.build) tries to find the `Kbuild` file by the given directory via the `obj` parameter, include this `Kbuild` files:
-
-```Makefile
-include $(kbuild-file)
-```
-
-and build targets from it. In our case `.` contains the [Kbuild](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Kbuild) file that generates the `kernel/bounds.s` and the `arch/x86/kernel/asm-offsets.s`. After this the `prepare` target finished to work. The `vmlinux-dirs` also depends on the second target - `scripts` that compiles following programs: `file2alias`, `mk_elfconfig`, `modpost`, etc..... After scripts/host-programs compilation our `vmlinux-dirs` target can be executed. First of all let's try to understand what does `vmlinux-dirs` contain. For my case it contains paths of the following kernel directories:
-
-```
-init usr arch/x86 kernel mm fs ipc security crypto block
-drivers sound firmware arch/x86/pci arch/x86/power
-arch/x86/video net lib arch/x86/lib
-```
-
-We can find definition of the `vmlinux-dirs` in the top [Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile) of the Linux kernel:
-
-```Makefile
-vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
-		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
-		     $(net-y) $(net-m) $(libs-y) $(libs-m)))
-
-init-y		:= init/
-drivers-y	:= drivers/ sound/ firmware/
-net-y		:= net/
-libs-y		:= lib/
-...
-...
-...
-```
-
-Here we remove the `/` symbol from the each directory with the help of the `patsubst` and `filter` functions and put it to the `vmlinux-dirs`. So we have list of directories in the `vmlinux-dirs` and the following code:
-
-```Makefile
-$(vmlinux-dirs): prepare scripts
-	$(Q)$(MAKE) $(build)=$@
-```
-
-The `$@` represents `vmlinux-dirs` here that means that it will go recursively over all directories from the `vmlinux-dirs` and its internal directories (depends on configuration) and will execute `make` in there. We can see it in the output:
-
-```
-  CC      init/main.o
-  CHK     include/generated/compile.h
-  CC      init/version.o
-  CC      init/do_mounts.o
-  ...
-  CC      arch/x86/crypto/glue_helper.o
-  AS      arch/x86/crypto/aes-x86_64-asm_64.o
-  CC      arch/x86/crypto/aes_glue.o
-  ...
-  AS      arch/x86/entry/entry_64.o
-  AS      arch/x86/entry/thunk_64.o
-  CC      arch/x86/entry/syscall_64.o
-```
-
-Source code in each directory will be compiled and linked to the `built-in.o`:
-
-```
-$ find . -name built-in.o
-./arch/x86/crypto/built-in.o
-./arch/x86/crypto/sha-mb/built-in.o
-./arch/x86/net/built-in.o
-./init/built-in.o
-./usr/built-in.o
-...
-...
-```
-
-Ok, all buint-in.o(s) built, now we can back to the `vmlinux` target. As you remember, the `vmlinux` target is in the top Makefile of the Linux kernel. Before the linking of the `vmlinux` it builds [samples](https://github.com/torvalds/linux/tree/master/samples), [Documentation](https://github.com/torvalds/linux/tree/master/Documentation), etc... but I will not describe it here as I wrote in the beginning of this part.
-
-```Makefile
-vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
-    ...
-    ...
-    +$(call if_changed,link-vmlinux)
-```
-
-As you can see main purpose of it is a call of the [scripts/link-vmlinux.sh](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/scripts/link-vmlinux.sh) script is linking of the all `built-in.o`(s) to the one statically linked executable and creation of the [System.map](https://en.wikipedia.org/wiki/System.map). In the end we will see following output:
-
-```
-  LINK    vmlinux
-  LD      vmlinux.o
-  MODPOST vmlinux.o
-  GEN     .version
-  CHK     include/generated/compile.h
-  UPD     include/generated/compile.h
-  CC      init/version.o
-  LD      init/built-in.o
-  KSYM    .tmp_kallsyms1.o
-  KSYM    .tmp_kallsyms2.o
-  LD      vmlinux
-  SORTEX  vmlinux
-  SYSMAP  System.map
-```
-
-and `vmlinux` and `System.map` in the root of the Linux kernel source tree:
-
-```
-$ ls vmlinux System.map
-System.map  vmlinux
-```
-
-That's all, `vmlinux` is ready. The next step is creation of the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage).
-
-Building bzImage
---------------------------------------------------------------------------------
-
-The `bzImage` file is the compressed Linux kernel image. We can get it by executing `make bzImage` after `vmlinux` is built. That, or we can just execute `make` without any argument and we will get `bzImage` anyway because it is default image:
-
-```Makefile
-all: bzImage
-```
-
-in the [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile). Let's look on this target, it will help us to understand how this image builds. As I already said the `bzImage` target defined in the [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile) and looks like this:
-
-```Makefile
-bzImage: vmlinux
-	$(Q)$(MAKE) $(build)=$(boot) $(KBUILD_IMAGE)
-	$(Q)mkdir -p $(objtree)/arch/$(UTS_MACHINE)/boot
-	$(Q)ln -fsn ../../x86/boot/bzImage $(objtree)/arch/$(UTS_MACHINE)/boot/$@
-```
-
-We can see here, that first of all called `make` for the boot directory, in our case it is:
-
-```Makefile
-boot := arch/x86/boot
-```
-
-The main goal now is to build the source code in the `arch/x86/boot` and `arch/x86/boot/compressed` directories, build `setup.bin` and `vmlinux.bin`, and build the `bzImage` from them in the end. First target in the [arch/x86/boot/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/Makefile) is the `$(obj)/setup.elf`:
-
-```Makefile
-$(obj)/setup.elf: $(src)/setup.ld $(SETUP_OBJS) FORCE
-	$(call if_changed,ld)
-```
-
-We already have the `setup.ld` linker script in the `arch/x86/boot` directory and the `SETUP_OBJS` variable that expands to the all source files from the `boot` directory. We can see first output:
-
-```Makefile
-  AS      arch/x86/boot/bioscall.o
-  CC      arch/x86/boot/cmdline.o
-  AS      arch/x86/boot/copy.o
-  HOSTCC  arch/x86/boot/mkcpustr
-  CPUSTR  arch/x86/boot/cpustr.h
-  CC      arch/x86/boot/cpu.o
-  CC      arch/x86/boot/cpuflags.o
-  CC      arch/x86/boot/cpucheck.o
-  CC      arch/x86/boot/early_serial_console.o
-  CC      arch/x86/boot/edd.o
-```
-
-The next source file is [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S), but we can't build it now because this target depends on the following two header files:
-
-```Makefile
-$(obj)/header.o: $(obj)/voffset.h $(obj)/zoffset.h
-```
-
-The first is `voffset.h` generated by the `sed` script that gets two addresses from the `vmlinux` with the `nm` util:
+I don't know how about you, but in my university I learn that a `C` program starts executing from the function which is called `main`. And that's partly true. Whenever we are starting to write new program, we start our program from the following lines of code:
 
 ```C
-#define VO__end 0xffffffff82ab0000
-#define VO__text 0xffffffff81000000
+int main(int argc, char *argv[]) {
+	// Entry point is here
+}
 ```
 
-They are the start and the end of the kernel. The second is `zoffset.h` depens on the `vmlinux` target from the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile):
+But if you are interested in low-level programming, you may already know that the `main` function isn't the actual entry point of a program. You will believe it's true after you look at this simple program in debugger:
 
-```Makefile
-$(obj)/zoffset.h: $(obj)/compressed/vmlinux FORCE
-	$(call if_changed,zoffset)
+```C
+int main(int argc, char *argv[]) {
+	return 0;
+}
 ```
 
-The `$(obj)/compressed/vmlinux` target depends on the `vmlinux-objs-y` that compiles source code files from the [arch/x86/boot/compressed](https://github.com/torvalds/linux/tree/master/arch/x86/boot/compressed) directory and generates `vmlinux.bin`, `vmlinux.bin.bz2`, and compiles program - `mkpiggy`. We can see this in the output:
-
-```Makefile
-  LDS     arch/x86/boot/compressed/vmlinux.lds
-  AS      arch/x86/boot/compressed/head_64.o
-  CC      arch/x86/boot/compressed/misc.o
-  CC      arch/x86/boot/compressed/string.o
-  CC      arch/x86/boot/compressed/cmdline.o
-  OBJCOPY arch/x86/boot/compressed/vmlinux.bin
-  BZIP2   arch/x86/boot/compressed/vmlinux.bin.bz2
-  HOSTCC  arch/x86/boot/compressed/mkpiggy
-```
-
-Where `vmlinux.bin` is the `vmlinux` file with debugging information and comments stripped and the `vmlinux.bin.bz2` compressed `vmlinux.bin.all` + `u32` size of `vmlinux.bin.all`. The `vmlinux.bin.all` is `vmlinux.bin + vmlinux.relocs`, where `vmlinux.relocs` is the `vmlinux` that was handled by the `relocs` program (see above). As we got these files, the `piggy.S` assembly files will be generated with the `mkpiggy` program and compiled:
-
-```Makefile
-  MKPIGGY arch/x86/boot/compressed/piggy.S
-  AS      arch/x86/boot/compressed/piggy.o
-```
-
-This assembly files will contain the computed offset from the compressed kernel. After this we can see that `zoffset` generated:
-
-```Makefile
-  ZOFFSET arch/x86/boot/zoffset.h
-```
-
-As the `zoffset.h` and the `voffset.h` are generated, compilation of the source code files from the [arch/x86/boot](https://github.com/torvalds/linux/tree/master/arch/x86/boot/) can be continued:
-
-```Makefile
-  AS      arch/x86/boot/header.o
-  CC      arch/x86/boot/main.o
-  CC      arch/x86/boot/mca.o
-  CC      arch/x86/boot/memory.o
-  CC      arch/x86/boot/pm.o
-  AS      arch/x86/boot/pmjump.o
-  CC      arch/x86/boot/printf.o
-  CC      arch/x86/boot/regs.o
-  CC      arch/x86/boot/string.o
-  CC      arch/x86/boot/tty.o
-  CC      arch/x86/boot/video.o
-  CC      arch/x86/boot/video-mode.o
-  CC      arch/x86/boot/video-vga.o
-  CC      arch/x86/boot/video-vesa.o
-  CC      arch/x86/boot/video-bios.o
-```
-
-As all source code files will be compiled, they will be linked to the `setup.elf`:
-
-```Makefile
-  LD      arch/x86/boot/setup.elf
-```
-
-or:
+Let's compile this and run in [gdb](https://www.gnu.org/software/gdb/):
 
 ```
-ld -m elf_x86_64   -T arch/x86/boot/setup.ld arch/x86/boot/a20.o arch/x86/boot/bioscall.o arch/x86/boot/cmdline.o arch/x86/boot/copy.o arch/x86/boot/cpu.o arch/x86/boot/cpuflags.o arch/x86/boot/cpucheck.o arch/x86/boot/early_serial_console.o arch/x86/boot/edd.o arch/x86/boot/header.o arch/x86/boot/main.o arch/x86/boot/mca.o arch/x86/boot/memory.o arch/x86/boot/pm.o arch/x86/boot/pmjump.o arch/x86/boot/printf.o arch/x86/boot/regs.o arch/x86/boot/string.o arch/x86/boot/tty.o arch/x86/boot/video.o arch/x86/boot/video-mode.o arch/x86/boot/version.o arch/x86/boot/video-vga.o arch/x86/boot/video-vesa.o arch/x86/boot/video-bios.o -o arch/x86/boot/setup.elf
+$ gcc -ggdb program.c -o program
+$ gdb ./program
+The target architecture is assumed to be i386:x86-64:intel
+Reading symbols from ./program...done.
 ```
 
-The last two things is the creation of the `setup.bin` that will contain compiled code from the `arch/x86/boot/*` directory:
+Let's execute gdb `info` subcommand with `files` argument. The `info files` prints information about debugging targets and memory spaces occupied by different sections.
 
 ```
-objcopy  -O binary arch/x86/boot/setup.elf arch/x86/boot/setup.bin
+(gdb) info files
+Symbols from "/home/alex/program".
+Local exec file:
+	`/home/alex/program', file type elf64-x86-64.
+	Entry point: 0x400430
+	0x0000000000400238 - 0x0000000000400254 is .interp
+	0x0000000000400254 - 0x0000000000400274 is .note.ABI-tag
+	0x0000000000400274 - 0x0000000000400298 is .note.gnu.build-id
+	0x0000000000400298 - 0x00000000004002b4 is .gnu.hash
+	0x00000000004002b8 - 0x0000000000400318 is .dynsym
+	0x0000000000400318 - 0x0000000000400357 is .dynstr
+	0x0000000000400358 - 0x0000000000400360 is .gnu.version
+	0x0000000000400360 - 0x0000000000400380 is .gnu.version_r
+	0x0000000000400380 - 0x0000000000400398 is .rela.dyn
+	0x0000000000400398 - 0x00000000004003c8 is .rela.plt
+	0x00000000004003c8 - 0x00000000004003e2 is .init
+	0x00000000004003f0 - 0x0000000000400420 is .plt
+	0x0000000000400420 - 0x0000000000400428 is .plt.got
+	0x0000000000400430 - 0x00000000004005e2 is .text
+	0x00000000004005e4 - 0x00000000004005ed is .fini
+	0x00000000004005f0 - 0x0000000000400610 is .rodata
+	0x0000000000400610 - 0x0000000000400644 is .eh_frame_hdr
+	0x0000000000400648 - 0x000000000040073c is .eh_frame
+	0x0000000000600e10 - 0x0000000000600e18 is .init_array
+	0x0000000000600e18 - 0x0000000000600e20 is .fini_array
+	0x0000000000600e20 - 0x0000000000600e28 is .jcr
+	0x0000000000600e28 - 0x0000000000600ff8 is .dynamic
+	0x0000000000600ff8 - 0x0000000000601000 is .got
+	0x0000000000601000 - 0x0000000000601028 is .got.plt
+	0x0000000000601028 - 0x0000000000601034 is .data
+	0x0000000000601034 - 0x0000000000601038 is .bss
 ```
 
-and the creation of the `vmlinux.bin` from the `vmlinux`:
+Note on `Entry point: 0x400430` line. Now we know the actual address of entry point of our program. Let's put a breakpoint by this address, run our program and see what happens:
 
 ```
-objcopy  -O binary -R .note -R .comment -S arch/x86/boot/compressed/vmlinux arch/x86/boot/vmlinux.bin
+(gdb) break *0x400430
+Breakpoint 1 at 0x400430
+(gdb) run
+Starting program: /home/alex/program
+
+Breakpoint 1, 0x0000000000400430 in _start ()
 ```
 
-In the end we compile host program: [arch/x86/boot/tools/build.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/tools/build.c) that will create our `bzImage` from the `setup.bin` and the `vmlinux.bin`:
+Interesting. We don't see execution of the `main` function here, but we have seen that another function is called. This function is `_start` and as our debugger shows us, it is the actual entry point of our program. Where is this function from? Who does call `main` and when is it called? I will try to answer all these questions in the following post.
+
+How the kernel starts a new program
+--------------------------------------------------------------------------------
+
+First of all, let's take a look at the following simple `C` program:
+
+```C
+// program.c
+
+#include <stdlib.h>
+#include <stdio.h>
+
+static int x = 1;
+
+int y = 2;
+
+int main(int argc, char *argv[]) {
+	int z = 3;
+
+	printf("x + y + z = %d\n", x + y + z);
+
+	return EXIT_SUCCESS;
+}
+```
+
+We can be sure that this program works as we expect. Let's compile it:
 
 ```
-arch/x86/boot/tools/build arch/x86/boot/setup.bin arch/x86/boot/vmlinux.bin arch/x86/boot/zoffset.h arch/x86/boot/bzImage
+$ gcc -Wall program.c -o sum
 ```
 
-Actually the `bzImage` is the concatenated `setup.bin` and the `vmlinux.bin`. In the end we will see the output which is familiar to all who once built the Linux kernel from source:
+and run:
 
 ```
-Setup is 16268 bytes (padded to 16384 bytes).
-System is 4704 kB
-CRC 94a88f9a
-Kernel: arch/x86/boot/bzImage is ready  (#5)
+$ ./sum
+x + y + z = 6
+```
+
+Ok, everything looks pretty good up to now. You may already know that there is a special family of functions - [exec*](http://man7.org/linux/man-pages/man3/execl.3.html). As we read in the man page:
+
+> The exec() family of functions replaces the current process image with a new process image.
+
+All the `exec*` functions are simple frontends to the [execve](http://man7.org/linux/man-pages/man2/execve.2.html) system call. If you have read the fourth [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4) of the chapter which describes [system calls](https://en.wikipedia.org/wiki/System_call), you may know that the [execve](http://linux.die.net/man/2/execve) system call is defined in the [files/exec.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/fs/exec.c#L1888) source code file and looks like:
+
+```C
+SYSCALL_DEFINE3(execve,
+		const char __user *, filename,
+		const char __user *const __user *, argv,
+		const char __user *const __user *, envp)
+{
+	return do_execve(getname(filename), argv, envp);
+}
+```
+
+It takes an executable file name, set of command line arguments, and set of environment variables. As you may guess, everything is done by the `do_execve` function. I will not describe the implementation of the `do_execve` function in detail because you can read about this in [here](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4). But in short words, the `do_execve` function does many checks like `filename` is valid, limit of launched processes is not exceeded in our system and etc. After all of these checks, this function parses our executable file which is represented in [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format, creates memory descriptor for newly executed executable file and fills it with the appropriate values like area for the stack, heap and etc. When the setup of new binary image is done, the `start_thread` function will set up one new process. This function is architecture-specific and for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, its definition will be located in the [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/arch/x86/kernel/process_64.c#L239) source code file.
+
+The `start_thread` function sets new value to [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation) and program execution address. From this point, our new process is ready to start. Once the [context switch](https://en.wikipedia.org/wiki/Context_switch) will be done, control will be returned to userspace with new values of registers and the new executable will be started to execute.
+
+That's all from the kernel side. The Linux kernel prepares the binary image for execution and its execution starts right after the context switch and returns control to userspace when it is finished. But it does not answer our questions like where does `_start` come from and others. Let's try to answer these questions in the next paragraph.
+
+How does a program start in userspace
+--------------------------------------------------------------------------------
+
+In the previous paragraph we saw how an executable file is prepared to run by the Linux kernel. Let's look at the same, but from userspace side. We already know that the entry point of each program is its `_start` function. But where is this function from? It may come from a library. But if you remember correctly we didn't link our program with any libraries during compilation of our program:
+
+```
+$ gcc -Wall program.c -o sum
+```
+
+You may guess that `_start` comes from the [standard library](https://en.wikipedia.org/wiki/Standard_library) and that's true. If you try to compile our program again and pass the `-v` option to gcc which will enable `verbose mode`, you will see a long output. The full output is not interesting for us, let's look at the following steps:
+
+First of all, our program should be compiled with `gcc`:
+
+```
+$ gcc -v -ggdb program.c -o sum
+...
+...
+...
+/usr/libexec/gcc/x86_64-redhat-linux/6.1.1/cc1 -quiet -v program.c -quiet -dumpbase program.c -mtune=generic -march=x86-64 -auxbase test -ggdb -version -o /tmp/ccvUWZkF.s
+...
+...
+...
+```
+
+The `cc1` compiler will compile our `C` source code and an produce assembly named `/tmp/ccvUWZkF.s` file. After this we can see that our assembly file will be compiled into object file with the `GNU as` assembler:
+
+```
+$ gcc -v -ggdb program.c -o sum
+...
+...
+...
+as -v --64 -o /tmp/cc79wZSU.o /tmp/ccvUWZkF.s
+...
+...
+...
+```
+
+In the end our object file will be linked by `collect2`:
+
+```
+$ gcc -v -ggdb program.c -o sum
+...
+...
+...
+/usr/libexec/gcc/x86_64-redhat-linux/6.1.1/collect2 -plugin /usr/libexec/gcc/x86_64-redhat-linux/6.1.1/liblto_plugin.so -plugin-opt=/usr/libexec/gcc/x86_64-redhat-linux/6.1.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccLEGYra.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --no-add-needed --eh-frame-hdr --hash-style=gnu -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o test /usr/lib/gcc/x86_64-redhat-linux/6.1.1/../../../../lib64/crt1.o /usr/lib/gcc/x86_64-redhat-linux/6.1.1/../../../../lib64/crti.o /usr/lib/gcc/x86_64-redhat-linux/6.1.1/crtbegin.o -L/usr/lib/gcc/x86_64-redhat-linux/6.1.1 -L/usr/lib/gcc/x86_64-redhat-linux/6.1.1/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L. -L/usr/lib/gcc/x86_64-redhat-linux/6.1.1/../../.. /tmp/cc79wZSU.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/lib/gcc/x86_64-redhat-linux/6.1.1/crtend.o /usr/lib/gcc/x86_64-redhat-linux/6.1.1/../../../../lib64/crtn.o
+...
+...
+...
+```
+
+Yes, we can see a long set of command line options which are passed to the linker. Let's go from another way. We know that our program depends on `stdlib`:
+
+```
+$ ldd program
+	linux-vdso.so.1 (0x00007ffc9afd2000)
+	libc.so.6 => /lib64/libc.so.6 (0x00007f56b389b000)
+	/lib64/ld-linux-x86-64.so.2 (0x0000556198231000)
+```
+
+as we use some stuff from there like `printf` and etc. But not only. That's why we will get an error when we pass `-nostdlib` option to the compiler:
+
+```
+$ gcc -nostdlib program.c -o program
+/usr/bin/ld: warning: cannot find entry symbol _start; defaulting to 000000000040017c
+/tmp/cc02msGW.o: In function `main':
+/home/alex/program.c:11: undefined reference to `printf'
+collect2: error: ld returned 1 exit status
+```
+
+Besides other errors, we also see that `_start` symbol is undefined. So now we are sure that the `_start` function comes from standard library. But even if we link it with the standard library, it will not be compiled successfully anyway:
+
+```
+$ gcc -nostdlib -lc -ggdb program.c -o program
+/usr/bin/ld: warning: cannot find entry symbol _start; defaulting to 0000000000400350
+```
+
+Ok, the compiler does not complain about undefined reference of standard library functions anymore as we linked our program with `/usr/lib64/libc.so.6`, but the `_start` symbol isn't resolved yet. Let's return to the verbose output of `gcc` and look at the parameters of `collect2`. The most important thing that we may see is that our program is linked not only with the standard library, but also with some object files. The first object file is: `/lib64/crt1.o`. And if we look inside this object file with `objdump`, we will see the `_start` symbol:
+
+```
+$ objdump -d /lib64/crt1.o
+
+/lib64/crt1.o:     file format elf64-x86-64
+
+
+Disassembly of section .text:
+
+0000000000000000 <_start>:
+   0:	31 ed                	xor    %ebp,%ebp
+   2:	49 89 d1             	mov    %rdx,%r9
+   5:	5e                   	pop    %rsi
+   6:	48 89 e2             	mov    %rsp,%rdx
+   9:	48 83 e4 f0          	and    $0xfffffffffffffff0,%rsp
+   d:	50                   	push   %rax
+   e:	54                   	push   %rsp
+   f:	49 c7 c0 00 00 00 00 	mov    $0x0,%r8
+  16:	48 c7 c1 00 00 00 00 	mov    $0x0,%rcx
+  1d:	48 c7 c7 00 00 00 00 	mov    $0x0,%rdi
+  24:	e8 00 00 00 00       	callq  29 <_start+0x29>
+  29:	f4                   	hlt
+```
+
+As `crt1.o` is a shared object file, we see only stubs here instead of real calls. Let's look at the source code of the `_start` function. As this function is architecture specific, implementation for `_start` will be located in the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file.
+
+The `_start` starts from the clearing of `ebp` register as [ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf) suggests.
+
+```assembly
+xorl %ebp, %ebp
+```
+
+And after this we put the address of termination function to the `r9` register:
+
+```assembly
+mov %RDX_LP, %R9_LP
+```
+
+As described in the [ELF](http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf) specification:
+
+> After the dynamic linker has built the process image and performed the relocations, each shared object
+> gets the opportunity to execute some initialization code.
+> ...
+> Similarly, shared objects may have termination functions, which are executed with the atexit (BA_OS)
+> mechanism after the base process begins its termination sequence.
+
+So we need to put the address of the termination function to the `r9` register as it will be passed to `__libc_start_main` in future as sixth argument. Note that the address of the termination function initially is located in the `rdx` register. Other registers besides `rdx` and `rsp` contain unspecified values. Actually the main point of the `_start` function is to call `__libc_start_main`. So the next action is to prepare for this function.
+
+The signature of the `__libc_start_main` function is located in the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=9a56dcbbaeb7ef85c495b4df9ab1d0b13454c043;hb=HEAD#l107) source code file. Let's look on it:
+
+```C
+STATIC int LIBC_START_MAIN (int (*main) (int, char **, char **),
+ 			                int argc,
+			                char **argv,
+ 			                __typeof (main) init,
+			                void (*fini) (void),
+			                void (*rtld_fini) (void),
+			                void *stack_end)
+```
+
+It takes the address of the `main` function of a program, `argc` and `argv`. `init` and `fini` functions are constructor and destructor of the program. The `rtld_fini` is the termination function which will be called after the program will be exited to terminate and free its dynamic section. The last parameter of the `__libc_start_main` is a pointer to the stack of the program. Before we can call the `__libc_start_main` function, all of these parameters must be prepared and passed to it. Let's return to the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file and continue to see what happens before the `__libc_start_main` function will be called from there.
+
+We can get all the arguments we need for `__libc_start_main` function from the stack. At the very beginning, when `_start` is called, our stack looks like:
+
+```
++-----------------+
+|       NULL      |
++-----------------+
+|       ...       |
+|       envp      |
+|       ...       |
++-----------------+
+|       NULL      |
++------------------
+|       ...       |
+|       argv      |
+|       ...       |
++------------------
+|       argc      | <- rsp
++-----------------+
+```
+
+After we cleared `ebp` register and saved the address of the termination function in the `r9` register, we pop an element from the stack to the `rsi` register, so after this `rsp` will point to the `argv` array and `rsi` will contain count of command line arguments passed to the program:
+
+```
++-----------------+
+|       NULL      |
++-----------------+
+|       ...       |
+|       envp      |
+|       ...       |
++-----------------+
+|       NULL      |
++------------------
+|       ...       |
+|       argv      |
+|       ...       | <- rsp
++-----------------+
+```
+
+After this we move the address of the `argv` array to the `rdx` register
+
+```assembly
+popq %rsi
+mov %RSP_LP, %RDX_LP
+```
+
+From this moment we have `argc` and `argv`. We still need to put pointers to the constructor, destructor in appropriate registers and pass pointer to the stack. At the first following three lines we align stack to `16` bytes boundary as suggested in [ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf) and push `rax` which contains garbage:
+
+```assembly
+and  $~15, %RSP_LP
+pushq %rax
+
+pushq %rsp
+mov $__libc_csu_fini, %R8_LP
+mov $__libc_csu_init, %RCX_LP
+mov $main, %RDI_LP
+```
+
+After stack aligning we push the address of the stack, move the addresses of constructor and destructor to the `r8` and `rcx` registers and address of the `main` symbol to the `rdi`. From this moment we can call the `__libc_start_main` function from the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD).
+
+Before we look at the `__libc_start_main` function, let's add the `/lib64/crt1.o` and try to compile our program again:
+
+```
+$ gcc -nostdlib /lib64/crt1.o -lc -ggdb program.c -o program
+/lib64/crt1.o: In function `_start':
+(.text+0x12): undefined reference to `__libc_csu_fini'
+/lib64/crt1.o: In function `_start':
+(.text+0x19): undefined reference to `__libc_csu_init'
+collect2: error: ld returned 1 exit status
+```
+
+Now we see another error that both `__libc_csu_fini` and `__libc_csu_init` functions are not found. We know that the addresses of these two functions are passed to the `__libc_start_main` as parameters and also these functions are constructor and destructor of our programs. But what do `constructor` and `destructor` in terms of `C` program means? We already saw the quote from the [ELF](http://flint.cs.yale.edu/cs422/doc/ELF_Format.pdf) specification:
+
+> After the dynamic linker has built the process image and performed the relocations, each shared object
+> gets the opportunity to execute some initialization code.
+> ...
+> Similarly, shared objects may have termination functions, which are executed with the atexit (BA_OS)
+> mechanism after the base process begins its termination sequence.
+
+So the linker creates two special sections besides usual sections like `.text`, `.data` and others:
+
+* `.init`
+* `.fini`
+
+We can find them with the `readelf` util:
+
+```
+$ readelf -e test | grep init
+  [11] .init             PROGBITS         00000000004003c8  000003c8
+
+$ readelf -e test | grep fini
+  [15] .fini             PROGBITS         0000000000400504  00000504
+```
+
+Both of these sections will be placed at the start and end of the binary image and contain routines which are called constructor and destructor respectively. The main point of these routines is to do some initialization/finalization like initialization of global variables, such as [errno](http://man7.org/linux/man-pages/man3/errno.3.html), allocation and deallocation of memory for system routines and etc., before the actual code of a program is executed.
+
+You may infer from the names of these functions, they will be called before the `main` function and after the `main` function. Definitions of `.init` and `.fini` sections are located in the `/lib64/crti.o` and if we add this object file:
+
+```
+$ gcc -nostdlib /lib64/crt1.o /lib64/crti.o  -lc -ggdb program.c -o program
+```
+
+we will not get any errors. But let's try to run our program and see what happens:
+
+```
+$ ./program
+Segmentation fault (core dumped)
+```
+
+Yeah, we got segmentation fault. Let's look inside of the `lib64/crti.o` with `objdump`:
+
+```
+$ objdump -D /lib64/crti.o
+
+/lib64/crti.o:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+0000000000000000 <_init>:
+   0:	48 83 ec 08          	sub    $0x8,%rsp
+   4:	48 8b 05 00 00 00 00 	mov    0x0(%rip),%rax        # b <_init+0xb>
+   b:	48 85 c0             	test   %rax,%rax
+   e:	74 05                	je     15 <_init+0x15>
+  10:	e8 00 00 00 00       	callq  15 <_init+0x15>
+
+Disassembly of section .fini:
+
+0000000000000000 <_fini>:
+   0:	48 83 ec 08          	sub    $0x8,%rsp
+```
+
+As I wrote above, the `/lib64/crti.o` object file contains definition of the `.init` and `.fini` section, but also we can see here the stub for function. Let's look at the source code which is placed in the [sysdeps/x86_64/crti.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crti.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD) source code file:
+
+```assembly
+	.section .init,"ax",@progbits
+	.p2align 2
+	.globl _init
+	.type _init, @function
+_init:
+	subq $8, %rsp
+	movq PREINIT_FUNCTION@GOTPCREL(%rip), %rax
+	testq %rax, %rax
+	je .Lno_weak_fn
+	call *%rax
+.Lno_weak_fn:
+	call PREINIT_FUNCTION
+```
+
+It contains the definition of the `.init` section and assembly code does 16-byte stack alignment and next we move address of the `PREINIT_FUNCTION` and if it is zero we don't call it:
+
+```
+00000000004003c8 <_init>:
+  4003c8:       48 83 ec 08             sub    $0x8,%rsp
+  4003cc:       48 8b 05 25 0c 20 00    mov    0x200c25(%rip),%rax        # 600ff8 <_DYNAMIC+0x1d0>
+  4003d3:       48 85 c0                test   %rax,%rax
+  4003d6:       74 05                   je     4003dd <_init+0x15>
+  4003d8:       e8 43 00 00 00          callq  400420 <__libc_start_main@plt+0x10>
+  4003dd:       48 83 c4 08             add    $0x8,%rsp
+  4003e1:       c3                      retq
+```
+
+where the `PREINIT_FUNCTION` is the `__gmon_start__` which does setup for profiling. You may note that we have no return instruction in the [sysdeps/x86_64/crti.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crti.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD). Actually that's why we got a segmentation fault. Prolog of `_init` and `_fini` is placed in the [sysdeps/x86_64/crtn.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crtn.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD) assembly file:
+
+```assembly
+.section .init,"ax",@progbits
+addq $8, %rsp
+ret
+
+.section .fini,"ax",@progbits
+addq $8, %rsp
+ret
+```
+
+and if we will add it to the compilation, our program will be successfully compiled and run!
+
+```
+$ gcc -nostdlib /lib64/crt1.o /lib64/crti.o /lib64/crtn.o  -lc -ggdb program.c -o program
+
+$ ./program
+x + y + z = 6
+```
+
+Conclusion
+--------------------------------------------------------------------------------
+
+Now let's return to the `_start` function and try to go through a full chain of calls before the `main` of our program will be called.
+
+The `_start` is always placed at the beginning of the `.text` section in our programs by the linked which is used default `ld` script:
+
+```
+$ ld --verbose | grep ENTRY
+ENTRY(_start)
+```
+
+The `_start` function is defined in the [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=f1b961f5ba2d6a1ebffee0005f43123c4352fbf4;hb=HEAD) assembly file and does preparation like getting `argc/argv` from the stack, stack preparation and etc., before the `__libc_start_main` function will be called. The `__libc_start_main` function from the [csu/libc-start.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=csu/libc-start.c;h=0fb98f1606bab475ab5ba2d0fe08c64f83cce9df;hb=HEAD) source code file does a registration of the constructor and destructor of application which are will be called before `main` and after it, starts up threading, does some security related actions like setting stack canary if need, calls initialization related routines and in the end it calls `main` function of our application and exits with its result:
+
+```C
+result = main (argc, argv, __environ MAIN_AUXVEC_PARAM);
+exit (result);
 ```
 
 That's all.
 
-Conclusion
-================================================================================
-
-It is the end of this part and here we saw all steps from the execution of the `make` command to the generation of the `bzImage`. I know, the Linux kernel makefiles and process of the Linux kernel building may seem confusing at first glance, but it is not so hard. Hope this part will help you understand the process of building the Linux kernel.
-
 Links
-================================================================================
+--------------------------------------------------------------------------------
 
-* [GNU make util](https://en.wikipedia.org/wiki/Make_%28software%29)
-* [Linux kernel top Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Makefile)
-* [cross-compilation](https://en.wikipedia.org/wiki/Cross_compiler)
-* [Ctags](https://en.wikipedia.org/wiki/Ctags)
-* [sparse](https://en.wikipedia.org/wiki/Sparse)
-* [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage)
-* [uname](https://en.wikipedia.org/wiki/Uname)
-* [shell](https://en.wikipedia.org/wiki/Shell_%28computing%29)
-* [Kbuild](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/kbuild.txt)
-* [binutils](http://www.gnu.org/software/binutils/)
-* [gcc](https://gcc.gnu.org/)
-* [Documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kbuild/makefiles.txt)
-* [System.map](https://en.wikipedia.org/wiki/System.map)
-* [Relocation](https://en.wikipedia.org/wiki/Relocation_%28computing%29)
-* [The Linux Kernel](https://www.kernel.org/doc/html/latest/driver-api/device_link.html)
+* [system call](https://en.wikipedia.org/wiki/System_call)
+* [gdb](https://www.gnu.org/software/gdb/)
+* [execve](http://linux.die.net/man/2/execve)
+* [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)
+* [x86_64](https://en.wikipedia.org/wiki/X86-64)
+* [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation)
+* [context switch](https://en.wikipedia.org/wiki/Context_switch)
+* [System V ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf)
