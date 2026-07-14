@@ -35,6 +35,8 @@ During reading this and other chapters, you may encounter special notation:
 
 ## Reading order
 
+The following parts are presented in this chapter:
+
 1. [From the bootloader to kernel](linux-bootstrap-1.md) - from power-on to the first instruction in the kernel
 2. [First steps in the kernel setup code](linux-bootstrap-2.md) - early setup, heap init, parameter discovery (EDD, IST, and more)
 3. [Video mode initialization and transition to protected mode](linux-bootstrap-3.md) - video mode setup and the move to protected mode
