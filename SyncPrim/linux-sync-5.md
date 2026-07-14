@@ -240,7 +240,7 @@ static inline void __down_write_nested(struct rw_semaphore *sem, int subclass)
 }
 ```
 
-As for other synchronization primitives which we saw in this chapter, usually `lock/unlock` functions consists only from an [inline assembly](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-3) statement. As we may see, in our case the same for `__down_write_nested` function. Let's try to understand what does this function do. The first line of our assembly statement is just a comment, let's skip it. The second like contains `LOCK_PREFIX` which will be expanded to the [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction as we already know. The next [xadd](http://x86.renejeschke.de/html/file_module_x86_id_327.html) instruction executes `add` and `exchange` operations. In other words, `xadd` instruction adds value of the `RWSEM_ACTIVE_WRITE_BIAS`:
+As for other synchronization primitives which we saw in this chapter, usually `lock/unlock` functions consists only from an [inline assembly](https://0xax.gitbook.io/linux-insides/summary/toolchain/linux-toolchain-4) statement. As we may see, in our case the same for `__down_write_nested` function. Let's try to understand what does this function do. The first line of our assembly statement is just a comment, let's skip it. The second like contains `LOCK_PREFIX` which will be expanded to the [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction as we already know. The next [xadd](http://x86.renejeschke.de/html/file_module_x86_id_327.html) instruction executes `add` and `exchange` operations. In other words, `xadd` instruction adds value of the `RWSEM_ACTIVE_WRITE_BIAS`:
 
 ```C
 #define RWSEM_ACTIVE_WRITE_BIAS         (RWSEM_WAITING_BIAS + RWSEM_ACTIVE_BIAS)
@@ -427,7 +427,7 @@ Links
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Linux kernel lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [Atomic operations](https://en.wikipedia.org/wiki/Linearizability)
-* [Inline assembly](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-3)
+* [Inline assembly](https://0xax.gitbook.io/linux-insides/summary/toolchain/linux-toolchain-4)
 * [XADD instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [Previous part](https://0xax.gitbook.io/linux-insides/summary/syncprim/linux-sync-4)

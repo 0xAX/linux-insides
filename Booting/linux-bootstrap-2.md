@@ -117,7 +117,7 @@ A code segment `Type` field:
 | 1              | 0            | 1            | Execute-Only, conforming, accessed |
 | 1              | 1            | 1            | Execute/Read, conforming, accessed |
 
-So far, we’ve looked at how a segment descriptor defines the properties of a memory segment — its base, limit, type, and different flags. But how does the CPU actually refer to one of these descriptors during execution? Just like in real mode - using segment registers. In protected mode they contain segment selectors. However, in protected mode, a segment selector is handled differently. Each segment descriptor has an associated segment selector which is a 16-bit structure:
+So far, we’ve looked at how a segment descriptor defines the properties of a memory segment - its base, limit, type, and different flags. But how does the CPU actually refer to one of these descriptors during execution? Just like in real mode - using segment registers. In protected mode they contain segment selectors. However, in protected mode, a segment selector is handled differently. Each segment descriptor has an associated segment selector which is a 16-bit structure:
 
 ![segment-selector](./images/segment-selector.svg)
 
@@ -196,7 +196,7 @@ BUILDIO(w, w, u16)
 BUILDIO(l,  , u32)
 ```
 
-All of these functions use `in` and `out` assembly instructions which send the given value to the given port or read the value from the given port. If the syntax is not familiar to you, you can read the chapter about [inline assembly](https://github.com/0xAX/linux-insides/blob/master/Theory/linux-theory-3.md).
+All of these functions use `in` and `out` assembly instructions which send the given value to the given port or read the value from the given port. If the syntax is not familiar to you, you can read the chapter about [inline assembly](https://github.com/0xAX/linux-insides/blob/master/Toolchain/linux-toolchain-4.md).
 
 After initialization of callbacks for writing to a serial port, the next step is copying of the kernel setup header filled by a bootloader into the corresponding field of the C `boot_params` structure. This will make the fields from the kernel setup header more easily accessible. All the job by copying handled by the `copy_boot_params` function with the help of `memcpy`:
 

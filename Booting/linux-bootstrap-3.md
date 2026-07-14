@@ -325,7 +325,7 @@ We will consider only a standard use case, when the bootloader does not provide 
 
 An interrupt is a signal to the CPU that is emitted by hardware or software. After getting such a signal, the CPU suspends the current instruction sequence, saves its state, and transfers control to the interrupt handler. After the interrupt handler has finished its work, it transfers control back to the interrupted instruction. Non-maskable interrupts (NMI) are interrupts that are always processed, independently of permission. They cannot be ignored and are typically used to signal non-recoverable hardware errors. We will not dive into the details of interrupts now, but we will discuss them in the next parts.
 
-At the first line, there is an [inline assembly](../Theory/linux-theory-3.md) statement with the `cli` instruction, which clears the [interrupt flag](https://en.wikipedia.org/wiki/Interrupt_flag). After this, external interrupts are disabled. The next line disables NMI (non-maskable interrupt).
+At the first line, there is an [inline assembly](../Toolchain/linux-toolchain-4.md) statement with the `cli` instruction, which clears the [interrupt flag](https://en.wikipedia.org/wiki/Interrupt_flag). After this, external interrupts are disabled. The next line disables NMI (non-maskable interrupt).
 
 Let's get back to the code. In the second line, we set the byte `0x0` to the port `0x80`. After that, a call to the `io_delay` function occurs. `io_delay` causes a little delay and looks like this:
 
