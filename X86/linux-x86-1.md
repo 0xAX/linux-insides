@@ -207,7 +207,7 @@ Next is the lowest usable address in kernel space - `ffff880000000000`. This vir
 #define __START_KERNEL_map      _AC(0xffffffff80000000, UL)
 ```
 
-Usually kernel's `.text` starts here with the `CONFIG_PHYSICAL_START` offset. We have seen it in the post about [ELF64](https://github.com/0xAX/linux-insides/blob/master/Theory/ELF.md):
+Usually kernel's `.text` starts here with the `CONFIG_PHYSICAL_START` offset. We have seen it in the post about [ELF64](https://github.com/0xAX/linux-insides/blob/master/Toolchain/linux-toolchain-3.md):
 
 ```
 readelf -s vmlinux | grep ffffffff81000000
@@ -257,6 +257,6 @@ Links
 * [Paging on Wikipedia](http://en.wikipedia.org/wiki/Paging)
 * [Intel 64 and IA-32 architectures software developer's manual volume 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)
 * [MMU](http://en.wikipedia.org/wiki/Memory_management_unit)
-* [ELF64](https://github.com/0xAX/linux-insides/blob/master/Theory/ELF.md)
+* [ELF64](https://github.com/0xAX/linux-insides/blob/master/Toolchain/linux-toolchain-3.md)
 * [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/x86_64/mm.txt)
 * [Last part - Kernel booting process](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-5)

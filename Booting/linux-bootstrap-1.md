@@ -1,6 +1,6 @@
-# Kernel Booting Process — Part 1
+# Kernel Booting Process - Part 1
 
-If you’ve read my earlier [posts](https://github.com/0xAX/asm) about [assembly language](https://en.wikipedia.org/wiki/Assembly_language) for Linux x86_64, you might see that I started to get interested in low-level programming. I’ve written a set of articles on assembly programming for [x86_64](https://en.wikipedia.org/wiki/X86-64) Linux and, in parallel, began exploring the Linux kernel source code. I’ve always been fascinated by what happens under the hood — how programs execute on a CPU, how they’re laid out in memory, how the kernel schedules processes and manages resources, how the network stack operates at a low level, and many other details. This series is a way of sharing my journey.
+If you’ve read my earlier [posts](https://github.com/0xAX/asm) about [assembly language](https://en.wikipedia.org/wiki/Assembly_language) for Linux x86_64, you might see that I started to get interested in low-level programming. I’ve written a set of articles on assembly programming for [x86_64](https://en.wikipedia.org/wiki/X86-64) Linux and, in parallel, began exploring the Linux kernel source code. I’ve always been fascinated by what happens under the hood - how programs execute on a CPU, how they’re laid out in memory, how the kernel schedules processes and manages resources, how the network stack operates at a low level, and many other details. This series is a way of sharing my journey.
 
 > [!NOTE]
 > This is not official Linux kernel documentation, it is a learning project. I’m not a professional Linux kernel developer, and I don’t write kernel code as part of my daily job. Learning how the Linux kernel works is just my hobby. If you find anything unclear, spot an error, or have questions or suggestions, feel free to reach out - you always can ping me on X [0xAX](https://twitter.com/0xAX), send me an [email](mailto:anotherworldofworld@gmail.com) or open a new [issue](https://github.com/0xAX/linux-insides/issues/new). Your feedback is always welcome and appreciated.
@@ -8,9 +8,9 @@ If you’ve read my earlier [posts](https://github.com/0xAX/asm) about [assembly
 The main goal of this series is to provide a guide to the Linux kernel for readers who want to begin learning how it works. We will explore not only what the kernel does, but will try to understand how and why it does it. Despite being considered to be understandable for anyone who is interested in Linux kernel, it is highly recommended to have some prior knowledge before starting to read these notes. If you want to experiment with the kernel code, first of all it is best to have a [Linux distribution](https://en.wikipedia.org/wiki/Linux_distribution) installed. Besides that, on these pages we will see much of [C](https://en.wikipedia.org/wiki/C_(programming_language)) and [assembly](https://en.wikipedia.org/wiki/Assembly_language) code, so the good understanding of these programming languages is highly required.
 
 > [!IMPORTANT]
-> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in the process of updating the content to reflect modern kernels where possible — now focusing on v6.16+. I’ll continue revising the posts as the kernel evolves.
+> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in the process of updating the content to reflect modern kernels where possible - now focusing on v6.16+. I’ll continue revising the posts as the kernel evolves.
 
-That’s enough introduction — let’s dive into the Linux kernel!
+That’s enough introduction - let’s dive into the Linux kernel!
 
 ## The Magic Power Button - What happens next?
 
@@ -18,16 +18,16 @@ Although this is a series of posts about Linux kernel, we will not jump straight
 
 When you press the "magic" power button on your laptop or desktop computer, the [motherboard](https://en.wikipedia.org/wiki/Motherboard) sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply). In response, the power supply delivers the proper amount of electricity to other components of the computer. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it triggers the CPU to start. The CPU then performs a reset: it clears any leftover data in its registers and loads predefined values into each of them, preparing for the very first instructions of the boot process.
 
-Each **x86_64** processor begins execution in a special mode called [real mode](https://en.wikipedia.org/wiki/Real_mode). This mode exists for historical reasons - to be compatible with the earliest processors. Real mode is supported on all x86-compatible processors — from the original [8086](https://en.wikipedia.org/wiki/Intel_8086) to today’s modern 64-bit CPUs.
+Each **x86_64** processor begins execution in a special mode called [real mode](https://en.wikipedia.org/wiki/Real_mode). This mode exists for historical reasons - to be compatible with the earliest processors. Real mode is supported on all x86-compatible processors - from the original [8086](https://en.wikipedia.org/wiki/Intel_8086) to today’s modern 64-bit CPUs.
 
-The **8086** was a 16-bit microprocessor. Basically it means that its general-purpose registers and instruction pointer were `16` bits wide. However, the chip was designed with a `20-bit` physical memory address bus — the set of electrical lines used to select memory locations. With `20` address lines, the CPU can form addresses from `0x00000` to `0xFFFFF`, giving access to exactly `1 MB` of physical memory or `2^20` bytes.
+The **8086** was a 16-bit microprocessor. Basically it means that its general-purpose registers and instruction pointer were `16` bits wide. However, the chip was designed with a `20-bit` physical memory address bus - the set of electrical lines used to select memory locations. With `20` address lines, the CPU can form addresses from `0x00000` to `0xFFFFF`, giving access to exactly `1 MB` of physical memory or `2^20` bytes.
 
 Because the registers on **8086** processors were only `16` bits wide, the largest value they could hold was `0xFFFF` which equals 64 KB. This means that, using just a single 16-bit value, the CPU could only directly address 64 KB of memory at a time. This leads us to the question - how can a processor with 16-bit registers access 20-bit addresses? The answer is [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation).
 
 To make use of the entire 1 MB space provided by the 20-bit address bus, the **8086** used a scheme called [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation). All memory is divided into small, fixed-size segments of `65_536` bytes each. Instead of using just one value to identify a memory location, a CPU uses the two:
 
-1. Segment selector — identifies the starting point (base address) of a 64 KB segment. Represented by the value of the `cs` (code-segment) register.
-2. Offset — specifies how far into that segment the target address is. Represented by the value of the `ip` register.
+1. Segment selector - identifies the starting point (base address) of a 64 KB segment. Represented by the value of the `cs` (code-segment) register.
+2. Offset - specifies how far into that segment the target address is. Represented by the value of the `ip` register.
 
 In real mode, the base address for a given segment selector is calculated as:
 
@@ -108,7 +108,7 @@ When the CPU wakes up, it reads the jump at the `0xFFFFFFF0` address, jump into 
 
 We stopped at the point when a CPU jumps from the reset vector to the firmware. On a legacy PC, that means the BIOS. On modern computers it is UEFI. In the next chapters we will see the booting processes on a legacy PC using the BIOS, and later UEFI.
 
-The first job of BIOS is to bring the system into a working state. It runs a series of hardware checks and initializations — memory tests, peripheral setup, chipset configuration — all part of the [POST](https://en.wikipedia.org/wiki/Power-on_self-test) routine. Once everything is checked, the next step is to find an operating system to boot. The BIOS doesn’t pick just a random disk. It follows a boot order, a list stored in its configuration.
+The first job of BIOS is to bring the system into a working state. It runs a series of hardware checks and initializations - memory tests, peripheral setup, chipset configuration - all part of the [POST](https://en.wikipedia.org/wiki/Power-on_self-test) routine. Once everything is checked, the next step is to find an operating system to boot. The BIOS doesn’t pick just a random disk. It follows a boot order, a list stored in its configuration.
 
 When the BIOS tries to boot from a hard drive, it looks for a [boot sector](https://en.wikipedia.org/wiki/Boot_sector). On hard drives partitioned with an [MBR partition layout](https://en.wikipedia.org/wiki/Master_boot_record), the boot sector is stored in the first `446` bytes of the first sector, where each sector is `512` bytes. The final two bytes of the first sector must be `0x55` and `0xAA`. These two last bytes says to BIOS somewhat like "yes - this device is bootable". Once the BIOS finds the valid boot sector, it copies it into the fixed memory location at `0x7C00`, jumps to there and start executing it.
 
@@ -187,7 +187,7 @@ Continuing from where we left off - the BIOS has now selected a boot device, fou
 The core image starts with [diskboot.S](https://github.com/rhboot/grub2/blob/master/grub-core/boot/i386/pc/diskboot.S), which is usually stored right after the first sector of the disk. The code from the `diskboot.S` file loads the rest of the core image into memory. The core image contains the code of the loader itself and drivers for reading different filesystems. After the whole core image is loaded into memory, the execution continues from the [grub_main](https://github.com/rhboot/grub2/blob/master/grub-core/kern/main.c) function. This is where GRUB sets up the environment it needs to operate:
 
 - Initializes the console so messages and menus can be displayed.
-- Sets the root device — the disk from which GRUB will read files modules and configuration files.
+- Sets the root device - the disk from which GRUB will read files modules and configuration files.
 - Loads and parses the GRUB configuration file.
 - Loads required modules.
 
@@ -246,7 +246,7 @@ X             +------------------------+
 ... where the address X is as low as the design of the boot loader permits.
 ```
 
-We can see that when the bootloader transfers control to the kernel, execution starts right after the kernel’s boot sector — that is, at the address `X` plus the length of the boot sector. The value of this `X` depends on how the kernel loaded. For example if I try to load kernel just with [qemu](https://www.qemu.org/), the starting address of the kernel image is at `0x10000`:
+We can see that when the bootloader transfers control to the kernel, execution starts right after the kernel’s boot sector - that is, at the address `X` plus the length of the boot sector. The value of this `X` depends on how the kernel loaded. For example if I try to load kernel just with [qemu](https://www.qemu.org/), the starting address of the kernel image is at `0x10000`:
 
 ```bash
 hexdump -C /tmp/dump | grep MZ

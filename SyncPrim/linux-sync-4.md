@@ -176,7 +176,7 @@ We may see the call of the `might_sleep` macro from the [include/linux/kernel.h]
 
 After the `might_sleep` macro, we may see the call of the `__mutex_fastpath_lock` function. This function is architecture-specific and as we consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture in this book, the implementation of the `__mutex_fastpath_lock` is located in the [arch/x86/include/asm/mutex_64.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/mutex_64.h) header file. As we may understand from the name of the `__mutex_fastpath_lock` function, this function will try to acquire lock in a fast path or in other words this function will try to decrement the value of the `count` of the given mutex.
 
-Implementation of the `__mutex_fastpath_lock` function consists of two parts. The first part is [inline assembly](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-3) statement. Let's look at it:
+Implementation of the `__mutex_fastpath_lock` function consists of two parts. The first part is [inline assembly](https://0xax.gitbook.io/linux-insides/summary/toolchain/linux-toolchain-4) statement. Let's look at it:
 
 ```C
 asm_volatile_goto(LOCK_PREFIX "   decl %0\n"
@@ -431,7 +431,7 @@ Links
 * [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
 * [Doubly linked list](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [Inline assembly](https://0xax.gitbook.io/linux-insides/summary/theory/linux-theory-3)
+* [Inline assembly](https://0xax.gitbook.io/linux-insides/summary/toolchain/linux-toolchain-4)
 * [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
 * [Lock instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [JNS instruction](http://unixwiz.net/techtips/x86-jumps.html)
