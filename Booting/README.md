@@ -4,14 +4,15 @@ Welcome to the boot journey of the Linux kernel, from power-on to the first inst
 
 ## How to read
 
-This chapter assumes you are comfortable with basic computer architecture and have a light familiarity with `C` programming language and x86_64 assembly syntax. You do not need to be a kernel expert, but being able to read short code snippets and recognize hardware terms will help.
+This chapter assumes you are comfortable with basic computer architecture and have a light familiarity with the `C` programming language and x86_64 assembly syntax. You do not need to be a kernel expert, but being able to read short code snippets and recognize hardware terms will help.
 
 Each part of this chapter focuses on one boot phase. Read in order the first time, then revisit individual steps as references when you want to map a specific symbol or register setup to its place in the sequence. It is quite useful to have the source code of Linux kernel on your local computer to follow the details. You can obtain the source code using the following command:
 
 ```bash
 git clone git@github.com:torvalds/linux.git
 ```
-You can also obtain the source code through the Github CLI:
+
+Alternatively, you can get the source code through the GitHub CLI:
 
 ```bash
 gh repo clone torvalds/linux
@@ -19,11 +20,11 @@ gh repo clone torvalds/linux
 
 ## Notation used
 
-During reading this and other chapters, you may encounter special notation:
+When reading this and other chapters, you may encounter special notation:
 
 - `CS`, `DS`, `SS`, `CR0`, `CR3`, `CR4`, `EFER` - refer to x86 segment and control registers
 - `0x...` - denotes hexadecimal values
-- `entry_*` and `startup_*` - are common prefixes for early boot symbols
+- `entry_*` and `startup_*` - common prefixes for early boot symbols
 - `setup code` refers to the early part of the Linux kernel which executes preparation to load the kernel code itself into memory
 - `decompressor` refers to the part of the `setup code` that inflates the compressed kernel image into memory
 
@@ -34,6 +35,8 @@ During reading this and other chapters, you may encounter special notation:
 - What the early setup code does before the kernel itself will be loaded into memory and start its work
 
 ## Reading order
+
+The following parts are presented in this chapter and should be read in this order:
 
 1. [From the bootloader to kernel](linux-bootstrap-1.md) - from power-on to the first instruction in the kernel
 2. [First steps in the kernel setup code](linux-bootstrap-2.md) - early setup, heap init, parameter discovery (EDD, IST, and more)
