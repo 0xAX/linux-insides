@@ -85,6 +85,5 @@
 * [Misc](Misc/README.md)
     * [Linux kernel development](Misc/linux-misc-1.md)
     * [Program startup process in userspace](Misc/linux-misc-2.md)
-    * [Write and Submit your first Linux kernel Patch]()
 * [Useful links](LINKS.md)
 * [Contributors](contributors.md)
