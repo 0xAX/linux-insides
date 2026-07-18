@@ -73,6 +73,7 @@
 * [x86 fundamentals](X86/README.md)
     * [Paging](X86/linux-x86-1.md)
     * [Interrupt Descriptor Table](X86/linux-x86-2.md)
+    * [Global Descriptor Table]()
     * [CPUID]()
     * [MSR]()
 * [Toolchain and binaries](Toolchain/README.md)
