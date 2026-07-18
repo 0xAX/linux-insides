@@ -23,7 +23,7 @@ The goal of this project is simple – to share knowledge about the Linux kernel
 - [ ] x86 fundamentals (pending v6.18.0 review)
 - [ ] Toolchain and binaries (pending v6.18.0 review)
 - [ ] Initial ram disk (pending v6.18.0 review)
-- [ ] Misc (pending v6.18.0 review)
+- [ ] Contributing to the Linux kernel (pending v6.18.0 review)
 
 ## Requirements
 

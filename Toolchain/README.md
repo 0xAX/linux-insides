@@ -1,6 +1,6 @@
 # Toolchain and binaries
 
-Welcome to the chapter about the toolchain behind the Linux kernel. This chapter describes the tools which are used to build the kernel and the format of the binaries they produce - from the moment you execute `make` in the root of the kernel source tree, through linking of object files, to the resulting `ELF` binaries and the assembly code embedded in the kernel sources.
+Welcome to the chapter about the toolchain behind the Linux kernel. This chapter describes the tools which are used to build the kernel and the format of the binaries they produce - from the moment you execute `make` in the root of the kernel source tree, through linking of object files, to the resulting `ELF` binaries, the assembly code embedded in the kernel sources and what happens when such a binary is started.
 
 ## How to read
 
@@ -35,6 +35,7 @@ When reading this and other chapters, you may encounter special notation:
 - How the linker combines object files into an executable and how linker scripts control this process
 - The structure of `ELF` binaries and how the Linux kernel describes them in its source code
 - How to read and write inline assembly statements in both their basic and extended forms
+- What happens in userspace between the start of a program and the call of its `main` function
 
 ## Reading order
 
@@ -44,3 +45,4 @@ The topics in this chapter are independent of one another, so you can read the s
 - [Linkers](linux-toolchain-2.md) - the linking process, object files and linker scripts
 - [Executable and Linkable Format](linux-toolchain-3.md) - the structure of `ELF` binaries and their representation in the kernel
 - [Inline assembly](linux-toolchain-4.md) - basic and extended forms of inline assembly with examples
+- [Program startup process in userspace](linux-toolchain-5.md) - the way from the entry point of an `ELF` binary to the `main` function of a program

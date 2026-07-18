@@ -46,9 +46,9 @@ area:x86:
   - changed-files:
     - any-glob-to-any-file: 'X86/**'
 
-area:misc:
+area:contributing:
   - changed-files:
-    - any-glob-to-any-file: 'Misc/**'
+    - any-glob-to-any-file: 'Contributing/**'
 
 ci:
   - changed-files:

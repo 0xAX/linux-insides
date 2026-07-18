@@ -51,9 +51,9 @@
   color: "fff9c4"
   description: "Relates to the X86 chapter"
 
-- name: area:misc
+- name: area:contributing
   color: "fff9c4"
-  description: "Relates to the Misc chapter"
+  description: "Relates to the Contributing chapter"
 
 # Repository infrastructure
 
