@@ -309,15 +309,15 @@ char *HEAP = _end;
 
 Now we need to initialize the size of the heap. There is another small hint in the Linux kernel boot protocol:
 
-> ============	==================
-> Field name:	heap_end_ptr
-> Type:		write (obligatory)
-> Offset/size:	0x224/2
-> Protocol:	2.01+
-> ============	==================
+> ### `heap_end_ptr`
 >
->  Set this field to the offset (from the beginning of the real-mode
->  code) of the end of the setup stack/heap, minus 0x0200.
+> | Property          | Value               |
+> | ----------------- | ------------------- |
+> | **Type**          | Write (obligatory)  |
+> | **Offset / size** | `0x224` / `2` bytes |
+> | **Protocol**      | `2.01+`             |
+>
+> Set this field to the offset, from the beginning of the real-mode code, of the end of the setup stack/heap, minus `0x0200`.
 
 The GRUB bootloader sets this value to:
 
