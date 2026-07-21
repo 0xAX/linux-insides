@@ -575,7 +575,32 @@ The first is the signature checking:
 
 This simply compares the [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld) constant value placed by the linker with the magic number `0x5A5AAA55`. If they are not equal, the setup code reports a fatal error and stops execution. The main goal of this check is to ensure we are actually running a valid Linux kernel setup binary, loaded into the proper place by the bootloader.
 
-With the magic number confirmed, and knowing our segment registers and stack are already in the proper state, the only initialization left is to clear the `.bss` section. The section of memory is used to store statically allocated, uninitialized data. Let's take a look at the initialization of this memory area:
+With the magic number confirmed, and knowing our segment registers and stack are already in the proper state, the only initialization left is to clear the `.bss` section. This section of memory is used to store statically allocated, uninitialized data. It must be zeroed before transferring control to the kernel's higher-level initialization code.
+
+There is no guarantee that this region of memory is zeroed at the time the kernel setup header is loaded into memory. The kernel setup image also cannot guarantee that this area is initially filled with zeroes, because the `.bss` area can extend beyond the memory region where the kernel setup code is loaded. You can verify it by calculating the size of the kernel setup code and comparing it with the `__bss_start` and `__bss_end` symbol addresses. The size of the kernel setup code can be determined by the `setup_sects` field from the kernel setup header:
+
+> | Field           | Value         |
+> | --------------- | ------------- |
+> | **Field name**  | `setup_sects` |
+> | **Type**        | Read          |
+> | **Offset/size** | `0x1f1/1`     |
+> | **Protocol**    | All           |
+>
+> The size of the setup code, expressed in 512-byte sectors. If this field is `0`, the actual value is `4`.
+>
+> The real-mode code consists of the boot sector, which is always one 512-byte sector, followed by the setup code.
+
+In my build, this field has the value `31`, so the size of the whole real-mode part of the kernel is `(31 + 1) * 512 = 0x4000`. Looking at the `__bss_end` and `__bss_start` symbols, we can see that this area extends beyond `0x4000`:
+
+```bash
+readelf -a arch/x86/boot/setup.elf | grep "bss"
+  [12] .bss              NOBITS          00003e60 004e5c 001380 00  WA  0   0 32
+   00     .bstext .header .entrytext .inittext .initdata .text .text32 .rodata .videocards .data .signature .bss
+   145: 000051e0     0 NOTYPE  GLOBAL DEFAULT   12 __bss_end
+   169: 00003e60     0 NOTYPE  GLOBAL DEFAULT   12 __bss_start
+```
+
+Since we know what the `.bss` is and why the kernel setup code should fill it with zeroes, let's take a look at the initialization of this memory area:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L592-L597 -->
 ```assembly
