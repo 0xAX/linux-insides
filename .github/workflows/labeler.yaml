@@ -33,7 +33,7 @@ jobs:
     needs: sync-labels
     steps:
       - name: Apply labels
-        uses: actions/labeler@v6
+        uses: actions/labeler@v7
         with:
           configuration-path: .github/labeler.yml
           sync-labels: true
