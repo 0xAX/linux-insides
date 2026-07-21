@@ -151,7 +151,7 @@ As it was mentioned above, the first thing that this function does is check whet
 
 If this option is specified in the kernel command line, the function does nothing, and the kernel is decompressed at the fixed address. In this chapter, however, we focus on the case where this option is not provided, as that is the main topic under discussion. If the `nokaslr` option is not present, the function proceeds to find a random location in memory to decompress the kernel.
 
-The very first step is to set a mark in the boot parameters that ASLR is enabled. This is done by setting a specific flag in the kernel’s boot header:
+The very first step is to set a mark in the boot parameters that ASLR is enabled. This is done by setting a specific flag in the kernel's boot header:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/kaslr.c#L875-L875 -->
 ```C
@@ -231,7 +231,7 @@ In the code above, the start address of the initial ramdisk and its size are sto
 - the decompressor itself
 - the compressed kernel image
 
-After the `mem_avoid_init` function is executed, the decompressor code has a complete picture of the system’s reserved memory zones and avoids them during selecting a random address to load the kernel image.
+After the `mem_avoid_init` function is executed, the decompressor code has a complete picture of the system's reserved memory zones and avoids them during selecting a random address to load the kernel image.
 
 Now we can return to the `choose_random_location` function and finally see the process of the address randomization.
 
@@ -343,7 +343,7 @@ The main goal of the `slots_fetch_random` function is to select a random memory 
 
 To select a random address, this function generates a random number which is limited to the total number of the available slots. The random value is produced by the `kaslr_get_random_long` function which is defined in the same file. As its name suggests, this function returns a random `unsigned long` value, obtained using whatever entropy sources are available on the system. Depending on the hardware and the kernel configuration it can be:
 
-- the CPU’s [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
+- the CPU's [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
 - the [rdrand](https://en.wikipedia.org/wiki/RdRand) instruction
 - The [i8254 programmable interval timer](https://en.wikipedia.org/wiki/Intel_8253)
 

@@ -150,7 +150,7 @@ After the new Global Descriptor Table is loaded, the next step is to load the ne
 
 The `load_stage1_idt` function is defined in [arch/x86/boot/compressed/idt_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/idt_64.c) and uses the `lidt` instruction to load the address of the new `Interrupt Descriptor Table`. For this moment, the `Interrupt Descriptor Table` has `NULL` entries to avoid handling the interrupts. As you can remember, the interrupts are disabled at this moment anyway. The valid interrupt handlers will be loaded after kernel relocation.
 
-The next steps after this are highly related to the setup of `5-level` paging, if it is configured using the `CONFIG_PGTABLE_LEVELS=5` kernel configuration option. This feature extends the virtual address space beyond the traditional 4-level paging scheme, but it is still relatively uncommon in practice and not essential for understanding the mainline boot flow. As mentioned in the [previous chapter](./linux-bootstrap-5.md), for clarity and focus, we’ll set it aside and continue with the standard 4-level paging case.
+The next steps after this are highly related to the setup of `5-level` paging, if it is configured using the `CONFIG_PGTABLE_LEVELS=5` kernel configuration option. This feature extends the virtual address space beyond the traditional 4-level paging scheme, but it is still relatively uncommon in practice and not essential for understanding the mainline boot flow. As mentioned in the [previous chapter](./linux-bootstrap-5.md), for clarity and focus, we'll set it aside and continue with the standard 4-level paging case.
 
 ### Kernel relocation
 
@@ -473,7 +473,7 @@ Program Headers:
 
 The `parse_elf` function acts as a minimal [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) loader. It reads the ELF program headers of the decompressed kernel image and uses them to determine which segments must be loaded and where each segment should be placed in physical memory.
 
-At this point, the `parse_elf` function has completed loading the decompressed kernel image into memory. Each `PT_LOAD` segment has been copied from the ELF file into its proper location. The kernel’s code, data, and other segments are now present at the chosen load address. However, it might not be sufficient to make the kernel fully runnable.
+At this point, the `parse_elf` function has completed loading the decompressed kernel image into memory. Each `PT_LOAD` segment has been copied from the ELF file into its proper location. The kernel's code, data, and other segments are now present at the chosen load address. However, it might not be sufficient to make the kernel fully runnable.
 
 The kernel was originally linked assuming a specific base address. If the address space layout randomization is enabled, the kernel can instead be loaded at a different physical and virtual address. As a result, any absolute addresses embedded within the kernel image will still reflect the original link-time address rather than the actual load address. To resolve this, the kernel image includes a relocation table that identifies all locations containing such absolute references. 
 

@@ -352,11 +352,11 @@ you will get an error:
 
 ```
 $ gcc -O3 test.c -o test
-test.c: In function ‘test_asm’:
-test.c:7:9: warning: asm operand 1 probably doesn’t match constraints
+test.c: In function 'test_asm':
+test.c:7:9: warning: asm operand 1 probably doesn't match constraints
          __asm__("movq %1, %0" : "=r"(a) : "I"(0xffffffffffff));
          ^
-test.c:7:9: error: impossible constraint in ‘asm’
+test.c:7:9: error: impossible constraint in 'asm'
 ```
 
 when at the same time:

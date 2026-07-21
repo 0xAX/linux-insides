@@ -6,7 +6,7 @@ From here on, we will still see some assembly code on our way, but it will be mo
 
 From the previous part, we know that the kernel setup code is still running in [real mode](https://en.wikipedia.org/wiki/Real_mode). Its primary task is to move the processor first into [protected mode](https://en.wikipedia.org/wiki/Protected_mode), and then into [long mode](https://en.wikipedia.org/wiki/Long_mode). Almost all of the C code we will see in the next chapters exists for this purpose - to prepare and complete these transitions.
 
-In this part, we’ll keep digging through the kernel’s setup code and cover:
+In this part, we'll keep digging through the kernel's setup code and cover:
 
 - What protected mode is on x86 processors
 - Setup of early [heap](https://en.wikipedia.org/wiki/Memory_management#HEAP) and console
@@ -34,7 +34,7 @@ Memory management in protected mode is divided into two, mostly independent mech
 - `Segmentation`
 - `Paging`
 
-For now, our attention stays on segmentation. We’ll return to paging later, once we enter 64-bit long mode.
+For now, our attention stays on segmentation. We'll return to paging later, once we enter 64-bit long mode.
 
 ### Memory segmentation in protected mode
 
@@ -43,7 +43,7 @@ In protected mode, memory segmentation is completely redesigned. Fixed 64 KB rea
 - The size of the Global Descriptor Table
 - The address of the Global Descriptor Table
 
-Later, we will see exactly how the Linux kernel builds and loads its GDT. For now, it’s enough to know that the CPU provides a dedicated instruction to load the table’s address into the GDTR register:
+Later, we will see exactly how the Linux kernel builds and loads its GDT. For now, it's enough to know that the CPU provides a dedicated instruction to load the table's address into the GDTR register:
 
 ```assembly
 lgdt gdt
@@ -117,7 +117,7 @@ A code segment `Type` field:
 | 1              | 0            | 1            | Execute-Only, conforming, accessed |
 | 1              | 1            | 1            | Execute/Read, conforming, accessed |
 
-So far, we’ve looked at how a segment descriptor defines the properties of a memory segment - its base, limit, type, and different flags. But how does the CPU actually refer to one of these descriptors during execution? Just like in real mode - using segment registers. In protected mode they contain segment selectors. However, in protected mode, a segment selector is handled differently. Each segment descriptor has an associated segment selector which is a 16-bit structure:
+So far, we've looked at how a segment descriptor defines the properties of a memory segment - its base, limit, type, and different flags. But how does the CPU actually refer to one of these descriptors during execution? Just like in real mode - using segment registers. In protected mode they contain segment selectors. However, in protected mode, a segment selector is handled differently. Each segment descriptor has an associated segment selector which is a 16-bit structure:
 
 ![segment-selector](./images/segment-selector.svg)
 

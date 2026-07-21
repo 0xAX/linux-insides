@@ -470,7 +470,7 @@ Each program operates now with addresses that are called `virtual`. When a progr
 > [!NOTE]
 > Modern x86_64 processors support five-level paging, but we will skip it in this post and focus on four-level paging.
 
-Let’s briefly see what happens when the processor needs to translate a virtual address into a physical one.
+Let's briefly see what happens when the processor needs to translate a virtual address into a physical one.
 
 In four-level paging mode, a virtual address is 64 bits long. However, only the `48` bits are actually used for translation to a physical address. These `48` bits are divided into several parts:
 

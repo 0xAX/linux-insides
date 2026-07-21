@@ -1,24 +1,24 @@
 # Kernel Booting Process - Part 1
 
-If you’ve read my earlier [posts](https://github.com/0xAX/asm) about [assembly language](https://en.wikipedia.org/wiki/Assembly_language) for Linux x86_64, you might see that I started to get interested in low-level programming. I’ve written a set of articles on assembly programming for [x86_64](https://en.wikipedia.org/wiki/X86-64) Linux and, in parallel, began exploring the Linux kernel source code. I’ve always been fascinated by what happens under the hood - how programs execute on a CPU, how they’re laid out in memory, how the kernel schedules processes and manages resources, how the network stack operates at a low level, and many other details. This series is a way of sharing my journey.
+If you've read my earlier [posts](https://github.com/0xAX/asm) about [assembly language](https://en.wikipedia.org/wiki/Assembly_language) for Linux x86_64, you might see that I started to get interested in low-level programming. I've written a set of articles on assembly programming for [x86_64](https://en.wikipedia.org/wiki/X86-64) Linux and, in parallel, began exploring the Linux kernel source code. I've always been fascinated by what happens under the hood - how programs execute on a CPU, how they're laid out in memory, how the kernel schedules processes and manages resources, how the network stack operates at a low level, and many other details. This series is a way of sharing my journey.
 
 > [!NOTE]
-> This is not official Linux kernel documentation, it is a learning project. I’m not a professional Linux kernel developer, and I don’t write kernel code as part of my daily job. Learning how the Linux kernel works is just my hobby. If you find anything unclear, spot an error, or have questions or suggestions, feel free to reach out - you always can ping me on X [0xAX](https://twitter.com/0xAX), send me an [email](mailto:anotherworldofworld@gmail.com) or open a new [issue](https://github.com/0xAX/linux-insides/issues/new). Your feedback is always welcome and appreciated.
+> This is not official Linux kernel documentation, it is a learning project. I'm not a professional Linux kernel developer, and I don't write kernel code as part of my daily job. Learning how the Linux kernel works is just my hobby. If you find anything unclear, spot an error, or have questions or suggestions, feel free to reach out - you always can ping me on X [0xAX](https://twitter.com/0xAX), send me an [email](mailto:anotherworldofworld@gmail.com) or open a new [issue](https://github.com/0xAX/linux-insides/issues/new). Your feedback is always welcome and appreciated.
 
 The main goal of this series is to provide a guide to the Linux kernel for readers who want to begin learning how it works. We will explore not only what the kernel does, but will try to understand how and why it does it. Despite being considered to be understandable for anyone who is interested in Linux kernel, it is highly recommended to have some prior knowledge before starting to read these notes. If you want to experiment with the kernel code, first of all it is best to have a [Linux distribution](https://en.wikipedia.org/wiki/Linux_distribution) installed. Besides that, on these pages we will see much of [C](https://en.wikipedia.org/wiki/C_(programming_language)) and [assembly](https://en.wikipedia.org/wiki/Assembly_language) code, so the good understanding of these programming languages is highly required.
 
 > [!IMPORTANT]
-> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in the process of updating the content to reflect modern kernels where possible - now focusing on v6.16+. I’ll continue revising the posts as the kernel evolves.
+> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in the process of updating the content to reflect modern kernels where possible - now focusing on v6.16+. I'll continue revising the posts as the kernel evolves.
 
-That’s enough introduction - let’s dive into the Linux kernel!
+That's enough introduction - let's dive into the Linux kernel!
 
 ## The Magic Power Button - What happens next?
 
-Although this is a series of posts about Linux kernel, we will not jump straight into kernel code. First, let’s step back and look at what happens before the kernel even comes into play. Everything starts from the turning on a computer. And we will start from this point as well.
+Although this is a series of posts about Linux kernel, we will not jump straight into kernel code. First, let's step back and look at what happens before the kernel even comes into play. Everything starts from the turning on a computer. And we will start from this point as well.
 
 When you press the "magic" power button on your laptop or desktop computer, the [motherboard](https://en.wikipedia.org/wiki/Motherboard) sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply). In response, the power supply delivers the proper amount of electricity to other components of the computer. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it triggers the CPU to start. The CPU then performs a reset: it clears any leftover data in its registers and loads predefined values into each of them, preparing for the very first instructions of the boot process.
 
-Each **x86_64** processor begins execution in a special mode called [real mode](https://en.wikipedia.org/wiki/Real_mode). This mode exists for historical reasons - to be compatible with the earliest processors. Real mode is supported on all x86-compatible processors - from the original [8086](https://en.wikipedia.org/wiki/Intel_8086) to today’s modern 64-bit CPUs.
+Each **x86_64** processor begins execution in a special mode called [real mode](https://en.wikipedia.org/wiki/Real_mode). This mode exists for historical reasons - to be compatible with the earliest processors. Real mode is supported on all x86-compatible processors - from the original [8086](https://en.wikipedia.org/wiki/Intel_8086) to today's modern 64-bit CPUs.
 
 The **8086** was a 16-bit microprocessor. Basically it means that its general-purpose registers and instruction pointer were `16` bits wide. However, the chip was designed with a `20-bit` physical memory address bus - the set of electrical lines used to select memory locations. With `20` address lines, the CPU can form addresses from `0x00000` to `0xFFFFF`, giving access to exactly `1 MB` of physical memory or `2^20` bytes.
 
@@ -57,7 +57,7 @@ If we take the largest possible values for the segment selector and the offset -
 
 This gives us the address `0x10FFEF`, which is `65_520` bytes past the 1 MB boundary. Since, in real mode on the original **8086** CPU, the CPU could only access the first 1 MB of memory, any address above `0xFFFFF` would wrap around back to the beginning of the address space. On modern **386+** CPUs the physical bus is wider even in real mode, but the address computation still based on the `segment:offset`.
 
-Now that we understand the basics of real mode and its memory addressing limitations, let’s return to the state after a hardware reset.
+Now that we understand the basics of real mode and its memory addressing limitations, let's return to the state after a hardware reset.
 
 ## First code executed after reset
 
@@ -108,7 +108,7 @@ When the CPU wakes up, it reads the jump at the `0xFFFFFFF0` address, jump into 
 
 We stopped at the point when a CPU jumps from the reset vector to the firmware. On a legacy PC, that means the BIOS. On modern computers it is UEFI. In the next chapters we will see the booting processes on a legacy PC using the BIOS, and later UEFI.
 
-The first job of BIOS is to bring the system into a working state. It runs a series of hardware checks and initializations - memory tests, peripheral setup, chipset configuration - all part of the [POST](https://en.wikipedia.org/wiki/Power-on_self-test) routine. Once everything is checked, the next step is to find an operating system to boot. The BIOS doesn’t pick just a random disk. It follows a boot order, a list stored in its configuration.
+The first job of BIOS is to bring the system into a working state. It runs a series of hardware checks and initializations - memory tests, peripheral setup, chipset configuration - all part of the [POST](https://en.wikipedia.org/wiki/Power-on_self-test) routine. Once everything is checked, the next step is to find an operating system to boot. The BIOS doesn't pick just a random disk. It follows a boot order, a list stored in its configuration.
 
 When the BIOS tries to boot from a hard drive, it looks for a [boot sector](https://en.wikipedia.org/wiki/Boot_sector). On hard drives partitioned with an [MBR partition layout](https://en.wikipedia.org/wiki/Master_boot_record), the boot sector is stored in the first `446` bytes of the first sector, where each sector is `512` bytes. The final two bytes of the first sector must be `0x55` and `0xAA`. These two last bytes says to BIOS somewhat like "yes - this device is bootable". Once the BIOS finds the valid boot sector, it copies it into the fixed memory location at `0x7C00`, jumps to there and start executing it.
 
@@ -246,7 +246,7 @@ X             +------------------------+
 ... where the address X is as low as the design of the boot loader permits.
 ```
 
-We can see that when the bootloader transfers control to the kernel, execution starts right after the kernel’s boot sector - that is, at the address `X` plus the length of the boot sector. The value of this `X` depends on how the kernel loaded. For example if I try to load kernel just with [qemu](https://www.qemu.org/), the starting address of the kernel image is at `0x10000`:
+We can see that when the bootloader transfers control to the kernel, execution starts right after the kernel's boot sector - that is, at the address `X` plus the length of the boot sector. The value of this `X` depends on how the kernel loaded. For example if I try to load kernel just with [qemu](https://www.qemu.org/), the starting address of the kernel image is at `0x10000`:
 
 ```bash
 hexdump -C /tmp/dump | grep MZ
@@ -442,7 +442,7 @@ The very first instruction we encounter here is [jmp](https://en.wikipedia.org/w
 
 > The target operand specifies either an absolute offset (that is an offset from the base of the code segment) or a relative offset (a signed displacement relative to the current value of the instruction pointer in the EIP register).
 
-If you’ve never met the `Nf` syntax before, `1f` means the next label `1` that will appear in the code. Immediately after those two bytes, we can see the label `1` located right before the beginning of the second part of the kernel setup header.
+If you've never met the `Nf` syntax before, `1f` means the next label `1` that will appear in the code. Immediately after those two bytes, we can see the label `1` located right before the beginning of the second part of the kernel setup header.
 
 After the second part of the kernel setup header, we can see the `.entrytext` section, which starts with the `start_of_setup` label. This is exactly the place where the execution will be continued:
 
@@ -468,7 +468,7 @@ state.cs = segment + 0x20;
 state.ip = 0;
 ```
 
-Here, `grub_linux_real_target` is the physical address where the kernel setup code will be loaded. As we saw in the [previous section](#the-magic-power-button---what-happens-next), this address was `0x90000`. Shifting it right by four divides it by `16`, converting a physical address into a segment value - that’s how real mode memory segmentation works.
+Here, `grub_linux_real_target` is the physical address where the kernel setup code will be loaded. As we saw in the [previous section](#the-magic-power-button---what-happens-next), this address was `0x90000`. Shifting it right by four divides it by `16`, converting a physical address into a segment value - that's how real mode memory segmentation works.
 
 Then, GRUB sets the code segment specified by the `CS` register to `segment + 0x20` before starting execution. Why `0x20`? Let's remember that in real mode, physical addresses are computed as:
 
@@ -491,7 +491,7 @@ After the jump to the `start_of_setup` label, the kernel setup code enters the v
 - Clearing the `.bss` section
 - Transitioning into C code
 
-In the next sections, we’ll walk through each of these steps in detail.
+In the next sections, we'll walk through each of these steps in detail.
 
 ### Aligning the segment registers
 

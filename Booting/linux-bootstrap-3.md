@@ -414,7 +414,7 @@ Only two last steps remain:
 - Setting up the Interrupt Descriptor Table
 - Setting up the Global Descriptor Table
 
-And that’s all! Once these two structures will be configured, the Linux kernel can make the jump into protected mode.
+And that's all! Once these two structures will be configured, the Linux kernel can make the jump into protected mode.
 
 ### Set up the Interrupt Descriptor Table
 

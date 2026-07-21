@@ -105,7 +105,7 @@ This is done using a [model-specific register](https://en.wikipedia.org/wiki/Mod
 
 In the code snippet above, the `wrmsr` instruction writes a 64-bit value to the MSR specified in `ecx`. The value comes from the `edx:eax` register pair. Since both are zeroed in the code snippet above, the `gs` base is set to zero.
 
-You might wonder why the kernel doesn't just load `gs` with a regular `mov` instruction. According to the [Intel® 64 and IA-32 Architectures Software Developer’s Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html), in long mode, the CPU manages the `gs` base using the MSR rather than using a GDT descriptor:
+You might wonder why the kernel doesn't just load `gs` with a regular `mov` instruction. According to the [Intel® 64 and IA-32 Architectures Software Developer's Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html), in long mode, the CPU manages the `gs` base using the MSR rather than using a GDT descriptor:
 
 > The hidden descriptor register fields for FS.base and GS.base are physically mapped to MSRs in order to load all address bits supported by a 64-bit implementation. Software with CPL = 0 (privileged software) can load all supported linear-address bits into FS.base or GS.base using WRMSR.
 
@@ -117,7 +117,7 @@ The next step is the setup of the kernel [Global Descriptor Table](https://en.wi
 
 The Global Descriptor Table (specified by the `gdt64` symbol) that we saw in the part about the [Linux kernel boot process](../Booting/linux-bootstrap-5.md) is a temporary table used only during decompression. The kernel cannot keep using it for two reasons. First, the decompressor's GDT is located in the decompressor's memory, which will not be mapped after the kernel switches to its own page tables. Second, each CPU needs its own GDT. The reason is that each CPU uses its own task-state segment, and the GDT entry for that segment must point to CPU-local data. The task-state segment holds the stack information that the processor uses when entering the kernel from user mode and when handling exceptions. For these reasons, the kernel loads a per-CPU Global Descriptor Table defined in [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c), which contains the full set of segments needed by the kernel.
 
-According to the [Intel® 64 and IA-32 Architectures Software Developer’s Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html):
+According to the [Intel® 64 and IA-32 Architectures Software Developer's Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html):
 
 > In 64-bit mode, segmentation is generally (but not completely) disabled, creating a flat 64-bit linear-address space. The processor treats the segment base of CS, DS, ES, SS as zero, creating a linear address that is equal to the effective address.
 
@@ -564,7 +564,7 @@ With the identity mapping page tables built, the kernel has page tables that map
 
 With the new kernel page tables ready, the `__startup_64` function returns and we arrive at [`common_startup_64`](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S). Now the kernel loads `cr3` with the address of `early_top_pgt`, activating the new page tables. The moment this write happens, every memory access, including the fetch of the next instruction, goes through the new page tables. This is why the kernel still needs the identity mapping. Without it, a page fault exception would be triggered on the very next instruction fetch.
 
-After switching to the new page tables, some old [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entries may still survive. According to the [Intel® 64 and IA-32 Architectures Software Developer’s Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html), reloading the `cr3` register flushes most TLB entries, but global entries survive: 
+After switching to the new page tables, some old [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entries may still survive. According to the [Intel® 64 and IA-32 Architectures Software Developer's Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html), reloading the `cr3` register flushes most TLB entries, but global entries survive:
 
 > Global pages are not flushed from the translation-lookaside buffer (TLB) on a task switch or a write to register CR3.
 
