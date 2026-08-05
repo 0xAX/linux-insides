@@ -4,25 +4,10 @@ This directory provides a set of helper scripts for maintaining and building thi
 
 | Script                                             | What it does                                                                           |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [`get_all_links.py`](get_all_links.py)             | Crawls every `.md` file and reports which external links are alive or dead             |
 | [`check_code_snippets.py`](check_code_snippets.py) | Verifies that kernel source snippets in the book still match the real source on GitHub |
 | [`latex.sh`](latex.sh)                             | Converts the whole book into a single LaTeX-typeset PDF                                |
 
-## `get_all_links.py` - link checker
-
-This script walks the given directory tree, extracts every link from the Markdown files, and checks each external URL with a real network request. Live links are printed to **stdout**; dead or unreachable links go to **stderr**, so you can split them apart.
-
-It requires Python 3 and the [`markdown`](https://pypi.org/project/Markdown/) package. Before using this script, you have to install it:
-
-```bash
-pip install markdown
-```
-
-Usage:
-
-```bash
-python ./scripts/get_all_links.py .
-```
+External links are not checked by a script from this directory. The [check links](../.github/workflows/check-links.yaml) workflow does it with [lychee](https://github.com/lycheeverse/lychee), configured in [`lychee.toml`](../lychee.toml).
 
 ## `check_code_snippets.py` - snippet validator
 
