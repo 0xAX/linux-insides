@@ -22,6 +22,15 @@ def __fetch_raw__(source: str) -> str:
     r = requests.get(source, timeout=5.0)
     return r.text
 
+def __compare__(code: str, content: str, path: str):
+    if code.rstrip() != content:
+        print("Error in", path)
+        print("Code in book:")
+        print(code)
+        print("Code from github:")
+        print(content)
+        sys.exit(1)
+
 def __handle_md__(md: str, path: str):
     in_code = False
     code = ''
@@ -48,17 +57,15 @@ def __handle_md__(md: str, path: str):
             continue
 
         if code != '':
-            if code.rstrip() != content:
-                print("Error in", path)
-                print("Code in book:")
-                print(code)
-                print("Code from github:")
-                print(content)
-                sys.exit(1)
-
+            __compare__(code, content, path)
             code = ''
             content = ''
             continue
+
+    # A snippet that ends the file has no trailing line to trigger the
+    # comparison above, so flush it here.
+    if code != '':
+        __compare__(code, content, path)
 
 def __main__():
     path = ''
