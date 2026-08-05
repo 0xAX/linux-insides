@@ -34,21 +34,25 @@ Keeps the code in the book honest. Each snippet is annotated with an HTML commen
 
 The script fetches that range from GitHub and compares it against the code block in the book. If they have drifted apart, it prints both versions and exits with a non-zero status - handy for CI.
 
-It requires Python 3 and the [`requests`](https://pypi.org/project/requests/) package. To install this package, use the following command:
+Its dependencies are declared in [`pyproject.toml`](pyproject.toml) and pinned in [`uv.lock`](uv.lock), so [uv](https://docs.astral.sh/uv/) provides both the interpreter and the packages. Nothing has to be installed by hand.
+
+Usage, from the repository root:
 
 ```bash
-pip install requests
-```
-
-Usage:
-
-```
 # Check the whole repository
-python3 check_code_snippets.py ../
+uv run --project scripts ./scripts/check_code_snippets.py .
 
 # Check a single chapter
-python3 check_code_snippets.py ../Initialization
+uv run --project scripts ./scripts/check_code_snippets.py ./Initialization
 ```
+
+From inside this directory the `--project` flag can be dropped:
+
+```bash
+uv run ./check_code_snippets.py ../Initialization
+```
+
+If you prefer a plain virtual environment, `uv sync` creates one in `scripts/.venv` and the script can be run directly after activating it.
 
 ## `latex.sh` - PDF builder
 

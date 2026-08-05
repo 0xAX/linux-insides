@@ -1,2 +1,6 @@
 *.tex
 build
+
+# uv virtual environment for the helper scripts
+.venv
+__pycache__
