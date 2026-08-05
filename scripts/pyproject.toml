@@ -1,0 +1,12 @@
+[project]
+name = "linux-insides-scripts"
+version = "0.1.0"
+description = "Helper scripts used to maintain and build the linux-insides book"
+requires-python = ">=3.9"
+dependencies = [
+    "requests>=2.32",
+]
+
+[tool.uv]
+# The scripts are run directly, they are not built or installed as a package.
+package = false

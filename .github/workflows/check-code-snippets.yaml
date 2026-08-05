@@ -19,14 +19,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
-      - name: Setup python
-        uses: actions/setup-python@v7
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v9
         with:
-          python-version: '3.14'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests  
+          enable-cache: true
+          cache-dependency-glob: scripts/uv.lock
       - name: Validate code snippets
         run: |
-          python ./scripts/check_code_snippets.py .
+          uv run --project scripts --locked ./scripts/check_code_snippets.py .

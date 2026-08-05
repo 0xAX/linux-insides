@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 A script that takes the lines of the Linux kernel source code from the comments
 in the markdown files that are attached to the code and checks their validity.

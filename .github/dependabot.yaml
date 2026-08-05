@@ -4,3 +4,8 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+
+  - package-ecosystem: "uv"
+    directory: "/scripts"
+    schedule:
+      interval: "daily"
