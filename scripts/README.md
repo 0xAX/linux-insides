@@ -5,7 +5,7 @@ This directory provides a set of helper scripts for maintaining and building thi
 | Script                                             | What it does                                                                           |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | [`check_code_snippets.py`](check_code_snippets.py) | Verifies that kernel source snippets in the book still match the real source on GitHub |
-| [`latex.sh`](latex.sh)                             | Converts the whole book into a single LaTeX-typeset PDF                                |
+| [`latex.py`](latex.py)                             | Converts the whole book into a single LaTeX-typeset PDF                                |
 
 External links are not checked by a script from this directory. The [check links](../.github/workflows/check-links.yaml) workflow does it with [lychee](https://github.com/lycheeverse/lychee), configured in [`lychee.toml`](../lychee.toml).
 
@@ -39,19 +39,22 @@ uv run ./check_code_snippets.py ../Initialization
 
 If you prefer a plain virtual environment, `uv sync` creates one in `scripts/.venv` and the script can be run directly after activating it.
 
-## `latex.sh` - PDF builder
+## `latex.py` - PDF builder
 
-Converts the Markdown of each chapter directory into LaTeX with `pandoc`, compiles each one with `pdflatex`, and stitches everything into a single `LinuxKernelInsides.pdf` with `pdfunite`.
+Converts the Markdown of each chapter directory into LaTeX with `pandoc`, compiles each one with `pdflatex`, and stitches everything into a single `LinuxKernelInsides.pdf` with `pdfunite`. The intermediate files are left in a `build` directory, which is where you find the `pdflatex` logs if a chapter does not typeset.
 
 > You only need this if you want to **build the PDF yourself**. To just read the book, grab the pre-built [`LinuxKernelInsides.pdf`](LinuxKernelInsides.pdf).
 
-It requires the following utils and packages:
+It uses only the standard library, so plain Python 3 is enough - no `uv` and no packages to install. It requires the following utils and packages:
 
 - [TeX Live](https://www.tug.org/texlive/)
 - [Pandoc](https://pandoc.org/)
+- `pdfunite` from [poppler-utils](https://poppler.freedesktop.org/)
 
-Usage:
+Usage, from this directory:
 
 ```bash
-./latex.sh
+./latex.py
 ```
+
+The `build` directory and the resulting PDF are written to the current working directory, so run it from wherever you want them.
