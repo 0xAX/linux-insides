@@ -70,6 +70,20 @@ clean: ## remove all exported e-book files ...
 		 "Linux Inside - 0xAX.pdf" \
 		 "Linux Inside - 0xAX (A5).pdf"
 
+### SCRIPTS
+
+# Narrow the snippet check down to a single chapter with, for example:
+#   make check-snippets DIR=./Initialization
+DIR ?= .
+
+.PHONY: check-snippets
+check-snippets: ## verify that the book code snippets still match the kernel source ...
+	uv run --project scripts --locked ./scripts/check_code_snippets.py $(DIR)
+
+.PHONY: sync
+sync: ## install the script dependencies into scripts/.venv ...
+	uv sync --project scripts --locked
+
 ### LAUNCH BROWSER
 
 .PHONY: browse
