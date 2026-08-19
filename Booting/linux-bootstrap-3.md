@@ -302,7 +302,7 @@ After this step, the video mode is configured and we save all the information ab
 
 Returning to the [`main`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) function of the early kernel setup code, we finally can see:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L179-L180 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L177-L178 -->
 ```C
 	/* Do the last things and invoke protected mode */
 	go_to_protected_mode();
