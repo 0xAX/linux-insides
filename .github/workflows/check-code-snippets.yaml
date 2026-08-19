@@ -25,5 +25,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: scripts/uv.lock
       - name: Validate code snippets
+        env:
+          GIT_API_TOKEN: ${{ secrets.GIT_API_TOKEN }}
         run: |
           uv run --project scripts --locked ./scripts/check_code_snippets.py .
