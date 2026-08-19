@@ -6,7 +6,7 @@ In the previous [part](./linux-bootstrap-4.md), we saw the transition from the [
 
 The point where we stopped in the previous chapter is the [lret](https://www.felixcloutier.com/x86/ret) instruction, which performed "jump" to the `64-bit` entry point located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L276-L278 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L280-L282 -->
 ```assembly
 	.code64
 	.org 0x200
@@ -27,7 +27,7 @@ All of this we will see in the next sections.
 
 The `64-bit` entrypoint starts with the same two instructions that `32-bit`:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L290-L291 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L294-L295 -->
 ```assembly
 	cld
 	cli
@@ -43,7 +43,7 @@ The kernel executes these two instructions if the bootloader didn't perform them
 
 After these two instructions are executed, the next step is to unify segment registers:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L294-L299 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L298-L303 -->
 ```assembly
 	xorl	%eax, %eax
 	movl	%eax, %ds
@@ -59,7 +59,7 @@ Segment registers are not used in long mode, so the kernel resets them to zero.
 
 The next step is to compute the difference between the location the kernel was compiled to be loaded at and the location where it is actually loaded:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L315-L331 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L319-L335 -->
 ```assembly
 #ifdef CONFIG_RELOCATABLE
 	leaq	startup_32(%rip) /* - $startup_32 */, %rbp
@@ -91,7 +91,7 @@ The only difference with the code from protected mode is that now, the kernel ca
 
 After these addresses are obtained, the kernel sets up the stack for the decompressor code:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L334-L334 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L338-L338 -->
 ```assembly
 	leaq	rva(boot_stack_end)(%rbx), %rsp
 ```
@@ -105,7 +105,7 @@ The next step is to set up a new Global Descriptor Table. Yes, one more time ðŸ˜
 
 The "new" Global Descriptor Table has the same entries but is pointed by the `gdt64` symbol:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L489-L493 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L493-L497 -->
 ```assembly
 	.data
 SYM_DATA_START_LOCAL(gdt64)
@@ -116,7 +116,7 @@ SYM_DATA_END(gdt64)
 
 The single difference is that `lgdt` in `64-bit` mode loads `GDTR` register with size `10` bytes. In comparison, in `32-bit`, the size of `GDTR` is `6` bytes. To load the new Global Descriptor Table, the kernel writes its address to the `GDTR` register using the `lgdt` instruction:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L357-L368 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L361-L372 -->
 ```assembly
 	/* Make sure we have GDT with 32-bit code segment */
 	leaq	gdt64(%rip), %rax
@@ -136,7 +136,7 @@ The single difference is that `lgdt` in `64-bit` mode loads `GDTR` register with
 
 After the new Global Descriptor Table is loaded, the next step is to load the new `Interrupt Descriptor Table`:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L369-L376 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L373-L380 -->
 ```assembly
 	/*
 	 * RSI holds a pointer to a boot_params structure provided by the
@@ -156,7 +156,7 @@ The next steps after this are highly related to the setup of `5-level` paging, i
 
 Since the calculation of the base address for the kernel relocation is done, the kernel setup code can copy the compressed kernel image and the decompressor code to the memory area pointed by this address:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L419-L425 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L423-L429 -->
 ```assembly
 	leaq	(_bss-8)(%rip), %rsi
 	leaq	rva(_bss-8)(%rbx), %rdi
@@ -177,7 +177,7 @@ Because of the `std` instruction, the copying is performed in the backward order
 
 After the copying is performed, the kernel needs to reload the previously loaded `Global Descriptor Table` in case it was overwritten or corrupted during the copy procedure:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L432-L435 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L436-L439 -->
 ```assembly
 	leaq	rva(gdt64)(%rbx), %rax
 	leaq	rva(gdt)(%rbx), %rdx
@@ -187,7 +187,7 @@ After the copying is performed, the kernel needs to reload the previously loaded
 
 And finally jump on the relocated code:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L440-L441 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L444-L445 -->
 ```assembly
 	leaq	rva(.Lrelocated)(%rbx), %rax
 	jmp	*%rax
@@ -199,7 +199,7 @@ In the previous section, we saw the kernel relocation. The very first task after
 
 The following code does that:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L450-L455 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L454-L459 -->
 ```assembly
 	xorl	%eax, %eax
 	leaq    _bss(%rip), %rdi
@@ -213,7 +213,7 @@ The assembly code above should be pretty easy to understand if you read the prev
 
 In the next step, the kernel fills the new `Interrupt Descriptor Table` with the call:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L457-L457 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L461-L461 -->
 ```
 	call	load_stage2_idt
 ```
@@ -255,7 +255,7 @@ The second interrupt handler is needed to "handle" a triple-fault if such an int
 
 After the `Interrupt Descriptor Table` is re-loaded, the `initialize_identity_maps` function is called:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L460-L461 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L464-L465 -->
 ```assembly
 	movq	%r15, %rdi
 	call	initialize_identity_maps
@@ -329,7 +329,7 @@ After all the identity mapping page table entries were initialized, the kernel u
 
 At this point, all the preparations needed to decompress the kernel image are done. Now the kernel decompressor code is ready to decompress the kernel:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L466-L475 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L470-L479 -->
 ```assembly
 	/* pass struct boot_params pointer and output target address */
 	movq	%r15, %rdi
