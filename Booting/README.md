@@ -47,4 +47,4 @@ The following parts are presented in this chapter and should be read in this ord
 
 ## Kernel version
 
-This chapter corresponds to `Linux kernel v7.1.0`.
+This chapter corresponds to `Linux kernel v7.2.0`.
