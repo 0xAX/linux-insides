@@ -49,4 +49,4 @@ The topics in this chapter are independent of one another, so you can read the s
 
 ## Kernel version
 
-This chapter corresponds to `Linux kernel v7.1.0`.
+This chapter corresponds to `Linux kernel v7.2.0`.
