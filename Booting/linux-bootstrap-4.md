@@ -258,7 +258,7 @@ Knowing now that the `ebp` register contains the physical address of the beginni
 
 The new Global Descriptor Table looks like this:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L495-L504 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L499-L508 -->
 ```assembly
 SYM_DATA_START_LOCAL(gdt)
 	.word	gdt_end - gdt - 1
@@ -338,7 +338,7 @@ Before the kernel can switch to long mode, it checks that it runs on a suitable 
 
 The `verify_cpu` function is defined in [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) and executes the [CPUID](https://en.wikipedia.org/wiki/CPUID) instruction to check the details of the processors on which the kernel is running. In our case, the most crucial check is for long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) support. This function returns the result in the `eax` register. Its value is `0` on success and `1` on failure. If long mode is not supported by the current processor, the kernel jumps to the `no_longmode` label, which stops the CPU with the `hlt` instruction:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L478-L483 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L482-L487 -->
 ```assembly
 	.code32
 SYM_FUNC_START_LOCAL_NOALIGN(.Lno_longmode)
@@ -526,7 +526,7 @@ Now that we know a little about paging, we can return to the kernel and update o
 
 The page table structure for boot is defined in the same source code file and looks like this:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L531-L533 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L535-L537 -->
 ```assembly
 	.section ".pgtable","aw",@nobits
 	.balign 4096
@@ -535,7 +535,7 @@ SYM_DATA_LOCAL(pgtable,		.fill BOOT_PGT_SIZE, 1, 0)
 
 The kernel needs to fill this structure with the proper page table entries for early 64-bit code. First of all, it fills the whole memory area occupied by the page tables with zeros for safety:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L200-L203 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L204-L207 -->
 ```assembly
 	leal	rva(pgtable)(%ebx), %edi
 	xorl	%eax, %eax
@@ -551,7 +551,7 @@ At the beginning, we set the address of the top of the page table to the `edi` r
 
 After the kernel clears the memory region reserved for the page tables, it starts populating it with entries. At the start, it fills the first and single entry of the top-level page table. The following snippet shows this:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L206-L209 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L210-L213 -->
 ```assembly
 	leal	rva(pgtable + 0)(%ebx), %edi
 	leal	0x1007 (%edi), %eax
@@ -567,7 +567,7 @@ In the code above, the kernel fills the first entry of the top-level page table 
 
 In the next step, the kernel builds four `Page Directory` entries in the `Page Directory Pointer` table with the same `Present+Read/Write/User` flags:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L212-L220 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L216-L224 -->
 ```assembly
 	leal	rva(pgtable + 0x1000)(%ebx), %edi
 	leal	0x1007(%edi), %eax
@@ -582,7 +582,7 @@ In the next step, the kernel builds four `Page Directory` entries in the `Page D
 
 In the code above, we can see the filling of the first four entries of the 3rd-level page table. The first entry of the 3rd level page table is located at the offset `0x1000` from the beginning of the top-level page table. The value of the `eax` register is similar to the 4th-level page table entry, with the difference that now it points to the 2nd-level page table. Next, the kernel fills the four entries of the 3rd-level page table in the "loop" until the value of the `ecx` register is not zero. As soon as these page table entries are filled, the kernel proceeds to the next-level page table:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L223-L231 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L227-L235 -->
 ```assembly
 	leal	rva(pgtable + 0x2000)(%ebx), %edi
 	movl	$0x00000183, %eax
@@ -609,7 +609,7 @@ There is no need to populate the lowest-level page tables yet. Every entry in th
 
 The page tables are now fully prepared. The last remaining step is to actually enable paging. To do this, the processor must know where the top-level page table resides. As we know, this is done by loading the physical address of the top-level page table into the `cr3` control register:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L234-L235 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L238-L239 -->
 ```assembly
 	leal	rva(pgtable)(%ebx), %eax
 	movl	%eax, %cr3
@@ -621,7 +621,7 @@ From this moment, page tables that cover four gigabytes of memory are ready, and
 
 Only the last steps remain before the Linux kernel can switch the processor into the long mode. The first one is setting the `EFER.LME` flag in the special [model-specific register](http://en.wikipedia.org/wiki/Model-specific_register) to the predefined value `0xC0000080`:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L238-L241 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L242-L245 -->
 ```assembly
 	movl	$MSR_EFER, %ecx
 	rdmsr
@@ -633,7 +633,7 @@ This is the `Long Mode Enable` bit, and it is mandatory to set this bit to enabl
 
 In the next step, we can see the preparation for the jump on the long mode entrypoint. To do this jump, the kernel stores the base address of the kernel segment code along with the address of the long mode entrypoint on the stack:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L264-L266 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L268-L270 -->
 ```assembly
 	leal	rva(startup_64)(%ebp), %eax
 	pushl	$__KERNEL_CS
@@ -642,14 +642,14 @@ In the next step, we can see the preparation for the jump on the long mode entry
 
 Since the stack contains the base of the kernel code segment and the address of the entrypoint, the kernel executes the last instruction in protected mode:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L273-L273 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L277-L277 -->
 ```assembly
 	lret
 ```
 
 The CPU extracts the address of `startup_64`, which is the long mode entrypoint from the stack, and jumps there:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L276-L278 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L280-L282 -->
 ```assembly
 	.code64
 	.org 0x200
