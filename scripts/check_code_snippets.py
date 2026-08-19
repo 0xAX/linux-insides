@@ -6,11 +6,22 @@ in the markdown files that are attached to the code and checks their validity.
 import os
 import re
 import sys
-from typing import Optional, Tuple
+import time
+from typing import Dict, Optional, Tuple
 
 import requests
 
-exclude_dirs = ["./.github"]
+# directories that hold no book content, but may hold example snippet
+# annotations that must not be fetched
+exclude_dirs = [".github", "scripts"]
+
+# Every snippet fetches the whole source file, and a single file usually backs
+# many snippets, so the sources are cached to keep the request count down.
+cache: Dict[str, str] = {}
+session = requests.Session()
+
+MAX_RETRIES = 5
+MAX_BACKOFF = 60.0
 
 def __split_url_and_range__(url: str) -> Tuple[str, Optional[int], Optional[int]]:
     base, frag = url.split("#", 1)
@@ -19,9 +30,82 @@ def __split_url_and_range__(url: str) -> Tuple[str, Optional[int], Optional[int]
     end = int(m.group(2)) if m.group(2) else None
     return base, start, end
 
+def __split_ref__(rest: str) -> Tuple[str, str]:
+    parts = rest.split("/")
+
+    if len(parts) > 3 and parts[0] == "refs" and parts[1] in ("heads", "tags"):
+        return parts[2], "/".join(parts[3:])
+
+    return parts[0], "/".join(parts[1:])
+
+def __api_url__(source: str) -> Optional[str]:
+    """
+    Rewrite a github url to the contents API, so that the request is counted
+    against the (much higher) authenticated rate limit of the given token.
+    """
+    m = re.match(r"https://raw\.githubusercontent\.com/([^/]+)/([^/]+)/(.+)$", source)
+
+    if not m:
+        m = re.match(r"https://github\.com/([^/]+)/([^/]+)/raw/(.+)$", source)
+
+    if not m:
+        return None
+
+    owner, repo, rest = m.groups()
+    (ref, path) = __split_ref__(rest)
+
+    if not path:
+        return None
+
+    return f"https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={ref}"
+
+def __get__(source: str) -> str:
+    headers = {}
+    token = os.environ.get("GITHUB_TOKEN")
+    url = source
+
+    if token:
+        api_url = __api_url__(source)
+
+        if api_url:
+            url = api_url
+            headers["Accept"] = "application/vnd.github.raw"
+            headers["Authorization"] = f"Bearer {token}"
+            headers["X-GitHub-Api-Version"] = "2022-11-28"
+
+    backoff = 2.0
+    response = None
+
+    for attempt in range(MAX_RETRIES):
+        response = session.get(url, timeout=30.0, headers=headers)
+
+        if response.status_code == 200:
+            return response.text
+
+        # github throttles anonymous requests, especially from shared CI
+        # addresses, so back off and try again instead of comparing the book
+        # against an error page
+        if response.status_code not in (403, 429) and response.status_code < 500:
+            break
+
+        if attempt == MAX_RETRIES - 1:
+            break
+
+        delay = min(float(response.headers.get("Retry-After", backoff)), MAX_BACKOFF)
+        print(f"{response.status_code} for {url}, retrying in {delay:.0f}s",
+              file=sys.stderr)
+        time.sleep(delay)
+        backoff *= 2
+
+    print(f"Failed to fetch {url}: {response.status_code} {response.text[:200]}",
+          file=sys.stderr)
+    sys.exit(1)
+
 def __fetch_raw__(source: str) -> str:
-    r = requests.get(source, timeout=5.0)
-    return r.text
+    if source not in cache:
+        cache[source] = __get__(source)
+
+    return cache[source]
 
 def __compare__(code: str, content: str, path: str):
     if code.rstrip() != content:
@@ -68,6 +152,10 @@ def __handle_md__(md: str, path: str):
     if code != '':
         __compare__(code, content, path)
 
+def __excluded__(md_path: str, root: str) -> bool:
+    rel = os.path.relpath(md_path, root)
+    return any(rel == d or rel.startswith(d + os.sep) for d in exclude_dirs)
+
 def __main__():
     path = ''
     md_files = []
@@ -84,15 +172,16 @@ def __main__():
             else:
                 continue
 
-    for md in md_files:
-        print("Checking code in the", md)
-        if os.path.dirname(md) in exclude_dirs:
+    for md_path in md_files:
+        if __excluded__(md_path, path):
             continue
 
-        with open(md, "r", encoding="utf-8") as f:
+        print("Checking code in the", md_path)
+
+        with open(md_path, "r", encoding="utf-8") as f:
             md = f.read()
 
-        __handle_md__(md, path)
+        __handle_md__(md, md_path)
 
 if __name__ == "__main__":
     __main__()
