@@ -460,20 +460,18 @@ The following information is going to be collected:
 
 At this moment we will not dive into details about each of this query, but will get back to them in the next parts when we will use this information. For now, just let's take a short look at these functions:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L163-L174 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L163-L172 -->
 ```C
 	/* Query Intel SpeedStep (IST) information */
 	query_ist();
 
 	/* Query APM information */
-#if defined(CONFIG_APM) || defined(CONFIG_APM_MODULE)
-	query_apm_bios();
-#endif
+	if (IS_ENABLED(CONFIG_APM))
+		query_apm_bios();
 
 	/* Query EDD information */
-#if defined(CONFIG_EDD) || defined(CONFIG_EDD_MODULE)
-	query_edd();
-#endif
+	if (IS_ENABLED(CONFIG_EDD))
+		query_edd();
 ```
 
 The first one is getting information about the [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep). This information is obtained by the calling the `0x15` BIOS interrupt and store the result in the `boot_params` structure. The returned information describes the support of the Intel SpeedStep and settings around it. If it is supported, this information will be passed later by the kernel to the power management subsystems.
