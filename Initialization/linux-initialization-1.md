@@ -18,7 +18,7 @@ Let's get started.
 
 At the end of the previous chapter, we reached the moment when the kernel decompressor finished its job. The kernel image was decompressed and the `extract_kernel` function from [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) returned the address of the kernel's entry point. This address was put in the `rax` register, and execution flow switched directly to it in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L469-L475 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L473-L479 -->
 ```assembly
 	call	extract_kernel		/* returns kernel entry point in %rax */
 
@@ -33,7 +33,7 @@ In other words, we have finally arrived at the actual kernel code.
 
 The x86_64 Linux kernel entry point is `startup_64` defined in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L36-L38 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/head_64.S#L36-L38 -->
 ```assembly
 	__INIT
 	.code64
@@ -60,7 +60,7 @@ The addresses match, so `startup_64` is indeed the entry point.
 
 Now that we know where the kernel entry point is, let's follow its very first instructions. First, the kernel saves the pointer to the `boot_params` structure for later use:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L59-L59 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/head_64.S#L59-L59 -->
 ```assembly
 	mov	%rsi, %r15
 ```
@@ -69,14 +69,14 @@ The decompressor passed this pointer in the `rsi` register because the kernel wi
 
 But before the kernel can call any function, it needs a valid stack. Without it, `push`, `pop`, and `call` instructions would read and write unpredictable memory, making any function call impossible. So the kernel sets up the stack:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L62-L62 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/head_64.S#L62-L62 -->
 ```assembly
 	leaq	__top_init_kernel_stack(%rip), %rsp
 ```
 
 The stack pointer is set to `__top_init_kernel_stack`. This is the stack of the init task which will eventually become the idle process with PID 0. The stack is `16384` bytes in size, and its top is defined in the kernel image by the [linker script](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/vmlinux.lds.S#L183-L183 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/vmlinux.lds.S#L189-L189 -->
 ```linker-script
 		__top_init_kernel_stack = __end_init_stack - TOP_OF_KERNEL_STACK_PADDING - PTREGS_SIZE;
 ```
@@ -90,7 +90,7 @@ With the stack ready, the kernel can now safely use stack operations and call fu
 
 The next few instructions deal with the `gs` register. The kernel uses it to access [per-CPU data structures](../Concepts/linux-cpu-1.md), but right now it may still hold whatever value the early kernel setup code left. If that garbage value is used as a base for a per-CPU access, the kernel would read from or write to the wrong memory location. So the kernel zeroes it out:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L69-L72 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/head_64.S#L69-L72 -->
 ```assembly
 	movl	$MSR_GS_BASE, %ecx
 	xorl	%eax, %eax
@@ -134,7 +134,7 @@ The main reason to load these descriptors is how they are used in long mode. Alt
 
 The following call loads the new Global Descriptor Table:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L74-L74 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/head_64.S#L74-L74 -->
 ```assembly
 	call	__pi_startup_64_setup_gdt_idt
 ```
