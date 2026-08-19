@@ -348,7 +348,7 @@ After all the entries are initialized and copied to the Interrupt Descriptor Tab
 
 Starting from this point, the `IDT` is initialized and loaded, so the kernel can handle the early exceptions it cares about. But which handlers does it actually have now? The answer is in `early_idt_handler_array`. This array is defined in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head_64.S#L488-L505 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/head_64.S#L488-L505 -->
 ```assembly
 SYM_CODE_START(early_idt_handler_array)
 	i = 0
@@ -419,7 +419,7 @@ All of these stubs jump to the common `early_idt_handler_common` routine. Before
 
 With this stack frame prepared, the kernel calls the `do_early_exception` function. This function first handles a few special early exceptions by vector number, and then falls back to the Linux kernel exception table:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head64.c#L159-L173 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/head64.c#L159-L173 -->
 ```C
 void __init do_early_exception(struct pt_regs *regs, int trapnr)
 {
@@ -451,7 +451,7 @@ A page fault is an exception that the processor raises whenever a program, or in
 
 During this early boot phase, the Linux kernel does not install the full page fault handler that will be used later during normal kernel execution. The IDT entry for page faults points to one of the generic early stubs, and the real work happens in `do_early_exception`. This function checks whether the exception is a page fault and, if yes, calls `early_make_pgtable`, passing the faulting address from the `cr2` register. The `early_make_pgtable` function translates the faulting virtual address to a physical address and computes the PMD entry for it:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/kernel/head64.c#L149-L157 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/head64.c#L149-L157 -->
 ```C
 static bool __init early_make_pgtable(unsigned long address)
 {
@@ -493,7 +493,7 @@ As we already saw, the `do_early_exception` function selects a handler for some 
 
 The table itself is built during the kernel build and consists of a contiguous set of the following structures:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/include/asm/extable.h#L23-L25 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/extable.h#L23-L25 -->
 ```C
 struct exception_table_entry {
 	int insn, fixup, data;
@@ -508,7 +508,7 @@ Where:
 
 The table is populated with entries using `_ASM_EXTABLE_TYPE` and similar macros from the same family:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/include/asm/asm.h#L138-L144 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/asm.h#L138-L144 -->
 ```C
 # define _ASM_EXTABLE_TYPE(from, to, type)				\
 	.pushsection "__ex_table", "aM", @progbits, EXTABLE_SIZE ;	\
@@ -521,7 +521,7 @@ The table is populated with entries using `_ASM_EXTABLE_TYPE` and similar macros
 
 For example, one of the next steps during kernel initialization is loading CPU microcode in the `load_ucode_bsp` function. This function uses the `rdmsr` instruction to check the AMD patch level:
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/arch/x86/include/asm/msr.h#L66-L76 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/msr.h#L66-L76 -->
 ```C
 static __always_inline u64 __rdmsr(u32 msr)
 {
@@ -548,7 +548,7 @@ Now we know how the Linux kernel can recover from selected exceptions without ch
 
 We have finished the main goal of this chapter, setting up the Interrupt Descriptor Table. Only a few architecture-specific steps remain before we reach the generic kernel entry point from [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c):
 
-<!-- https://github.com/torvalds/linux/raw/refs/heads/master/init/main.c#L971-L972 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/init/main.c#L977-L978 -->
 ```C
 asmlinkage __visible __init __no_sanitize_address __noreturn __no_stack_protector
 void start_kernel(void)
