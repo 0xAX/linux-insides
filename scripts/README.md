@@ -19,6 +19,12 @@ Keeps the code in the book honest. Each snippet is annotated with an HTML commen
 
 The script fetches that range from GitHub and compares it against the code block in the book. If they have drifted apart, it prints both versions and exits with a non-zero status - handy for CI.
 
+Each source file is fetched only once per run and the result is reused by every snippet that refers to it. Requests that GitHub throttles are retried with a growing delay. If `GITHUB_TOKEN` is set, the sources are read through the GitHub contents API instead of the raw endpoint, which counts against the authenticated rate limit and makes `429 Too Many Requests` far less likely:
+
+```bash
+GITHUB_TOKEN=$(gh auth token) uv run --project scripts ./scripts/check_code_snippets.py .
+```
+
 Its dependencies are declared in [`pyproject.toml`](pyproject.toml) and pinned in [`uv.lock`](uv.lock), so [uv](https://docs.astral.sh/uv/) provides both the interpreter and the packages. Nothing has to be installed by hand.
 
 Usage, from the repository root:
