@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="860px" height="270px" viewBox="0 0 860 270"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .hi   { fill: #eee8d5; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#eee8d5, #2d2614); stroke: light-dark(#000000, #ffffff); }
+    .node { fill: #fdf6e3; stroke: #000000; stroke-width: 1.5;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .gd   { stroke: #000000; stroke-width: 1; stroke-dasharray: 3 3; fill: none;
+            stroke: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ttl  { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .mem  { fill: #000000; font-size: 11px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* these two win over the anchor set by .mem / .val above */
+    .l    { text-anchor: end; }
+    .r    { text-anchor: start; }
+
+    /* step 1 - all we hold is the address of the embedded member,
+       step 2 - after subtracting the offset we hold the container */
+    .hl   { fill: none; stroke: #cb4b16; stroke-width: 2;
+            stroke: light-dark(#cb4b16, #eb7a4a); }
+    .hl-member    { animation: member    6s ease-in-out infinite; }
+    .hl-container { animation: container 6s ease-in-out infinite; }
+
+    @keyframes member {
+        0% { opacity: 0; }
+        8% { opacity: 1; }
+       42% { opacity: 1; }
+       50% { opacity: 0; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes container {
+        0% { opacity: 0; }
+       50% { opacity: 0; }
+       58% { opacity: 1; }
+       92% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hl-member, .hl-container { animation: none; opacity: 0; }
+    }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path class="ah" d="M0,0 L7,3 L0,6 z"/>
+    </marker>
+    <marker id="arrow-back" markerWidth="8" markerHeight="8" refX="0" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path class="ah" d="M7,0 L0,3 L7,6 z"/>
+    </marker>
+  </defs>
+
+  <!-- Addresses grow downwards here: the tasks member sits 0x390 bytes below
+       the start of the task_struct that contains it (offset made up for the
+       picture, the real one depends on the kernel configuration). -->
+
+  <!-- ===== the containing structure ===== -->
+  <rect class="box"  x="290" y="70" width="220" height="158"/>
+  <text class="ttl"  x="400" y="90">struct task_struct</text>
+  <rect class="hi"   x="305" y="98" width="190" height="26"/>
+  <text class="val"  x="400" y="115">other fields</text>
+  <rect class="node" x="305" y="130" width="190" height="56"/>
+  <text class="mem"  x="400" y="144">tasks</text>
+  <line class="div"  x1="305" y1="150" x2="495" y2="150"/>
+  <line class="div"  x1="400" y1="150" x2="400" y2="186"/>
+  <text class="lbl"  x="352" y="172">prev</text>
+  <text class="lbl"  x="448" y="172">next</text>
+  <rect class="hi"   x="305" y="192" width="190" height="26"/>
+  <text class="val"  x="400" y="209">other fields</text>
+
+  <!-- ===== left: the offset that offsetof() gives us ===== -->
+  <line class="gd" x1="240" y1="70"  x2="290" y2="70"/>
+  <line class="gd" x1="240" y1="130" x2="305" y2="130"/>
+  <line class="div" x1="262" y1="70" x2="262" y2="130"
+        marker-start="url(#arrow-back)" marker-end="url(#arrow)"/>
+  <text class="val l" x="240" y="93">offset of the tasks member</text>
+  <text class="mem l" x="240" y="110">offsetof(...) = 0x390</text>
+
+  <!-- ===== right: what we get and what we started from ===== -->
+  <line class="div" x1="570" y1="70" x2="514" y2="70" marker-end="url(#arrow)"/>
+  <text class="mem r" x="578" y="66">0xffff888100a2c000</text>
+  <text class="val r" x="578" y="82">the address container_of() returns</text>
+
+  <line class="div" x1="570" y1="143" x2="499" y2="143" marker-end="url(#arrow)"/>
+  <text class="mem r" x="578" y="139">0xffff888100a2c390</text>
+  <text class="val r" x="578" y="155">ptr, the only address we have</text>
+
+  <!-- ===== the arithmetic itself ===== -->
+  <text class="mem" x="400" y="252">0xffff888100a2c390 - 0x390 = 0xffff888100a2c000</text>
+
+  <!-- ===== step 1: the member we hold ===== -->
+  <rect class="hl hl-member" x="303" y="128" width="194" height="60" rx="2"/>
+  <!-- ===== step 2: the container we recovered ===== -->
+  <rect class="hl hl-container" x="288" y="68" width="224" height="162" rx="2"/>
+</svg>

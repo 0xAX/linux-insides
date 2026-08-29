@@ -1,249 +1,279 @@
-Data Structures in the Linux Kernel
-================================================================================
+# Kernel Data Structures - Part 1
 
-Doubly linked list
---------------------------------------------------------------------------------
+The Linux kernel is really huge peice of code. As a modern operating system kernel, it contains schedulers to manage processes and resources, network stack, a handful of file systems, thousands of device drivers, and much, much more. At the same time, the kernel has to manage all of this as efficiently as possible. Efficiency here is not always only about writing faster instructions or clever algorithms. Very often, as in any userspace application, it starts with a much more fundamental question - how is the data organized?
 
-Linux kernel provides its own implementation of doubly linked list, which you can find in the [include/linux/list.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/list.h). We will start `Data Structures in the Linux kernel` from the doubly linked list data structure. Why? Because it is very popular in the kernel, just try to [search](http://lxr.free-electrons.com/ident?i=list_head)
+As Linus Torvalds once [wrote](https://lore.kernel.org/git/Pine.LNX.4.64.0607270936200.4168@g5.osdl.org/):
 
-First of all, let's look on the main structure in the [include/linux/types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h):
+> Good programmers  worry about data structures and their relationships.
 
+The kernel needs to keep track of processes, memory pages, files, timers, devices, network connections, and countless other objects. Some of them need to be searched quickly, some must always remain ordered, some are frequently traversed, and some need to be inserted or removed with as little overhead as possible. Choosing an appropriate representation for this data may have a direct impact on the performance and memory usage. 
+
+This is especially important for software such as an operating system kernel. Ideally, it should remain almost invisible to the user while introducing as little overhead as possible.
+
+If you have looked at the kernel source code, you have probably noticed that linked lists, trees, queues, bitmaps, hash tables, and many other data structures are used in almost every kernel subsystem. Some are familiar from the well known computer science textbooks, while others have been adapted to the particular requirements and programming style of the kernel.
+
+In this chapter, we will look at these building blocks so that they will already be familiar to us when we explore the main kernel subsystems.
+
+## Linked list
+
+The very first data structure that we will meet in the chapter is the [linked list](https://en.wikipedia.org/wiki/Linked_list).
+
+I think this is a good choice to start with, because this data structure is relatively simple on the one hand, and quite ubiquitous on the other. Saying that it is ubiquitous, is not an exaggeration. We can meet the linked lists in many different parts of the Linux kernel. We can get a rough idea of just how common this data structure in the kernel:
+
+```bash
+rg -w 'struct list_head' | wc -l
+17143
+```
+
+More than seventeen thousand occurrences! It is definitely worth to understand how the linked list is implemented and used in the kernel.
+
+One of the main purposes of this data structure is to organize different kinds of objects into sequences. But before we take a look at the implementation of linked lists in the kernel, let's take a short look at this data structure in general.
+
+According to [wikipedia](https://en.wikipedia.org/wiki/Linked_list):
+
+> In computer science, a linked list is a linear collection of data elements whose order is not given by their physical placement in memory. Instead, each element points to the next. It is a data structure consisting of a collection of nodes which together represent a sequence. In its most basic form, each node contains data, and a reference (in other words, a link) to the next node in the sequence.
+
+In other words, unlike an [array](https://en.wikipedia.org/wiki/Array_(data_structure)), the elements of a linked list do not have to occupy contiguous locations in memory. The relationship between them is represented explicitly by links. In the simplest case, every node contains a single link to the next node. Schematically it can be represented like this:
+
+![singly linked list](./images/singly-linked-list.svg)
+
+Such a list called a singly linked list and can be walked in one direction only. We start from the `head` and follow the `next` pointer of each node until we reach the end. The definition of this data structure and implementation of its basic operations are pretty simple. If you have read, for example, [Algorithms](https://www.amazon.com/Algorithms-4th-Robert-Sedgewick/dp/032157351X) by Robert Sedgewick and Kevin Wayne, you know the classical representation of the linked list:
+
+```java
+private class Node
+{
+    Item item;
+    Node next;
+}
+```
+
+Each `Node` stores an item and a reference to the next node. For example, if our list contains three elements, the head points to the first node, the first node points to the second one, and the second node points to the third. The last node points to nothing, that is how the end of a list is determined.
+
+Adding a new element does not require moving the existing elements in memory. We only need to create a new node and adjust the appropriate links. To remove an element from a list, we need to change the link from the preceding node to skip the node being removed.
+
+Very often, this is not enough. For some operations, we may need to move backwards through the list. In such cases, every node gets a second link which points to the previous node, and the structure is called a doubly linked list. Schematically, this structure can be represented like this:
+
+![doubly linked list](./images/doubly-linked-list.svg)
+
+> [!NOTE]
+> I will not provide examples of linked-list implementations here. If you have never implemented one yourself, it can be a good exercise for self-training.
+
+## Linked lists in the Linux kernel
+
+Now that we have refreshed the basic idea behind linked lists, we can take a look at their implementation in the Linux kernel.
+
+Before the time I have seen the implementation of the linked lists in the Linux kernel, I expected to see something very similar to what we have seen above. A simple structure with a pointer or storage for a data and a reference to another node. It turns out that it is quite different!
+
+The kernel implements so-called intrusive linked lists. In such lists, there is no pointer to the data. Instead, a list's node contains only two pointers. One pointer to the next element and the pointer to the previous element. Such a node is embedded into the structure that we want to keep in the list. The links connect these embedded nodes to each other:
+
+![intrusive linked list](./images/intrusive-list.svg)
+
+Yes, this may look very unusual at first. How can such a structure represent a list of processes, devices, files, or any other kernel objects if it does not contain the objects themselves? As described above, the answer is one of the characteristic ideas behind the Linux implementation of linked lists. Instead of storing an object inside a list node, the list node is stored inside the object.
+
+The implementation of the Linux kernel linked lists can be find in the [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h). If we will take a look at the structure itself, we will see the same what was described above:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/types.h#L206-L208 -->
 ```C
 struct list_head {
 	struct list_head *next, *prev;
 };
 ```
 
-You can note that it is different from many implementations of doubly linked list which you have seen. For example, this doubly linked list structure from the [glib](http://www.gnu.org/software/libc/) library looks like :
+As we can see, the `list_head` structure contains only two pointers to the next and previous nodes. So how can we use it? The answer is to embed a `list_head` directly into the structure whose objects we want to keep in a list. For example, if we will take a look at the structure that defines a process, we can see that among other fields it has:
 
 ```C
-struct GList {
-  gpointer data;
-  GList *next;
-  GList *prev;
+struct task_struct { 
+    ...
+    struct list_head tasks;
+    ...
 };
 ```
 
-Usually a linked list structure contains a pointer to the item. The implementation of linked list in Linux kernel does not. So the main question is - `where does the list store the data?`. The actual implementation of linked list in the kernel is - `Intrusive list`. An intrusive linked list does not contain data in its nodes - A node just contains pointers to the next and previous node and list nodes part of the data that are added to the list. This makes the data structure generic, so it does not care about entry data type anymore.
+The `tasks` field is used to link `task_struct` objects together. So, instead of allocating a separate list node which contains a pointer to a `task_struct`, every `task_struct` contains its own list node. Interestingly, the `next` and `prev` pointers do not point directly to another `task_struct`. Instead, they point to the tasks member embedded inside the neighboring `task_struct` objects. Schematically, it looks like this:
 
-For example:
+![list of task_struct objects](./images/task-struct-list.svg)
 
+This approach gives us a linked list without requiring a separate allocation for every list node and without requiring `list_head` to know anything about the structures it links.
+
+This sounds great, but when you see it for the first time, it raises another question. If all we have while walking the list is a pointer to `list_head`, how can we get back to the `task_struct` which contains it? The answer is based on another very common kernel helper - the `container_of` macro. This macro allows us to get a pointer to the structure which we are interested in. In our case, having a pointer to the `tasks` member allows us to get back to the `task_struct` which contains it.
+
+The idea behind it is pretty simple. If we know the address of a list node embedded inside a structure, the type of the structure, and the name of the field which contains the node, we can calculate the address of the containing structure. In our case, we have a pointer to the `tasks` member, which is a `list_head`, and we know that this member belongs to a `task_struct` structure. Using this information, the kernel can recover the address of the containing `task_struct`.
+
+This is exactly what allows the linked list implementation to stay generic. `list_head` does not know anything about `task_struct`, while the code which uses the list can always get back to the object that contains the list node.
+
+After we understood the basic idea, let's take a look at the implementation of the `container_of`. The definition of this macro you can find in [include/linux/container_of.h]():
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/container_of.h#L10-L23 -->
 ```C
-struct nmi_desc {
-    spinlock_t lock;
-    struct list_head head;
+/**
+ * container_of - cast a member of a structure out to the containing structure
+ * @ptr:	the pointer to the member.
+ * @type:	the type of the container struct this is embedded in.
+ * @member:	the name of the member within the struct.
+ *
+ * WARNING: any const qualifier of @ptr is lost.
+ * Do not use container_of() in new code.
+ */
+#define container_of(ptr, type, member) ({				\
+	static_assert(__same_type(*(ptr), typeof_member(type, member)) || \
+		      __same_type(*(ptr), void),			\
+		      "pointer type mismatch in container_of()");	\
+	(type *)((void *)(ptr) - offsetof(type, member)); })
+```
+
+As we can see, this macro accepts three arguments: 
+
+- the pointer to the list node
+- the type of the structure that contains the list node
+- the name of the field that represents the list node
+
+In the example that we used above, these arguments would correspond to a pointer to the `tasks` field, `struct task_struct` as the type that contains the list node, and `tasks` as the name of the field that reresents the list node.
+
+The fist line of the macro's body does not strictly related to the address calculation. The only work that it does is a compile-time type check to make sure that the pointer to the list node has the expected type. 
+
+The second line of the macro does the actual job. Using the [offsetof](https://en.cppreference.com/c/types/offsetof) macro, it calculates the offset from the beginning of the structure to the field that defines the list node. Knowing this offset, we can substract it from the address of the list node and gt the address of the structure that contains this node.
+
+![container_of](./images/container-of.svg)
+
+And that is basically it! Abstractly, the `container_of()` macro allows us to get the address of a structure when we know the address of one of its fields. Putting this logic into the context of linked lists, this is nothing more than obtaining the actual list entry from a pointer to its embedded list node:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/list.h#L641-L648 -->
+```C
+/**
+ * list_entry - get the struct for this entry
+ * @ptr:	the &struct list_head pointer.
+ * @type:	the type of the struct this is embedded in.
+ * @member:	the name of the list_head within the struct.
+ */
+#define list_entry(ptr, type, member) \
+	container_of(ptr, type, member)
+```
+
+## List operations
+
+In the previous section, we got familiar with the basic structure of linked lists in the Linux kernel. Now it is time to look at the operations that we can use to add, remove, and update elements in a list.
+
+While writing this part, I was thinking that it would be quite boring to simply enumerate the existing API. Much more interesting would be to take a look at a real example of its usage. Some mechanism that you have probably seen while using a Linux operating system, but perhaps never thought about what is happening behind it.
+
+There are a lot of places in the kernel where lists are used. Let's take a look for example at the [miscellaneous character devices](https://en.wikipedia.org/wiki/Device_file#Character_devices).
+
+Each character device is identified by a pair of numbers: a major and a minor number. The major number usually identifies the driver or a group of related devices, while the minor number identifies a particular device handled by that driver.
+
+The kernel provides a special API which allows a driver to register a character device which can have no a separate major number for it. All such devices share the same major number, while each registered device gets its own minor number. Such major number is:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/uapi/linux/major.h#L26-L26 -->
+```C
+#define MISC_MAJOR		10
+```
+
+We can see the list of registered miscellaneous devices using the following command:
+
+```bash
+ls -l /dev | awk '$5 == "10," { print $10 }'
+
+acpi_thermal_rel
+autofs
+cpu_dma_latency
+cuse
+fuse
+hpet
+hwrng
+io_uring_mock
+kvm
+loop-control
+mcelog
+nvram
+rfkill
+snapshot
+tpm0
+udmabuf
+uhid
+userfaultfd
+vga_arbiter
+vhost-net
+vhost-vsock
+```
+
+So, from the userspace point of view, miscellaneous devices look like regular character devices with the same major number and different minor numbers. What is interesing for us, is that how the kernel keeps track of all these registered devices internally.
+
+Every miscellaneous device is represented by a `miscdevice` structure defined in [include/linux/miscdevice.h](https://github.com/torvalds/linux/blob/master/include/linux/miscdevice.h). Among other fields, this structure contains a field with the name `list`, which allows the device to become a part of the linked list maintained by the misc subsystem:
+
+<!-- https://github.com/torvalds/linux/raw/refs/heads/master/include/linux/miscdevice.h#L84-L94 -->
+```C
+struct miscdevice {
+	int minor;
+	const char *name;
+	const struct file_operations *fops;
+	struct list_head list;
+	struct device *parent;
+	struct device *this_device;
+	const struct attribute_group **groups;
+	const char *nodename;
+	umode_t mode;
 };
 ```
 
-Let's look at some examples to understand how `list_head` is used in the kernel. As I already wrote about, there are many, really many different places where lists are used in the kernel. Let's look for an example in miscellaneous character drivers. Misc character drivers API from the [drivers/char/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/char/misc.c) is used for writing small drivers for handling simple hardware or virtual devices. Those drivers share same major number:
+We already know the reason the `list` field is used for. Each registered device contains its own list node. Good, we have nodes. But how to access the list itself? The answer to this question is a special list head:
 
-```C
-#define MISC_MAJOR              10
-```
-
-but have their own minor number. For example you can see it with:
-
-```
-ls -l /dev |  grep 10
-crw-------   1 root root     10, 235 Mar 21 12:01 autofs
-drwxr-xr-x  10 root root         200 Mar 21 12:01 cpu
-crw-------   1 root root     10,  62 Mar 21 12:01 cpu_dma_latency
-crw-------   1 root root     10, 203 Mar 21 12:01 cuse
-drwxr-xr-x   2 root root         100 Mar 21 12:01 dri
-crw-rw-rw-   1 root root     10, 229 Mar 21 12:01 fuse
-crw-------   1 root root     10, 228 Mar 21 12:01 hpet
-crw-------   1 root root     10, 183 Mar 21 12:01 hwrng
-crw-rw----+  1 root kvm      10, 232 Mar 21 12:01 kvm
-crw-rw----   1 root disk     10, 237 Mar 21 12:01 loop-control
-crw-------   1 root root     10, 227 Mar 21 12:01 mcelog
-crw-------   1 root root     10,  59 Mar 21 12:01 memory_bandwidth
-crw-------   1 root root     10,  61 Mar 21 12:01 network_latency
-crw-------   1 root root     10,  60 Mar 21 12:01 network_throughput
-crw-r-----   1 root kmem     10, 144 Mar 21 12:01 nvram
-brw-rw----   1 root disk      1,  10 Mar 21 12:01 ram10
-crw--w----   1 root tty       4,  10 Mar 21 12:01 tty10
-crw-rw----   1 root dialout   4,  74 Mar 21 12:01 ttyS10
-crw-------   1 root root     10,  63 Mar 21 12:01 vga_arbiter
-crw-------   1 root root     10, 137 Mar 21 12:01 vhci
-```
-
-Now let's have a close look at how lists are used in the misc device drivers. First of all, let's look on `miscdevice` structure:
-
-```C
-struct miscdevice
-{
-      int minor;
-      const char *name;
-      const struct file_operations *fops;
-      struct list_head list;
-      struct device *parent;
-      struct device *this_device;
-      const char *nodename;
-      mode_t mode;
-};
-```
-
-We can see the fourth field in the `miscdevice` structure - `list` which is a list of registered devices. In the beginning of the source code file we can see the definition of misc_list:
-
+<!-- https://github.com/torvalds/linux/raw/refs/heads/master/drivers/char/misc.c#L57-L57 -->
 ```C
 static LIST_HEAD(misc_list);
 ```
 
-which expands to the definition of variables with `list_head` type:
+Following the definitions of the `LIST_HEAD` and `LIST_HEAD_INIT` macros in [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h), this expands to a regular C structure initialization:
 
 ```C
-#define LIST_HEAD(name) \
-	struct list_head name = LIST_HEAD_INIT(name)
+struct list_head misc_list = { &(misc_list), &(misc_list) }
 ```
 
-and initializes it with the `LIST_HEAD_INIT` macro, which sets previous and next entries with the address of variable - name:
+The two values inside the initializer are the `prev` and `next` fields of the `list_head` structure. Since the list is initially empty, there are no other nodes for these pointers to reference.
 
+When the kernel registers a device, it initialies the corresponding `miscdevice` structure and adds it to the list with:
+
+<!-- https://github.com/torvalds/linux/raw/refs/heads/master/drivers/char/misc.c#L269-L269 -->
 ```C
-#define LIST_HEAD_INIT(name) { &(name), &(name) }
+	list_add(&misc->list, &misc_list);
 ```
 
-Now let's look on the `misc_register` function which registers a miscellaneous device. At the start it initializes `miscdevice->list` with the `INIT_LIST_HEAD` function:
+This function is defined in [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h) and looks like this:
 
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/list.h#L189-L193 -->
 ```C
-INIT_LIST_HEAD(&misc->list);
-```
-
-which does the same as the `LIST_HEAD_INIT` macro:
-
-```C
-static inline void INIT_LIST_HEAD(struct list_head *list)
-{
-	list->next = list;
-	list->prev = list;
-}
-```
-
-In the next step after a device is created by the `device_create` function, we add it to the miscellaneous devices list with:
-
-```
-list_add(&misc->list, &misc_list);
-```
-
-Kernel `list.h` provides this API for the addition of a new entry to the list. Let's look at its implementation:
-
-```C
-static inline void list_add(struct list_head *new, struct list_head *head)
+static __always_inline void list_add(struct list_head *new,
+				     struct list_head *head)
 {
 	__list_add(new, head, head->next);
 }
 ```
 
-It just calls internal function `__list_add` with the 3 given parameters:
+As we can see, this function simply delegates the actual work to the internal __list_add() helper, which is implemented like this:
 
-* new  - new entry.
-* head - list head after which the new item will be inserted.
-* head->next - next item after list head.
-
-Implementation of the `__list_add` is pretty simple:
-
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/list.h#L165-L176 -->
 ```C
-static inline void __list_add(struct list_head *new,
-			      struct list_head *prev,
-			      struct list_head *next)
+static __always_inline void __list_add(struct list_head *new,
+				       struct list_head *prev,
+				       struct list_head *next)
 {
+	if (!__list_add_valid(new, prev, next))
+		return;
+
 	next->prev = new;
 	new->next = next;
 	new->prev = prev;
-	prev->next = new;
+	WRITE_ONCE(prev->next, new);
 }
 ```
 
-Here we add a new item between `prev` and `next`. So `misc` list which we defined at the start with the `LIST_HEAD_INIT` macro will contain previous and next pointers to the `miscdevice->list`.
+This already should be familiar to you if you have ever tried to implement a linked list by yourself. To insert a new node between two existing nodes, the kernel updates four links:
 
-There is still one question: how to get list's entry. There is a special macro:
+![list_add](./images/list-add.svg)
 
-```C
-#define list_entry(ptr, type, member) \
-	container_of(ptr, type, member)
-```
+At this point, I think we already know enough to understand the basic idea behind the linked list API in the kernel. We have seen how list nodes are embedded into other structures, how to get the containing structure back with `list_entry`, and how a new node is inserted into a list with `list_add`.
 
-which gets three parameters:
+The rest of the basic operations follow the same idea. There are helpers for removing nodes, adding them to the end of a list, moving them between lists, and iterating over the elements.
 
-* ptr - the structure list_head pointer;
-* type - structure type;
-* member - the name of the list_head within the structure;
+Here I will not go through each of them one by one here. With the concepts that we already know, reading their implementation in [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h) can be a good exercise.
 
-For example:
+## Conclusion
 
-```C
-const struct miscdevice *p = list_entry(v, struct miscdevice, list)
-```
-
-After this we can access to any `miscdevice` field with `p->minor` or `p->name` and etc... Let's look on the `list_entry` implementation:
-
-```C
-#define list_entry(ptr, type, member) \
-	container_of(ptr, type, member)
-```
-
-As we can see it just calls `container_of` macro with the same arguments. At first sight, the `container_of` looks strange:
-
-```C
-#define container_of(ptr, type, member) ({                      \
-    const typeof( ((type *)0)->member ) *__mptr = (ptr);    \
-    (type *)( (char *)__mptr - offsetof(type,member) );})
-```
-
-First of all you can note that it consists of two expressions in curly brackets. The compiler will evaluate the whole block in the curly braces and use the value of the last expression.
-
-For example:
-
-```
-#include <stdio.h>
-
-int main() {
-	int i = 0;
-	printf("i = %d\n", ({++i; ++i;}));
-	return 0;
-}
-```
-
-will print `2`.
-
-The next point is `typeof`, it's simple. As you can understand from its name, it just returns the type of the given variable. When I first saw the implementation of the `container_of` macro, the strangest thing I found was the zero in the `((type *)0)` expression. Actually this pointer magic calculates the offset of the given field from the address of the structure, but as we have `0` here, it will be just a zero offset along with the field width. Let's look at a simple example:
-
-```C
-#include <stdio.h>
-
-struct s {
-        int field1;
-        char field2;
-		char field3;
-};
-
-int main() {
-	printf("%p\n", &((struct s*)0)->field3);
-	return 0;
-}
-```
-
-will print `0x5`.
-
-The next `offsetof` macro calculates offset from the beginning of the structure to the given structure's field. Its implementation is very similar to the previous code:
-
-```C
-#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
-```
-
-Let's summarize all about `container_of` macro. The `container_of` macro returns the address of the structure by the given address of the structure's field with `list_head` type, the name of the structure field with `list_head` type and type of the container structure. At the first line this macro declares the `__mptr` pointer which points to the field of the structure that `ptr` points to and assigns `ptr` to it. Now `ptr` and `__mptr` point to the same address. Technically we don't need this line but it's useful for type checking. The first line ensures that the given structure (`type` parameter) has a member called `member`. In the second line it calculates offset of the field from the structure with the `offsetof` macro and subtracts it from the structure address. That's all.
-
-Of course `list_add` and `list_entry` is not the only functions which `<linux/list.h>` provides. Implementation of the doubly linked list provides the following API:
-
-* list_add
-* list_add_tail
-* list_del
-* list_replace
-* list_move
-* list_is_last
-* list_empty
-* list_cut_position
-* list_splice
-* list_for_each
-* list_for_each_entry
-
-and many more.
+This is the end of the first part about the data structures used in the Linux kernel. If you have questions or suggestions, feel free to ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).

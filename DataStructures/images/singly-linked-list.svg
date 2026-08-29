@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="800px" height="180px" viewBox="0 0 800 180"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .dot  { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .ptr  { fill: #000000; font-size: 12px; text-anchor: middle; font-weight: bold;
+            fill: light-dark(#000000, #ffffff); }
+    .nul  { fill: #000000; font-size: 12px; text-anchor: start; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* traversal cursor: walks the chain by following the next pointer */
+    .cursor { fill: none; stroke: #cb4b16; stroke-width: 2;
+              stroke: light-dark(#cb4b16, #eb7a4a);
+              animation: walk 6s ease-in-out infinite; }
+
+    @keyframes walk {
+        0% { transform: translateX(0px);   opacity: 0; }
+        5% { transform: translateX(0px);   opacity: 1; }
+       28% { transform: translateX(0px);   opacity: 1; }
+       36% { transform: translateX(240px); opacity: 1; }
+       59% { transform: translateX(240px); opacity: 1; }
+       67% { transform: translateX(480px); opacity: 1; }
+       92% { transform: translateX(480px); opacity: 1; }
+      100% { transform: translateX(480px); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { animation: none; opacity: 0; }
+    }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path class="ah" d="M0,0 L7,3 L0,6 z"/>
+    </marker>
+  </defs>
+
+  <!-- ===== cell labels ===== -->
+  <text class="lbl" x="145" y="70">data</text>
+  <text class="lbl" x="215" y="70">next</text>
+  <text class="lbl" x="385" y="70">data</text>
+  <text class="lbl" x="455" y="70">next</text>
+  <text class="lbl" x="625" y="70">data</text>
+  <text class="lbl" x="695" y="70">next</text>
+
+  <!-- ===== head pointer ===== -->
+  <text class="ptr"  x="60" y="100">head</text>
+  <line class="div" x1="34" y1="110" x2="96" y2="110" marker-end="url(#arrow)"/>
+
+  <!-- ===== node 1 ===== -->
+  <rect class="box" x="100" y="80" width="140" height="60"/>
+  <line class="div" x1="190" y1="80" x2="190" y2="140"/>
+  <text class="val" x="145" y="115">d0</text>
+  <circle class="dot" cx="215" cy="110" r="3.5"/>
+  <line class="div" x1="215" y1="110" x2="336" y2="110" marker-end="url(#arrow)"/>
+
+  <!-- ===== node 2 ===== -->
+  <rect class="box" x="340" y="80" width="140" height="60"/>
+  <line class="div" x1="430" y1="80" x2="430" y2="140"/>
+  <text class="val" x="385" y="115">d1</text>
+  <circle class="dot" cx="455" cy="110" r="3.5"/>
+  <line class="div" x1="455" y1="110" x2="576" y2="110" marker-end="url(#arrow)"/>
+
+  <!-- ===== node 3, the last one: its next link goes nowhere ===== -->
+  <rect class="box" x="580" y="80" width="140" height="60"/>
+  <line class="div" x1="670" y1="80" x2="670" y2="140"/>
+  <text class="val" x="625" y="115">d2</text>
+  <circle class="dot" cx="695" cy="110" r="3.5"/>
+  <line class="div" x1="695" y1="110" x2="736" y2="110" marker-end="url(#arrow)"/>
+  <text class="nul" x="742" y="114">NULL</text>
+
+  <!-- ===== animated traversal cursor (starts on node 1) ===== -->
+  <rect class="cursor" x="98" y="78" width="144" height="64" rx="2"/>
+</svg>

@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="520px" viewBox="0 0 820 520"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .node { fill: #fdf6e3; stroke: #000000; stroke-width: 1.5;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1; fill: none;
+            stroke: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ttl  { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .mem  { fill: #000000; font-size: 11px; text-anchor: start; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .num  { fill: #000000; font-size: 10px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .cap  { fill: #000000; font-size: 11px; text-anchor: start;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* the link written by the step, and the number of that step */
+    .hl   { stroke: #cb4b16; stroke-width: 2; fill: none;
+            stroke: light-dark(#cb4b16, #eb7a4a); }
+    .ah-hl { fill: #cb4b16; fill: light-dark(#cb4b16, #eb7a4a); }
+    .ring { fill: #fdf6e3; stroke: #cb4b16; stroke-width: 1.5;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#cb4b16, #eb7a4a); }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path class="ah" d="M0,0 L7,3 L0,6 z"/>
+    </marker>
+    <marker id="arrow-hl" markerWidth="10" markerHeight="10" refX="9" refY="4"
+            orient="auto" markerUnits="userSpaceOnUse">
+      <path class="ah-hl" d="M0,0 L9,4 L0,8 z"/>
+    </marker>
+  </defs>
+
+  <!-- __list_add(new, prev, next): prev and next are already neighbours, the
+       four assignments splice new in between them. Every row shows the links
+       as they are once the assignment on its left has been executed. -->
+
+  <!-- ===== which node is which ===== -->
+  <text class="ttl" x="275" y="22">prev</text>
+  <text class="ttl" x="505" y="22">new</text>
+  <text class="ttl" x="735" y="22">next</text>
+
+  <!-- ===== the starting point ===== -->
+  <text class="cap" x="46" y="94">before the insertion</text>
+  <rect class="box" x="210" y="70" width="130" height="40"/>
+  <line class="div" x1="275" y1="70" x2="275" y2="110"/>
+  <text class="lbl" x="242.5" y="94">prev</text>
+  <text class="lbl" x="307.5" y="94">next</text>
+  <rect class="node" x="440" y="70" width="130" height="40"/>
+  <line class="div" x1="505" y1="70" x2="505" y2="110"/>
+  <text class="lbl" x="472.5" y="94">prev</text>
+  <text class="lbl" x="537.5" y="94">next</text>
+  <rect class="box" x="670" y="70" width="130" height="40"/>
+  <line class="div" x1="735" y1="70" x2="735" y2="110"/>
+  <text class="lbl" x="702.5" y="94">prev</text>
+  <text class="lbl" x="767.5" y="94">next</text>
+  <polyline class="div" points="340,83 370,83 370,46 700,46 700,70" marker-end="url(#arrow)"/>
+  <polyline class="div" points="670,97 640,97 640,134 310,134 310,110" marker-end="url(#arrow)"/>
+
+  <!-- ===== step 1: next-&gt;prev = new; ===== -->
+  <circle class="ring" cx="29" cy="210" r="9"/>
+  <text class="num" x="29" y="213.5">1</text>
+  <text class="mem" x="46" y="214">next-&gt;prev = new;</text>
+  <rect class="box" x="210" y="190" width="130" height="40"/>
+  <line class="div" x1="275" y1="190" x2="275" y2="230"/>
+  <text class="lbl" x="242.5" y="214">prev</text>
+  <text class="lbl" x="307.5" y="214">next</text>
+  <rect class="node" x="440" y="190" width="130" height="40"/>
+  <line class="div" x1="505" y1="190" x2="505" y2="230"/>
+  <text class="lbl" x="472.5" y="214">prev</text>
+  <text class="lbl" x="537.5" y="214">next</text>
+  <rect class="box" x="670" y="190" width="130" height="40"/>
+  <line class="div" x1="735" y1="190" x2="735" y2="230"/>
+  <text class="lbl" x="702.5" y="214">prev</text>
+  <text class="lbl" x="767.5" y="214">next</text>
+  <polyline class="div" points="340,203 370,203 370,166 700,166 700,190" marker-end="url(#arrow)"/>
+  <line class="hl" x1="670" y1="217" x2="570" y2="217" marker-end="url(#arrow-hl)"/>
+
+  <!-- ===== step 2: new-&gt;next = next; ===== -->
+  <circle class="ring" cx="29" cy="305" r="9"/>
+  <text class="num" x="29" y="308.5">2</text>
+  <text class="mem" x="46" y="309">new-&gt;next = next;</text>
+  <rect class="box" x="210" y="285" width="130" height="40"/>
+  <line class="div" x1="275" y1="285" x2="275" y2="325"/>
+  <text class="lbl" x="242.5" y="309">prev</text>
+  <text class="lbl" x="307.5" y="309">next</text>
+  <rect class="node" x="440" y="285" width="130" height="40"/>
+  <line class="div" x1="505" y1="285" x2="505" y2="325"/>
+  <text class="lbl" x="472.5" y="309">prev</text>
+  <text class="lbl" x="537.5" y="309">next</text>
+  <rect class="box" x="670" y="285" width="130" height="40"/>
+  <line class="div" x1="735" y1="285" x2="735" y2="325"/>
+  <text class="lbl" x="702.5" y="309">prev</text>
+  <text class="lbl" x="767.5" y="309">next</text>
+  <polyline class="div" points="340,298 370,298 370,261 700,261 700,285" marker-end="url(#arrow)"/>
+  <line class="div" x1="670" y1="312" x2="570" y2="312" marker-end="url(#arrow)"/>
+  <line class="hl" x1="570" y1="298" x2="670" y2="298" marker-end="url(#arrow-hl)"/>
+
+  <!-- ===== step 3: new-&gt;prev = prev; ===== -->
+  <circle class="ring" cx="29" cy="400" r="9"/>
+  <text class="num" x="29" y="403.5">3</text>
+  <text class="mem" x="46" y="404">new-&gt;prev = prev;</text>
+  <rect class="box" x="210" y="380" width="130" height="40"/>
+  <line class="div" x1="275" y1="380" x2="275" y2="420"/>
+  <text class="lbl" x="242.5" y="404">prev</text>
+  <text class="lbl" x="307.5" y="404">next</text>
+  <rect class="node" x="440" y="380" width="130" height="40"/>
+  <line class="div" x1="505" y1="380" x2="505" y2="420"/>
+  <text class="lbl" x="472.5" y="404">prev</text>
+  <text class="lbl" x="537.5" y="404">next</text>
+  <rect class="box" x="670" y="380" width="130" height="40"/>
+  <line class="div" x1="735" y1="380" x2="735" y2="420"/>
+  <text class="lbl" x="702.5" y="404">prev</text>
+  <text class="lbl" x="767.5" y="404">next</text>
+  <polyline class="div" points="340,393 370,393 370,356 700,356 700,380" marker-end="url(#arrow)"/>
+  <line class="div" x1="670" y1="407" x2="570" y2="407" marker-end="url(#arrow)"/>
+  <line class="div" x1="570" y1="393" x2="670" y2="393" marker-end="url(#arrow)"/>
+  <line class="hl" x1="440" y1="407" x2="340" y2="407" marker-end="url(#arrow-hl)"/>
+
+  <!-- ===== step 4: prev-&gt;next = new; ===== -->
+  <circle class="ring" cx="29" cy="480" r="9"/>
+  <text class="num" x="29" y="483.5">4</text>
+  <text class="mem" x="46" y="484">prev-&gt;next = new;</text>
+  <rect class="box" x="210" y="460" width="130" height="40"/>
+  <line class="div" x1="275" y1="460" x2="275" y2="500"/>
+  <text class="lbl" x="242.5" y="484">prev</text>
+  <text class="lbl" x="307.5" y="484">next</text>
+  <rect class="node" x="440" y="460" width="130" height="40"/>
+  <line class="div" x1="505" y1="460" x2="505" y2="500"/>
+  <text class="lbl" x="472.5" y="484">prev</text>
+  <text class="lbl" x="537.5" y="484">next</text>
+  <rect class="box" x="670" y="460" width="130" height="40"/>
+  <line class="div" x1="735" y1="460" x2="735" y2="500"/>
+  <text class="lbl" x="702.5" y="484">prev</text>
+  <text class="lbl" x="767.5" y="484">next</text>
+  <line class="hl" x1="340" y1="473" x2="440" y2="473" marker-end="url(#arrow-hl)"/>
+  <line class="div" x1="670" y1="487" x2="570" y2="487" marker-end="url(#arrow)"/>
+  <line class="div" x1="570" y1="473" x2="670" y2="473" marker-end="url(#arrow)"/>
+  <line class="div" x1="440" y1="487" x2="340" y2="487" marker-end="url(#arrow)"/>
+</svg>
