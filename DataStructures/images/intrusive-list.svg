@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="208px" viewBox="0 0 820 208"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .hi   { fill: #eee8d5; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#eee8d5, #2d2614); stroke: light-dark(#000000, #ffffff); }
+    .node { fill: #fdf6e3; stroke: #000000; stroke-width: 1.5;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .dot  { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ttl  { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 12px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .ell  { fill: #000000; font-size: 12px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* the traversal walks the embedded nodes, not the containers */
+    .cursor { fill: none; stroke: #cb4b16; stroke-width: 2;
+              stroke: light-dark(#cb4b16, #eb7a4a);
+              animation: walk 7s ease-in-out infinite; }
+
+    @keyframes walk {
+        0% { transform: translateX(0px);   opacity: 0; }
+        5% { transform: translateX(0px);   opacity: 1; }
+       28% { transform: translateX(0px);   opacity: 1; }
+       36% { transform: translateX(250px); opacity: 1; }
+       59% { transform: translateX(250px); opacity: 1; }
+       67% { transform: translateX(500px); opacity: 1; }
+       92% { transform: translateX(500px); opacity: 1; }
+      100% { transform: translateX(500px); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { animation: none; opacity: 0; }
+    }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path class="ah" d="M0,0 L7,3 L0,6 z"/>
+    </marker>
+  </defs>
+
+  <!-- Every element of one list has the same type: list_entry() resolves the
+       container type at compile time, so a single list cannot mix types. -->
+
+  <!-- ===== container 1 ===== -->
+  <rect class="box"  x="70" y="60" width="170" height="136"/>
+  <text class="ttl"  x="155" y="80">struct foo</text>
+  <rect class="hi"   x="85" y="88" width="140" height="44"/>
+  <text class="val"  x="155" y="114">data fields</text>
+  <rect class="node" x="85" y="140" width="140" height="44"/>
+  <line class="div"  x1="155" y1="140" x2="155" y2="184"/>
+  <text class="lbl"  x="120" y="166">prev</text>
+  <text class="lbl"  x="190" y="166">next</text>
+
+  <!-- ===== container 2 ===== -->
+  <rect class="box"  x="320" y="60" width="170" height="136"/>
+  <text class="ttl"  x="405" y="80">struct foo</text>
+  <rect class="hi"   x="335" y="88" width="140" height="44"/>
+  <text class="val"  x="405" y="114">data fields</text>
+  <rect class="node" x="335" y="140" width="140" height="44"/>
+  <line class="div"  x1="405" y1="140" x2="405" y2="184"/>
+  <text class="lbl"  x="370" y="166">prev</text>
+  <text class="lbl"  x="440" y="166">next</text>
+
+  <!-- ===== container 3 ===== -->
+  <rect class="box"  x="570" y="60" width="170" height="136"/>
+  <text class="ttl"  x="655" y="80">struct foo</text>
+  <rect class="hi"   x="585" y="88" width="140" height="44"/>
+  <text class="val"  x="655" y="114">data fields</text>
+  <rect class="node" x="585" y="140" width="140" height="44"/>
+  <line class="div"  x1="655" y1="140" x2="655" y2="184"/>
+  <text class="lbl"  x="620" y="166">prev</text>
+  <text class="lbl"  x="690" y="166">next</text>
+
+  <!-- ===== next links: leave the right border 8px above the node centre ===== -->
+  <line class="div" x1="225" y1="154" x2="331" y2="154" marker-end="url(#arrow)"/>
+  <line class="div" x1="475" y1="154" x2="581" y2="154" marker-end="url(#arrow)"/>
+  <line class="div" x1="725" y1="154" x2="770" y2="154" marker-end="url(#arrow)"/>
+  <text class="ell" x="788" y="158">...</text>
+
+  <!-- ===== prev links: leave the left border 8px below the node centre ===== -->
+  <line class="div" x1="335" y1="170" x2="229" y2="170" marker-end="url(#arrow)"/>
+  <line class="div" x1="585" y1="170" x2="479" y2="170" marker-end="url(#arrow)"/>
+  <line class="div" x1="85"  y1="170" x2="40"  y2="170" marker-end="url(#arrow)"/>
+  <text class="ell" x="22" y="174">...</text>
+
+  <!-- ===== animated traversal cursor (starts on the first node) ===== -->
+  <rect class="cursor" x="83" y="138" width="144" height="48" rx="2"/>
+</svg>

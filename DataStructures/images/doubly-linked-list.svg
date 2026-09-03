@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="190px" viewBox="0 0 820 190"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .dot  { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .nulR { fill: #000000; font-size: 12px; text-anchor: start; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .nulL { fill: #000000; font-size: 12px; text-anchor: end; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* traversal cursor: walks forward over next, then back over prev */
+    .cursor { fill: none; stroke: #cb4b16; stroke-width: 2;
+              stroke: light-dark(#cb4b16, #eb7a4a);
+              animation: walk 9s ease-in-out infinite; }
+
+    @keyframes walk {
+        0% { transform: translateX(0px);   }
+       14% { transform: translateX(0px);   }
+       21% { transform: translateX(240px); }
+       32% { transform: translateX(240px); }
+       39% { transform: translateX(480px); }
+       53% { transform: translateX(480px); }
+       60% { transform: translateX(240px); }
+       71% { transform: translateX(240px); }
+       78% { transform: translateX(0px);   }
+      100% { transform: translateX(0px);   }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { animation: none; opacity: 0; }
+    }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path class="ah" d="M0,0 L7,3 L0,6 z"/>
+    </marker>
+  </defs>
+
+  <!-- ===== cell labels ===== -->
+  <text class="lbl" x="130" y="80">prev</text>
+  <text class="lbl" x="185" y="80">data</text>
+  <text class="lbl" x="240" y="80">next</text>
+  <text class="lbl" x="370" y="80">prev</text>
+  <text class="lbl" x="425" y="80">data</text>
+  <text class="lbl" x="480" y="80">next</text>
+  <text class="lbl" x="610" y="80">prev</text>
+  <text class="lbl" x="665" y="80">data</text>
+  <text class="lbl" x="720" y="80">next</text>
+
+  <!-- ===== node 1: its prev link goes nowhere ===== -->
+  <rect class="box" x="110" y="90" width="150" height="60"/>
+  <line class="div" x1="150" y1="90" x2="150" y2="150"/>
+  <line class="div" x1="220" y1="90" x2="220" y2="150"/>
+  <text class="val" x="185" y="125">d0</text>
+  <circle class="dot" cx="130" cy="130" r="3.5"/>
+  <circle class="dot" cx="240" cy="110" r="3.5"/>
+  <line class="div" x1="130" y1="130" x2="69"  y2="130" marker-end="url(#arrow)"/>
+  <text class="nulL" x="63" y="134">NULL</text>
+  <line class="div" x1="240" y1="110" x2="346" y2="110" marker-end="url(#arrow)"/>
+
+  <!-- ===== node 2 ===== -->
+  <rect class="box" x="350" y="90" width="150" height="60"/>
+  <line class="div" x1="390" y1="90" x2="390" y2="150"/>
+  <line class="div" x1="460" y1="90" x2="460" y2="150"/>
+  <text class="val" x="425" y="125">d1</text>
+  <circle class="dot" cx="370" cy="130" r="3.5"/>
+  <circle class="dot" cx="480" cy="110" r="3.5"/>
+  <line class="div" x1="370" y1="130" x2="264" y2="130" marker-end="url(#arrow)"/>
+  <line class="div" x1="480" y1="110" x2="586" y2="110" marker-end="url(#arrow)"/>
+
+  <!-- ===== node 3: its next link goes nowhere ===== -->
+  <rect class="box" x="590" y="90" width="150" height="60"/>
+  <line class="div" x1="630" y1="90" x2="630" y2="150"/>
+  <line class="div" x1="700" y1="90" x2="700" y2="150"/>
+  <text class="val" x="665" y="125">d2</text>
+  <circle class="dot" cx="610" cy="130" r="3.5"/>
+  <circle class="dot" cx="720" cy="110" r="3.5"/>
+  <line class="div" x1="610" y1="130" x2="504" y2="130" marker-end="url(#arrow)"/>
+  <line class="div" x1="720" y1="110" x2="761" y2="110" marker-end="url(#arrow)"/>
+  <text class="nulR" x="767" y="114">NULL</text>
+
+  <!-- ===== animated traversal cursor (starts on node 1) ===== -->
+  <rect class="cursor" x="108" y="88" width="154" height="64" rx="2"/>
+</svg>

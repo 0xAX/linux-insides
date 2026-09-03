@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="220px" viewBox="0 0 820 220"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .hi   { fill: #eee8d5; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#eee8d5, #2d2614); stroke: light-dark(#000000, #ffffff); }
+    .node { fill: #fdf6e3; stroke: #000000; stroke-width: 1.5;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ttl  { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .mem  { fill: #000000; font-size: 11px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .ell  { fill: #000000; font-size: 12px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* the traversal steps from one tasks member to the next */
+    .cursor { fill: none; stroke: #cb4b16; stroke-width: 2;
+              stroke: light-dark(#cb4b16, #eb7a4a);
+              animation: walk 7s ease-in-out infinite; }
+
+    @keyframes walk {
+        0% { transform: translateX(0px);   opacity: 0; }
+        5% { transform: translateX(0px);   opacity: 1; }
+       28% { transform: translateX(0px);   opacity: 1; }
+       36% { transform: translateX(250px); opacity: 1; }
+       59% { transform: translateX(250px); opacity: 1; }
+       67% { transform: translateX(500px); opacity: 1; }
+       92% { transform: translateX(500px); opacity: 1; }
+      100% { transform: translateX(500px); opacity: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cursor { animation: none; opacity: 0; }
+    }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
+            orient="auto" markerUnits="strokeWidth">
+      <path class="ah" d="M0,0 L7,3 L0,6 z"/>
+    </marker>
+  </defs>
+
+  <!-- struct list_head tasks; sits in the middle of task_struct
+       (include/linux/sched.h:967), hence the fields above and below it. -->
+
+  <!-- ===== task_struct 1 ===== -->
+  <rect class="box"  x="50" y="50" width="190" height="158"/>
+  <text class="ttl"  x="145" y="70">struct task_struct</text>
+  <rect class="hi"   x="65" y="78" width="160" height="26"/>
+  <text class="val"  x="145" y="95">other fields</text>
+  <rect class="node" x="65" y="110" width="160" height="56"/>
+  <text class="mem"  x="145" y="124">tasks</text>
+  <line class="div"  x1="65" y1="130" x2="225" y2="130"/>
+  <line class="div"  x1="145" y1="130" x2="145" y2="166"/>
+  <text class="lbl"  x="105" y="152">prev</text>
+  <text class="lbl"  x="185" y="152">next</text>
+  <rect class="hi"   x="65" y="172" width="160" height="26"/>
+  <text class="val"  x="145" y="189">other fields</text>
+
+  <!-- ===== task_struct 2 ===== -->
+  <rect class="box"  x="300" y="50" width="190" height="158"/>
+  <text class="ttl"  x="395" y="70">struct task_struct</text>
+  <rect class="hi"   x="315" y="78" width="160" height="26"/>
+  <text class="val"  x="395" y="95">other fields</text>
+  <rect class="node" x="315" y="110" width="160" height="56"/>
+  <text class="mem"  x="395" y="124">tasks</text>
+  <line class="div"  x1="315" y1="130" x2="475" y2="130"/>
+  <line class="div"  x1="395" y1="130" x2="395" y2="166"/>
+  <text class="lbl"  x="355" y="152">prev</text>
+  <text class="lbl"  x="435" y="152">next</text>
+  <rect class="hi"   x="315" y="172" width="160" height="26"/>
+  <text class="val"  x="395" y="189">other fields</text>
+
+  <!-- ===== task_struct 3 ===== -->
+  <rect class="box"  x="550" y="50" width="190" height="158"/>
+  <text class="ttl"  x="645" y="70">struct task_struct</text>
+  <rect class="hi"   x="565" y="78" width="160" height="26"/>
+  <text class="val"  x="645" y="95">other fields</text>
+  <rect class="node" x="565" y="110" width="160" height="56"/>
+  <text class="mem"  x="645" y="124">tasks</text>
+  <line class="div"  x1="565" y1="130" x2="725" y2="130"/>
+  <line class="div"  x1="645" y1="130" x2="645" y2="166"/>
+  <text class="lbl"  x="605" y="152">prev</text>
+  <text class="lbl"  x="685" y="152">next</text>
+  <rect class="hi"   x="565" y="172" width="160" height="26"/>
+  <text class="val"  x="645" y="189">other fields</text>
+
+  <!-- ===== next links: right border of tasks, 8px above the cell centre ===== -->
+  <line class="div" x1="225" y1="140" x2="311" y2="140" marker-end="url(#arrow)"/>
+  <line class="div" x1="475" y1="140" x2="561" y2="140" marker-end="url(#arrow)"/>
+  <line class="div" x1="725" y1="140" x2="765" y2="140" marker-end="url(#arrow)"/>
+  <text class="ell" x="782" y="144">...</text>
+
+  <!-- ===== prev links: left border of tasks, 8px below the cell centre ===== -->
+  <line class="div" x1="315" y1="156" x2="229" y2="156" marker-end="url(#arrow)"/>
+  <line class="div" x1="565" y1="156" x2="479" y2="156" marker-end="url(#arrow)"/>
+  <line class="div" x1="65"  y1="156" x2="30"  y2="156" marker-end="url(#arrow)"/>
+  <text class="ell" x="13" y="160">...</text>
+
+  <!-- ===== animated traversal cursor (starts on the first tasks member) ===== -->
+  <rect class="cursor" x="63" y="108" width="164" height="60" rx="2"/>
+</svg>
