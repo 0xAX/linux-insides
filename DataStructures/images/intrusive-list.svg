@@ -85,14 +85,14 @@
   <text class="lbl"  x="690" y="166">next</text>
 
   <!-- ===== next links: leave the right border 8px above the node centre ===== -->
-  <line class="div" x1="225" y1="154" x2="331" y2="154" marker-end="url(#arrow)"/>
-  <line class="div" x1="475" y1="154" x2="581" y2="154" marker-end="url(#arrow)"/>
+  <line class="div" x1="225" y1="154" x2="335" y2="154" marker-end="url(#arrow)"/>
+  <line class="div" x1="475" y1="154" x2="585" y2="154" marker-end="url(#arrow)"/>
   <line class="div" x1="725" y1="154" x2="770" y2="154" marker-end="url(#arrow)"/>
   <text class="ell" x="788" y="158">...</text>
 
   <!-- ===== prev links: leave the left border 8px below the node centre ===== -->
-  <line class="div" x1="335" y1="170" x2="229" y2="170" marker-end="url(#arrow)"/>
-  <line class="div" x1="585" y1="170" x2="479" y2="170" marker-end="url(#arrow)"/>
+  <line class="div" x1="335" y1="170" x2="225" y2="170" marker-end="url(#arrow)"/>
+  <line class="div" x1="585" y1="170" x2="475" y2="170" marker-end="url(#arrow)"/>
   <line class="div" x1="85"  y1="170" x2="40"  y2="170" marker-end="url(#arrow)"/>
   <text class="ell" x="22" y="174">...</text>
 

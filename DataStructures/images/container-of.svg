@@ -94,11 +94,11 @@
   <text class="mem l" x="240" y="110">offsetof(...) = 0x390</text>
 
   <!-- ===== right: what we get and what we started from ===== -->
-  <line class="div" x1="570" y1="70" x2="514" y2="70" marker-end="url(#arrow)"/>
+  <line class="div" x1="570" y1="70" x2="510" y2="70" marker-end="url(#arrow)"/>
   <text class="mem r" x="578" y="66">0xffff888100a2c000</text>
   <text class="val r" x="578" y="82">the address container_of() returns</text>
 
-  <line class="div" x1="570" y1="143" x2="499" y2="143" marker-end="url(#arrow)"/>
+  <line class="div" x1="570" y1="143" x2="495" y2="143" marker-end="url(#arrow)"/>
   <text class="mem r" x="578" y="139">0xffff888100a2c390</text>
   <text class="val r" x="578" y="155">ptr, the only address we have</text>
 
