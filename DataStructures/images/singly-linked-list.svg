@@ -57,21 +57,21 @@
 
   <!-- ===== head pointer ===== -->
   <text class="ptr"  x="60" y="100">head</text>
-  <line class="div" x1="34" y1="110" x2="96" y2="110" marker-end="url(#arrow)"/>
+  <line class="div" x1="34" y1="110" x2="100" y2="110" marker-end="url(#arrow)"/>
 
   <!-- ===== node 1 ===== -->
   <rect class="box" x="100" y="80" width="140" height="60"/>
   <line class="div" x1="190" y1="80" x2="190" y2="140"/>
   <text class="val" x="145" y="115">d0</text>
   <circle class="dot" cx="215" cy="110" r="3.5"/>
-  <line class="div" x1="215" y1="110" x2="336" y2="110" marker-end="url(#arrow)"/>
+  <line class="div" x1="215" y1="110" x2="340" y2="110" marker-end="url(#arrow)"/>
 
   <!-- ===== node 2 ===== -->
   <rect class="box" x="340" y="80" width="140" height="60"/>
   <line class="div" x1="430" y1="80" x2="430" y2="140"/>
   <text class="val" x="385" y="115">d1</text>
   <circle class="dot" cx="455" cy="110" r="3.5"/>
-  <line class="div" x1="455" y1="110" x2="576" y2="110" marker-end="url(#arrow)"/>
+  <line class="div" x1="455" y1="110" x2="580" y2="110" marker-end="url(#arrow)"/>
 
   <!-- ===== node 3, the last one: its next link goes nowhere ===== -->
   <rect class="box" x="580" y="80" width="140" height="60"/>

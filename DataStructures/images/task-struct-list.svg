@@ -98,14 +98,14 @@
   <text class="val"  x="645" y="189">other fields</text>
 
   <!-- ===== next links: right border of tasks, 8px above the cell centre ===== -->
-  <line class="div" x1="225" y1="140" x2="311" y2="140" marker-end="url(#arrow)"/>
-  <line class="div" x1="475" y1="140" x2="561" y2="140" marker-end="url(#arrow)"/>
+  <line class="div" x1="225" y1="140" x2="315" y2="140" marker-end="url(#arrow)"/>
+  <line class="div" x1="475" y1="140" x2="565" y2="140" marker-end="url(#arrow)"/>
   <line class="div" x1="725" y1="140" x2="765" y2="140" marker-end="url(#arrow)"/>
   <text class="ell" x="782" y="144">...</text>
 
   <!-- ===== prev links: left border of tasks, 8px below the cell centre ===== -->
-  <line class="div" x1="315" y1="156" x2="229" y2="156" marker-end="url(#arrow)"/>
-  <line class="div" x1="565" y1="156" x2="479" y2="156" marker-end="url(#arrow)"/>
+  <line class="div" x1="315" y1="156" x2="225" y2="156" marker-end="url(#arrow)"/>
+  <line class="div" x1="565" y1="156" x2="475" y2="156" marker-end="url(#arrow)"/>
   <line class="div" x1="65"  y1="156" x2="30"  y2="156" marker-end="url(#arrow)"/>
   <text class="ell" x="13" y="160">...</text>
 
