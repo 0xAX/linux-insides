@@ -64,6 +64,12 @@ To join the group, send an email to `kernelhacking+subscribe@googlegroups.com`. 
 > [!TIP]
 > If you have a Google account, you can simply open the [archive page](https://groups.google.com/forum/#!forum/kernelhacking) and click **Apply to join group**. You will be approved automatically.
 
+## Sponsors
+
+Thanks to the people supporting this project on [Patreon](https://www.patreon.com/0xAX):
+
+- Paulo Oliveira
+
 ## License
 
 This project is licensed under the [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
