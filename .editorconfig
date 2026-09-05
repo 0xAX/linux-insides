@@ -1,0 +1,35 @@
+# Editor defaults for this repository. See https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# The book needs its trailing spaces: two of them make a hard line break, and
+# the fenced blocks pad terminal output into columns. There is no indent rule
+# either, because the kernel sources quoted in those blocks use tabs.
+[*.md]
+trim_trailing_whitespace = false
+
+# The license text is kept byte for byte.
+[LICENSE]
+trim_trailing_whitespace = false
+
+# Recipes have to start with a real tab.
+[Makefile]
+indent_style = tab
+
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+[*.{py,json,toml}]
+indent_style = space
+indent_size = 4
+
+# Written by drawing tools, so leave the bytes alone.
+[*.svg]
+insert_final_newline = false
+trim_trailing_whitespace = false
