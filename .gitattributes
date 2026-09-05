@@ -1,0 +1,17 @@
+# Store every text file with LF in the repository, whatever the contributor's
+# platform checks it out as. Nothing tracked here uses CRLF today, so this only
+# guards against it appearing in future pull requests.
+* text=auto eol=lf
+
+# SVG is text and is edited by hand, so keep it normalized like the prose.
+*.svg text
+
+# Never diff or merge the images and the pre-built PDF as text.
+*.png binary
+*.jpg binary
+*.pdf binary
+
+# Put the enclosing heading into the diff hunk header, so a chapter diff reads
+# as "@@ ... ## Paging" instead of "@@ ...". Both drivers are built into git.
+*.md diff=markdown
+*.py diff=python
