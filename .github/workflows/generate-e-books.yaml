@@ -3,6 +3,9 @@ name: Generate e-books
 on:
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   build-for-pr:
     # For every PR, build the same artifacts and make them accessible from the PR.
