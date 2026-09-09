@@ -68,7 +68,8 @@ To join the group, send an email to `kernelhacking+subscribe@googlegroups.com`. 
 
 Thanks to the people supporting this project on [Patreon](https://www.patreon.com/0xAX):
 
-- Paulo Oliveira
+- [Paulo Oliveira](https://www.patreon.com/profile/creators?u=225844623)
+- [KD](https://www.patreon.com/profile/creators?u=8478384)
 
 ## License
 
