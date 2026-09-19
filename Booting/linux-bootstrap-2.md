@@ -300,6 +300,8 @@ First of all, `init_heap` checks the `CAN_USE_HEAP` flag from the kernel setup h
 >	Set this bit to 1 to indicate that the value entered in the
 >	heap_end_ptr is valid.  If this field is clear, some setup code
 >	functionality will be disabled.
+>
+> -- *The Linux/x86 Boot Protocol*, "Details of Header Fields", `loadflags`
 
 If this bit is not set, we'll see the warning message. Otherwise, the heap memory area is initialized. The beginning of the heap is defined by the `HEAP` pointer, which points to the end of the kernel setup image:
 
@@ -318,6 +320,8 @@ Now we need to initialize the size of the heap. There is another small hint in t
 > | **Protocol**      | `2.01+`             |
 >
 > Set this field to the offset, from the beginning of the real-mode code, of the end of the setup stack/heap, minus `0x0200`.
+>
+> -- *The Linux/x86 Boot Protocol*, "Details of Header Fields", `heap_end_ptr`
 
 The GRUB bootloader sets this value to:
 

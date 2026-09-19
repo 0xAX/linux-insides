@@ -48,10 +48,14 @@ We have already met the [`cr4` control register](https://en.wikipedia.org/wiki/C
 The kernel preserves the value of this register because it is used quite often. We will see many examples later. Reading and writing this register is an expensive operation. [Intel® 64 and IA-32 Architectures Software Developer's Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html) says:
 
 > MOV CR* instructions, except for MOV CR8, are serializing instructions
+>
+> -- *Intel® 64 and IA-32 Architectures Software Developer's Manual*, vol. 2B, "MOV—Move to/from Control Registers"
 
 And:
 
 > The Intel 64 and IA-32 architectures define several serializing instructions. These instructions force the processor to complete all modifications to flags, registers, and memory by previous instructions and to drain all buffered writes to memory before the next instruction is fetched and executed
+>
+> -- *Intel® 64 and IA-32 Architectures Software Developer's Manual*, vol. 3A, section 11.3, "Serializing Instructions"
 
 To avoid paying extra CPU cycles, the Linux kernel saves the value of the `cr4` control register in memory. From this point, the kernel changes bits of the `cr4` register only using special helpers like `cr4_set_bits` and `cr4_clear_bits`, which update the shadow copy and write the new value to the actual register only if it differs from the stored one.
 
@@ -167,6 +171,8 @@ This identity mapping was needed during the switch to long mode and to the high 
 > MOV to CR3. The behavior of the instruction depends on the value of CR4.PCIDE:
 >
 > If CR4.PCIDE = 0, the instruction invalidates all TLB entries associated with PCID 000H except those for global pages. It also invalidates all entries in all paging-structure caches associated with PCID 000H.
+>
+> -- *Intel® 64 and IA-32 Architectures Software Developer's Manual*, vol. 3A, section 5.10.4.1, "Operations that Invalidate TLBs and Paging-Structure Caches"
 
 So even after the identity mapping is gone from the page tables, stale translations for it might still be cached. To get rid of them, the kernel forces a flush of the global entries with the `__native_tlb_flush_global` function:
 
