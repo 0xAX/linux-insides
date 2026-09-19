@@ -441,6 +441,8 @@ _start:
 The very first instruction we encounter here is [jmp](https://en.wikipedia.org/wiki/JMP_(x86_instruction)) specified by the `0xEB` opcode. The second byte defines the offset to jump to. As described in the [Intel® 64 and IA-32 Architectures Software Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html):
 
 > The target operand specifies either an absolute offset (that is an offset from the base of the code segment) or a relative offset (a signed displacement relative to the current value of the instruction pointer in the EIP register).
+>
+> -- *Intel® 64 and IA-32 Architectures Software Developer's Manual*, vol. 2A, "JMP—Jump"
 
 If you've never met the `Nf` syntax before, `1f` means the next label `1` that will appear in the code. Immediately after those two bytes, we can see the label `1` located right before the beginning of the second part of the kernel setup header.
 
@@ -457,6 +459,8 @@ start_of_setup:
 But from which point are we jumping? After the kernel setup code receives control from the bootloader, the first `jmp` instruction is located at the `0x200` bytes offset from the start of the loaded kernel image. This is mentioned in the Linux kernel boot protocol:
 
 > The kernel is started by jumping to the kernel entry point, which is located at *segment* offset 0x20 from the start of the real mode kernel.
+>
+> -- *The Linux/x86 Boot Protocol*, "Running the Kernel"
 
 This applies also to the GRUB 2 bootloader. We can see in its [source code](https://github.com/rhboot/grub2/blob/master/grub-core/loader/i386/pc/linux.c):
 
@@ -498,6 +502,8 @@ In the next sections, we'll walk through each of these steps in detail.
 Reading the Linux kernel boot protocol for `x86_64`, we can see:
 
 > At entry, ds = es = ss should point to the start of the real-mode kernel code...
+>
+> -- *The Linux/x86 Boot Protocol*, "Running the Kernel"
 
 This is the first operation we can see after the `start_of_setup` label. First, the kernel setup code ensures that the `ds` and `es` segment registers point to the same address. Next, it clears the [direction flag](https://en.wikipedia.org/wiki/Direction_flag) using the `cld` instruction:
 
@@ -589,6 +595,8 @@ There is no guarantee that this region of memory is zeroed at the time the kerne
 > The size of the setup code, expressed in 512-byte sectors. If this field is `0`, the actual value is `4`.
 >
 > The real-mode code consists of the boot sector, which is always one 512-byte sector, followed by the setup code.
+>
+> -- *The Linux/x86 Boot Protocol*, "Details of Header Fields", `setup_sects`
 
 In my build, this field has the value `31`, so the size of the whole real-mode part of the kernel is `(31 + 1) * 512 = 0x4000`. Looking at the `__bss_end` and `__bss_start` symbols, we can see that this area extends beyond `0x4000`:
 

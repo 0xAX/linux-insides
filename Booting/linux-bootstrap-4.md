@@ -26,6 +26,8 @@ The last point where we stopped was the [jump](https://en.wikipedia.org/wiki/Bra
 The value of the `eax` register contains the address of the `32-bit` entry point. What is this address? To answer on this question, we can read the [Linux kernel x86 boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) document:
 
 > When using bzImage, the protected-mode kernel was relocated to 0x100000
+>
+> -- *The Linux/x86 Boot Protocol*, "Memory Layout"
 
 We can make make sure that this 32-bit entry point of the Linux kernel using the [GNU GDB](https://sourceware.org/gdb/) debugger and running the Linux kernel in the [QEMU](https://www.qemu.org/) virtual machine. To do this, you can run the following command in one terminal:
 

@@ -5,6 +5,8 @@ The Linux kernel is a really huge piece of code. As a modern operating system ke
 As Linus Torvalds once [wrote](https://lore.kernel.org/git/Pine.LNX.4.64.0607270936200.4168@g5.osdl.org/):
 
 > Good programmers  worry about data structures and their relationships.
+>
+> -- Linus Torvalds, *git* mailing list, 27 July 2006
 
 The kernel needs to keep track of processes, memory pages, files, timers, devices, network connections, and countless other objects. Some of them need to be searched quickly, some must always remain ordered, some are frequently traversed, and some need to be inserted or removed with as little overhead as possible. Choosing an appropriate representation for this data may have a direct impact on the performance and memory usage. 
 
@@ -32,6 +34,8 @@ One of the main purposes of this data structure is to organize different kinds o
 According to [wikipedia](https://en.wikipedia.org/wiki/Linked_list):
 
 > In computer science, a linked list is a linear collection of data elements whose order is not given by their physical placement in memory. Instead, each element points to the next. It is a data structure consisting of a collection of nodes which together represent a sequence. In its most basic form, each node contains data, and a reference (in other words, a link) to the next node in the sequence.
+>
+> -- Wikipedia, "Linked list"
 
 In other words, unlike an [array](https://en.wikipedia.org/wiki/Array_(data_structure)), the elements of a linked list do not have to occupy contiguous locations in memory. The relationship between them is represented explicitly by links. In the simplest case, every node contains a single link to the next node. The process can be illustrated as follows:
 

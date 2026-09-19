@@ -108,6 +108,8 @@ In the code snippet above, the `wrmsr` instruction writes a 64-bit value to the 
 You might wonder why the kernel doesn't just load `gs` with a regular `mov` instruction. According to the [Intel® 64 and IA-32 Architectures Software Developer's Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html), in long mode, the CPU manages the `gs` base using the MSR rather than using a GDT descriptor:
 
 > The hidden descriptor register fields for FS.base and GS.base are physically mapped to MSRs in order to load all address bits supported by a 64-bit implementation. Software with CPL = 0 (privileged software) can load all supported linear-address bits into FS.base or GS.base using WRMSR.
+>
+> -- *Intel® 64 and IA-32 Architectures Software Developer's Manual*, vol. 3A, section 3.4.4, "Segment Loading Instructions in IA-32e Mode"
 
 With the `gs` register zeroed out, the kernel can now turn its attention to another piece inherited from the previous stages - the Global Descriptor Table.
 
@@ -120,6 +122,8 @@ The Global Descriptor Table (specified by the `gdt64` symbol) that we saw in the
 According to the [Intel® 64 and IA-32 Architectures Software Developer's Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html):
 
 > In 64-bit mode, segmentation is generally (but not completely) disabled, creating a flat 64-bit linear-address space. The processor treats the segment base of CS, DS, ES, SS as zero, creating a linear address that is equal to the effective address.
+>
+> -- *Intel® 64 and IA-32 Architectures Software Developer's Manual*, vol. 3A, section 3.2.4, "Segmentation in IA-32e Mode"
 
 Despite this, the kernel still loads the following segment descriptors:
 
@@ -567,6 +571,8 @@ With the new kernel page tables ready, the `__startup_64` function returns and w
 After switching to the new page tables, some old [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entries may still survive. According to the [Intel® 64 and IA-32 Architectures Software Developer's Manual](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html), reloading the `cr3` register flushes most TLB entries, but global entries survive:
 
 > Global pages are not flushed from the translation-lookaside buffer (TLB) on a task switch or a write to register CR3.
+>
+> -- *Intel® 64 and IA-32 Architectures Software Developer's Manual*, vol. 3A, section 2.5, "Control Registers"
 
 So the kernel still needs an additional TLB flush. To flush those entries, the kernel clears the `PGE` ([Page Global Enable](https://en.wikipedia.org/wiki/Control_register)) bit in the `cr4` register. Changing this bit invalidates all global TLB entries, and setting it back re-enables global translations with fresh entries from the new page tables. But `cr4` contains many other important bits, so the kernel cannot just zero the whole register. It first builds a mask of the bits that must survive the flush. These bits are:
 
