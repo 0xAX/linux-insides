@@ -142,3 +142,4 @@ Special thanks to all the people who helped to develop this project:
 * [Davide Benini](https://github.com/beninidavide/)
 * [kyselejsyrecek](https://github.com/kyselejsyrecek)
 * [kianmeng](https://github.com/kianmeng)
+* [qodroi](https://github.com/qodroi)
