@@ -23,7 +23,7 @@ If you find any existing issue to work on, you are welcome to open a PR with a f
 
 ## Open a pull request
 
-If you want to directly contribute to the project, create a pull reguest with the suggested changes. To do so:
+If you want to directly contribute to the project, create a pull request with the suggested changes. To do so:
 
 1. [Fork the repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo#fork-an-example-repository).
 
