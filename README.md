@@ -1,8 +1,24 @@
-# Linux insides
+<div align="center">
+<h1>linux-insides</h1>
+<p><b>A book-in-progress about the Linux kernel and its insides.</b></p>
 
-This repository contains a book-in-progress about the Linux kernel and its insides.
+[Introduction](#introduction) • [Chapter status](#chapter-status-kernel-v720) • [Requirements](#requirements) • [Translations](#translations) • [Contributing](#contribution) • [Author](#author)
 
-The goal of this project is simple – to share knowledge about the Linux kernel internals and related low-level topics. If you're curious about what's under the hood, see the [Table of Contents](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md).
+[![Read online](https://img.shields.io/badge/read-online-2ea44f?style=flat-square)](https://0xax.dev/books/linux-inside/)
+![Linux kernel](https://img.shields.io/badge/Linux-kernel-FCC624?style=flat-square&logo=linux&logoColor=black)
+![x86_64](https://img.shields.io/badge/arch-x86__64-0071C5?style=flat-square&logo=intel&logoColor=white)
+[![Sponsors](https://img.shields.io/badge/sponsors-ff69b4?style=flat-square&logo=githubsponsors&logoColor=white)](#sponsors)
+![License](https://img.shields.io/badge/license-CC%20BY--NC--SA%204.0-lightgrey?style=flat-square)
+<br/>
+[![Patreon](https://img.shields.io/badge/Patreon-f96854?style=flat-square&logo=patreon&logoColor=white)](https://www.patreon.com/0xAX)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=flat-square&logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/0xAX)
+
+<img src="Assets/banner.svg" alt="Linux insides — a book-in-progress about the Linux kernel and its insides" width="900">
+</div>
+
+# Introduction
+
+`linux-insides` is a book-in-progress about the Linux kernel and its insides. The goal of this project is simple - to share knowledge about the Linux kernel internals and related low-level topics. If you're curious about what's under the hood, see the [Table of Contents](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md).
 
 ## Chapter status (kernel v7.2.0)
 
