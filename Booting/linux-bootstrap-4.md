@@ -389,7 +389,7 @@ SECTIONS
 There are three sections at the beginning of the linker script above:
 
 - `.head.text` - section where we are now
-- `.rodaya..compressed` - section with the compressed kernel image
+- `.rodata..compressed` - section with the compressed kernel image
 - `.text` - section with the decompressor code
 
 The kernel decompression happens in-place, which is the same place where the compressed kernel is. This means that the parts of the decompressed kernel image will overwrite the parts of the compressed image during the decompression process. It may sound dangerous – if the decompressed part overwrites the decompressor code or the part of the compressed kernel image that is not decompressed yet, this will lead to code or image corruption.
