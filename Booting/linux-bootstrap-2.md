@@ -329,7 +329,7 @@ The GRUB bootloader sets this value to:
 #define GRUB_LINUX_HEAP_END_OFFSET	(0x9000 - 0x200)
 ```
 
-Based on these values, the end of the heap pointed by the `heap_end` will be at the `0x9000` offset from the end of the kernel setup image. To avoid the case when the heap and stack overlap, there is an additional check. It sets the end of the heap equal to the end of the stack if the first one is greater than the second. Having this, the heap memory area will be located above the `bss` area till the stack. So, the memory map will look like:
+Based on these values, the end of the heap pointed by the `heap_end` will be at the `0x9000` offset from the beginning of the real-mode code. To avoid the case when the heap and stack overlap, there is an additional check. It sets the end of the heap equal to the end of the stack if the first one is greater than the second. Having this, the heap memory area will be located above the `bss` area till the stack. So, the memory map will look like:
 
 ![early-heap](./images/early-heap.svg)
 
