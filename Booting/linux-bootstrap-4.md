@@ -232,7 +232,7 @@ We know both these addresses based on the experiment above, and as a result, we 
 
 The `call` instruction is used to get the physical address where the kernel is actually loaded. This trick works because after the `call` instruction is executed, the stack should have the return address on top. This return address will be exactly the address of the label `1`. 
 
-In the code above, the kernel sets up a temporary mini stack where the return address will be stored after the `call` instruction. Right after the call, we pop this address from the stack and save it in the `ebp` register. Using the last instruction, we subtract the difference between the address of the label `1` and the `startup_32` physical address using the `rva` macro and `subl` instruction, and store the result in the `ebp` register.
+In the code above, the kernel sets up a temporary mini stack where the return address will be stored after the `call` instruction. Right after the call, we pop this address from the stack and save it in the `ebp` register. Using the last instruction, we subtract the difference between the link-time addresses of the label `1` and `startup_32` using the `rva` macro and `subl` instruction, and store the result in the `ebp` register.
 
 The `rva` macro is defined in the same source code file and looks like this:
 
