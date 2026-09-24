@@ -602,10 +602,10 @@ In my build, this field has the value `31`, so the size of the whole real-mode p
 
 ```bash
 readelf -a arch/x86/boot/setup.elf | grep "bss"
-  [12] .bss              NOBITS          00003e60 004e5c 001380 00  WA  0   0 32
+  [12] .bss              NOBITS          00003f00 004efc 001380 00  WA  0   0 32
    00     .bstext .header .entrytext .inittext .initdata .text .text32 .rodata .videocards .data .signature .bss
-   145: 000051e0     0 NOTYPE  GLOBAL DEFAULT   12 __bss_end
-   169: 00003e60     0 NOTYPE  GLOBAL DEFAULT   12 __bss_start
+   145: 00005280     0 NOTYPE  GLOBAL DEFAULT   12 __bss_end
+   169: 00003f00     0 NOTYPE  GLOBAL DEFAULT   12 __bss_start
 ```
 
 Since we know what the `.bss` is and why the kernel setup code should fill it with zeroes, let's take a look at the initialization of this memory area:
