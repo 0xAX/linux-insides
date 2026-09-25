@@ -20,14 +20,15 @@
             fill: light-dark(#000000, #ffffff); }
     .ptr  { fill: #000000; font-size: 12px; text-anchor: middle; font-weight: bold;
             fill: light-dark(#000000, #ffffff); }
-    .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
     .mono { font-family: monospace; }
   </style>
 
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
-            orient="auto" markerUnits="strokeWidth">
-      <path d="M0,0 L7,3 L0,6 z" class="ah"/>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path d="M7,3.5 L0,0 L1.75,3.5 L0,7 z" class="ah"/>
     </marker>
   </defs>
 
