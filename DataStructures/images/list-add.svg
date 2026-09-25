@@ -10,7 +10,8 @@
             fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
     .div  { stroke: #000000; stroke-width: 1; fill: none;
             stroke: light-dark(#000000, #ffffff); }
-    .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
     .ttl  { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace;
             fill: light-dark(#000000, #ffffff); }
     .mem  { fill: #000000; font-size: 11px; text-anchor: start; font-family: monospace;
@@ -25,20 +26,21 @@
     /* the link written by the step, and the number of that step */
     .hl   { stroke: #cb4b16; stroke-width: 2; fill: none;
             stroke: light-dark(#cb4b16, #eb7a4a); }
-    .ah-hl { fill: #cb4b16; fill: light-dark(#cb4b16, #eb7a4a); }
+    .ah-hl { fill: #cb4b16; stroke: #cb4b16; stroke-width: 1;
+             fill: light-dark(#cb4b16, #eb7a4a); stroke: light-dark(#cb4b16, #eb7a4a); }
     .ring { fill: #fdf6e3; stroke: #cb4b16; stroke-width: 1.5;
             fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#cb4b16, #eb7a4a); }
     .mono { font-family: monospace; }
   </style>
 
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3"
-            orient="auto" markerUnits="strokeWidth">
-      <path class="ah" d="M0,0 L7,3 L0,6 z"/>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path class="ah" d="M7,3.5 L0,0 L1.75,3.5 L0,7 z"/>
     </marker>
-    <marker id="arrow-hl" markerWidth="10" markerHeight="10" refX="9" refY="4"
-            orient="auto" markerUnits="userSpaceOnUse">
-      <path class="ah-hl" d="M0,0 L9,4 L0,8 z"/>
+    <marker id="arrow-hl" markerWidth="10" markerHeight="10" refX="9" refY="4.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path class="ah-hl" d="M9,4.5 L0,0 L2.25,4.5 L0,9 z"/>
     </marker>
   </defs>
 
