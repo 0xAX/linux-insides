@@ -41,11 +41,11 @@
 
   <!-- faulting address label (left) -->
   <text class="lblL" x="150" y="190">faulting address</text>
-  <text class="valL" x="150" y="206">0xffff888001000000</text>
+  <text class="valL" x="150" y="206">0xFFFF888001000000</text>
 
   <!-- __PAGE_OFFSET label (base of the window) -->
   <text class="lbl"  x="240" y="318">__PAGE_OFFSET</text>
-  <text class="val"  x="240" y="334">0xffff888000000000</text>
+  <text class="val"  x="240" y="334">0xFFFF888000000000</text>
 
   <!-- ===== physical bar ===== -->
   <rect class="box" x="495" y="60" width="160" height="240"/>

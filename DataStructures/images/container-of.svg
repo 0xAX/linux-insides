@@ -95,15 +95,15 @@
 
   <!-- ===== right: what we get and what we started from ===== -->
   <line class="div" x1="570" y1="70" x2="510" y2="70" marker-end="url(#arrow)"/>
-  <text class="mem r" x="578" y="66">0xffff888100a2c000</text>
+  <text class="mem r" x="578" y="66">0xFFFF888100A2C000</text>
   <text class="val r" x="578" y="82">the address container_of() returns</text>
 
   <line class="div" x1="570" y1="143" x2="495" y2="143" marker-end="url(#arrow)"/>
-  <text class="mem r" x="578" y="139">0xffff888100a2c390</text>
+  <text class="mem r" x="578" y="139">0xFFFF888100A2C390</text>
   <text class="val r" x="578" y="155">ptr, the only address we have</text>
 
   <!-- ===== the arithmetic itself ===== -->
-  <text class="mem" x="400" y="252">0xffff888100a2c390 - 0x390 = 0xffff888100a2c000</text>
+  <text class="mem" x="400" y="252">0xFFFF888100A2C390 - 0x390 = 0xFFFF888100A2C000</text>
 
   <!-- ===== step 1: the member we hold ===== -->
   <rect class="hl hl-member" x="303" y="128" width="194" height="60" rx="2"/>
