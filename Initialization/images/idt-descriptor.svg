@@ -4,11 +4,16 @@
      style="background: transparent; background-color: transparent; color-scheme: light dark;"
      font-family="Helvetica">
   <style>
-    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1; }
-    .div  { stroke: #000000; stroke-width: 1; }
-    .name { fill: #000000; font-size: 12px; text-anchor: middle; }
-    .bitL { fill: #000000; font-size: 11px; text-anchor: start; }
-    .bitR { fill: #000000; font-size: 11px; text-anchor: end; }
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .name { fill: #000000; font-size: 12px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .bitL { fill: #000000; font-size: 11px; text-anchor: start;
+            fill: light-dark(#000000, #ffffff); }
+    .bitR { fill: #000000; font-size: 11px; text-anchor: end;
+            fill: light-dark(#000000, #ffffff); }
   </style>
 
   <!-- bits 79..0 : IDTR pseudo-descriptor -->
