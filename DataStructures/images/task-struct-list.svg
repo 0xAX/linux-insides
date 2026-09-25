@@ -43,6 +43,7 @@
     @media (prefers-reduced-motion: reduce) {
       .cursor { animation: none; opacity: 0; }
     }
+    .mono { font-family: monospace; }
   </style>
 
   <defs>
@@ -64,8 +65,8 @@
   <text class="mem"  x="145" y="124">tasks</text>
   <line class="div"  x1="65" y1="130" x2="225" y2="130"/>
   <line class="div"  x1="145" y1="130" x2="145" y2="166"/>
-  <text class="lbl"  x="105" y="152">prev</text>
-  <text class="lbl"  x="185" y="152">next</text>
+  <text class="lbl mono"  x="105" y="152">prev</text>
+  <text class="lbl mono"  x="185" y="152">next</text>
   <rect class="hi"   x="65" y="172" width="160" height="26"/>
   <text class="val"  x="145" y="189">other fields</text>
 
@@ -78,8 +79,8 @@
   <text class="mem"  x="395" y="124">tasks</text>
   <line class="div"  x1="315" y1="130" x2="475" y2="130"/>
   <line class="div"  x1="395" y1="130" x2="395" y2="166"/>
-  <text class="lbl"  x="355" y="152">prev</text>
-  <text class="lbl"  x="435" y="152">next</text>
+  <text class="lbl mono"  x="355" y="152">prev</text>
+  <text class="lbl mono"  x="435" y="152">next</text>
   <rect class="hi"   x="315" y="172" width="160" height="26"/>
   <text class="val"  x="395" y="189">other fields</text>
 
@@ -92,8 +93,8 @@
   <text class="mem"  x="645" y="124">tasks</text>
   <line class="div"  x1="565" y1="130" x2="725" y2="130"/>
   <line class="div"  x1="645" y1="130" x2="645" y2="166"/>
-  <text class="lbl"  x="605" y="152">prev</text>
-  <text class="lbl"  x="685" y="152">next</text>
+  <text class="lbl mono"  x="605" y="152">prev</text>
+  <text class="lbl mono"  x="685" y="152">next</text>
   <rect class="hi"   x="565" y="172" width="160" height="26"/>
   <text class="val"  x="645" y="189">other fields</text>
 

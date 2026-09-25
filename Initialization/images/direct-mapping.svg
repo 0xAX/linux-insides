@@ -29,6 +29,7 @@
     .dim   { fill: #000000; font-size: 12px; text-anchor: middle;
              fill: light-dark(#000000, #ffffff); }
     .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .mono { font-family: monospace; }
   </style>
 
   <defs>
@@ -57,7 +58,7 @@
   <text class="valL" x="150" y="206">0xFFFF888001000000</text>
 
   <!-- __PAGE_OFFSET label (base of the window) -->
-  <text class="lbl"  x="240" y="318">__PAGE_OFFSET</text>
+  <text class="lbl mono"  x="240" y="318">__PAGE_OFFSET</text>
   <text class="val"  x="240" y="334">0xFFFF888000000000</text>
 
   <!-- ===== physical bar ===== -->

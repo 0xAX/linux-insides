@@ -21,6 +21,7 @@
     .ptr     { fill: #000000; font-size: 12px; text-anchor: middle; font-weight: bold;
                fill: light-dark(#000000, #ffffff); }
     .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .mono { font-family: monospace; }
   </style>
 
   <defs>
@@ -61,27 +62,27 @@
   <line class="div"      x1="120" y1="650" x2="280" y2="650"/>
 
   <!-- register names -->
-  <text class="reg" x="200" y="69">%ss</text>
-  <text class="reg" x="200" y="99">%rsp</text>
-  <text class="reg" x="200" y="129">%rflags</text>
-  <text class="reg" x="200" y="159">%cs</text>
-  <text class="reg" x="200" y="189">%rip</text>
+  <text class="reg mono" x="200" y="69">%ss</text>
+  <text class="reg mono" x="200" y="99">%rsp</text>
+  <text class="reg mono" x="200" y="129">%rflags</text>
+  <text class="reg mono" x="200" y="159">%cs</text>
+  <text class="reg mono" x="200" y="189">%rip</text>
   <text class="reg" x="200" y="219">error code</text>
-  <text class="reg" x="200" y="249">%rdi</text>
-  <text class="reg" x="200" y="279">%rsi</text>
-  <text class="reg" x="200" y="309">%rdx</text>
-  <text class="reg" x="200" y="339">%rcx</text>
-  <text class="reg" x="200" y="369">%rax</text>
-  <text class="reg" x="200" y="399">%r8</text>
-  <text class="reg" x="200" y="429">%r9</text>
-  <text class="reg" x="200" y="459">%r10</text>
-  <text class="reg" x="200" y="489">%r11</text>
-  <text class="reg" x="200" y="519">%rbx</text>
-  <text class="reg" x="200" y="549">%rbp</text>
-  <text class="reg" x="200" y="579">%r12</text>
-  <text class="reg" x="200" y="609">%r13</text>
-  <text class="reg" x="200" y="639">%r14</text>
-  <text class="reg" x="200" y="669">%r15</text>
+  <text class="reg mono" x="200" y="249">%rdi</text>
+  <text class="reg mono" x="200" y="279">%rsi</text>
+  <text class="reg mono" x="200" y="309">%rdx</text>
+  <text class="reg mono" x="200" y="339">%rcx</text>
+  <text class="reg mono" x="200" y="369">%rax</text>
+  <text class="reg mono" x="200" y="399">%r8</text>
+  <text class="reg mono" x="200" y="429">%r9</text>
+  <text class="reg mono" x="200" y="459">%r10</text>
+  <text class="reg mono" x="200" y="489">%r11</text>
+  <text class="reg mono" x="200" y="519">%rbx</text>
+  <text class="reg mono" x="200" y="549">%rbp</text>
+  <text class="reg mono" x="200" y="579">%r12</text>
+  <text class="reg mono" x="200" y="609">%r13</text>
+  <text class="reg mono" x="200" y="639">%r14</text>
+  <text class="reg mono" x="200" y="669">%r15</text>
 
   <!-- offsets from %rsp (%r15 at +0) -->
   <text class="off" x="60" y="69">+160</text>
@@ -122,6 +123,6 @@
   <text class="desc" x="308" y="465">pushed by the handler</text>
 
   <!-- stack pointer after all registers are saved -->
-  <text class="ptr" x="97" y="657">%rsp</text>
+  <text class="ptr mono" x="97" y="657">%rsp</text>
   <line class="div" x1="78" y1="665" x2="116" y2="665" marker-end="url(#arrow)"/>
 </svg>

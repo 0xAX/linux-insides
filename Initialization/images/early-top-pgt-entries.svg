@@ -15,6 +15,7 @@
     .ttl  { fill: #000000; font-size: 12px; text-anchor: middle;
             fill: light-dark(#000000, #ffffff); }
     .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .mono { font-family: monospace; }
   </style>
   <defs>
     <marker id="arrow" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
@@ -23,7 +24,7 @@
   </defs>
 
   <!-- title -->
-  <text class="ttl" x="120" y="48">early_top_pgt</text>
+  <text class="ttl mono" x="120" y="48">early_top_pgt</text>
 
   <!-- the PGD: 512 entries -->
   <rect class="box" x="40" y="60" width="160" height="160"/>

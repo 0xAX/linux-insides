@@ -38,6 +38,7 @@
     @media (prefers-reduced-motion: reduce) {
       .cursor { animation: none; opacity: 0; }
     }
+    .mono { font-family: monospace; }
   </style>
 
   <defs>
@@ -48,15 +49,15 @@
   </defs>
 
   <!-- ===== cell labels ===== -->
-  <text class="lbl" x="145" y="70">data</text>
-  <text class="lbl" x="215" y="70">next</text>
-  <text class="lbl" x="385" y="70">data</text>
-  <text class="lbl" x="455" y="70">next</text>
-  <text class="lbl" x="625" y="70">data</text>
-  <text class="lbl" x="695" y="70">next</text>
+  <text class="lbl mono" x="145" y="70">data</text>
+  <text class="lbl mono" x="215" y="70">next</text>
+  <text class="lbl mono" x="385" y="70">data</text>
+  <text class="lbl mono" x="455" y="70">next</text>
+  <text class="lbl mono" x="625" y="70">data</text>
+  <text class="lbl mono" x="695" y="70">next</text>
 
   <!-- ===== head pointer ===== -->
-  <text class="ptr"  x="60" y="100">head</text>
+  <text class="ptr mono"  x="60" y="100">head</text>
   <line class="div" x1="34" y1="110" x2="100" y2="110" marker-end="url(#arrow)"/>
 
   <!-- ===== node 1 ===== -->

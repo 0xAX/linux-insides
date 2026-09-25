@@ -54,6 +54,7 @@
     @media (prefers-reduced-motion: reduce) {
       .hl-member, .hl-container { animation: none; opacity: 0; }
     }
+    .mono { font-family: monospace; }
   </style>
 
   <defs>
@@ -80,8 +81,8 @@
   <text class="mem"  x="400" y="144">tasks</text>
   <line class="div"  x1="305" y1="150" x2="495" y2="150"/>
   <line class="div"  x1="400" y1="150" x2="400" y2="186"/>
-  <text class="lbl"  x="352" y="172">prev</text>
-  <text class="lbl"  x="448" y="172">next</text>
+  <text class="lbl mono"  x="352" y="172">prev</text>
+  <text class="lbl mono"  x="448" y="172">next</text>
   <rect class="hi"   x="305" y="192" width="190" height="26"/>
   <text class="val"  x="400" y="209">other fields</text>
 
@@ -90,17 +91,17 @@
   <line class="gd" x1="240" y1="130" x2="305" y2="130"/>
   <line class="div" x1="262" y1="70" x2="262" y2="130"
         marker-start="url(#arrow-back)" marker-end="url(#arrow)"/>
-  <text class="val l" x="240" y="93">offset of the tasks member</text>
+  <text class="mem l" x="240" y="93">offset of the tasks member</text>
   <text class="mem l" x="240" y="110">offsetof(...) = 0x390</text>
 
   <!-- ===== right: what we get and what we started from ===== -->
   <line class="div" x1="570" y1="70" x2="510" y2="70" marker-end="url(#arrow)"/>
   <text class="mem r" x="578" y="66">0xFFFF888100A2C000</text>
-  <text class="val r" x="578" y="82">the address container_of() returns</text>
+  <text class="mem r" x="578" y="82">the address container_of() returns</text>
 
   <line class="div" x1="570" y1="143" x2="495" y2="143" marker-end="url(#arrow)"/>
   <text class="mem r" x="578" y="139">0xFFFF888100A2C390</text>
-  <text class="val r" x="578" y="155">ptr, the only address we have</text>
+  <text class="mem r" x="578" y="155">ptr, the only address we have</text>
 
   <!-- ===== the arithmetic itself ===== -->
   <text class="mem" x="400" y="252">0xFFFF888100A2C390 - 0x390 = 0xFFFF888100A2C000</text>
