@@ -40,6 +40,7 @@
     @media (prefers-reduced-motion: reduce) {
       .cursor { animation: none; opacity: 0; }
     }
+    .mono { font-family: monospace; }
   </style>
 
   <defs>
@@ -50,15 +51,15 @@
   </defs>
 
   <!-- ===== cell labels ===== -->
-  <text class="lbl" x="130" y="80">prev</text>
-  <text class="lbl" x="185" y="80">data</text>
-  <text class="lbl" x="240" y="80">next</text>
-  <text class="lbl" x="370" y="80">prev</text>
-  <text class="lbl" x="425" y="80">data</text>
-  <text class="lbl" x="480" y="80">next</text>
-  <text class="lbl" x="610" y="80">prev</text>
-  <text class="lbl" x="665" y="80">data</text>
-  <text class="lbl" x="720" y="80">next</text>
+  <text class="lbl mono" x="130" y="80">prev</text>
+  <text class="lbl mono" x="185" y="80">data</text>
+  <text class="lbl mono" x="240" y="80">next</text>
+  <text class="lbl mono" x="370" y="80">prev</text>
+  <text class="lbl mono" x="425" y="80">data</text>
+  <text class="lbl mono" x="480" y="80">next</text>
+  <text class="lbl mono" x="610" y="80">prev</text>
+  <text class="lbl mono" x="665" y="80">data</text>
+  <text class="lbl mono" x="720" y="80">next</text>
 
   <!-- ===== node 1: its prev link goes nowhere ===== -->
   <rect class="box" x="110" y="90" width="150" height="60"/>

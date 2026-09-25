@@ -21,6 +21,7 @@
     .ptr  { fill: #000000; font-size: 12px; text-anchor: middle; font-weight: bold;
             fill: light-dark(#000000, #ffffff); }
     .ah   { fill: #000000; fill: light-dark(#000000, #ffffff); }
+    .mono { font-family: monospace; }
   </style>
 
   <defs>
@@ -48,11 +49,11 @@
   <rect class="opt" x="120" y="226" width="160" height="36"/>
 
   <!-- register names -->
-  <text class="reg" x="200" y="68">%ss</text>
-  <text class="reg" x="200" y="104">%rsp</text>
-  <text class="reg" x="200" y="140">%rflags</text>
-  <text class="reg" x="200" y="176">%cs</text>
-  <text class="reg" x="200" y="212">%rip</text>
+  <text class="reg mono" x="200" y="68">%ss</text>
+  <text class="reg mono" x="200" y="104">%rsp</text>
+  <text class="reg mono" x="200" y="140">%rflags</text>
+  <text class="reg mono" x="200" y="176">%cs</text>
+  <text class="reg mono" x="200" y="212">%rip</text>
   <text class="reg" x="200" y="248">error code</text>
 
   <!-- offsets from %rsp (error code at +0) -->
@@ -64,7 +65,7 @@
   <text class="off" x="60" y="248">+0</text>
 
   <!-- stack pointer on entry to the handler -->
-  <text class="ptr" x="97" y="237">%rsp</text>
+  <text class="ptr mono" x="97" y="237">%rsp</text>
   <line class="div" x1="78" y1="246" x2="116" y2="246" marker-end="url(#arrow)"/>
 
   <!-- descriptions -->
