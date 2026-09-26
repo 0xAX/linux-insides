@@ -6,7 +6,7 @@
   <style>
     .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
             fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
-    .opt  { fill: #fdf6e3; stroke: #000000; stroke-width: 1; stroke-dasharray: 4 3;
+    .opt  { fill: #fdf6e3; stroke: #000000; stroke-width: 1; stroke-dasharray: 6 4;
             fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
     .div  { stroke: #000000; stroke-width: 1;
             stroke: light-dark(#000000, #ffffff); }

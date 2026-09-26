@@ -8,8 +8,6 @@
                fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
     .div     { stroke: #000000; stroke-width: 1;
                stroke: light-dark(#000000, #ffffff); }
-    .divthick{ stroke: #000000; stroke-width: 2;
-               stroke: light-dark(#000000, #ffffff); }
     .reg     { fill: #000000; font-size: 12px; text-anchor: middle;
                fill: light-dark(#000000, #ffffff); }
     .desc    { fill: #000000; font-size: 12px; text-anchor: start;
@@ -46,7 +44,7 @@
   <line class="div"      x1="120" y1="140" x2="280" y2="140"/>
   <line class="div"      x1="120" y1="170" x2="280" y2="170"/>
   <line class="div"      x1="120" y1="200" x2="280" y2="200"/>
-  <line class="divthick" x1="120" y1="230" x2="280" y2="230"/>
+  <line class="div"      x1="120" y1="230" x2="280" y2="230"/>
   <line class="div"      x1="120" y1="260" x2="280" y2="260"/>
   <line class="div"      x1="120" y1="290" x2="280" y2="290"/>
   <line class="div"      x1="120" y1="320" x2="280" y2="320"/>
