@@ -617,7 +617,11 @@ The page tables are now fully prepared. The last remaining step is to actually e
 	movl	%eax, %cr3
 ```
 
-From this moment, page tables that cover four gigabytes of memory are ready, and paging is enabled. The kernel is ready for transition into the long mode.
+From this moment, page tables that cover four gigabytes of memory are ready, and paging is enabled. The whole structure that the kernel has just built looks like this:
+
+![early-4g-page-tables](./images/early-4g-page-tables.svg)
+
+The kernel is ready for transition into the long mode.
 
 ## The transition into 64-bit mode
 

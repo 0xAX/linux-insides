@@ -327,6 +327,10 @@ After all the identity mapping page table entries were initialized, the kernel u
 	write_cr3(top_level_pgt);
 ```
 
+Since we came from `startup_32`, the first four gigabytes were already mapped, so the page tables still have the same structure that we saw in the previous chapter:
+
+![early-4g-page-tables](./images/early-4g-page-tables.svg)
+
 At this point, all the preparations needed to decompress the kernel image are done. Now the kernel decompressor code is ready to decompress the kernel:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L470-L479 -->
