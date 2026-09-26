@@ -12,7 +12,7 @@
              stroke: light-dark(#000000, #ffffff); }
     .dash  { stroke: #000000; stroke-width: 1; stroke-dasharray: 3 3;
              stroke: light-dark(#000000, #ffffff); }
-    .ttl   { fill: #000000; font-size: 13px; text-anchor: middle; font-weight: bold;
+    .ttl   { fill: #000000; font-size: 13px; text-anchor: middle;
              fill: light-dark(#000000, #ededed); }
     .lbl   { fill: #000000; font-size: 12px; text-anchor: middle;
              fill: light-dark(#000000, #ededed); }
