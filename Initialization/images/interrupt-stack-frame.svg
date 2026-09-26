@@ -11,15 +11,15 @@
     .div  { stroke: #000000; stroke-width: 1;
             stroke: light-dark(#000000, #ffffff); }
     .reg  { fill: #000000; font-size: 12px; text-anchor: middle;
-            fill: light-dark(#000000, #ffffff); }
+            fill: light-dark(#000000, #ededed); }
     .desc { fill: #000000; font-size: 12px; text-anchor: start;
-            fill: light-dark(#000000, #ffffff); }
+            fill: light-dark(#000000, #ededed); }
     .addr { fill: #000000; font-size: 12px; text-anchor: middle;
-            fill: light-dark(#000000, #ffffff); }
+            fill: light-dark(#000000, #ededed); }
     .off  { fill: #000000; font-size: 12px; text-anchor: middle;
-            fill: light-dark(#000000, #ffffff); }
+            fill: light-dark(#000000, #ededed); }
     .ptr  { fill: #000000; font-size: 12px; text-anchor: middle; font-weight: bold;
-            fill: light-dark(#000000, #ffffff); }
+            fill: light-dark(#000000, #ededed); }
     .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
             fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
     .mono { font-family: monospace; }
