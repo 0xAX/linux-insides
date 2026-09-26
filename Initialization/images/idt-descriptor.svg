@@ -9,11 +9,11 @@
     .div  { stroke: #000000; stroke-width: 1;
             stroke: light-dark(#000000, #ffffff); }
     .name { fill: #000000; font-size: 12px; text-anchor: middle;
-            fill: light-dark(#000000, #ffffff); }
+            fill: light-dark(#000000, #ededed); }
     .bitL { fill: #000000; font-size: 11px; text-anchor: start;
-            fill: light-dark(#000000, #ffffff); }
+            fill: light-dark(#000000, #ededed); }
     .bitR { fill: #000000; font-size: 11px; text-anchor: end;
-            fill: light-dark(#000000, #ffffff); }
+            fill: light-dark(#000000, #ededed); }
   </style>
 
   <!-- bits 79..0 : IDTR pseudo-descriptor -->

@@ -13,21 +13,21 @@
     .dash  { stroke: #000000; stroke-width: 1; stroke-dasharray: 3 3;
              stroke: light-dark(#000000, #ffffff); }
     .ttl   { fill: #000000; font-size: 13px; text-anchor: middle; font-weight: bold;
-             fill: light-dark(#000000, #ffffff); }
+             fill: light-dark(#000000, #ededed); }
     .lbl   { fill: #000000; font-size: 12px; text-anchor: middle;
-             fill: light-dark(#000000, #ffffff); }
+             fill: light-dark(#000000, #ededed); }
     .lblL  { fill: #000000; font-size: 12px; text-anchor: end;
-             fill: light-dark(#000000, #ffffff); }
+             fill: light-dark(#000000, #ededed); }
     .lblR  { fill: #000000; font-size: 12px; text-anchor: start;
-             fill: light-dark(#000000, #ffffff); }
+             fill: light-dark(#000000, #ededed); }
     .val   { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace;
-             fill: light-dark(#000000, #ffffff); }
+             fill: light-dark(#000000, #ededed); }
     .valL  { fill: #000000; font-size: 12px; text-anchor: end;    font-family: monospace;
-             fill: light-dark(#000000, #ffffff); }
+             fill: light-dark(#000000, #ededed); }
     .valR  { fill: #000000; font-size: 12px; text-anchor: start;  font-family: monospace;
-             fill: light-dark(#000000, #ffffff); }
+             fill: light-dark(#000000, #ededed); }
     .dim   { fill: #000000; font-size: 12px; text-anchor: middle;
-             fill: light-dark(#000000, #ffffff); }
+             fill: light-dark(#000000, #ededed); }
     .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
             fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
     .mono { font-family: monospace; }
