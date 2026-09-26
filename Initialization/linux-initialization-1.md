@@ -322,7 +322,7 @@ This is the main reason the kernel must build new page tables. Right now it is s
 
 Right now the page tables have the following structure:
 
-![early-page-tables](./images/early-page-tables.svg)
+![early-page-table-identity-mapping](./images/early-page-table-identity-mapping.svg)
 
 After the new page tables are built, the structure looks like this:
 

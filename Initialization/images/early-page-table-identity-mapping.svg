@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="870px" height="485px" viewBox="0 0 870 485"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .used { fill: #eee8d5; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#eee8d5, #2d2614); stroke: light-dark(#000000, #ffffff); }
+    /* .sel = 20% Solarized orange #cb4b16 over the box fill */
+    .sel  { fill: #f3d4ba; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#f3d4ba, #42240c); stroke: light-dark(#000000, #ffffff); }
+    .ln   { fill: none; stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 12px; text-anchor: middle;
+            fill: light-dark(#000000, #ededed); }
+    .bitL { fill: #000000; font-size: 12px; text-anchor: start;
+            fill: light-dark(#000000, #ededed); }
+    .bitR { fill: #000000; font-size: 12px; text-anchor: end;
+            fill: light-dark(#000000, #ededed); }
+    .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
+    .mono { font-family: monospace; }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path d="M7,3.5 L0,0 L1.75,3.5 L0,7 z" class="ah"/>
+    </marker>
+  </defs>
+
+  <g transform="translate(0.5,0.5)">
+    <rect class="box" x="20" y="42" width="170" height="50"/>
+    <rect class="box" x="190" y="42" width="170" height="50"/>
+    <rect class="box" x="360" y="42" width="340" height="50"/>
+    <rect class="box" x="700" y="42" width="150" height="50"/>
+    <rect class="box" x="45" y="295" width="130" height="80"/>
+    <rect class="sel" x="45" y="375" width="130" height="30"/>
+    <rect class="box" x="215" y="190" width="130" height="60"/>
+    <rect class="used" x="215" y="250" width="130" height="30"/>
+    <rect class="used" x="215" y="280" width="130" height="30"/>
+    <rect class="used" x="215" y="310" width="130" height="30"/>
+    <rect class="sel" x="215" y="340" width="130" height="30"/>
+    <rect class="used" x="385" y="253" width="130" height="24"/>
+    <path class="ln" d="M 345 265 L 385 265" marker-end="url(#arrow)"/>
+    <rect class="used" x="385" y="283" width="130" height="24"/>
+    <path class="ln" d="M 345 295 L 385 295" marker-end="url(#arrow)"/>
+    <rect class="used" x="385" y="313" width="130" height="24"/>
+    <path class="ln" d="M 345 325 L 385 325" marker-end="url(#arrow)"/>
+    <rect class="used" x="555" y="158" width="130" height="60"/>
+    <rect class="sel" x="555" y="218" width="130" height="30"/>
+    <rect class="used" x="555" y="248" width="130" height="40"/>
+    <rect class="box" x="725" y="133" width="125" height="50"/>
+    <rect class="sel" x="725" y="183" width="125" height="30"/>
+    <path class="ln" d="M 20 92 L 20 390 L 45 390" marker-end="url(#arrow)"/>
+    <path class="ln" d="M 190 92 L 190 355 L 215 355" marker-end="url(#arrow)"/>
+    <path class="ln" d="M 360 92 L 360 233 L 555 233" marker-end="url(#arrow)"/>
+    <path class="ln" d="M 700 92 L 700 198 L 725 198" marker-end="url(#arrow)"/>
+    <path class="ln" d="M 175 390 L 280 390 L 280 370" marker-end="url(#arrow)"/>
+    <path class="ln" d="M 345 355 L 620 355 L 620 288" marker-end="url(#arrow)"/>
+    <path class="ln" d="M 685 233 L 787 233 L 787 213" marker-end="url(#arrow)"/>
+    <rect class="box" x="45" y="435" width="130" height="30"/>
+    <path class="ln" d="M 110 435 L 110 405" marker-end="url(#arrow)"/>
+  </g>
+  <text class="lbl mono" x="435.0" y="16">0x0000000001000000</text>
+  <text class="lbl" x="105.0" y="63">PGD Offset</text>
+  <text class="lbl mono" x="105.0" y="80">0</text>
+  <text class="bitL" x="24" y="36">47</text>
+  <text class="bitR" x="186" y="36">39</text>
+  <text class="lbl" x="275.0" y="63">PUD Offset</text>
+  <text class="lbl mono" x="275.0" y="80">0</text>
+  <text class="bitL" x="194" y="36">38</text>
+  <text class="bitR" x="356" y="36">30</text>
+  <text class="lbl" x="530.0" y="63">PMD Offset</text>
+  <text class="lbl mono" x="530.0" y="80">8</text>
+  <text class="bitL" x="364" y="36">29</text>
+  <text class="bitR" x="696" y="36">21</text>
+  <text class="lbl" x="775.0" y="63">Physical Page Offset</text>
+  <text class="lbl mono" x="775.0" y="80">0x0</text>
+  <text class="bitL" x="704" y="36">20</text>
+  <text class="bitR" x="846" y="36">0</text>
+  <text class="lbl" x="110.0" y="339">PGD Entries 1..511</text>
+  <text class="lbl" x="110.0" y="394">PGD Entry 0</text>
+  <text class="lbl" x="280.0" y="224">PUD Entries 4..511</text>
+  <text class="lbl" x="280.0" y="269">PUD Entry 3</text>
+  <text class="lbl" x="280.0" y="299">PUD Entry 2</text>
+  <text class="lbl" x="280.0" y="329">PUD Entry 1</text>
+  <text class="lbl" x="280.0" y="359">PUD Entry 0</text>
+  <text class="lbl" x="450.0" y="269">PMD Entries 0..511</text>
+  <text class="lbl" x="450.0" y="299">PMD Entries 0..511</text>
+  <text class="lbl" x="450.0" y="329">PMD Entries 0..511</text>
+  <text class="lbl" x="620.0" y="192">PMD Entries 9..511</text>
+  <text class="lbl" x="620.0" y="237">PMD Entry 8</text>
+  <text class="lbl" x="620.0" y="272">PMD Entries 0..7</text>
+  <text class="lbl" x="787.5" y="162">2 MB page</text>
+  <text class="lbl mono" x="787.5" y="202">0x1000000</text>
+  <text class="lbl" x="110.0" y="454">CR3</text>
+</svg>

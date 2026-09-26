@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="445px" viewBox="0 0 820 445"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .used { fill: #eee8d5; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#eee8d5, #2d2614); stroke: light-dark(#000000, #ffffff); }
+    /* .sel = 20% Solarized orange #cb4b16 over the box fill */
+    .sel  { fill: #f3d4ba; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#f3d4ba, #42240c); stroke: light-dark(#000000, #ffffff); }
+    .ln   { fill: none; stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 12px; text-anchor: middle;
+            fill: light-dark(#000000, #ededed); }
+    .bitL { fill: #000000; font-size: 12px; text-anchor: start;
+            fill: light-dark(#000000, #ededed); }
+    .bitR { fill: #000000; font-size: 12px; text-anchor: end;
+            fill: light-dark(#000000, #ededed); }
+    .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
+    .mono { font-family: monospace; }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path d="M7,3.5 L0,0 L1.75,3.5 L0,7 z" class="ah"/>
+    </marker>
+  </defs>
+
+  <g transform="translate(0.5,0.5)">
+    <rect class="box" x="190" y="40" width="130" height="60"/>
+    <rect class="used" x="190" y="100" width="130" height="50"/>
+    <rect class="used" x="190" y="150" width="130" height="50"/>
+    <rect class="used" x="190" y="200" width="130" height="50"/>
+    <rect class="used" x="190" y="250" width="130" height="50"/>
+    <rect class="used" x="360" y="105" width="150" height="40"/>
+    <path class="ln" d="M 320 125 L 360 125" marker-end="url(#arrow)"/>
+    <rect class="box" x="550" y="100" width="250" height="50"/>
+    <path class="ln" d="M 510 125 L 550 125" marker-end="url(#arrow)"/>
+    <rect class="used" x="360" y="155" width="150" height="40"/>
+    <path class="ln" d="M 320 175 L 360 175" marker-end="url(#arrow)"/>
+    <rect class="box" x="550" y="150" width="250" height="50"/>
+    <path class="ln" d="M 510 175 L 550 175" marker-end="url(#arrow)"/>
+    <rect class="used" x="360" y="205" width="150" height="40"/>
+    <path class="ln" d="M 320 225 L 360 225" marker-end="url(#arrow)"/>
+    <rect class="box" x="550" y="200" width="250" height="50"/>
+    <path class="ln" d="M 510 225 L 550 225" marker-end="url(#arrow)"/>
+    <rect class="used" x="360" y="255" width="150" height="40"/>
+    <path class="ln" d="M 320 275 L 360 275" marker-end="url(#arrow)"/>
+    <rect class="box" x="550" y="250" width="250" height="50"/>
+    <path class="ln" d="M 510 275 L 550 275" marker-end="url(#arrow)"/>
+    <rect class="box" x="20" y="255" width="130" height="80"/>
+    <rect class="used" x="20" y="335" width="130" height="30"/>
+    <path class="ln" d="M 150 350 L 255 350 L 255 300" marker-end="url(#arrow)"/>
+    <rect class="box" x="20" y="395" width="130" height="30"/>
+    <path class="ln" d="M 85 395 L 85 365" marker-end="url(#arrow)"/>
+  </g>
+  <text class="lbl mono" x="255.0" y="34">pgtable+0x1000</text>
+  <text class="lbl" x="255.0" y="74">PDPT Entries 4..511</text>
+  <text class="lbl" x="255.0" y="129">PDPT Entry 3</text>
+  <text class="lbl" x="255.0" y="179">PDPT Entry 2</text>
+  <text class="lbl" x="255.0" y="229">PDPT Entry 1</text>
+  <text class="lbl" x="255.0" y="279">PDPT Entry 0</text>
+  <text class="lbl" x="675.0" y="94">Physical memory</text>
+  <text class="lbl mono" x="435.0" y="121">pgtable+0x5000</text>
+  <text class="lbl" x="435.0" y="137">PD Entries 0..511</text>
+  <text class="lbl" x="675.0" y="129">3–4 GB</text>
+  <text class="lbl mono" x="435.0" y="171">pgtable+0x4000</text>
+  <text class="lbl" x="435.0" y="187">PD Entries 0..511</text>
+  <text class="lbl" x="675.0" y="179">2–3 GB</text>
+  <text class="lbl mono" x="435.0" y="221">pgtable+0x3000</text>
+  <text class="lbl" x="435.0" y="237">PD Entries 0..511</text>
+  <text class="lbl" x="675.0" y="229">1–2 GB</text>
+  <text class="lbl mono" x="435.0" y="271">pgtable+0x2000</text>
+  <text class="lbl" x="435.0" y="287">PD Entries 0..511</text>
+  <text class="lbl" x="675.0" y="279">0–1 GB</text>
+  <text class="lbl mono" x="85.0" y="249">pgtable</text>
+  <text class="lbl" x="85.0" y="299">PML4 Entries 1..511</text>
+  <text class="lbl" x="85.0" y="354">PML4 Entry 0</text>
+  <text class="lbl" x="85.0" y="414">CR3</text>
+</svg>
