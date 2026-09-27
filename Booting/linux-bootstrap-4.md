@@ -601,9 +601,8 @@ Here we already fill four page directory tables with `2048` entries. The first e
 
 - Present
 - Read/Write
-- User
-- Page Cache Disable
-- Large Page 
+- Large Page
+- Global
 
 The two additional flags tell the processor to keep [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entry across reload of the value of the `cr3` register and use two-megabyte pages.
 
