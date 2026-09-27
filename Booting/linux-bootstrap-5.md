@@ -249,7 +249,7 @@ We can skip the part of the code wrapped with `CONFIG_AMD_MEM_ENCRYPT` as it is 
 - `PF` - Page fault interrupt handler
 - `NMI` - Non-maskable interrupt handler
 
-The first interrupt handler is set because the `initialize_identity_maps` function (which we will see very soon) may trigger page fault exception. This exception can be triggered for example, when [Address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization) is enabled and such random physical and virtual addresses were used for which the page tables do have an entry.
+The first interrupt handler is set because the `initialize_identity_maps` function (which we will see very soon) may trigger page fault exception. This exception can be triggered for example, when [Address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization) is enabled and such random physical and virtual addresses were used for which the page tables do not have an entry.
 
 The second interrupt handler is needed to "handle" a triple-fault if such an interrupt appears during kernel decompression. So at least dummy NMI handler is needed.
 
