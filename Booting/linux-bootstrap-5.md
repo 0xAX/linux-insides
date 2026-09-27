@@ -347,7 +347,7 @@ At this point, all the preparations needed to decompress the kernel image are do
 	jmp	*%rax
 ```
 
-After the kernel is decompressed. The last instructions of the decompressor code transfers control to the Linux kernel entrypoint jumping on the address of the kernel's entrypoint. The early setup phase is complete, and the Linux kernel starts its job 🎉
+After the kernel is decompressed, the last instructions of the decompressor code transfer control to the Linux kernel entrypoint jumping on the address of the kernel's entrypoint. The early setup phase is complete, and the Linux kernel starts its job 🎉
 
 In the next section, let's see how the kernel decompression works.
 
