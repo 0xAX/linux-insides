@@ -318,7 +318,7 @@ All of the actual work is performed by the `kernel_add_identity_map` function de
 	kernel_add_identity_map(cmdline, cmdline + COMMAND_LINE_SIZE);
 ```
 
-The `kernel_add_itntity_map` function walks the page table hierarchy and ensures that there is existing page table entries which provide 1:1 mapping into the virtual address space. If such entries does not exist, the new entry is allocated with the flags that we have seen during the initialization of the `mapping_info`.
+The `kernel_add_identity_map` function walks the page table hierarchy and ensures that there are existing page table entries which provide 1:1 mapping into the virtual address space. If such entries do not exist, the new entry is allocated with the flags that we have seen during the initialization of the `mapping_info`.
 
 After all the identity mapping page table entries were initialized, the kernel updates the `cr3` control register with the address of the top page table:
 
