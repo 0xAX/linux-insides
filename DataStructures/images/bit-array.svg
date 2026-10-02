@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="130px" viewBox="0 0 820 130"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .hi   { fill: #eee8d5; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#eee8d5, #2d2614); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .ptr  { fill: #000000; font-size: 12px; text-anchor: middle; font-weight: bold;
+            fill: light-dark(#000000, #ffffff); }
+    .mono { font-family: monospace; }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path class="ah" d="M7,3.5 L0,0 L1.75,3.5 L0,7 z"/>
+    </marker>
+  </defs>
+
+  <!-- A bit array of 16 bits that represents the set {1, 3, 8, 12}.
+       Bit numbers grow from left to right, the set bits are shaded. -->
+
+  <!-- ===== bit numbers ===== -->
+  <text class="lbl mono" x="112" y="60">0</text>
+  <text class="lbl mono" x="152" y="60">1</text>
+  <text class="lbl mono" x="192" y="60">2</text>
+  <text class="lbl mono" x="232" y="60">3</text>
+  <text class="lbl mono" x="272" y="60">4</text>
+  <text class="lbl mono" x="312" y="60">5</text>
+  <text class="lbl mono" x="352" y="60">6</text>
+  <text class="lbl mono" x="392" y="60">7</text>
+  <text class="lbl mono" x="432" y="60">8</text>
+  <text class="lbl mono" x="472" y="60">9</text>
+  <text class="lbl mono" x="512" y="60">10</text>
+  <text class="lbl mono" x="552" y="60">11</text>
+  <text class="lbl mono" x="592" y="60">12</text>
+  <text class="lbl mono" x="632" y="60">13</text>
+  <text class="lbl mono" x="672" y="60">14</text>
+  <text class="lbl mono" x="712" y="60">15</text>
+
+  <!-- ===== the array itself ===== -->
+  <text class="ptr mono" x="56" y="94">bits</text>
+  <line class="div" x1="30" y1="104" x2="92" y2="104" marker-end="url(#arrow)"/>
+
+  <rect class="box" x="92"  y="70" width="40" height="40"/>
+  <rect class="hi"  x="132" y="70" width="40" height="40"/>
+  <rect class="box" x="172" y="70" width="40" height="40"/>
+  <rect class="hi"  x="212" y="70" width="40" height="40"/>
+  <rect class="box" x="252" y="70" width="40" height="40"/>
+  <rect class="box" x="292" y="70" width="40" height="40"/>
+  <rect class="box" x="332" y="70" width="40" height="40"/>
+  <rect class="box" x="372" y="70" width="40" height="40"/>
+  <rect class="hi"  x="412" y="70" width="40" height="40"/>
+  <rect class="box" x="452" y="70" width="40" height="40"/>
+  <rect class="box" x="492" y="70" width="40" height="40"/>
+  <rect class="box" x="532" y="70" width="40" height="40"/>
+  <rect class="hi"  x="572" y="70" width="40" height="40"/>
+  <rect class="box" x="612" y="70" width="40" height="40"/>
+  <rect class="box" x="652" y="70" width="40" height="40"/>
+  <rect class="box" x="692" y="70" width="40" height="40"/>
+
+  <text class="val" x="112" y="95">0</text>
+  <text class="val" x="152" y="95">1</text>
+  <text class="val" x="192" y="95">0</text>
+  <text class="val" x="232" y="95">1</text>
+  <text class="val" x="272" y="95">0</text>
+  <text class="val" x="312" y="95">0</text>
+  <text class="val" x="352" y="95">0</text>
+  <text class="val" x="392" y="95">0</text>
+  <text class="val" x="432" y="95">1</text>
+  <text class="val" x="472" y="95">0</text>
+  <text class="val" x="512" y="95">0</text>
+  <text class="val" x="552" y="95">0</text>
+  <text class="val" x="592" y="95">1</text>
+  <text class="val" x="632" y="95">0</text>
+  <text class="val" x="672" y="95">0</text>
+  <text class="val" x="712" y="95">0</text>
+</svg>
