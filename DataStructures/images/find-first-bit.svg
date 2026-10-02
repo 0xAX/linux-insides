@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="230px" viewBox="0 0 820 230"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .hi   { fill: #eee8d5; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#eee8d5, #2d2614); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1; fill: none;
+            stroke: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
+    .ttl  { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .mem  { fill: #000000; font-size: 11px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* the word where the scan stops and the bit it finds there */
+    .hl   { fill: none; stroke: #cb4b16; stroke-width: 2;
+            stroke: light-dark(#cb4b16, #eb7a4a); }
+    .mono { font-family: monospace; }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path class="ah" d="M7,3.5 L0,0 L1.75,3.5 L0,7 z"/>
+    </marker>
+  </defs>
+
+  <!-- find_first_bit() over four words: the two zero words are skipped as a
+       whole, the third word is the first non-zero one, and tzcnt gives the
+       position of its lowest set bit, 12. The result is 2 * 64 + 12 = 140. -->
+
+  <!-- ===== the words of the bitmap ===== -->
+  <text class="ttl" x="54" y="80">addr</text>
+  <line class="div" x1="26" y1="90" x2="92" y2="90" marker-end="url(#arrow)"/>
+
+  <rect class="box" x="92"  y="60" width="160" height="60"/>
+  <text class="mem" x="172" y="84">addr[0]</text>
+  <text class="mem" x="172" y="104">0x0000000000000000</text>
+
+  <rect class="box" x="252" y="60" width="160" height="60"/>
+  <text class="mem" x="332" y="84">addr[1]</text>
+  <text class="mem" x="332" y="104">0x0000000000000000</text>
+
+  <rect class="hi" x="412" y="60" width="160" height="60"/>
+  <text class="mem" x="492" y="84">addr[2]</text>
+  <text class="mem" x="492" y="104">0x0000000000001000</text>
+
+  <rect class="box" x="572" y="60" width="160" height="60"/>
+  <text class="mem" x="652" y="84">addr[3]</text>
+  <text class="mem" x="652" y="104">0x0000000000000800</text>
+
+  <!-- ===== the scan: one step per word, stops at the first non-zero one ===== -->
+  <text class="lbl" x="172" y="44">val == 0, skip</text>
+  <text class="lbl" x="332" y="44">val == 0, skip</text>
+  <text class="lbl" x="492" y="44">val != 0, stop</text>
+  <polyline class="div" points="172,120 172,146 324,146 324,120" marker-end="url(#arrow)"/>
+  <polyline class="div" points="340,120 340,146 492,146 492,120" marker-end="url(#arrow)"/>
+  <rect class="hl" x="410" y="58" width="164" height="64" rx="2"/>
+
+  <!-- ===== the result ===== -->
+  <text class="mem" x="492" y="200">2 * 64 + tzcnt(0x1000) = 2 * 64 + 12 = 140</text>
+</svg>

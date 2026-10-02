@@ -378,7 +378,7 @@ Ok, we already passed the main theme of this part which is `RCU` initialization,
 
 After we initialized `RCU`, the next step which you can see in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) is the - `trace_init` function. As you can understand from its name, this function initialize [tracing](http://en.wikipedia.org/wiki/Tracing_%28software%29) subsystem. You can read more about Linux kernel trace system - [here](http://elinux.org/Kernel_Trace_Systems).
 
-After the `trace_init`, we can see the call of the `radix_tree_init`. If you are familiar with the different data structures, you can understand from the name of this function that it initializes kernel implementation of the [Radix tree](http://en.wikipedia.org/wiki/Radix_tree). This function is defined in the [lib/radix-tree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/radix-tree.c) and you can read more about it in the part about [Radix tree](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-2).
+After the `trace_init`, we can see the call of the `radix_tree_init`. If you are familiar with the different data structures, you can understand from the name of this function that it initializes kernel implementation of the [Radix tree](http://en.wikipedia.org/wiki/Radix_tree). This function is defined in the [lib/radix-tree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/lib/radix-tree.c) and you can read more about it in the part about [Radix tree](../DataStructures/linux-datastructures-3.md).
 
 In the next step we can see the functions which are related to the `interrupts handling` subsystem, they are:
 

@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="250px" viewBox="0 0 820 250"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .hi   { fill: #eee8d5; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#eee8d5, #2d2614); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .mem  { fill: #000000; font-size: 11px; text-anchor: start; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .op   { fill: #000000; font-size: 16px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* the bit that the operation changes */
+    .hl-v { fill: #cb4b16; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#cb4b16, #eb7a4a); }
+    .hl   { fill: none; stroke: #cb4b16; stroke-width: 2;
+            stroke: light-dark(#cb4b16, #eb7a4a); }
+    .mono { font-family: monospace; }
+  </style>
+
+  <!-- lock orb $0x10, 29(addr): the byte at addr + (236 >> 3) is or-ed with
+       1 << (236 & 7). Bits of the byte are written most significant first,
+       so bit 4 is the fifth cell from the right. -->
+
+  <!-- ===== bit numbers inside the byte ===== -->
+  <text class="lbl mono" x="392" y="44">7</text>
+  <text class="lbl mono" x="432" y="44">6</text>
+  <text class="lbl mono" x="472" y="44">5</text>
+  <text class="lbl mono" x="512" y="44">4</text>
+  <text class="lbl mono" x="552" y="44">3</text>
+  <text class="lbl mono" x="592" y="44">2</text>
+  <text class="lbl mono" x="632" y="44">1</text>
+  <text class="lbl mono" x="672" y="44">0</text>
+
+  <!-- ===== the byte that contains bit 236 ===== -->
+  <text class="mem" x="40" y="79">byte at addr + 29</text>
+  <rect class="box" x="372" y="55" width="40" height="40"/>
+  <rect class="box" x="412" y="55" width="40" height="40"/>
+  <rect class="box" x="452" y="55" width="40" height="40"/>
+  <rect class="box" x="492" y="55" width="40" height="40"/>
+  <rect class="box" x="532" y="55" width="40" height="40"/>
+  <rect class="box" x="572" y="55" width="40" height="40"/>
+  <rect class="box" x="612" y="55" width="40" height="40"/>
+  <rect class="box" x="652" y="55" width="40" height="40"/>
+  <text class="val" x="392" y="80">0</text>
+  <text class="val" x="432" y="80">1</text>
+  <text class="val" x="472" y="80">0</text>
+  <text class="val" x="512" y="80">0</text>
+  <text class="val" x="552" y="80">0</text>
+  <text class="val" x="592" y="80">1</text>
+  <text class="val" x="632" y="80">0</text>
+  <text class="val" x="672" y="80">1</text>
+
+  <!-- ===== the mask ===== -->
+  <text class="op" x="354" y="134">|</text>
+  <text class="mem" x="40" y="134">1 &lt;&lt; (236 &amp; 7) = 0x10</text>
+  <rect class="box" x="372" y="110" width="40" height="40"/>
+  <rect class="box" x="412" y="110" width="40" height="40"/>
+  <rect class="box" x="452" y="110" width="40" height="40"/>
+  <rect class="hi"  x="492" y="110" width="40" height="40"/>
+  <rect class="box" x="532" y="110" width="40" height="40"/>
+  <rect class="box" x="572" y="110" width="40" height="40"/>
+  <rect class="box" x="612" y="110" width="40" height="40"/>
+  <rect class="box" x="652" y="110" width="40" height="40"/>
+  <text class="val" x="392" y="135">0</text>
+  <text class="val" x="432" y="135">0</text>
+  <text class="val" x="472" y="135">0</text>
+  <text class="val" x="512" y="135">1</text>
+  <text class="val" x="552" y="135">0</text>
+  <text class="val" x="592" y="135">0</text>
+  <text class="val" x="632" y="135">0</text>
+  <text class="val" x="672" y="135">0</text>
+
+  <!-- ===== the result written back to the same byte ===== -->
+  <line class="div" x1="372" y1="168" x2="692" y2="168"/>
+  <text class="mem" x="40" y="209">the same byte after lock orb</text>
+  <rect class="box" x="372" y="185" width="40" height="40"/>
+  <rect class="box" x="412" y="185" width="40" height="40"/>
+  <rect class="box" x="452" y="185" width="40" height="40"/>
+  <rect class="hi"  x="492" y="185" width="40" height="40"/>
+  <rect class="box" x="532" y="185" width="40" height="40"/>
+  <rect class="box" x="572" y="185" width="40" height="40"/>
+  <rect class="box" x="612" y="185" width="40" height="40"/>
+  <rect class="box" x="652" y="185" width="40" height="40"/>
+  <text class="val" x="392" y="210">0</text>
+  <text class="val" x="432" y="210">1</text>
+  <text class="val" x="472" y="210">0</text>
+  <text class="hl-v" x="512" y="210">1</text>
+  <text class="val" x="552" y="210">0</text>
+  <text class="val" x="592" y="210">1</text>
+  <text class="val" x="632" y="210">0</text>
+  <text class="val" x="672" y="210">1</text>
+  <rect class="hl" x="490" y="183" width="44" height="44" rx="2"/>
+</svg>
