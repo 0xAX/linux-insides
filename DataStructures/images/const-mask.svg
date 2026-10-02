@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="240px" viewBox="0 0 820 240"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .sel  { fill: #f3d4ba; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#f3d4ba, #42240c); stroke: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .idx  { fill: #000000; font-size: 11px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .name { fill: #000000; font-size: 13px; text-anchor: end; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+
+    /* byte 29 and bit 4 inside it */
+    .hl   { fill: none; stroke: #cb4b16; stroke-width: 2;
+            stroke: light-dark(#cb4b16, #eb7a4a); }
+    .hl-v { fill: #cb4b16; font-size: 13px; text-anchor: middle; font-family: monospace;
+            font-weight: bold; fill: light-dark(#cb4b16, #eb7a4a); }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path class="ah" d="M7,3.5 L0,0 L1.75,3.5 L0,7 z"/>
+    </marker>
+  </defs>
+
+  <!-- Setting bit 236 with a constant bit number: 236 / 8 = 29 selects the byte,
+       236 % 8 = 4 selects the bit inside it, and lock orb ORs the byte with 1 << 4,
+       which sets bit 4 and keeps all other bits as they were.
+       Bits of the byte are drawn most significant first, so bit 4 is the fourth cell. -->
+
+
+  <!-- ===== the bitmap as bytes, byte 29 is selected ===== -->
+  <text class="name" x="114" y="43">bitmap</text>
+  <rect class="box" x="130" y="20" width="70" height="36"/>
+  <text class="val" x="165" y="43">0</text>
+  <rect class="box" x="200" y="20" width="70" height="36"/>
+  <text class="val" x="235" y="43">1</text>
+  <rect class="box" x="270" y="20" width="70" height="36"/>
+  <text class="val" x="305" y="43">2</text>
+  <rect class="box" x="340" y="20" width="70" height="36"/>
+  <text class="val" x="375" y="43">...</text>
+  <rect class="box" x="410" y="20" width="70" height="36"/>
+  <text class="val" x="445" y="43">28</text>
+  <rect class="sel" x="480" y="20" width="70" height="36"/>
+  <text class="val" x="515" y="43">29</text>
+  <rect class="box" x="550" y="20" width="70" height="36"/>
+  <text class="val" x="585" y="43">30</text>
+  <rect class="box" x="620" y="20" width="70" height="36"/>
+  <text class="val" x="655" y="43">31</text>
+  <rect class="hl" x="478" y="18" width="74" height="40" rx="2"/>
+
+  <!-- ===== byte 29 is expanded into its eight bits ===== -->
+  <line class="div" x1="510" y1="58" x2="510" y2="100" marker-end="url(#arrow)"/>
+  <rect class="box" x="370" y="100" width="40" height="36"/>
+  <text class="val" x="390" y="123">0</text>
+  <rect class="box" x="410" y="100" width="40" height="36"/>
+  <text class="val" x="430" y="123">1</text>
+  <rect class="box" x="450" y="100" width="40" height="36"/>
+  <text class="val" x="470" y="123">0</text>
+  <rect class="box" x="490" y="100" width="40" height="36"/>
+  <text class="val" x="510" y="123">0</text>
+  <rect class="box" x="530" y="100" width="40" height="36"/>
+  <text class="val" x="550" y="123">0</text>
+  <rect class="box" x="570" y="100" width="40" height="36"/>
+  <text class="val" x="590" y="123">1</text>
+  <rect class="box" x="610" y="100" width="40" height="36"/>
+  <text class="val" x="630" y="123">0</text>
+  <rect class="box" x="650" y="100" width="40" height="36"/>
+  <text class="val" x="670" y="123">1</text>
+
+  <!-- ===== OR with 1 << 4 sets bit 4 and keeps the others ===== -->
+  <line class="div" x1="510" y1="136" x2="510" y2="173" marker-end="url(#arrow)"/>
+  <text class="name" x="500" y="161">OR 1 &lt;&lt; 4</text>
+  <rect class="box" x="370" y="176" width="40" height="36"/>
+  <text class="val" x="390" y="199">0</text>
+  <rect class="box" x="410" y="176" width="40" height="36"/>
+  <text class="val" x="430" y="199">1</text>
+  <rect class="box" x="450" y="176" width="40" height="36"/>
+  <text class="val" x="470" y="199">0</text>
+  <rect class="sel" x="490" y="176" width="40" height="36"/>
+  <text class="hl-v" x="510" y="199">1</text>
+  <rect class="box" x="530" y="176" width="40" height="36"/>
+  <text class="val" x="550" y="199">0</text>
+  <rect class="box" x="570" y="176" width="40" height="36"/>
+  <text class="val" x="590" y="199">1</text>
+  <rect class="box" x="610" y="176" width="40" height="36"/>
+  <text class="val" x="630" y="199">0</text>
+  <rect class="box" x="650" y="176" width="40" height="36"/>
+  <text class="val" x="670" y="199">1</text>
+
+  <!-- ===== bit numbers inside the byte ===== -->
+  <text class="idx" x="390" y="230">7</text>
+  <text class="idx" x="430" y="230">6</text>
+  <text class="idx" x="470" y="230">5</text>
+  <text class="idx" x="510" y="230">4</text>
+  <text class="idx" x="550" y="230">3</text>
+  <text class="idx" x="590" y="230">2</text>
+  <text class="idx" x="630" y="230">1</text>
+  <text class="idx" x="670" y="230">0</text>
+  <rect class="hl" x="488" y="174" width="44" height="40" rx="2"/>
+</svg>

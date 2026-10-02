@@ -413,7 +413,7 @@ if (WARN_ON(initcnt > IRQ_BITMAP_BITS))
     initcnt = IRQ_BITMAP_BITS;
 ```
 
-where `IRQ_BITMAP_BITS` is equal to the `NR_IRQS` if the `CONFIG_SPARSE_IRQ` is not set and `NR_IRQS + 8196` in other way. In the next step we are going over all interrupt descriptors which need to be allocated in the loop and allocate space for the descriptor and insert to the `irq_desc_tree` [radix tree](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-2):
+where `IRQ_BITMAP_BITS` is equal to the `NR_IRQS` if the `CONFIG_SPARSE_IRQ` is not set and `NR_IRQS + 8196` in other way. In the next step we are going over all interrupt descriptors which need to be allocated in the loop and allocate space for the descriptor and insert to the `irq_desc_tree` [radix tree](../DataStructures/linux-datastructures-3.md):
 
 ```C
 for (i = 0; i < initcnt; i++) {
@@ -457,5 +457,5 @@ Links
 * [Intel 8259](https://en.wikipedia.org/wiki/Intel_8259)
 * [PIC](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)
 * [MultiProcessor Configuration Table](https://en.wikipedia.org/wiki/MultiProcessor_Specification)
-* [radix tree](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-2)
+* [radix tree](../DataStructures/linux-datastructures-3.md)
 * [dmesg](https://en.wikipedia.org/wiki/Dmesg)

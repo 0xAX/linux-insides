@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     version="1.1" width="820px" height="330px" viewBox="0 0 820 330"
+     style="background: transparent; background-color: transparent; color-scheme: light dark;"
+     font-family="Helvetica">
+  <style>
+    .box  { fill: #fdf6e3; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#fdf6e3, #201a0a); stroke: light-dark(#000000, #ffffff); }
+    .sel  { fill: #f3d4ba; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#f3d4ba, #42240c); stroke: light-dark(#000000, #ffffff); }
+    .val  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .dim  { fill: #93a1a1; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#93a1a1, #586e75); }
+    .idx  { fill: #000000; font-size: 11px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .name { fill: #000000; font-size: 13px; text-anchor: end; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .res  { fill: #000000; font-size: 13px; text-anchor: start; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .stat { fill: #000000; font-size: 13px; text-anchor: middle;
+            fill: light-dark(#000000, #ffffff); }
+    .ptr  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
+            fill: light-dark(#000000, #ffffff); }
+    .div  { stroke: #000000; stroke-width: 1;
+            stroke: light-dark(#000000, #ffffff); }
+    .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
+            fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
+
+    /* the tzcnt cursor and the bit it finds */
+    .hl   { fill: none; stroke: #cb4b16; stroke-width: 2;
+            stroke: light-dark(#cb4b16, #eb7a4a); }
+    .hl-v { fill: #cb4b16; font-size: 13px; text-anchor: middle; font-family: monospace;
+            font-weight: bold; fill: light-dark(#cb4b16, #eb7a4a); }
+    .hl-r { fill: #cb4b16; font-size: 13px; text-anchor: start; font-family: monospace;
+            font-weight: bold; fill: light-dark(#cb4b16, #eb7a4a); }
+
+    @keyframes w0 { 0% { opacity: 1; } 22.072% { opacity: 1; } 22.523% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w1 { 0% { opacity: 1; } 22.072% { opacity: 1; } 22.523% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w2 { 0% { opacity: 0; } 6.757% { opacity: 0; } 7.207% { opacity: 1; } 22.072% { opacity: 1; } 22.523% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w3 { 0% { opacity: 0; } 11.261% { opacity: 0; } 11.712% { opacity: 1; } 12.613% { opacity: 1; } 13.063% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w4 { 0% { opacity: 0; } 11.261% { opacity: 0; } 11.712% { opacity: 1; } 12.613% { opacity: 1; } 13.063% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w5 { 0% { opacity: 0; } 13.063% { opacity: 0; } 13.514% { opacity: 1; } 22.072% { opacity: 1; } 22.523% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w6 { 0% { opacity: 0; } 13.063% { opacity: 0; } 13.514% { opacity: 1; } 22.072% { opacity: 1; } 22.523% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w7 { 0% { opacity: 1; } 22.072% { opacity: 1; } 22.523% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w8 { 0% { opacity: 0; } 11.261% { opacity: 0; } 11.712% { opacity: 1; } 15.315% { opacity: 1; } 15.766% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w9 { 0% { opacity: 0; } 15.766% { opacity: 0; } 16.216% { opacity: 1; } 22.072% { opacity: 1; } 22.523% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w10 { 0% { opacity: 0; } 22.523% { opacity: 0; } 22.973% { opacity: 1; } 48.874% { opacity: 1; } 49.324% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w11 { 0% { opacity: 0; } 22.523% { opacity: 0; } 22.973% { opacity: 1; } 48.874% { opacity: 1; } 49.324% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w12 { 0% { opacity: 0; } 28.153% { opacity: 0; } 28.604% { opacity: 1; } 48.874% { opacity: 1; } 49.324% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w13 { 0% { opacity: 0; } 32.658% { opacity: 0; } 33.108% { opacity: 1; } 34.009% { opacity: 1; } 34.459% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w14 { 0% { opacity: 0; } 32.658% { opacity: 0; } 33.108% { opacity: 1; } 34.009% { opacity: 1; } 34.459% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w15 { 0% { opacity: 0; } 34.459% { opacity: 0; } 34.910% { opacity: 1; } 35.811% { opacity: 1; } 36.261% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w16 { 0% { opacity: 0; } 34.459% { opacity: 0; } 34.910% { opacity: 1; } 35.811% { opacity: 1; } 36.261% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w17 { 0% { opacity: 0; } 36.261% { opacity: 0; } 36.712% { opacity: 1; } 37.613% { opacity: 1; } 38.063% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w18 { 0% { opacity: 0; } 36.261% { opacity: 0; } 36.712% { opacity: 1; } 37.613% { opacity: 1; } 38.063% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w19 { 0% { opacity: 0; } 38.063% { opacity: 0; } 38.514% { opacity: 1; } 39.414% { opacity: 1; } 39.865% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w20 { 0% { opacity: 0; } 38.063% { opacity: 0; } 38.514% { opacity: 1; } 39.414% { opacity: 1; } 39.865% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w21 { 0% { opacity: 0; } 39.865% { opacity: 0; } 40.315% { opacity: 1; } 48.874% { opacity: 1; } 49.324% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w22 { 0% { opacity: 0; } 39.865% { opacity: 0; } 40.315% { opacity: 1; } 48.874% { opacity: 1; } 49.324% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w23 { 0% { opacity: 0; } 22.523% { opacity: 0; } 22.973% { opacity: 1; } 48.874% { opacity: 1; } 49.324% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w24 { 0% { opacity: 0; } 32.658% { opacity: 0; } 33.108% { opacity: 1; } 42.117% { opacity: 1; } 42.568% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w25 { 0% { opacity: 0; } 42.568% { opacity: 0; } 43.018% { opacity: 1; } 48.874% { opacity: 1; } 49.324% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w26 { 0% { opacity: 0; } 49.324% { opacity: 0; } 49.775% { opacity: 1; } 79.279% { opacity: 1; } 79.730% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w27 { 0% { opacity: 0; } 49.324% { opacity: 0; } 49.775% { opacity: 1; } 79.279% { opacity: 1; } 79.730% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w28 { 0% { opacity: 0; } 54.955% { opacity: 0; } 55.405% { opacity: 1; } 79.279% { opacity: 1; } 79.730% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w29 { 0% { opacity: 0; } 59.459% { opacity: 0; } 59.910% { opacity: 1; } 60.811% { opacity: 1; } 61.261% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w30 { 0% { opacity: 0; } 59.459% { opacity: 0; } 59.910% { opacity: 1; } 60.811% { opacity: 1; } 61.261% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w31 { 0% { opacity: 0; } 61.261% { opacity: 0; } 61.712% { opacity: 1; } 62.613% { opacity: 1; } 63.063% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w32 { 0% { opacity: 0; } 61.261% { opacity: 0; } 61.712% { opacity: 1; } 62.613% { opacity: 1; } 63.063% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w33 { 0% { opacity: 0; } 63.063% { opacity: 0; } 63.514% { opacity: 1; } 64.414% { opacity: 1; } 64.865% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w34 { 0% { opacity: 0; } 63.063% { opacity: 0; } 63.514% { opacity: 1; } 64.414% { opacity: 1; } 64.865% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w35 { 0% { opacity: 0; } 64.865% { opacity: 0; } 65.315% { opacity: 1; } 66.216% { opacity: 1; } 66.667% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w36 { 0% { opacity: 0; } 64.865% { opacity: 0; } 65.315% { opacity: 1; } 66.216% { opacity: 1; } 66.667% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w37 { 0% { opacity: 0; } 66.667% { opacity: 0; } 67.117% { opacity: 1; } 68.018% { opacity: 1; } 68.468% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w38 { 0% { opacity: 0; } 66.667% { opacity: 0; } 67.117% { opacity: 1; } 68.018% { opacity: 1; } 68.468% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w39 { 0% { opacity: 0; } 68.468% { opacity: 0; } 68.919% { opacity: 1; } 69.820% { opacity: 1; } 70.270% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w40 { 0% { opacity: 0; } 68.468% { opacity: 0; } 68.919% { opacity: 1; } 69.820% { opacity: 1; } 70.270% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w41 { 0% { opacity: 0; } 70.270% { opacity: 0; } 70.721% { opacity: 1; } 79.279% { opacity: 1; } 79.730% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w42 { 0% { opacity: 0; } 70.270% { opacity: 0; } 70.721% { opacity: 1; } 79.279% { opacity: 1; } 79.730% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w43 { 0% { opacity: 0; } 49.324% { opacity: 0; } 49.775% { opacity: 1; } 79.279% { opacity: 1; } 79.730% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w44 { 0% { opacity: 0; } 59.459% { opacity: 0; } 59.910% { opacity: 1; } 72.523% { opacity: 1; } 72.973% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w45 { 0% { opacity: 0; } 72.973% { opacity: 0; } 73.423% { opacity: 1; } 79.279% { opacity: 1; } 79.730% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w46 { 0% { opacity: 0; } 79.730% { opacity: 0; } 80.180% { opacity: 1; } 98.423% { opacity: 1; } 98.874% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w47 { 0% { opacity: 0; } 79.730% { opacity: 0; } 80.180% { opacity: 1; } 98.423% { opacity: 1; } 98.874% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w48 { 0% { opacity: 0; } 85.360% { opacity: 0; } 85.811% { opacity: 1; } 98.423% { opacity: 1; } 98.874% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w49 { 0% { opacity: 0; } 79.730% { opacity: 0; } 80.180% { opacity: 1; } 98.423% { opacity: 1; } 98.874% { opacity: 0; } 100% { opacity: 0; } }
+    @keyframes w50 { 0% { opacity: 0; } 89.865% { opacity: 0; } 90.315% { opacity: 1; } 98.423% { opacity: 1; } 98.874% { opacity: 0; } 100% { opacity: 0; } }
+  </style>
+
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3.5"
+            orient="auto" markerUnits="userSpaceOnUse" overflow="visible">
+      <path class="ah" d="M7,3.5 L0,0 L1.75,3.5 L0,7 z"/>
+    </marker>
+  </defs>
+
+  <!-- for_each_set_bit over an 8-bit bitmap with bits 1, 4 and 6 set.
+       The arrow marks the current position of the loop, offset.
+       Every iteration calls find_next_bit(addr, 8, offset): GENMASK(7, offset)
+       clears the bits the loop has already passed, tzcnt counts the trailing
+       zeros of what is left, and that count is the next set bit. When nothing
+       is left, the function returns the size of the bitmap and the loop ends. -->
+
+  <!-- ===== the bitmap word, the same in every iteration ===== -->
+  <text class="name" x="264" y="87">*addr</text>
+  <rect class="box" x="280" y="64" width="40" height="36"/>
+  <rect class="box" x="320" y="64" width="40" height="36"/>
+  <rect class="box" x="360" y="64" width="40" height="36"/>
+  <rect class="box" x="400" y="64" width="40" height="36"/>
+  <rect class="box" x="440" y="64" width="40" height="36"/>
+  <rect class="box" x="480" y="64" width="40" height="36"/>
+  <rect class="box" x="520" y="64" width="40" height="36"/>
+  <rect class="box" x="560" y="64" width="40" height="36"/>
+  <text class="val" x="580" y="87">0</text>
+  <text class="val" x="540" y="87">1</text>
+  <text class="val" x="500" y="87">0</text>
+  <text class="val" x="460" y="87">0</text>
+  <text class="val" x="420" y="87">1</text>
+  <text class="val" x="380" y="87">0</text>
+  <text class="val" x="340" y="87">1</text>
+  <text class="val" x="300" y="87">0</text>
+
+  <!-- ===== empty mask and result rows ===== -->
+  <rect class="box" x="280" y="124" width="40" height="36"/>
+  <rect class="box" x="320" y="124" width="40" height="36"/>
+  <rect class="box" x="360" y="124" width="40" height="36"/>
+  <rect class="box" x="400" y="124" width="40" height="36"/>
+  <rect class="box" x="440" y="124" width="40" height="36"/>
+  <rect class="box" x="480" y="124" width="40" height="36"/>
+  <rect class="box" x="520" y="124" width="40" height="36"/>
+  <rect class="box" x="560" y="124" width="40" height="36"/>
+  <rect class="box" x="280" y="214" width="40" height="36"/>
+  <rect class="box" x="320" y="214" width="40" height="36"/>
+  <rect class="box" x="360" y="214" width="40" height="36"/>
+  <rect class="box" x="400" y="214" width="40" height="36"/>
+  <rect class="box" x="440" y="214" width="40" height="36"/>
+  <rect class="box" x="480" y="214" width="40" height="36"/>
+  <rect class="box" x="520" y="214" width="40" height="36"/>
+  <rect class="box" x="560" y="214" width="40" height="36"/>
+  <text class="name" x="264" y="237">val</text>
+
+  <!-- ===== bit numbers ===== -->
+  <text class="idx" x="580" y="272">0</text>
+  <text class="idx" x="540" y="272">1</text>
+  <text class="idx" x="500" y="272">2</text>
+  <text class="idx" x="460" y="272">3</text>
+  <text class="idx" x="420" y="272">4</text>
+  <text class="idx" x="380" y="272">5</text>
+  <text class="idx" x="340" y="272">6</text>
+  <text class="idx" x="300" y="272">7</text>
+
+  <!-- ===== find_next_bit(addr, 8, 0) ===== -->
+  <g style="opacity: 0; animation: w0 44.40s linear infinite">
+    <text class="ptr" x="580" y="20">offset</text>
+    <line class="div" x1="580" y1="28" x2="580" y2="64" marker-end="url(#arrow)"/>
+  </g>
+  <g style="opacity: 0; animation: w1 44.40s linear infinite">
+    <text class="name" x="264" y="147">GENMASK(7, 0)</text>
+    <text class="val" x="580" y="147">1</text>
+    <text class="val" x="540" y="147">1</text>
+    <text class="val" x="500" y="147">1</text>
+    <text class="val" x="460" y="147">1</text>
+    <text class="val" x="420" y="147">1</text>
+    <text class="val" x="380" y="147">1</text>
+    <text class="val" x="340" y="147">1</text>
+    <text class="val" x="300" y="147">1</text>
+  </g>
+  <g style="opacity: 0; animation: w2 44.40s linear infinite">
+    <text class="val" x="580" y="237">0</text>
+    <text class="val" x="540" y="237">1</text>
+    <text class="val" x="500" y="237">0</text>
+    <text class="val" x="460" y="237">0</text>
+    <text class="val" x="420" y="237">1</text>
+    <text class="val" x="380" y="237">0</text>
+    <text class="val" x="340" y="237">1</text>
+    <text class="val" x="300" y="237">0</text>
+  </g>
+  <rect class="hl" x="558" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w3 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w4 44.40s linear infinite">tzcnt = 0</text>
+  <g style="opacity: 0; animation: w5 44.40s linear infinite">
+    <rect class="sel" x="520" y="214" width="40" height="36"/>
+    <text class="hl-v" x="540" y="237">1</text>
+    <rect class="hl" x="518" y="212" width="44" height="40" rx="2"/>
+  </g>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w6 44.40s linear infinite">tzcnt = 1</text>
+  <text class="stat" x="440" y="184" style="opacity: 0; animation: w7 44.40s linear infinite">clear the bits before offset</text>
+  <text class="stat" x="440" y="312" style="opacity: 0; animation: w8 44.40s linear infinite">count zeros from the right</text>
+  <text class="stat" x="440" y="312" style="opacity: 0; animation: w9 44.40s linear infinite">found bit 1</text>
+
+  <!-- ===== find_next_bit(addr, 8, 2) ===== -->
+  <g style="opacity: 0; animation: w10 44.40s linear infinite">
+    <text class="ptr" x="500" y="20">offset</text>
+    <line class="div" x1="500" y1="28" x2="500" y2="64" marker-end="url(#arrow)"/>
+  </g>
+  <g style="opacity: 0; animation: w11 44.40s linear infinite">
+    <text class="name" x="264" y="147">GENMASK(7, 2)</text>
+    <text class="dim" x="580" y="147">0</text>
+    <text class="dim" x="540" y="147">0</text>
+    <text class="val" x="500" y="147">1</text>
+    <text class="val" x="460" y="147">1</text>
+    <text class="val" x="420" y="147">1</text>
+    <text class="val" x="380" y="147">1</text>
+    <text class="val" x="340" y="147">1</text>
+    <text class="val" x="300" y="147">1</text>
+  </g>
+  <g style="opacity: 0; animation: w12 44.40s linear infinite">
+    <text class="dim" x="580" y="237">0</text>
+    <text class="dim" x="540" y="237">0</text>
+    <text class="val" x="500" y="237">0</text>
+    <text class="val" x="460" y="237">0</text>
+    <text class="val" x="420" y="237">1</text>
+    <text class="val" x="380" y="237">0</text>
+    <text class="val" x="340" y="237">1</text>
+    <text class="val" x="300" y="237">0</text>
+  </g>
+  <rect class="hl" x="558" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w13 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w14 44.40s linear infinite">tzcnt = 0</text>
+  <rect class="hl" x="518" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w15 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w16 44.40s linear infinite">tzcnt = 1</text>
+  <rect class="hl" x="478" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w17 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w18 44.40s linear infinite">tzcnt = 2</text>
+  <rect class="hl" x="438" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w19 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w20 44.40s linear infinite">tzcnt = 3</text>
+  <g style="opacity: 0; animation: w21 44.40s linear infinite">
+    <rect class="sel" x="400" y="214" width="40" height="36"/>
+    <text class="hl-v" x="420" y="237">1</text>
+    <rect class="hl" x="398" y="212" width="44" height="40" rx="2"/>
+  </g>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w22 44.40s linear infinite">tzcnt = 4</text>
+  <text class="stat" x="440" y="184" style="opacity: 0; animation: w23 44.40s linear infinite">clear the bits before offset</text>
+  <text class="stat" x="440" y="312" style="opacity: 0; animation: w24 44.40s linear infinite">count zeros from the right</text>
+  <text class="stat" x="440" y="312" style="opacity: 0; animation: w25 44.40s linear infinite">found bit 4</text>
+
+  <!-- ===== find_next_bit(addr, 8, 5) ===== -->
+  <g style="opacity: 0; animation: w26 44.40s linear infinite">
+    <text class="ptr" x="380" y="20">offset</text>
+    <line class="div" x1="380" y1="28" x2="380" y2="64" marker-end="url(#arrow)"/>
+  </g>
+  <g style="opacity: 0; animation: w27 44.40s linear infinite">
+    <text class="name" x="264" y="147">GENMASK(7, 5)</text>
+    <text class="dim" x="580" y="147">0</text>
+    <text class="dim" x="540" y="147">0</text>
+    <text class="dim" x="500" y="147">0</text>
+    <text class="dim" x="460" y="147">0</text>
+    <text class="dim" x="420" y="147">0</text>
+    <text class="val" x="380" y="147">1</text>
+    <text class="val" x="340" y="147">1</text>
+    <text class="val" x="300" y="147">1</text>
+  </g>
+  <g style="opacity: 0; animation: w28 44.40s linear infinite">
+    <text class="dim" x="580" y="237">0</text>
+    <text class="dim" x="540" y="237">0</text>
+    <text class="dim" x="500" y="237">0</text>
+    <text class="dim" x="460" y="237">0</text>
+    <text class="dim" x="420" y="237">0</text>
+    <text class="val" x="380" y="237">0</text>
+    <text class="val" x="340" y="237">1</text>
+    <text class="val" x="300" y="237">0</text>
+  </g>
+  <rect class="hl" x="558" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w29 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w30 44.40s linear infinite">tzcnt = 0</text>
+  <rect class="hl" x="518" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w31 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w32 44.40s linear infinite">tzcnt = 1</text>
+  <rect class="hl" x="478" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w33 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w34 44.40s linear infinite">tzcnt = 2</text>
+  <rect class="hl" x="438" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w35 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w36 44.40s linear infinite">tzcnt = 3</text>
+  <rect class="hl" x="398" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w37 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w38 44.40s linear infinite">tzcnt = 4</text>
+  <rect class="hl" x="358" y="212" width="44" height="40" rx="2" style="opacity: 0; animation: w39 44.40s linear infinite"/>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w40 44.40s linear infinite">tzcnt = 5</text>
+  <g style="opacity: 0; animation: w41 44.40s linear infinite">
+    <rect class="sel" x="320" y="214" width="40" height="36"/>
+    <text class="hl-v" x="340" y="237">1</text>
+    <rect class="hl" x="318" y="212" width="44" height="40" rx="2"/>
+  </g>
+  <text class="res" x="620" y="237" style="opacity: 0; animation: w42 44.40s linear infinite">tzcnt = 6</text>
+  <text class="stat" x="440" y="184" style="opacity: 0; animation: w43 44.40s linear infinite">clear the bits before offset</text>
+  <text class="stat" x="440" y="312" style="opacity: 0; animation: w44 44.40s linear infinite">count zeros from the right</text>
+  <text class="stat" x="440" y="312" style="opacity: 0; animation: w45 44.40s linear infinite">found bit 6</text>
+
+  <!-- ===== find_next_bit(addr, 8, 7) ===== -->
+  <g style="opacity: 0; animation: w46 44.40s linear infinite">
+    <text class="ptr" x="300" y="20">offset</text>
+    <line class="div" x1="300" y1="28" x2="300" y2="64" marker-end="url(#arrow)"/>
+  </g>
+  <g style="opacity: 0; animation: w47 44.40s linear infinite">
+    <text class="name" x="264" y="147">GENMASK(7, 7)</text>
+    <text class="dim" x="580" y="147">0</text>
+    <text class="dim" x="540" y="147">0</text>
+    <text class="dim" x="500" y="147">0</text>
+    <text class="dim" x="460" y="147">0</text>
+    <text class="dim" x="420" y="147">0</text>
+    <text class="dim" x="380" y="147">0</text>
+    <text class="dim" x="340" y="147">0</text>
+    <text class="val" x="300" y="147">1</text>
+  </g>
+  <g style="opacity: 0; animation: w48 44.40s linear infinite">
+    <text class="dim" x="580" y="237">0</text>
+    <text class="dim" x="540" y="237">0</text>
+    <text class="dim" x="500" y="237">0</text>
+    <text class="dim" x="460" y="237">0</text>
+    <text class="dim" x="420" y="237">0</text>
+    <text class="dim" x="380" y="237">0</text>
+    <text class="dim" x="340" y="237">0</text>
+    <text class="val" x="300" y="237">0</text>
+  </g>
+  <text class="stat" x="440" y="184" style="opacity: 0; animation: w49 44.40s linear infinite">clear the bits before offset</text>
+  <text class="stat" x="440" y="312" style="opacity: 0; animation: w50 44.40s linear infinite">no set bits left</text>
+</svg>
