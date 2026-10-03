@@ -6,6 +6,9 @@ on:
     branches:
       - master
   pull_request:
+    paths:
+      - '**/*.md'
+      - '.github/workflows/check-links.yaml'
 
 permissions:
   contents: read
