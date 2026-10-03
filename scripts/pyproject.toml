@@ -2,7 +2,7 @@
 name = "linux-insides-scripts"
 version = "0.1.0"
 description = "Helper scripts used to maintain and build the linux-insides book"
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 dependencies = [
     "requests>=2.34.2",
 ]
