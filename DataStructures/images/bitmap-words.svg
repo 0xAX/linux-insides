@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     version="1.1" width="860px" height="250px" viewBox="0 0 860 250"
+     version="1.1" width="820px" height="250px" viewBox="0 0 820 250"
      style="background: transparent; background-color: transparent; color-scheme: light dark;"
      font-family="Helvetica">
   <style>
@@ -14,11 +14,11 @@
             stroke: light-dark(#000000, #ffffff); }
     .ah   { fill: #000000; stroke: #000000; stroke-width: 1;
             fill: light-dark(#000000, #ffffff); stroke: light-dark(#000000, #ffffff); }
-    .ttl  { fill: #000000; font-size: 12px; text-anchor: middle; font-family: monospace;
+    .ttl  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
             fill: light-dark(#000000, #ffffff); }
-    .mem  { fill: #000000; font-size: 11px; text-anchor: middle; font-family: monospace;
+    .mem  { fill: #000000; font-size: 13px; text-anchor: middle; font-family: monospace;
             fill: light-dark(#000000, #ffffff); }
-    .lbl  { fill: #000000; font-size: 11px; text-anchor: middle;
+    .lbl  { fill: #000000; font-size: 12px; text-anchor: middle;
             fill: light-dark(#000000, #ffffff); }
 
     /* the word and the bit inside it that the bit number 236 selects */
@@ -45,6 +45,8 @@
   <!-- DECLARE_BITMAP(system_vectors, 256) is four unsigned long words.
        Bit 236 lives in word 236 / 64 = 3 at position 236 % 64 = 44. -->
 
+  <g transform="translate(-22,0)">
+
   <!-- ===== the bit number and how it splits ===== -->
   <text class="ttl" x="410" y="26">nr = 236</text>
   <line class="div" x1="410" y1="34" x2="410" y2="52"/>
@@ -52,39 +54,37 @@
   <line class="div" x1="150" y1="52" x2="150" y2="66" marker-end="url(#arrow)"/>
   <line class="div" x1="670" y1="52" x2="670" y2="66" marker-end="url(#arrow)"/>
 
-  <rect class="box" x="40" y="66" width="220" height="40"/>
-  <text class="mem" x="150" y="83">nr / 64 = 3</text>
-  <text class="lbl" x="150" y="98">which word of the array</text>
+  <rect class="box" x="40" y="66" width="220" height="48"/>
+  <text class="mem" x="150" y="86">nr / 64 = 3</text>
+  <text class="lbl" x="150" y="104">which word of the array</text>
 
-  <rect class="box" x="560" y="66" width="220" height="40"/>
-  <text class="mem" x="670" y="83">nr % 64 = 44</text>
-  <text class="lbl" x="670" y="98">which bit inside that word</text>
+  <rect class="box" x="560" y="66" width="220" height="48"/>
+  <text class="mem" x="670" y="86">nr % 64 = 44</text>
+  <text class="lbl" x="670" y="104">which bit inside that word</text>
 
   <!-- ===== the array of words ===== -->
-  <text class="ttl" x="54" y="190">bits</text>
-  <line class="div" x1="26" y1="200" x2="92" y2="200" marker-end="url(#arrow)"/>
-
   <rect class="box" x="92"  y="170" width="160" height="60"/>
   <text class="mem" x="172" y="194">system_vectors[0]</text>
-  <text class="lbl" x="172" y="214">bits 0 - 63</text>
+  <text class="lbl" x="172" y="214">bits 0..63</text>
 
   <rect class="box" x="252" y="170" width="160" height="60"/>
   <text class="mem" x="332" y="194">system_vectors[1]</text>
-  <text class="lbl" x="332" y="214">bits 64 - 127</text>
+  <text class="lbl" x="332" y="214">bits 64..127</text>
 
   <rect class="box" x="412" y="170" width="160" height="60"/>
   <text class="mem" x="492" y="194">system_vectors[2]</text>
-  <text class="lbl" x="492" y="214">bits 128 - 191</text>
+  <text class="lbl" x="492" y="214">bits 128..191</text>
 
   <rect class="box" x="572" y="170" width="160" height="60"/>
   <text class="mem" x="652" y="194">system_vectors[3]</text>
-  <text class="lbl" x="652" y="214">bits 192 - 255</text>
+  <text class="lbl" x="652" y="214">bits 192..255</text>
 
   <!-- ===== the word index selects the fourth word ===== -->
-  <polyline class="hl-ln" points="150,106 150,140 652,140 652,170" marker-end="url(#arrow-hl)"/>
+  <polyline class="hl-ln" points="150,114 150,140 652,140 652,170" marker-end="url(#arrow-hl)"/>
   <rect class="hl" x="570" y="168" width="164" height="64" rx="2"/>
 
   <!-- ===== the bit position is the offset inside that word ===== -->
-  <polyline class="hl-ln" points="670,106 670,128 770,128 770,200 732,200" marker-end="url(#arrow-hl)"/>
-  <text class="mem" x="806" y="204">bit 44</text>
+  <polyline class="hl-ln" points="670,114 670,128 770,128 770,200 732,200" marker-end="url(#arrow-hl)"/>
+  <text class="mem" x="800" y="204">bit 44</text>
+  </g>
 </svg>

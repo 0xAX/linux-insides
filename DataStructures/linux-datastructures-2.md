@@ -1,37 +1,53 @@
 # Kernel Data Structures - Part 2
 
-In the [first part](./linux-datastructures-1.md) of this chapter, we looked at the linked list - probably the most widespread data structure in the Linux kernel. In this part, we will look at another data structure that is simple on one hand and very common on the other - the [bit array](https://en.wikipedia.org/wiki/Bit_array), or as it is usually called in the kernel, the **bitmap**.
+In the [previous part](./linux-datastructures-1.md) of this chapter, we looked at the first and probably one of the most common data structure used in the Linux kernel - [linked list](https://en.wikipedia.org/wiki/Linked_list). In this part, we will continue looking at common data structures and algorithms and how they are implemented in the Linux kernel.
 
-Just like with the linked lists, let's get a rough idea of how common bitmaps are in the kernel source code. The most basic operations on a bitmap are to set a bit, to clear a bit, and to test whether a bit is set:
+Linux is an operating system kernel, so it naturally deals with low-level primitives and abstractions built on top of them very often. One of such abstraction that is extensively used in the kernel, is the [bit array](https://en.wikipedia.org/wiki/Bit_array), or, as it is usually called in the kernel, the **bitmap**.
+
+The statement that this abstraction is used very often in the kernel is not an empty claim. Just like with the linked lists, let's try to get a rough idea of how common bitmaps are in the kernel source code. The most basic operations on a bitmap are to set a bit, to clear a bit, and to test whether a bit is set. Let's see:
 
 ```bash
 rg -w 'set_bit|clear_bit|test_bit' | wc -l
-28337
+28340
 ```
 
-More than twenty-eight thousand calls of just three functions! Where are all these bitmaps used? The kernel needs to track sets of numbered items everywhere. Which processors are online, which interrupt vectors are already taken, which file descriptors of a process are open. Each of these questions is a yes or no question about an item with a number, and that is exactly what a bitmap answers well.
+Of course, the number above can be different if you are using a different version of the Linux kernel. But anyway, it should be quite visible how often it is used. So it is definitely worth looking and understanding how bitmaps are implemented in the Linux kernel.
 
-## Bit array
+## Bit arrays
 
-Before we dive into the kernel implementation, let's take a short look at this data structure in general. According to [wikipedia](https://en.wikipedia.org/wiki/Bit_array):
+A bitmap is just a sequence of bits where every bit represents some state, for example:
+
+- set or clear
+- available or unavailable
+- enabled or disabled
+
+This makes bitmaps especially useful when the kernel needs to keep track of a large number of objects or states and in the same time to use as little memory as possible.
+
+As usual, before we dive into the kernel implementation, let's take a short look at this data structure in general. According to [wikipedia](https://en.wikipedia.org/wiki/Bit_array):
 
 > A bit array (also known as bit map, bit set, bit string, or bit vector) is an array data structure that compactly stores bits. It can be used to implement a simple set data structure. A bit array is effective at exploiting bit-level parallelism in hardware to perform operations quickly.
 >
 > -- Wikipedia, "Bit array"
 
-The idea is very simple. We have a sequence of bits numbered from zero, and every bit is either `0` or `1`. If we want to represent a set of small non-negative integers, we set the bit with the corresponding number for every element of the set. For example, the set `{1, 3, 8, 12}` is represented by a bit array of sixteen bits like this:
+At first glance, the idea sounds relatively simple, right?
+
+We have a sequence of bits numbered from zero, and every bit is either `0` or `1`. Since every bit has an index that identifies its position in the bit array, we can treat this index as a value and the bit itself as an answer to the question "is this value present?". This is exactly how a bit array implements the `set` mentioned in the quote above. For example, to store the set of numbers `{1, 3, 8, 12}`, we can take a bit array of sixteen bits, set the bits with indexes `1`, `3`, `8` and `12`, and leave all other bits clear. We can visualize it like this:
 
 ![bit array](./images/bit-array.svg)
 
-The operations on such a structure are as basic as it can be. We can set a bit, clear a bit, test whether a bit is set, and find the first set or clear bit. The first three operations touch only a single bit. The last one scans the bits, but as we will see, it does it one machine word at a time.
+Since the indexes go from zero to the size of the bit array minus one, only numbers from this range can be stored in such a set.
 
-What makes bit arrays so attractive is how compact they are. A set that may contain any number from `0` to `255` needs only `256` bits, or `32` bytes. An array of `bool` values for the same purpose takes eight times more memory, and a linked list of integers takes much more than that. The second reason is speed. Processors can operate on a whole word of bits with a single instruction, and some instructions even work with a single bit directly. We will see this in the kernel code soon.
+So what can we do with such a set? Quite a few useful things, actually. We can set a bit, clear a bit, test whether a bit is set, and find the first set or clear bit. The first three operations touch only a single bit. The last one scans the bits, but as we will see, it does it one machine word at a time.
+
+What makes bit arrays so attractive is how compact they are. A set that may contain any number from `0` to `255` needs only `256` bits, or `32` bytes. An array of `bool` values for the same purpose takes eight times more memory, and a linked list of integers takes much more than that. The second reason is speed. Processors can operate on a whole word of bits with a single instruction, and some instructions even work with a single bit directly. All of this, we will see this in the kernel code soon.
 
 ## Bitmaps in the Linux kernel
 
-Now that we have refreshed the basic idea, we can take a look at how the Linux kernel represents bitmaps.
+Now that we have briefly revisited what a bit array is, let's see how the Linux kernel implements it.
 
-There is no special type for a bitmap in the kernel. A bitmap is just an array of `unsigned long` values. On `x86_64`, this type is `64` bits wide, so a bitmap of `N` bits occupies `N / 64` words rounded up. The kernel provides the `DECLARE_BITMAP` macro to declare such an array. It is defined in the [include/linux/types.h](https://github.com/torvalds/linux/blob/master/include/linux/types.h) header file:
+Before we look at the API for manipulating bitmaps, we need to know how the Linux kernel declares them. There is no special type for a bitmap in the Linux kernel. A bitmap is just an array of `unsigned long` values. On `x86_64`, this data type is `64` bits wide, so every `64` bits of a bitmap take one word. If the number of bits is not a multiple of `64`, the remaining bits still get a whole word. For example, a bitmap of `100` bits occupies `128` bits, or `16` bytes. 
+
+The kernel provides the `DECLARE_BITMAP` macro to declare such an array. It is defined in the [include/linux/types.h](https://github.com/torvalds/linux/blob/master/include/linux/types.h) header file and looks like this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/types.h#L9-L10 -->
 ```C
@@ -39,59 +55,79 @@ There is no special type for a bitmap in the kernel. A bitmap is just an array o
 	unsigned long name[BITS_TO_LONGS(bits)]
 ```
 
-This macro takes two arguments:
+No big surprises here. To declare a bitmap, we only need to pass two things to the macro:
 
 - the name of the array
-- the number of bits that the bitmap must hold
+- the number of bits the bitmap consists of
 
-It expands to the definition of an array of `unsigned long` with `BITS_TO_LONGS(bits)` elements. The `BITS_TO_LONGS` macro is defined in the [include/linux/bitops.h](https://github.com/torvalds/linux/blob/master/include/linux/bitops.h) header file:
+It expands to the definition of an array of `unsigned long` with `BITS_TO_LONGS(bits)` elements. The `BITS_TO_LONGS` macro, in turn, is defined in the [include/linux/bitops.h](https://github.com/torvalds/linux/blob/master/include/linux/bitops.h) header file:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/bitops.h#L11-L11 -->
 ```C
 #define BITS_TO_LONGS(nr)	__KERNEL_DIV_ROUND_UP(nr, BITS_PER_TYPE(long))
 ```
 
-As the name suggests, it converts a number of bits into a number of `long` values. `BITS_PER_TYPE(long)` is the number of bits in a `long`, which is `64` in our case. The `__KERNEL_DIV_ROUND_UP` macro does the division and rounds the result up, so the last bits still get a word even if they do not fill it completely:
+As the name suggests, it converts a number of bits into a number of `long` values. Here, the `BITS_PER_TYPE(long)` macro expands to the number of bits in a `long`, which is `64` in our case. The `__KERNEL_DIV_ROUND_UP` macro does the division and rounds the result up, so the last bits still get a word even if they do not fill it completely:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/uapi/linux/const.h#L51-L51 -->
 ```C
 #define __KERNEL_DIV_ROUND_UP(n, d) (((n) + (d) - 1) / (d))
 ```
 
-Let's take a look at a real example. The `x86_64` architecture has `256` interrupt vectors. Some of them are reserved by the kernel for its own needs, for example, for the local [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) timer or for the [inter-processor interrupts](https://en.wikipedia.org/wiki/Inter-processor_interrupt). The kernel calls such vectors **system vectors**, and it needs to know which of them are already taken. The set of taken vectors is a bitmap defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c) source code file:
+That is enough theory about how bitmaps are declared in the Linux kernel. It is time to take a look at a real example. 
+
+In the beginning of this part, we have seen that bitmaps are ubiquitous in the kernel. So, we do not need to go far to find one. A good candidate is something the kernel has a fixed number of and needs to track as taken or free. [Interrupt](https://en.wikipedia.org/wiki/Interrupt) vectors are exactly that.
+
+The `x86_64` architecture has `256` interrupt vectors, and not all of them are free for devices to use. During boot, the kernel reserves some of them for its own needs. For example, some vectors are reserved for the local [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) timer or the [inter-processor interrupts](https://en.wikipedia.org/wiki/Inter-processor_interrupt). Such vectors are called **system vectors**. So how does the kernel remember which vectors it has reserved? The answer, as you may have already guessed, is a bitmap.
+
+We can find the declaration of this bitmap in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c) source code file:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/traps.c#L84-L84 -->
 ```C
 DECLARE_BITMAP(system_vectors, NR_VECTORS);
 ```
 
-The `NR_VECTORS` macro is defined in the [arch/x86/include/asm/irq_vectors.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irq_vectors.h) header file:
+As mentioned above, the `x86_64` architecture provides `256` interrupt vectors. The `NR_VECTORS` macro confirms this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/irq_vectors.h#L108-L108 -->
 ```C
 #define NR_VECTORS			 256
 ```
 
-So, `BITS_TO_LONGS(256)` gives us `(256 + 64 - 1) / 64`, which is `4`, and after the preprocessor is done, the declaration above turns into a plain array of four words:
+We have already seen the `BITS_TO_LONGS` macro above. As a reminder, this macro calculates how many `unsigned long` values are needed to hold the given number of bits. We can try to apply the same calculation and see what array size it produces. It gives us `(256 + 64 - 1) / 64`, which is `4`, so after the preprocessor is done, the declaration above expands into a plain array of four words:
 
 ```C
 unsigned long system_vectors[4];
 ```
 
-We will meet this bitmap again in the chapter about [interrupts](../Interrupts/README.md). For now, it is enough to know that bit number `N` of this bitmap is set when the interrupt vector `N` is reserved by the kernel.
-
-Of course, a bitmap does not have to be a global variable. It can be a field of a structure like any other array. For example, the set of processors that the kernel calls `cpumask` is nothing more than a structure with a single bitmap inside:
+In the case of the interrupt vectors, the bitmap is a global variable. Of course, a bitmap does not have to be one. Another common case is a bitmap as a field of a structure, just like any other array. For example, the set of processors that the kernel calls `cpumask` is nothing more than a structure with a single bitmap inside:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/cpumask_types.h#L9-L9 -->
 ```C
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 ```
 
-Since a bitmap is an array of words, every bit number has to be translated into two values before the bit can be accessed. The first value is the index of the word in the array, and the second is the position of the bit inside that word. Both are easy to get. The index of the word is the bit number divided by `64`, and the position inside the word is the remainder of this division. For example, the local APIC timer uses the vector `0xEC`, or `236` in decimal:
+## Accessing a bit
+
+Now that we know how a bitmap is declared in the Linux kernel, we can take a look at the existing API to work with bitmaps.
+
+Since a bitmap is an array of words, to access a bit we need to translate the bit number into two values:
+
+- the index of the word in the array
+- the position of the bit inside that word
+
+Both are relatively easy to get. To get the index of the word, we can divide the given bit number by `64`. The position inside the word is just the remainder of this division. 
+
+For example, the local APIC timer uses the vector `0xEC`, or `236` in decimal. To find the word and the bit inside it for this vector, let's try to do the calculations:
+
+- the index of the word is `236 / 64 = 3`
+- the position of the bit inside this word is `236 % 64 = 44`
+
+So the local APIC timer vector corresponds to bit `44` in the last word of the interrupt vector bitmap. Visually, it looks like this:
 
 ![bit number to word](./images/bitmap-words.svg)
 
-The kernel has two macros for these calculations in the [include/linux/bits.h](https://github.com/torvalds/linux/blob/master/include/linux/bits.h) header file:
+Of course, there is no need to do these operations manually every time. The kernel has two macros for these calculations:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/bits.h#L8-L9 -->
 ```C
@@ -99,23 +135,30 @@ The kernel has two macros for these calculations in the [include/linux/bits.h](h
 #define BIT_WORD(nr)		((nr) / BITS_PER_LONG)
 ```
 
-The `BIT_WORD` macro gives the index of the word, and `BIT_MASK` gives a word in which only the bit at the needed position is set. We will see both of these calculations again in the code below.
+The `BIT_WORD` macro is exactly the division we just did by hand. If we pass our value `236` to `BIT_WORD`, it gives us `3`, the same result as our calculation. The `BIT_MASK` macro does a little more than returning the position within the word. It returns a whole word with only bit `44` set.
 
-> [!NOTE]
-> Bit `0` of a bitmap is the least significant bit of the first word, bit `64` is the least significant bit of the second word, and so on. Keep this in mind when you look at a bitmap in memory, for example in a debugger. The bits of each word are printed from the most significant to the least significant, so the picture looks reversed compared to the diagram above.
+With the index of the word and the mask, we have everything we need to work with a single bit. For example, to set bit `236`, it is enough to combine the word and the mask with the [bitwise OR](https://en.wikipedia.org/wiki/Bitwise_operation#OR), for example:
 
-## Bit operations
+```C
+system_vectors[BIT_WORD(236)] |= BIT_MASK(236);
+```
 
-Now it is time to look at the operations. Let's start with the most basic one - setting a bit. The kernel provides two functions for this:
+## Setting, clearing and testing bits
 
-- `set_bit` - the atomic variant
+We already know how to find any bit in a bitmap and even how to set it with a single line of code. Despite this, the kernel provides an API for these operations:
+
+- `set_bit` - the [atomic](https://en.wikipedia.org/wiki/Linearizability) variant
 - `__set_bit` - the non-atomic variant
 
 The same pair exists for every other basic operation. There are `clear_bit` and `__clear_bit`, `change_bit` and `__change_bit`, `test_and_set_bit` and `__test_and_set_bit`, and so on. The names that start with the double underscore are always the non-atomic variants.
 
-What does atomic mean here? Setting a bit in memory is a read-modify-write operation. The processor reads the word, changes one bit in it, and writes the word back. If two processors do this with the same word at the same time, one of the changes can be lost. The atomic variant guarantees that the whole operation is executed as one indivisible step, so no other processor can touch the word in the middle. The non-atomic variant does not give such a guarantee. It must be used only when the code knows that nobody else can access the bitmap at the same time, for example, when the bitmap is protected by a lock or is not visible to the other processors yet. In exchange, it is cheaper.
+Why does the kernel need separate operations when we already know how to set or clear a bit using the macros that we have seen in the previous section? The answer to this question is simple. It turns out that a plain `|=` is not always as innocent as it may look, and very soon we will see why.
 
-Let's take a look at how the `system_vectors` bitmap is filled during the kernel initialization. The function from [arch/x86/kernel/idt.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/idt.c) that installs the interrupt handlers for the system vectors looks like this:
+Let's start with the most basic operation - setting a bit. But before we will take a look at the implementation of these APIs, let's figure out what does atomic mean here.
+
+Setting a bit in memory is a [read-modify-write](https://en.wikipedia.org/wiki/Read%E2%80%93modify%E2%80%93write) operation. The processor reads the word, changes one bit in it, and writes the word back. If two processors do this with the same word at the same time, one of the changes can be lost. The atomic variant guarantees that the whole operation is executed as one indivisible step, so no other processor can touch the word in the middle. In contrast, the non-atomic variant does not give such a guarantee. It must be used only when the code knows that nobody else can access the bitmap at the same time, for example, when the bitmap is protected by a lock or is not visible to the other processors yet.
+
+After this short introduction to what atomic means, we can go back to our `system_vectors` bitmap and find out how the kernel fills it during initialization. This job is done by the `idt_setup_from_table` function from the [arch/x86/kernel/idt.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/idt.c) source code file. Besides installing the interrupt handlers for the system vectors, it also marks them as reserved in the bitmap:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/kernel/idt.c#L196-L207 -->
 ```C
@@ -133,7 +176,7 @@ idt_setup_from_table(gate_desc *idt, const struct idt_data *t, int size, bool sy
 }
 ```
 
-We do not need to understand everything here. What is interesting for us is the call of `set_bit`. Its first argument is the number of the bit, and the second is the bitmap itself. This function is defined in the [include/asm-generic/bitops/instrumented-atomic.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/bitops/instrumented-atomic.h) header file:
+We do not need to understand everything here since this chapter is not about interrupts. What interests us here is the call to `set_bit`. Its first argument is the number of the bit, and the second is the bitmap itself. This function is defined in the [include/asm-generic/bitops/instrumented-atomic.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/bitops/instrumented-atomic.h) header file and looks like this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/asm-generic/bitops/instrumented-atomic.h#L26-L30 -->
 ```C
@@ -144,7 +187,7 @@ static __always_inline void set_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-The first line is not related to the bit operation itself. It tells the kernel sanitizers like [KASAN](https://docs.kernel.org/dev-tools/kasan.html) and [KCSAN](https://docs.kernel.org/dev-tools/kcsan.html) that the word with the index `BIT_WORD(nr)` is about to be written. In a normal kernel build without these tools, it does nothing. The actual work is done by `arch_set_bit`. As we can guess from the name, this function is architecture-specific. For `x86`, it is defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file:
+The first line is not related to the bit operation itself. It tells the kernel sanitizers like [KASAN](https://docs.kernel.org/dev-tools/kasan.html) and [KCSAN](https://docs.kernel.org/dev-tools/kcsan.html) that the word with the index `BIT_WORD(nr)` is about to be written. All the actual work is done by `arch_set_bit`. The `arch_` prefix tells us that this function is architecture-specific. For `x86_64` architecture, this function is defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file. The implementation looks like this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/bitops.h#L51-L63 -->
 ```C
@@ -163,7 +206,16 @@ arch_set_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-The function has two branches, and the compiler picks one of them at compile time. The `__builtin_constant_p` is a [gcc](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html) builtin function that returns `1` if its argument is a constant known at compile time. In both branches we see [inline assembly](https://en.wikipedia.org/wiki/Inline_assembler), and both start with the `LOCK_PREFIX` macro. This macro is defined in the [arch/x86/include/asm/alternative.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/alternative.h) header file:
+Let's take a closer look at the implementation of this function. It has two branches, and the compiler picks one of them at compile time, based on the result of [`__builtin_constant_p(nr)`](https://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html#index-_005f_005fbuiltin_005fconstant_005fp). This is a compiler builtin function that returns `1` if its argument is a constant known at compile time, and `0` otherwise.
+
+In our case, `idt_setup_from_table` passes `t->vector` as the number of the bit. This value is read from a table while the loop runs, so the compiler cannot know it in advance, and `__builtin_constant_p(nr)` returns `0`. But this is not always the case. Very often, the number of the bit is just a named constant. For example, the [EFI](https://en.wikipedia.org/wiki/UEFI) code marks that the EFI runtime services can be used like this:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/platform/efi/efi.c#L498-L498 -->
+```C
+set_bit(EFI_RUNTIME_SERVICES, &efi.flags);
+```
+
+Returning to the `arch_set_but_function`, we can see that in both branches there are [inline assembly](https://en.wikipedia.org/wiki/Inline_assembler) instruction that start with the `LOCK_PREFIX` macro. This macro expands to the [lock](https://www.felixcloutier.com/x86/lock) prefix:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/alternative.h#L23-L27 -->
 ```C
@@ -174,19 +226,11 @@ The function has two branches, and the compiler picks one of them at compile tim
 #endif
 ```
 
-It expands to the `lock` instruction prefix. This prefix makes the read-modify-write instruction that follows it atomic. While such an instruction is executed, no other processor can access its memory operand. This is exactly what makes `set_bit` atomic. If the kernel is built without [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) support, there is only one processor, and the prefix is not needed.
+This prefix makes the instruction that follows it atomic, and this is exactly what makes `set_bit` atomic. If the kernel is built without [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) support, there is only one processor, and the prefix is obviously not needed.
 
-Let's look at the second branch first, because it is the general case. The number of the bit is not known at compile time. In `idt_setup_from_table`, for example, it comes from a table, so this is the branch that sets the bits of `system_vectors`. The `__ASM_SIZE(bts)` macro appends the operand size suffix to the instruction, so on `x86_64` it becomes `btsq`. The [bts](https://www.felixcloutier.com/x86/bts) instruction stands for "bit test and set". It selects the bit of the memory operand `%0` with the number given by the operand `%1`, saves the value of this bit in the [CF](https://en.wikipedia.org/wiki/FLAGS_register) flag, and sets the bit to `1`. The `"Ir"` constraint tells the compiler that the bit number may be given either as an immediate constant or in a register. The memory operand is described by the `RLONG_ADDR` macro:
+So what does this inline assembly actually do? Let's start with the second branch, because it handles the general case, when the number of the bit is not known at compile time. This branch uses only one instruction - [bts](https://www.felixcloutier.com/x86/bts) that does "bit test and set" operation. This instruction takes the address of the bitmap and the number of the bit, and sets this bit to `1`. The interesting thing about the `bts` instruction is that the number of the bit is not limited to `63`. The processor itself finds the right word in memory, so `set_bit` does not need `BIT_WORD` or `BIT_MASK` at all.
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/bitops.h#L39-L40 -->
-```C
-#define RLONG_ADDR(x)			 "m" (*(volatile long *) (x))
-#define WBYTE_ADDR(x)			"+m" (*(volatile char *) (x))
-```
-
-It is just the `long` value at the given address with the `m` constraint, which means a memory operand. What is important here, when the bit number is in a register and the operand is in memory, the `bts` instruction is not limited to a single word. The bit number may be larger than `63`, and the processor itself finds the right word in memory. This is why `set_bit` does not need to calculate `BIT_WORD` or `BIT_MASK`. The processor does it for us.
-
-Now the first branch. If the number of the bit is a compile-time constant, the kernel does not use `bts` at all. In this case, the compiler knows in advance which byte of the bitmap contains the bit and which bit of that byte it is, so a simple bitwise [or](https://en.wikipedia.org/wiki/Bitwise_operation#OR) on a single byte is enough. Such an instruction is shorter and cheaper than `bts` with a memory operand. The two macros that we see in this branch calculate the address of the byte and the mask for it:
+Returning to the first branch, we already know that it is an optimization for the case when the number of the bit is known at compile time. Here, the compiler can calculate in advance which byte of the bitmap holds the bit and which bit of that byte it is using the following macros:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/bitops.h#L48-L49 -->
 ```C
@@ -194,9 +238,22 @@ Now the first branch. If the number of the bit is a compile-time constant, the k
 #define CONST_MASK(nr)			(1 << ((nr) & 7))
 ```
 
-Shifting the bit number right by `3` divides it by `8` and gives the offset of the byte from the beginning of the bitmap. The remainder of this division, `nr & 7`, gives the position of the bit inside this byte. This works because `x86` is a [little-endian](https://en.wikipedia.org/wiki/Endianness) architecture, so the byte with the offset `nr / 8` is exactly the byte that holds the bit `nr` of the bitmap. The `WBYTE_ADDR` macro is similar to `RLONG_ADDR`, but describes a byte instead of a `long`, and the `+` in its constraint tells the compiler that the operand is both read and written. All that is left is the `orb` instruction. The `b` suffix means that it operates on a byte, and `%b1` tells the compiler to print the mask as a byte-sized operand. For our vector `236`, the byte is at the offset `29` and the mask is `1 << 4`:
+These macros do the same calculations as `BIT_WORD` and `BIT_MASK` from the previous section. The difference is only that they do it with bytes instead of 64-bit words. Shifting `nr` right by `3` is the same as dividing it by `8`, so `CONST_MASK_ADDR` gives the address of the byte that holds the bit. The `nr & 7` expression is the remainder of this division, so `CONST_MASK` gives a byte with only the needed bit set. 
+
+This works because `x86` is a [little-endian](https://en.wikipedia.org/wiki/Endianness) architecture, so the bit `nr` of a bitmap is always stored in the byte `nr / 8`. Having the byte and the mask, a single `orb` instruction, a bitwise [or](https://en.wikipedia.org/wiki/Bitwise_operation#OR) on one byte, is enough to set the bit. 
+
+Why does the kernel need two branches at all, if `bts` can handle any bit? With `bts`, the processor has to find the right word in memory from the number of the bit every time the instruction runs. With a constant, the compiler does this work only once, at compile time, and the processor only has to apply a simple `OR` to a byte with a known address.
+
+Let's see how it works with our vector `236`, pretending for a moment that it is a constant. This time we need to repeat two operations to find the bit in the byte array:
+
+- the byte that holds the bit: `236 / 8 = 29`
+- the position of the bit inside this byte: `236 % 8 = 4`
+
+So the kernel takes the byte `29` of the bitmap and combines it with the mask `1 << 4` using `OR` to set this bit. Visually, it looks like this:
 
 ![constant mask](./images/const-mask.svg)
+
+=============
 
 Clearing a bit is the mirror image of what we have just seen:
 
