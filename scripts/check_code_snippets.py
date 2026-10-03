@@ -15,6 +15,17 @@ import requests
 # annotations that must not be fetched
 exclude_dirs = [".github", "scripts"]
 
+# markdown files that are not chapters of the book, matched by name in any
+# directory, so the README.md of every part is skipped as well
+exclude_files = [
+    "CODE_OF_CONDUCT.md",
+    "CONTRIBUTING.md",
+    "LINKS.md",
+    "README.md",
+    "SUMMARY.md",
+    "contributors.md",
+]
+
 # Every snippet fetches the whole source file, and a single file usually backs
 # many snippets, so the sources are cached to keep the request count down.
 cache: Dict[str, str] = {}
@@ -153,6 +164,9 @@ def __handle_md__(md: str, path: str):
         __compare__(code, content, path)
 
 def __excluded__(md_path: str, root: str) -> bool:
+    if os.path.basename(md_path) in exclude_files:
+        return True
+
     rel = os.path.relpath(md_path, root)
     return any(rel == d or rel.startswith(d + os.sep) for d in exclude_dirs)
 
