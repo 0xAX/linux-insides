@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '**/*.md'
+      - '.github/workflows/check-links.yaml'
   pull_request:
     paths:
       - '**/*.md'

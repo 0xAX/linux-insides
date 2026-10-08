@@ -5,6 +5,12 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '**/*.md'
+      - 'scripts/check_code_snippets.py'
+      - 'scripts/pyproject.toml'
+      - 'scripts/uv.lock'
+      - '.github/workflows/check-code-snippets.yaml'
   pull_request:
     paths:
       - '**/*.md'
