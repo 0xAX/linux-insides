@@ -586,4 +586,4 @@ Here is the list of the links that you may find useful when reading this chapter
 - [Page Fault](https://en.wikipedia.org/wiki/Page_fault)
 - [Model specific register](https://en.wikipedia.org/wiki/Model-specific_register)
 - [Microcode](https://en.wikipedia.org/wiki/Microcode)
-- [Previous part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1)
+- [Previous part](./linux-initialization-1.md)
