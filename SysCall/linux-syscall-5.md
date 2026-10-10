@@ -8,7 +8,7 @@ This is the fifth part of the chapter that describes [system calls](https://en.w
 
 I don't know how about you, but the inner workings of the operating system both fascinate and excite my curiosity greatly. As you may know, our programs interact with the kernel through a special mechanism called [system call](https://en.wikipedia.org/wiki/System_call). I will hence attempt to describe the implementation and behavior of system calls such as `read`, `write`, `open`, `close`, `dup` etc. in a series of articles.
 
-Let me start with the description of the simplest (and commonly used) [open](http://man7.org/linux/man-pages/man2/open.2.html) system call. if you have done any `C` programming at all, you should know that a file must be opened using the `open` system call before we are able to read/write to it.
+Let me start with the description of the simplest (and commonly used) [open](https://man.archlinux.org/man/open.2) system call. if you have done any `C` programming at all, you should know that a file must be opened using the `open` system call before we are able to read/write to it.
 
 ```C
 #include <fcntl.h>
@@ -42,7 +42,7 @@ $ sudo ls /proc/1/fd/
 1  11  13  15  19  20  22  24  26  28  3   31  33  35  37  39  40  42  44  46  48  5   51  54  57  59  60  62  65  7   9
 ```
 
-I am not going to describe more details about the `open` routine from the userspace view in this post, but mostly from the kernel side. If you are not very familiar with, you can get more info in the [man page](http://man7.org/linux/man-pages/man2/open.2.html).
+I am not going to describe more details about the `open` routine from the userspace view in this post, but mostly from the kernel side. If you are not very familiar with, you can get more info in the [man page](https://man.archlinux.org/man/open.2).
 
 So let's start.
 
@@ -71,7 +71,7 @@ if (force_o_largefile())
 ```
 
 Here we apply the `O_LARGEFILE` flag to the flags which were passed to `open` system call in a case when the `force_o_largefile()` will return true.
-What is `O_LARGEFILE`? We may read this in the [man page](http://man7.org/linux/man-pages/man2/open.2.html) for the `open(2)` system call:
+What is `O_LARGEFILE`? We may read this in the [man page](https://man.archlinux.org/man/open.2) for the `open(2)` system call:
 
 > O_LARGEFILE
 >
@@ -208,9 +208,9 @@ Here we reset permissions in `open_flags` instance if an open file wasn't tempor
 
 > if  neither O_CREAT nor O_TMPFILE is specified, then mode is ignored.
 
-In other case if `O_CREAT` or `O_TMPFILE` were passed we canonicalize it to a regular file because a directory should be created with the [opendir](http://man7.org/linux/man-pages/man3/opendir.3.html) system call.
+In other case if `O_CREAT` or `O_TMPFILE` were passed we canonicalize it to a regular file because a directory should be created with the [opendir](https://man.archlinux.org/man/opendir.3) system call.
 
-At the next step we check that a file is not tried to be opened via [fanotify](http://man7.org/linux/man-pages/man7/fanotify.7.html) and without the `O_CLOEXEC` flag:
+At the next step we check that a file is not tried to be opened via [fanotify](https://man.archlinux.org/man/fanotify.7) and without the `O_CLOEXEC` flag:
 
 ```C
 flags &= ~FMODE_NONOTIFY & ~O_CLOEXEC;
@@ -323,7 +323,7 @@ So, it just calls the `getname_flags` function and returns its result. The main 
 
 * name - pointer to a file path in kernel space;
 * uptr - original pointer from userland;
-* aname - filename from [audit](https://linux.die.net/man/8/auditd) context;
+* aname - filename from [audit](https://man.archlinux.org/man/auditd.8) context;
 * refcnt - reference counter;
 * iname - a filename in a case when it will be less than `PATH_MAX`.
 
@@ -377,7 +377,7 @@ That's all for now. We didn't consider **full** implementation of the `open` sys
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fifth part of the implementation of different system calls in the Linux kernel. If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part, we will continue to dive into system calls in the Linux kernel and see the implementation of the [read](http://man7.org/linux/man-pages/man2/read.2.html) system call.
+This is the end of the fifth part of the implementation of different system calls in the Linux kernel. If you have questions or suggestions, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part, we will continue to dive into system calls in the Linux kernel and see the implementation of the [read](https://man.archlinux.org/man/read.2) system call.
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
@@ -385,19 +385,19 @@ Links
 --------------------------------------------------------------------------------
 
 * [system call](https://en.wikipedia.org/wiki/System_call)
-* [open](http://man7.org/linux/man-pages/man2/open.2.html)
+* [open](https://man.archlinux.org/man/open.2)
 * [file descriptor](https://en.wikipedia.org/wiki/File_descriptor)
 * [proc](https://en.wikipedia.org/wiki/Procfs)
 * [GNU C Library Reference Manual](https://www.gnu.org/software/libc/manual/html_mono/libc.html#File-Position-Primitive)
 * [IA-64](https://en.wikipedia.org/wiki/IA-64)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [opendir](http://man7.org/linux/man-pages/man3/opendir.3.html)
-* [fanotify](http://man7.org/linux/man-pages/man7/fanotify.7.html)
+* [opendir](https://man.archlinux.org/man/opendir.3)
+* [fanotify](https://man.archlinux.org/man/fanotify.7)
 * [fork](https://en.wikipedia.org/wiki/Fork_\(system_call\))
 * [execve](https://en.wikipedia.org/wiki/Exec_\(system_call\))
 * [symlink](https://en.wikipedia.org/wiki/Symbolic_link)
-* [audit](https://linux.die.net/man/8/auditd)
+* [audit](https://man.archlinux.org/man/auditd.8)
 * [inode](https://en.wikipedia.org/wiki/Inode)
 * [RCU](https://www.kernel.org/doc/Documentation/RCU/whatisRCU.txt)
-* [read](http://man7.org/linux/man-pages/man2/read.2.html)
+* [read](https://man.archlinux.org/man/read.2)
 * [previous part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4)

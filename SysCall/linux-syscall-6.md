@@ -61,7 +61,7 @@ The last one function looks a little bit complex and takes `4` arguments. Beside
   * `new_limit` - provides new limits values if it is not `NULL`;
   * `old_limit` - current `soft` and `hard` limits will be placed here if it is not `NULL`.
 
-Exactly `prlimit` function is used by [ulimit](https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#index-ulimit) util. We can verify this with the help of [strace](https://linux.die.net/man/1/strace) util.
+Exactly `prlimit` function is used by [ulimit](https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#index-ulimit) util. We can verify this with the help of [strace](https://man.archlinux.org/man/strace.1) util.
 
 For example:
 
@@ -83,16 +83,16 @@ Now let's look at list of available resources:
 | RLIMIT_FSIZE      | the maximum size of files that a process may create                                      |
 | RLIMIT_DATA       | the maximum  size  of  the process's data segment                                        |
 | RLIMIT_STACK      | the maximum size of the process stack in bytes                                           |
-| RLIMIT_CORE       | the maximum size of a [core](http://man7.org/linux/man-pages/man5/core.5.html) file.     |
+| RLIMIT_CORE       | the maximum size of a [core](https://man.archlinux.org/man/core.5) file.     |
 | RLIMIT_RSS        | the number of bytes that can be allocated for a process in RAM                           |
 | RLIMIT_NPROC      | the maximum number of processes that can be created by a user                            |
 | RLIMIT_NOFILE     | the maximum number of a file descriptor that can be opened by a process                  |
-| RLIMIT_MEMLOCK    | the maximum number of bytes of memory that may be locked into RAM by [mlock](http://man7.org/linux/man-pages/man2/mlock.2.html).|
+| RLIMIT_MEMLOCK    | the maximum number of bytes of memory that may be locked into RAM by [mlock](https://man.archlinux.org/man/mlock.2).|
 | RLIMIT_AS         | the maximum size of virtual memory in bytes.                                             |
-| RLIMIT_LOCKS      | the maximum number [flock](https://linux.die.net/man/1/flock) and locking related [fcntl](http://man7.org/linux/man-pages/man2/fcntl.2.html) calls|
-| RLIMIT_SIGPENDING | maximum number of [signals](http://man7.org/linux/man-pages/man7/signal.7.html) that may be queued for a user of the calling process|
-| RLIMIT_MSGQUEUE   | the number of bytes that can be allocated for [POSIX message queues](http://man7.org/linux/man-pages/man7/mq_overview.7.html) |
-| RLIMIT_NICE       | the maximum [nice](https://linux.die.net/man/1/nice) value that can be set by a process  |
+| RLIMIT_LOCKS      | the maximum number [flock](https://man.archlinux.org/man/flock.1) and locking related [fcntl](https://man.archlinux.org/man/fcntl.2) calls|
+| RLIMIT_SIGPENDING | maximum number of [signals](https://man.archlinux.org/man/signal.7) that may be queued for a user of the calling process|
+| RLIMIT_MSGQUEUE   | the number of bytes that can be allocated for [POSIX message queues](https://man.archlinux.org/man/mq_overview.7) |
+| RLIMIT_NICE       | the maximum [nice](https://man.archlinux.org/man/nice.1) value that can be set by a process  |
 | RLIMIT_RTPRIO     | maximum real-time priority value                                                         |
 | RLIMIT_RTTIME     | maximum number of microseconds that a process may be scheduled under real-time scheduling policy without making blocking system call|
 
@@ -217,5 +217,5 @@ Links
 * [system calls](https://en.wikipedia.org/wiki/System_call)
 * [PID](https://en.wikipedia.org/wiki/Process_identifier)
 * [ulimit](https://www.gnu.org/software/bash/manual/html_node/Bash-Builtins.html#index-ulimit)
-* [strace](https://linux.die.net/man/1/strace)
-* [POSIX message queues](http://man7.org/linux/man-pages/man7/mq_overview.7.html)
+* [strace](https://man.archlinux.org/man/strace.1)
+* [POSIX message queues](https://man.archlinux.org/man/mq_overview.7)
