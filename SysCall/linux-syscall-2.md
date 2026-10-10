@@ -5,7 +5,7 @@ How does the Linux kernel handle a system call
 --------------------------------------------------------------------------------
 
 The previous [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-1) was the first part of the chapter that describes the [system call](https://en.wikipedia.org/wiki/System_call) concepts in the Linux kernel.
-In the previous part we learned what a system call is in the Linux kernel, and in operating systems in general. This was introduced from a user-space perspective, and part of the [write](http://man7.org/linux/man-pages/man2/write.2.html) system call implementation was discussed. In this part we continue our look at system calls, starting with some theory before moving onto the Linux kernel code.
+In the previous part we learned what a system call is in the Linux kernel, and in operating systems in general. This was introduced from a user-space perspective, and part of the [write](https://man.archlinux.org/man/write.2) system call implementation was discussed. In this part we continue our look at system calls, starting with some theory before moving onto the Linux kernel code.
 
 A user application does not make the system call directly from our applications. We did not write the `Hello world!` program like:
 
@@ -63,7 +63,7 @@ There will be the same number of system calls in the [arch/x86/entry/syscalls/sy
 typedef void (*sys_call_ptr_t)(void);
 ```
 
-The second thing is the initialization of the `sys_call_table` array. As we can see in the code above, all elements of our array that contain pointers to the system call handlers point to the `sys_ni_syscall`. The `sys_ni_syscall` function represents not-implemented system calls. To start with, all elements of the `sys_call_table` array point to the not-implemented system call. This is the correct initial behaviour, because we only initialize storage of the pointers to the system call handlers, it is populated later on. Implementation of the `sys_ni_syscall` is pretty easy, it just returns [-errno](http://man7.org/linux/man-pages/man3/errno.3.html) or `-ENOSYS` in our case:
+The second thing is the initialization of the `sys_call_table` array. As we can see in the code above, all elements of our array that contain pointers to the system call handlers point to the `sys_ni_syscall`. The `sys_ni_syscall` function represents not-implemented system calls. To start with, all elements of the `sys_call_table` array point to the not-implemented system call. This is the correct initial behaviour, because we only initialize storage of the pointers to the system call handlers, it is populated later on. Implementation of the `sys_ni_syscall` is pretty easy, it just returns [-errno](https://man.archlinux.org/man/errno.3) or `-ENOSYS` in our case:
 
 ```C
 asmlinkage long sys_ni_syscall(void)
@@ -388,13 +388,13 @@ Links
 --------------------------------------------------------------------------------
 
 * [system call](https://en.wikipedia.org/wiki/System_call)
-* [write](http://man7.org/linux/man-pages/man2/write.2.html)
+* [write](https://man.archlinux.org/man/write.2)
 * [C standard library](https://en.wikipedia.org/wiki/GNU_C_Library)
 * [list of cpu architectures](https://en.wikipedia.org/wiki/List_of_CPU_architectures)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [kbuild](https://www.kernel.org/doc/Documentation/kbuild/makefiles.txt)
 * [typedef](https://en.wikipedia.org/wiki/Typedef)
-* [errno](http://man7.org/linux/man-pages/man3/errno.3.html)
+* [errno](https://man.archlinux.org/man/errno.3)
 * [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)
 * [model specific register](https://en.wikipedia.org/wiki/Model-specific_register)
 * [intel 2b manual](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)

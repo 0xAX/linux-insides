@@ -371,7 +371,7 @@ static __always_inline void bitmap_zero(unsigned long *dst, unsigned int nbits)
 }
 ```
 
-The `bitmap_size` macro converts the number of bits into the size of the bitmap in bytes. Since the kernel knows the number of bytes to clear, it can choose the optimal way to clear them. If the whole bitmap fits into a single word and its size is known at compile time, it can write zero into this word directly. If not, the kernel uses [memset](https://man7.org/linux/man-pages/man3/memset.3.html) to fill all bytes of the bitmap with zeros.
+The `bitmap_size` macro converts the number of bits into the size of the bitmap in bytes. Since the kernel knows the number of bytes to clear, it can choose the optimal way to clear them. If the whole bitmap fits into a single word and its size is known at compile time, it can write zero into this word directly. If not, the kernel uses [memset](https://man.archlinux.org/man/memset.3) to fill all bytes of the bitmap with zeros.
 
 Its twin is `bitmap_fill`, which sets the bits in the given bitmap instead of clearing them. The implementation differs in one detail only - it fills the bitmap with ones instead of zeros:
 
