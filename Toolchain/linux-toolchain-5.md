@@ -119,11 +119,11 @@ $ ./sum
 x + y + z = 6
 ```
 
-Ok, everything looks pretty good up to now. You may already know that there is a special family of functions - [exec*](http://man7.org/linux/man-pages/man3/execl.3.html). As we read in the man page:
+Ok, everything looks pretty good up to now. You may already know that there is a special family of functions - [exec*](https://man.archlinux.org/man/execl.3). As we read in the man page:
 
 > The exec() family of functions replaces the current process image with a new process image.
 
-All the `exec*` functions are simple frontends to the [execve](http://man7.org/linux/man-pages/man2/execve.2.html) system call. If you have read the fourth [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4) of the chapter which describes [system calls](https://en.wikipedia.org/wiki/System_call), you may know that the [execve](http://linux.die.net/man/2/execve) system call is defined in the [files/exec.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/fs/exec.c#L1888) source code file and looks like:
+All the `exec*` functions are simple frontends to the [execve](https://man.archlinux.org/man/execve.2) system call. If you have read the fourth [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4) of the chapter which describes [system calls](https://en.wikipedia.org/wiki/System_call), you may know that the [execve](https://man.archlinux.org/man/execve.2) system call is defined in the [files/exec.c](https://github.com/torvalds/linux/blob/08e4e0d0456d0ca8427b2d1ddffa30f1c3e774d7/fs/exec.c#L1888) source code file and looks like:
 
 ```C
 SYSCALL_DEFINE3(execve,
@@ -373,7 +373,7 @@ $ readelf -e test | grep fini
   [15] .fini             PROGBITS         0000000000400504  00000504
 ```
 
-Both of these sections will be placed at the start and end of the binary image and contain routines which are called constructor and destructor respectively. The main point of these routines is to do some initialization/finalization like initialization of global variables, such as [errno](http://man7.org/linux/man-pages/man3/errno.3.html), allocation and deallocation of memory for system routines and etc., before the actual code of a program is executed.
+Both of these sections will be placed at the start and end of the binary image and contain routines which are called constructor and destructor respectively. The main point of these routines is to do some initialization/finalization like initialization of global variables, such as [errno](https://man.archlinux.org/man/errno.3), allocation and deallocation of memory for system routines and etc., before the actual code of a program is executed.
 
 You may infer from the names of these functions, they will be called before the `main` function and after the `main` function. Definitions of `.init` and `.fini` sections are located in the `/lib64/crti.o` and if we add this object file:
 
@@ -488,7 +488,7 @@ Links
 
 * [system call](https://en.wikipedia.org/wiki/System_call)
 * [gdb](https://www.gnu.org/software/gdb/)
-* [execve](http://linux.die.net/man/2/execve)
+* [execve](https://man.archlinux.org/man/execve.2)
 * [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [segment registers](https://en.wikipedia.org/wiki/X86_memory_segmentation)

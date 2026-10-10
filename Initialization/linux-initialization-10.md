@@ -458,7 +458,7 @@ Links
 * [VFS](http://en.wikipedia.org/wiki/Virtual_file_system)
 * [inode](http://en.wikipedia.org/wiki/Inode)
 * [proc](http://en.wikipedia.org/wiki/Procfs)
-* [man proc](http://linux.die.net/man/5/proc)
+* [man proc](https://man.archlinux.org/man/proc.5)
 * [Sysctl](http://en.wikipedia.org/wiki/Sysctl)
 * [ftrace](https://www.kernel.org/doc/Documentation/trace/ftrace.txt)
 * [cgroup](http://en.wikipedia.org/wiki/Cgroups)

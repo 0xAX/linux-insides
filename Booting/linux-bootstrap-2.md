@@ -205,7 +205,7 @@ After initialization of callbacks for writing to a serial port, the next step is
 	memcpy(&boot_params.hdr, &hdr, sizeof(hdr));
 ```
 
-Do not mix this `memcpy` with the function from the C standard library - [memcpy](https://man7.org/linux/man-pages/man3/memcpy.3.html). During the time when the kernel is in the early initialization phase, there is no way to load any library. For this reason, an operating system kernel provides own implementation of such functions. The kernel's `memcpy` defined in the [copy.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S). If you already started to miss an assembly code, this is the high time to bring some back:
+Do not mix this `memcpy` with the function from the C standard library - [memcpy](https://man.archlinux.org/man/memcpy.3). During the time when the kernel is in the early initialization phase, there is no way to load any library. For this reason, an operating system kernel provides own implementation of such functions. The kernel's `memcpy` defined in the [copy.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S). If you already started to miss an assembly code, this is the high time to bring some back:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/copy.S#L18-L32 -->
 ```assembly

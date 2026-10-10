@@ -443,7 +443,7 @@ As we finished with the lists initialization, we can see the call of the `autogr
 #endif
 ```
 
-which initializes automatic process group scheduling. The `autogroup` feature is about automatic creation and population of a new task group during creation of a new session via [setsid](https://linux.die.net/man/2/setsid) call.
+which initializes automatic process group scheduling. The `autogroup` feature is about automatic creation and population of a new task group during creation of a new session via [setsid](https://man.archlinux.org/man/setsid.2) call.
 
 After this we are going through the all `possible` CPUs (you can remember that `possible` CPUs are stored in the `cpu_possible_mask` bitmap that can ever be available in the system) and initialize a `runqueue` for each `possible` cpu:
 

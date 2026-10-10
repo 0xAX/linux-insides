@@ -438,7 +438,7 @@ Links
 
 * [control groups](https://en.wikipedia.org/wiki/Cgroups)
 * [PID](https://en.wikipedia.org/wiki/Process_identifier)
-* [cpuset](http://man7.org/linux/man-pages/man7/cpuset.7.html)
+* [cpuset](https://man.archlinux.org/man/cpuset.7)
 * [block devices](https://en.wikipedia.org/wiki/Device_file)
 * [huge pages](https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt)
 * [sysfs](https://en.wikipedia.org/wiki/Sysfs)
