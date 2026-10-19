@@ -27,7 +27,7 @@ What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the
 
 The main motivation for switching from real mode is its memory addressing limitation. As we saw in the previous part, real mode can address only 2<sup>20</sup> bytes. This is just 1 MB of RAM. Obviously, modern software, including an operating system kernel, needs more. To break these constraints, the new processor mode was introduced - `protected mode`.
 
-Protected mode was introduced to the x86 architecture in 1982 and became the primary operating mode of Intel processors, starting with the [80286](http://en.wikipedia.org/wiki/Intel_80286) until the introduction of x86_64 and long mode. This mode brought many changes and improvements, but one of the most crucial was the memory management. The 20-bit address bus was replaced with a 32-bit address bus. It allowed access to 4 Gigabytes of memory in comparison to the 1 Megabyte in real mode.
+Protected mode was introduced to the x86 architecture in 1982 and became the primary operating mode of Intel processors, starting with the [80286](http://en.wikipedia.org/wiki/Intel_80286) until the introduction of x86_64 and long mode. This mode brought many changes and improvements, but one of the most crucial was the memory management. The 20-bit address bus was replaced with a 24-bit address bus on the 80286 and a 32-bit address bus on the 80386. The latter allows access to 4 Gigabytes of memory in comparison to the 1 Megabyte in real mode.
 
 Memory management in protected mode is divided into two, mostly independent mechanisms:
 
