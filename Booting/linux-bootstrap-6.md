@@ -170,7 +170,7 @@ After marking that ASLR is enabled, the next task is to determine the upper memo
 
 Since we consider only `x86_64` systems, the memory limit is `MAXMEM`, which is a macro defined in [arch/x86/include/asm/pgtable_64_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/pgtable_64_types.h):
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/pgtable_64_types.h#L96-L96
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/include/asm/pgtable_64_types.h#L96-L96 -->
 ```C
 #define MAXMEM			(1UL << MAX_PHYSMEM_BITS)
 ```
