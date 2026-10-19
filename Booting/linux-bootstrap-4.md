@@ -274,13 +274,12 @@ SYM_DATA_START_LOCAL(gdt)
 SYM_DATA_END_LABEL(gdt, SYM_L_LOCAL, gdt_end)
 ```
 
-The new Global Descriptor table contains five descriptors: 
+The new Global Descriptor table contains four descriptors:
 
 - 32-bit kernel code segment
 - 64-bit kernel code segment
 - 32-bit kernel data segment
-- Task state descriptor
-- Second task state descriptor
+- 16-byte task state descriptor
 
 We already saw loading the Global Descriptor Table in the previous [part](./linux-bootstrap-3.md#set-up-global-descriptor-table), and now we're doing almost the same, but we set descriptors to use `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode.
 
@@ -490,7 +489,7 @@ When the processor translates a virtual address, it performs the following steps
 6. Bits `20–12` select an entry in the `PT`.
 7. Bits `11–0` provide the offset inside the resulting physical page.
 
-In addition to a physical address of the next-level table, each page table entry contains flags in first `12` bits. These flags are:
+In addition to a physical address of the next-level table, each page table entry contains flags in its first `12` bits, plus the no-execute flag in bit `63`. These flags are:
 
 | Bit   | Name                     | Description                                                                                                                                        |
 |-------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
