@@ -4,7 +4,7 @@ In the [previous part](./linux-bootstrap-5.md), we finally left the setup code a
 
 As you can remember from the previous parts, the entry point of the Linux kernel is the `startup_64` function defined in [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S). In normal cases, the kernel is loaded at the fixed, well-known address defined by the value of the `CONFIG_PHYSICAL_START` configuration option. The description and the default value of this option are defined in [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig):
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/Kconfig#L2021-L2025 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/Kconfig#L1992-L1996 -->
 ```
 config PHYSICAL_START
 	hex "Physical address where the kernel is loaded" if (EXPERT || CRASH_DUMP)
@@ -65,7 +65,7 @@ As we can see, this function takes five parameters:
 
 The `extract_kernel` function receives the `output` parameter from the code that prepares the decompressor:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L467-L469 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L471-L473 -->
 ```
 	movq	%r15, %rdi
 	movq	%rbp, %rsi
