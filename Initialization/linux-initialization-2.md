@@ -554,7 +554,7 @@ Now we know how the Linux kernel can recover from selected exceptions without ch
 
 We have finished the main goal of this chapter, setting up the Interrupt Descriptor Table. Only a few architecture-specific steps remain before we reach the generic kernel entry point from [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c):
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/init/main.c#L986-L987 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/init/main.c#L1047-L1048 -->
 ```C
 asmlinkage __visible __init __no_sanitize_address __noreturn __no_stack_protector
 void start_kernel(void)
