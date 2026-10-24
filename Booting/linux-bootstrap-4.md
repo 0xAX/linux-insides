@@ -503,7 +503,7 @@ In addition to a physical address of the next-level table, each page table entry
 | `PS`  | Page Size                | Determines whether the entry maps a large page (e.g., 2 MiB or 1 GiB) instead of pointing to a lower-level page table.                             |
 | `NX`  | No-Execute               | Prevents instruction execution from the referenced page when set. Used to enforce executable/non-executable memory protections.                    |
        
-You might wonder how an 8-byte entry can contain both a 64-bit physical address of the next-level page table and flags at the same time. The reason is that each page table is aligned on a four-kilobyte boundary. As a result, the lower 12 bits of its physical address are always zero. These 12 bits are therefore used to store the flags.
+You might wonder how an 8-byte entry can contain both a physical address of the next-level page table and flags at the same time. The reason is that each page table is aligned on a four-kilobyte boundary. As a result, the lower 12 bits of its physical address are always zero. These 12 bits are therefore used to store the flags. The upper bits are free as well, because a physical address on x86_64 is at most 52 bits wide, and that is where `NX` lives.
 
 Now that we know how the processor translates a virtual address to a physical address using paging, it is time to take a look at the structure of page tables.
 
