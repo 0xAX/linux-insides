@@ -358,7 +358,7 @@ A few of the bitmap operations defined by this API are worth a closer look.
 
 One of the most commonly used functions there is `bitmap_zero`, which clears all bits of a bitmap:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/bitmap.h#L241-L249 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/bitmap.h#L245-L253 -->
 ```C
 static __always_inline void bitmap_zero(unsigned long *dst, unsigned int nbits)
 {
@@ -375,7 +375,7 @@ The `bitmap_size` macro converts the number of bits into the size of the bitmap 
 
 Its twin is `bitmap_fill`, which sets the bits in the given bitmap instead of clearing them. The implementation differs in one detail only - it fills the bitmap with ones instead of zeros:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/bitmap.h#L251-L259 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/include/linux/bitmap.h#L255-L263 -->
 ```C
 static __always_inline void bitmap_fill(unsigned long *dst, unsigned int nbits)
 {
