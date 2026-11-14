@@ -2,7 +2,7 @@
 <h1>linux-insides</h1>
 <p><b>A book-in-progress about the Linux kernel and its insides.</b></p>
 
-[Introduction](#introduction) • [Chapter status](#chapter-status-kernel-v720) • [Requirements](#requirements) • [Translations](#translations) • [Contributing](#contribution) • [Author](#author)
+[Introduction](#introduction) • [Chapter status](#chapter-status-kernel-v730) • [Requirements](#requirements) • [Translations](#translations) • [Contributing](#contribution) • [Author](#author)
 
 [![Read online](https://img.shields.io/badge/read-online-2ea44f?style=flat-square)](https://0xax.dev/books/linux-inside/)
 ![Linux kernel](https://img.shields.io/badge/Linux-kernel-FCC624?style=flat-square&logo=linux&logoColor=black)
