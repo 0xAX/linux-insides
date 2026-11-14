@@ -8,7 +8,7 @@ If you've read my earlier [posts](https://github.com/0xAX/asm) about [assembly l
 The main goal of this series is to provide a guide to the Linux kernel for readers who want to begin learning how it works. We will explore not only what the kernel does, but will try to understand how and why it does it. Despite being considered to be understandable for anyone who is interested in Linux kernel, it is highly recommended to have some prior knowledge before starting to read these notes. If you want to experiment with the kernel code, first of all it is best to have a [Linux distribution](https://en.wikipedia.org/wiki/Linux_distribution) installed. Besides that, on these pages we will see much of [C](https://en.wikipedia.org/wiki/C_(programming_language)) and [assembly](https://en.wikipedia.org/wiki/Assembly_language) code, so the good understanding of these programming languages is highly required.
 
 > [!IMPORTANT]
-> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in the process of updating the content to reflect modern kernels where possible - now focusing on v6.16+. I'll continue revising the posts as the kernel evolves.
+> I started writing this series when the latest version of the kernel was `3.18`. A lot has changed since then, and I am in the process of updating the content to reflect modern kernels where possible - now focusing on v7.3+. I'll continue revising the posts as the kernel evolves.
 
 That's enough introduction - let's dive into the Linux kernel!
 
