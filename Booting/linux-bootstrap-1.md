@@ -558,9 +558,11 @@ At this point, the `dx` register stores the stack pointer value, which should po
 #define GRUB_LINUX_SETUP_STACK		0x9000
 ```
 
-At the next step we check that the address is aligned by four bytes and if yes jump to the label `3`. If the stack pointer is not aligned, we set it to `0xFFFC` value. The reason for this that we can not have stack pointer equal to zero as it grows down during pushing something on the stack. The `0xFFFC` value is the highest 4‑byte aligned address below `0x10000`. If the value of the stack pointer is aligned, we continue to use the aligned value.
+At the next step, the kernel setup code aligns the stack pointer down to a four-byte boundary. This is because the kernel setup code pushes and pops four-byte values. Strictly speaking, this operation is not required, but it ensures that all stack accesses are aligned.
 
-From this point we have a correct stack and starts from `0x9000:0x9000` and grows down:
+If the stack pointer is less than four, which in practice usually means zero, it is set to `0xFFFC`. This prevents the stack pointer from pointing outside the stack segment. After the stack pointer is aligned, both the stack segment and the stack pointer have valid values, so the code can safely switch to C.
+
+From this point, the kernel setup code has a valid stack that starts at `0x9000:0x9000` and grows downward:
 
 ![early-stack](./images/early-stack.svg)
 
