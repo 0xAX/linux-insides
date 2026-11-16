@@ -122,7 +122,7 @@ In general, real mode's memory map is as follows:
 | 0x00007C00–0x00007DFF | Bootloader                           |
 | 0x00007E00–0x0009FFFF | Unused                               |
 | 0x000A0000–0x000BFFFF | Video RAM (VRAM) Memory              |
-| 0x000B0000–0x000B7777 | Monochrome Video Memory              |
+| 0x000B0000–0x000B7FFF | Monochrome Video Memory              |
 | 0x000B8000–0x000BFFFF | Color Video Memory                   |
 | 0x000C0000–0x000C7FFF | Video ROM BIOS                       |
 | 0x000C8000–0x000EFFFF | BIOS Shadow Area                     |
