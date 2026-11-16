@@ -174,7 +174,7 @@ Booting from Hard Disk...
 !
 ```
 
-Of course, a real-world boot sector has "slightly" speaking more code for loading of an operating system instead of printing an exclamation mark, but it may interesting to experiment. In this example, we can see that the code will be executed in `16-bit` real mode which is specified by the `[BITS 16]` directive. After starting, it calls the [0x10](https://en.wikipedia.org/wiki/INT_10H) interrupt, which just prints the `!` symbol. The `times` directive will pad that number of bytes up to `510th` byte with zeros. In the end we "hard-code" the last two magic bytes `0xAA` and `0x55`. To exit from the virtual machine, you can press - `Ctrl+a x`.
+Of course, a real-world boot sector has "slightly" speaking more code for loading of an operating system instead of printing an exclamation mark, but it may interesting to experiment. In this example, we can see that the code will be executed in `16-bit` real mode which is specified by the `[BITS 16]` directive. After starting, it calls the [0x10](https://en.wikipedia.org/wiki/INT_10H) interrupt, which just prints the `!` symbol. The `times` directive will pad that number of bytes up to `510th` byte with zeros. In the end we "hard-code" the last two magic bytes `0x55` and `0xAA`. To exit from the virtual machine, you can press - `Ctrl+a x`.
 
 From this point onwards, the BIOS hands control over to the bootloader.
 
