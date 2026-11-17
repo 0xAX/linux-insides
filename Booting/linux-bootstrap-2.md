@@ -490,7 +490,7 @@ The first one is getting information about the [Intel SpeedStep](http://en.wikip
 
 The next one is getting information about the [Advanced Power Management](http://en.wikipedia.org/wiki/Advanced_Power_Management). The logic of this function is pretty similar to the one described above. It uses the same `0x15` BIOS interrupt to obtain information and store it in the `boot_params` structure. The returned information describes the support of the `APM` which was power management sub-system before [ACPI](https://en.wikipedia.org/wiki/ACPI) started to be a standard.
 
-The last one function tries to retrive `Enhanced Disk Drive` information the BIOS. This time, the `0x13` BIOS interrupt is used to obtain this information. The returned information describes the disks and their characteristics like geometry and mapping information.
+The last one function tries to retrieve `Enhanced Disk Drive` information from the BIOS. This time, the `0x13` BIOS interrupt is used to obtain this information. The returned information describes the disks and their characteristics like geometry and mapping information.
 
 ## Conclusion
 
