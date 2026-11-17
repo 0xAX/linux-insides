@@ -87,7 +87,7 @@ For a code segment, these three bits interpreted as:
 
 - `Accessed` - indicates whether a segment has been accessed since the last time the kernel cleared this bit.
 - `Read-Enable` - determines whether a segment is execute-only or execute-read.
-- `Confirming` - determines how privilege level changes are handled when transferring execution to that segment.
+- `Conforming` - determines how privilege level changes are handled when transferring execution to that segment.
 
 In the tables below you can find full information about possible states of the flags for a code and a data segments.
 
