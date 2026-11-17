@@ -226,7 +226,15 @@ SYM_FUNC_START_NOALIGN(memcpy)
 SYM_FUNC_END(memcpy)
 ```
 
-First of all, we can see that `memcpy` and other routines which are defined there, start and end with the two macros - `SYM_FUNC_START_NOALIGN` and `SYM_FUNC_END`. The `SYM_FUNC_START_NOALIGN` just specifies the given symbol name as [.globl](https://sourceware.org/binutils/docs/as.html#Global) to make it visible for other functions. The `SYM_FUNC_END` just expands to an empty string in our case.
+First of all, we can see that `memcpy` and other routines which are defined there, start and end with the two macros - `SYM_FUNC_START_NOALIGN` and `SYM_FUNC_END`. The `SYM_FUNC_START_NOALIGN` just specifies the given symbol name as [.globl](https://sourceware.org/binutils/docs/as.html#Global) to make it visible for other functions. The `SYM_FUNC_END` macro expands to something like this:
+
+```
+.type memcpy, STT_FUNC
+.set .L__sym_size_memcpy, .-memcpy
+.size memcpy, .L__sym_size_memcpy
+```
+
+The first line marks the `memcpy` symbol as function in the [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) symbol table. The last two lines calculate the function’s size in bytes and record it in the ELF symbol table as well.
 
 Despite the implementation of this function is written in assembly language, the implementation of `memcpy` is relatively simple. At first, it pushes values from the `si` and `di` registers to the stack to preserve their values because they will change during the `memcpy` execution. At the next step we may see handling of the function's parameters. The parameters of this function are passed through the `ax`, `dx`, and `cx` registers. This is because the kernel setup code is built with `-mregparm=3` option. So:
 
