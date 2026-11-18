@@ -327,7 +327,7 @@ An interrupt is a signal to the CPU that is emitted by hardware or software. Aft
 
 At the first line, there is an [inline assembly](../Toolchain/linux-toolchain-4.md) statement with the `cli` instruction, which clears the [interrupt flag](https://en.wikipedia.org/wiki/Interrupt_flag). After this, external interrupts are disabled. The next line disables NMI (non-maskable interrupt).
 
-Let's get back to the code. In the second line, we set the byte `0x0` to the port `0x80`. After that, a call to the `io_delay` function occurs. `io_delay` causes a little delay and looks like this:
+Let's get back to the code. In the second line, we set the byte `0x80` to the port `0x70`. After that, a call to the `io_delay` function occurs. `io_delay` causes a little delay and looks like this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/boot.h#L39-L43 -->
 ```C
