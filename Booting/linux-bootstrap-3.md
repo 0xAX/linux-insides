@@ -369,7 +369,7 @@ static int a20_test(int loops)
 }
 ```
 
-To verify whether the `A20` line is already enabled or not, the kernel performs a simple memory test. It begins by setting the `FS` register to `0x0000` and the `GS` register to `0xffff` values. By doing this, an access to `FS:0x200` (`A20_TEST_ADDR`) points into the very beginning of memory, while an access to `GS:0x2010` refers to a location just past the one-megabyte boundary. If the `A20` line is disabled, the latter will wrap around and point to the same physical address.
+To verify whether the `A20` line is already enabled or not, the kernel performs a simple memory test. It begins by setting the `FS` register to `0x0000` and the `GS` register to `0xffff` values. By doing this, an access to `FS:0x200` (`A20_TEST_ADDR`) points into the very beginning of memory, while an access to `GS:0x210` refers to a location just past the one-megabyte boundary. If the `A20` line is disabled, the latter will wrap around and point to the same physical address.
 
 If the `A20` gate is disabled, the kernel will try to enable it using different methods which you can find in `enable_a20` function. For example, it can be done with a call to the `0x15` BIOS interrupt with `AH` register set to `0x2041`. If this function finished with a failure, print an error message and call the function `die` which will stop the process of the kernel setup.
 
