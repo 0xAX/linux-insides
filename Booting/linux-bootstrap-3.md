@@ -186,7 +186,7 @@ static inline char *__get_heap(size_t s, size_t a, size_t n)
 }
 ```
 
-Let's try to understand how the `__get_heap` function works. First of all we can see here that `HEAP` pointer is assigned to the [aligned](https://en.wikipedia.org/wiki/Data_structure_alignment) address of the memory. The address is aligned based on the size of data type for which we want to allocate memory. After we have got the initial aligned address, we just move the `HEAP` pointer by the requested size.
+Let's try to understand how the `__get_heap` function works. First of all we can see here that `HEAP` pointer is assigned to the [aligned](https://en.wikipedia.org/wiki/Data_structure_alignment) address of the memory. The address is aligned based on the alignment of the data type of the items that the kernel setup code wants to allocate, which the `GET_HEAP` macro gets using `__alignof__(type)`. After we have got the initial aligned address, we just move the `HEAP` pointer by the requested size.
 
 The last but not least API of the early heap that we will see is the `heap_free` function which checks the availability of the given size of memory on the heap:
 
