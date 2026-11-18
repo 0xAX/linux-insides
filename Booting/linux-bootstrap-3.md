@@ -250,7 +250,7 @@ static __videocard video_vga = {
 };
 ```
 
-After the `probe_cards` function is executed, we have a set of structures in our `video_cards` array, along with the known number of video modes they support. At the next step, the kernel setup code prints a menu with available video modes if the `vid_mode=ask` option was passed to the kernel command line, and sets up the video mode with all the parameters that we collected in the previous steps.
+After the `probe_cards` function is executed, we have a set of structures in our `video_cards` array, along with the known number of video modes they support. At the next step, the kernel setup code prints a menu with available video modes if the `vga=ask` option was passed to the kernel command line, and sets up the video mode with all the parameters that we collected in the previous steps.
 
 The video mode is set by the `set_mode` function which is defined in [video-mode.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video-mode.c). This function expects one parameter - the video mode identifier. This identifier is set by the bootloader or based on the choice of the video modes menu. The `set_mode` function goes over all available video cards defined in the `video_cards` array, and if the given mode belongs to the given card, the `card->set_mode()` callback is called to set up the video mode.
 
