@@ -623,7 +623,7 @@ The kernel is ready for transition into the long mode.
 
 ## The transition into 64-bit mode
 
-Only the last steps remain before the Linux kernel can switch the processor into the long mode. The first one is setting the `EFER.LME` flag in the special [model-specific register](http://en.wikipedia.org/wiki/Model-specific_register) to the predefined value `0xC0000080`:
+Only the last steps remain before the Linux kernel can switch the processor into the long mode. The first one is setting the `LME` flag in the `EFER` [model-specific register](http://en.wikipedia.org/wiki/Model-specific_register). The number of this register is `0xC0000080`, and the kernel loads it into `ecx` as `MSR_EFER` before it reads the register with `rdmsr`:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L242-L245 -->
 ```assembly
