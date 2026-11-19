@@ -635,7 +635,7 @@ Only the last steps remain before the Linux kernel can switch the processor into
 
 This is the `Long Mode Enable` bit, and it is mandatory to set this bit to enable long mode.
 
-In the next step, we can see the preparation for the jump on the long mode entrypoint. To do this jump, the kernel stores the base address of the kernel segment code along with the address of the long mode entrypoint on the stack:
+In the next step, we can see the preparation for the jump on the long mode entrypoint. To do this jump, the kernel stores the kernel code segment selector along with the address of the long mode entrypoint on the stack:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L268-L270 -->
 ```assembly
@@ -654,7 +654,7 @@ The last step is to enable paging. The kernel does it by loading the `CR0_STATE`
 
 As the `PAE` and `LME` bits are already set, enabling paging also activates the long mode. The processor still executes 32-bit code, but only one instruction is left to change this.
 
-Since the stack contains the base of the kernel code segment and the address of the entrypoint, the kernel executes the last 32-bit instruction:
+Since the stack contains the kernel code segment selector and the address of the entrypoint, the kernel executes the last 32-bit instruction:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L277-L277 -->
 ```assembly
