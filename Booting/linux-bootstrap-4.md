@@ -534,7 +534,7 @@ The page table structure for boot is defined in the same source code file and lo
 SYM_DATA_LOCAL(pgtable,		.fill BOOT_PGT_SIZE, 1, 0)
 ```
 
-The kernel needs to fill this structure with the proper page table entries for early 64-bit code. First of all, it fills the whole memory area occupied by the page tables with zeros for safety:
+The kernel needs to fill this structure with the proper page table entries for early 64-bit code. First of all, it fills the memory area occupied by the initial page tables with zeros for safety:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L204-L207 -->
 ```assembly
