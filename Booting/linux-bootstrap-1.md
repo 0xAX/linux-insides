@@ -410,7 +410,7 @@ Now we can inspect the memory dump at the `0x90000` address:
 00090000  4d 5a 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |MZ..............|
 ```
 
-We can see the same `MZ` header from which the Linux kernel setup head starts. In addition, we can inspect the memory at the `0x90200` offset to see that there is a kernel setup header:
+We can see the same `MZ` header from which the Linux kernel setup head starts. In addition, we can inspect the memory at the `0x90200` address to see that there is the kernel setup code entry point and the second part of the kernel setup header:
 
 ```bash
 ~$ hexdump -C /tmp/dump | grep 00090200
