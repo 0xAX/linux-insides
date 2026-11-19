@@ -167,7 +167,7 @@ Since the calculation of the base address for the kernel relocation is done, the
 	cld
 ```
 
-The set of assembly instructions above copies the compressed kernel image and decompressor code to the memory area, which starts at the address pointed by the `rbx` register. The code above copies the memory contents starting from the `_bss-8` up to the `_startup_32` symbol, which includes:
+The set of assembly instructions above copies the compressed kernel image and decompressor code to the memory area, which starts at the address pointed by the `rbx` register. The code above copies the memory contents starting from the `_bss-8` up to the `startup_32` symbol, which includes:
 
 - `32-bit` kernel setup code
 - compressed kernel image 
