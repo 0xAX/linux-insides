@@ -660,9 +660,9 @@ modified   arch/x86/boot/main.c
 
  #include "boot.h"
  #include "string.h"
-@@ -173,6 +174,8 @@ void main(void)
-	query_edd();
- #endif
+@@ -171,6 +172,8 @@ void main(void)
+	if (IS_ENABLED(CONFIG_EDD))
+		query_edd();
 
 +        printf("BSS start: %p. BSS end: %p\n", __bss_start, _end);
 +
