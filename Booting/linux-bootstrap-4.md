@@ -311,7 +311,7 @@ The last action after we loaded the new Global Descriptor Table is to reload the
 1:
 ```
 
-Since we can not change segment registers using the `mov` instruction, a trick with the `lretl` instruction is used to set the `cs` with the correct value. This instruction fetches two values from the top of the stack, then puts the first value into the `eip` register and the second value into the `cs` register. Since this moment, we have a proper kernel code selector and instruction pointer values.
+Since we cannot change the code segment register using the `mov` instruction, a trick with the `lretl` instruction is used to load the correct value into `cs`. This instruction fetches two values from the top of the stack, then puts the first value into the `eip` register and the second value into the `cs` register. From this moment, we have a proper kernel code selector and instruction pointer values.
 
 Just a couple of steps separate us from transitioning into the long mode. As mentioned at the beginning of this chapter, one of the most crucial steps is to set up `paging`. But before that, the kernel needs to do the last preparations, which we will see in the next sections.
 
