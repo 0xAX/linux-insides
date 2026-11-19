@@ -211,7 +211,7 @@ Ok, now we know data structures which represents queued spinlock in the Linux ke
 #define arch_spin_lock(l)               queued_spin_lock(l)
 ```
 
-Yes, this function is - `queued_spin_lock`. As we may understand from the function's name, it allows a thread to acquire a lock. This function is defined in the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) header file and its implementation is:
+Yes, this function is - `queued_spin_lock`. As we may understand from the function's name, it allows a thread to acquire a lock. This function is defined in the [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h) header file and its implementation is:
 
 ```C
 static __always_inline void queued_spin_lock(struct qspinlock *lock)
