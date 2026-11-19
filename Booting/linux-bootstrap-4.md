@@ -607,7 +607,7 @@ The two additional flags tell the processor to keep [TLB](https://en.wikipedia.o
 
 There is no need to populate the lowest-level page tables yet. Every entry in the 2nd-level page directory has the `Large Page` bit set, which means each entry directly maps a two-megabyte region of physical memory. During the address translation, the page-walk procedure stops at the 2nd-level page table, and the lower `21` bits of the virtual address are used as the offset inside that two-megabyte page.
 
-The page tables are now fully prepared. The last remaining step is to actually enable paging. To do this, the processor must know where the top-level page table resides. As we know, this is done by loading the physical address of the top-level page table into the `cr3` control register:
+The page tables are now fully prepared. To use them, the processor must know where the top-level page table resides. As we know, this is done by loading the physical address of the top-level page table into the `cr3` control register:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L238-L239 -->
 ```assembly
@@ -615,7 +615,7 @@ The page tables are now fully prepared. The last remaining step is to actually e
 	movl	%eax, %cr3
 ```
 
-From this moment, page tables that cover four gigabytes of memory are ready, and paging is enabled. The whole structure that the kernel has just built looks like this:
+From this moment, page tables that cover four gigabytes of memory are ready, and paging can be enabled to switch to long mode. The whole structure that the kernel has just built looks like this:
 
 ![early-4g-page-tables](./images/early-4g-page-tables.svg)
 
@@ -644,7 +644,17 @@ In the next step, we can see the preparation for the jump on the long mode entry
 	pushl	%eax
 ```
 
-Since the stack contains the base of the kernel code segment and the address of the entrypoint, the kernel executes the last instruction in protected mode:
+The last step is to enable paging. The kernel does it by loading the `CR0_STATE` value, which contains the `X86_CR0_PG` bit, into the `cr0` control register:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L273-L274 -->
+```assembly
+	movl	$CR0_STATE, %eax
+	movl	%eax, %cr0
+```
+
+As the `PAE` and `LME` bits are already set, enabling paging also activates the long mode. The processor still executes 32-bit code, but only one instruction is left to change this.
+
+Since the stack contains the base of the kernel code segment and the address of the entrypoint, the kernel executes the last 32-bit instruction:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L277-L277 -->
 ```assembly
