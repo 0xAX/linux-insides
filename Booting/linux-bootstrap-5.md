@@ -251,7 +251,19 @@ We can skip the part of the code wrapped with `CONFIG_AMD_MEM_ENCRYPT` as it is 
 
 The first interrupt handler is set because the `initialize_identity_maps` function (which we will see very soon) may trigger page fault exception. This exception can be triggered for example, when [Address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization) is enabled and such random physical and virtual addresses were used for which the page tables do not have an entry.
 
-The second interrupt handler is needed to "handle" a triple-fault if such an interrupt appears during kernel decompression. So at least dummy NMI handler is needed.
+The second interrupt handler is interesting. If we take a look at the handler code, we will see that it does nothing but increase a counter, which is printed after the kernel is decompressed if it is not equal to zero:
+
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/ident_map_64.c#L390-L393 -->
+```C
+void do_boot_nmi_trap(struct pt_regs *regs, unsigned long error_code)
+{
+	spurious_nmi_count++;
+}
+```
+
+We can find the reason to have such a handler in the [commit](https://github.com/torvalds/linux/commit/78a509fba9c9b1fcb77f95b7c6be30da3d24823a) where it was added. Multiple NMIs can be triggered at once. The processor delivers them one by one, and the second NMI is delivered only after the [iret](https://www.felixcloutier.com/x86/iret:iretd:iretq) instruction is executed.
+
+Besides that, the kernel can be configured to switch to another kernel in case of a [panic](https://en.wikipedia.org/wiki/Kernel_panic), which can happen during NMI handling. Then control is transferred to the new kernel without executing `iret`. This kernel may trigger page fault exceptions while building its page tables. Since the page fault handler executes the `iret` instruction at the end, the second NMI arrives in the new kernel. Without a handler for it, the boot fails. To avoid this, the early kernel code sets a handler which ignores NMIs.
 
 After the `Interrupt Descriptor Table` is re-loaded, the `initialize_identity_maps` function is called:
 
