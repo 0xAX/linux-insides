@@ -251,7 +251,7 @@ by default, and the `shift` is
 #endif
 ```
 
-The `jiffies` clock source uses the `NSEC_PER_JIFFY` multiplier conversion to specify the nanosecond over cycle ratio. Note that values of the  `JIFFIES_SHIFT` and `NSEC_PER_JIFFY` depend on `HZ` value. The `HZ` represents the frequency of the system timer. This macro defined in the [include/asm-generic/param.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/param.h) and depends on the `CONFIG_HZ` kernel configuration option. The value of `HZ` differs for each supported architecture, but for `x86` it's defined like:
+The `jiffies` clock source uses the `NSEC_PER_JIFFY` multiplier conversion to specify the nanosecond over cycle ratio. Note that values of the  `JIFFIES_SHIFT` and `NSEC_PER_JIFFY` depend on `HZ` value. The `HZ` represents the frequency of the system timer. This macro defined in the [include/asm-generic/param.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/param.h) and depends on the [`CONFIG_HZ`](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.hz) kernel configuration option. The value of `HZ` differs for each supported architecture, but for `x86` it's defined like:
 
 ```C
 #define HZ		CONFIG_HZ

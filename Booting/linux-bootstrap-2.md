@@ -367,7 +367,7 @@ int validate_cpu(void)
 	}
 ```
 
-If the level of CPU is less than the required level specified by the `CONFIG_X86_MINIMUM_CPU_FAMILY` kernel configuration option, the function returns the error and the kernel setup process is aborted.
+If the level of CPU is less than the required level specified by the [`CONFIG_X86_MINIMUM_CPU_FAMILY`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig.cpu) kernel configuration option, the function returns the error and the kernel setup process is aborted.
 
 ### Memory detection
 

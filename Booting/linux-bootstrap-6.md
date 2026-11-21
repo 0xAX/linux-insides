@@ -15,7 +15,7 @@ config PHYSICAL_START
 
 However, modern systems rarely stick to predictable memory layouts for security reasons. Knowing the fixed address where the kernel was loaded can make it easier for attackers to guess the location of the kernel structures which can be exploited in various ways. To make such attacks harder, the Linux kernel provides support for [address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization) mechanism. 
 
-To enable this mechanism, the `CONFIG_RANDOMIZE_BASE` kernel configuration option should be enabled. If this mechanism is enabled, the kernel will not be decompressed and loaded at the given fixed address. Instead, each boot the kernel image will be placed at a different physical address. 
+To enable this mechanism, the [`CONFIG_RANDOMIZE_BASE`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option should be enabled. If this mechanism is enabled, the kernel will not be decompressed and loaded at the given fixed address. Instead, each boot the kernel image will be placed at a different physical address. 
 
 In this part, we will look at how this mechanism works.
 

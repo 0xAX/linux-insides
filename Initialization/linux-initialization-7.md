@@ -6,7 +6,7 @@ The End of the architecture-specific initialization, almost...
 
 This is the seventh part of the Linux Kernel initialization process which covers insides of the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861). As you can know from the previous [parts](https://0xax.gitbook.io/linux-insides/summary/initialization), the `setup_arch` function does some architecture-specific (in our case it is [x86_64](http://en.wikipedia.org/wiki/X86-64)) initialization stuff like reserving memory for kernel code/data/bss, early scanning of the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface), early dump of the [PCI](http://en.wikipedia.org/wiki/PCI) device and many many more. If you have read the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6), you can remember that we've finished it at the `setup_real_mode` function. In the next step, as we set limit of the [memblock](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-1) to the all mapped pages, we can see the call of the `setup_log_buf` function from the [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c).
 
-The `setup_log_buf` function setups kernel cyclic buffer and its length depends on the `CONFIG_LOG_BUF_SHIFT` configuration option. As we can read from the documentation of the `CONFIG_LOG_BUF_SHIFT` it can be between `12` and `21`. In the insides, buffer defined as array of chars:
+The `setup_log_buf` function setups kernel cyclic buffer and its length depends on the [`CONFIG_LOG_BUF_SHIFT`](https://github.com/torvalds/linux/blob/master/init/Kconfig) configuration option. As we can read from the documentation of the `CONFIG_LOG_BUF_SHIFT` it can be between `12` and `21`. In the insides, buffer defined as array of chars:
 
 ```C
 #define __LOG_BUF_LEN (1 << CONFIG_LOG_BUF_SHIFT)
@@ -167,10 +167,10 @@ cma=nn[MG]@[start[MG][-end[MG]]]
 
 If we will not pass `cma` option to the kernel command line, `size_cmdline` will be equal to `-1`. In this way we need to calculate size of the reserved area which depends on the following kernel configuration options:
 
-* `CONFIG_CMA_SIZE_SEL_MBYTES` - size in megabytes, default global `CMA` area, which is equal to `CMA_SIZE_MBYTES * SZ_1M` or `CONFIG_CMA_SIZE_MBYTES * 1M`;
-* `CONFIG_CMA_SIZE_SEL_PERCENTAGE` - percentage of total memory;
-* `CONFIG_CMA_SIZE_SEL_MIN` - use lower value;
-* `CONFIG_CMA_SIZE_SEL_MAX` - use higher value.
+* [`CONFIG_CMA_SIZE_SEL_MBYTES`](https://github.com/torvalds/linux/blob/master/kernel/dma/Kconfig) - size in megabytes, default global `CMA` area, which is equal to `CMA_SIZE_MBYTES * SZ_1M` or [`CONFIG_CMA_SIZE_MBYTES`](https://github.com/torvalds/linux/blob/master/kernel/dma/Kconfig) `* 1M`;
+* [`CONFIG_CMA_SIZE_SEL_PERCENTAGE`](https://github.com/torvalds/linux/blob/master/kernel/dma/Kconfig) - percentage of total memory;
+* [`CONFIG_CMA_SIZE_SEL_MIN`](https://github.com/torvalds/linux/blob/master/kernel/dma/Kconfig) - use lower value;
+* [`CONFIG_CMA_SIZE_SEL_MAX`](https://github.com/torvalds/linux/blob/master/kernel/dma/Kconfig) - use higher value.
 
 As we calculated the size of the reserved area, we reserve area with the call of the `dma_contiguous_reserve_area` function which first of all calls:
 
@@ -222,7 +222,7 @@ if (boot_cpu_data.cpuid_level >= 0) {
 }
 ```
 
-The next function which you can see is `map_vsyscal` from the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c). This function maps memory space for [vsyscalls](https://lwn.net/Articles/446528/) and depends on `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option. Actually `vsyscall` is a special segment which provides fast access to the certain system calls like `getcpu`, etc. Let's look on implementation of this function:
+The next function which you can see is `map_vsyscal` from the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c). This function maps memory space for [vsyscalls](https://lwn.net/Articles/446528/) and depends on [`CONFIG_X86_VSYSCALL_EMULATION`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option. Actually `vsyscall` is a special segment which provides fast access to the certain system calls like `getcpu`, etc. Let's look on implementation of this function:
 
 ```C
 void __init map_vsyscall(void)
@@ -346,7 +346,7 @@ static inline void mm_init_cpumask(struct mm_struct *mm)
 }
 ```
 
-As you can see in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c), we pass memory descriptor of the init process to the `mm_init_cpumask` and depends on `CONFIG_CPUMASK_OFFSTACK` configuration option we clear [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) switch `cpumask`.
+As you can see in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c), we pass memory descriptor of the init process to the `mm_init_cpumask` and depends on [`CONFIG_CPUMASK_OFFSTACK`](https://github.com/torvalds/linux/blob/master/lib/Kconfig) configuration option we clear [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) switch `cpumask`.
 
 In the next step we can see the call of the following function:
 

@@ -115,7 +115,7 @@ struct tvec_root {
 };
 ```
 
-type. Note that the value of the `TVR_SIZE` depends on the `CONFIG_BASE_SMALL` kernel configuration option:
+type. Note that the value of the `TVR_SIZE` depends on the [`CONFIG_BASE_SMALL`](https://github.com/torvalds/linux/blob/master/init/Kconfig) kernel configuration option:
 
 ![base small](images/base_small.png)
 
@@ -190,7 +190,7 @@ Timerstats sample period: 3.888770 s
   ...
 ```
 
-The next step after initialization of the `tstats_lookup_lock` spinlock is the call of the `timer_register_cpu_notifier` function. This function depends on the `CONFIG_HOTPLUG_CPU` kernel configuration option which enables support for [hotplug](https://en.wikipedia.org/wiki/Hot_swapping) processors in the Linux kernel.
+The next step after initialization of the `tstats_lookup_lock` spinlock is the call of the `timer_register_cpu_notifier` function. This function depends on the [`CONFIG_HOTPLUG_CPU`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option which enables support for [hotplug](https://en.wikipedia.org/wiki/Hot_swapping) processors in the Linux kernel.
 
 When a processor will be logically offlined, a notification will be sent to the Linux kernel with the `CPU_DEAD` or the `CPU_DEAD_FROZEN` event by the call of the `cpu_notifier` macro:
 

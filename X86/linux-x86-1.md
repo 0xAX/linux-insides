@@ -207,7 +207,7 @@ Next is the lowest usable address in kernel space - `ffff880000000000`. This vir
 #define __START_KERNEL_map      _AC(0xffffffff80000000, UL)
 ```
 
-Usually kernel's `.text` starts here with the `CONFIG_PHYSICAL_START` offset. We have seen it in the post about [ELF64](https://github.com/0xAX/linux-insides/blob/master/Toolchain/linux-toolchain-3.md):
+Usually kernel's `.text` starts here with the [`CONFIG_PHYSICAL_START`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) offset. We have seen it in the post about [ELF64](https://github.com/0xAX/linux-insides/blob/master/Toolchain/linux-toolchain-3.md):
 
 ```
 readelf -s vmlinux | grep ffffffff81000000

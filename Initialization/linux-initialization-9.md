@@ -9,7 +9,7 @@ This is ninth part of the [Linux Kernel initialization process](https://0xax.git
 * `preempt_disable`
 * `preempt_enable`
 
-for preemption disabling and enabling. First of all let's try to understand what is `preempt` in the context of an operating system kernel. In simple words, preemption is ability of the operating system kernel to preempt current task to run task with higher priority. Here we need to disable preemption because we will have only one `init` process for the early boot time and we don't need to stop it before we call `cpu_idle` function. The `preempt_disable` macro is defined in the [include/linux/preempt.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/preempt.h) and depends on the `CONFIG_PREEMPT_COUNT` kernel configuration option. This macro is implemented as:
+for preemption disabling and enabling. First of all let's try to understand what is `preempt` in the context of an operating system kernel. In simple words, preemption is ability of the operating system kernel to preempt current task to run task with higher priority. Here we need to disable preemption because we will have only one `init` process for the early boot time and we don't need to stop it before we call `cpu_idle` function. The `preempt_disable` macro is defined in the [include/linux/preempt.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/preempt.h) and depends on the [`CONFIG_PREEMPT_COUNT`](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.preempt) kernel configuration option. This macro is implemented as:
 
 ```C
 #define preempt_disable() \
@@ -122,8 +122,8 @@ RCU initialization
 
 The next step is [RCU](http://en.wikipedia.org/wiki/Read-copy-update) initialization with the `rcu_init` function and its implementation depends on two kernel configuration options:
 
-* `CONFIG_TINY_RCU`
-* `CONFIG_TREE_RCU`
+* [`CONFIG_TINY_RCU`](https://github.com/torvalds/linux/blob/master/kernel/rcu/Kconfig)
+* [`CONFIG_TREE_RCU`](https://github.com/torvalds/linux/blob/master/kernel/rcu/Kconfig)
 
 In the first case `rcu_init` will be in the [kernel/rcu/tiny.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tiny.c) and in the second case it will be defined in the [kernel/rcu/tree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/rcu/tree.c). We will see the implementation of the `tree rcu`, but first of all about the `RCU` in general.
 
@@ -169,7 +169,7 @@ static void __init rcu_bootup_announce(void)
 }
 ```
 
-It just prints information about the `RCU` with the `pr_info` function and `rcu_bootup_announce_oddness` which uses `pr_info` too, for printing different information about the current `RCU` configuration which depends on different kernel configuration options like `CONFIG_RCU_TRACE`, `CONFIG_PROVE_RCU`, `CONFIG_RCU_FANOUT_EXACT`, etc. In the next step, we can see the call of the `rcu_init_geometry` function. This function is defined in the same source code file and computes the node tree geometry depends on the amount of CPUs. Actually `RCU` provides scalability with extremely low internal RCU lock contention. What if a data structure will be read from the different CPUs? `RCU` API provides the `rcu_state` structure which presents RCU global state including node hierarchy. Hierarchy is presented by the:
+It just prints information about the `RCU` with the `pr_info` function and `rcu_bootup_announce_oddness` which uses `pr_info` too, for printing different information about the current `RCU` configuration which depends on different kernel configuration options like [`CONFIG_RCU_TRACE`](https://github.com/torvalds/linux/blob/master/kernel/rcu/Kconfig.debug), [`CONFIG_PROVE_RCU`](https://github.com/torvalds/linux/blob/master/kernel/rcu/Kconfig.debug), `CONFIG_RCU_FANOUT_EXACT`, etc. In the next step, we can see the call of the `rcu_init_geometry` function. This function is defined in the same source code file and computes the node tree geometry depends on the amount of CPUs. Actually `RCU` provides scalability with extremely low internal RCU lock contention. What if a data structure will be read from the different CPUs? `RCU` API provides the `rcu_state` structure which presents RCU global state including node hierarchy. Hierarchy is presented by the:
 
 ```
 struct rcu_node node[NUM_RCU_NODES];
@@ -193,7 +193,7 @@ The `rcu_node` structure is defined in the [kernel/rcu/tree.h](https://github.co
 #define RCU_SUM (NUM_RCU_LVL_0 + NUM_RCU_LVL_1 + NUM_RCU_LVL_2 + NUM_RCU_LVL_3 + NUM_RCU_LVL_4)
 ```
 
-where levels values depend on the `CONFIG_RCU_FANOUT_LEAF` configuration option. For example for the simplest case, one `rcu_node` will cover two CPU on machine with the eight CPUs:
+where levels values depend on the [`CONFIG_RCU_FANOUT_LEAF`](https://github.com/torvalds/linux/blob/master/kernel/rcu/Kconfig) configuration option. For example for the simplest case, one `rcu_node` will cover two CPU on machine with the eight CPUs:
 
 ```
 +-----------------------------------------------------------------+
@@ -292,7 +292,7 @@ extern struct rcu_state rcu_bh_state;
 DECLARE_PER_CPU(struct rcu_data, rcu_bh_data);
 ```
 
-About these states you can read [here](http://lwn.net/Articles/264090/). As I wrote above we need to initialize `rcu_state` structures and `rcu_init_one` function will help us with it. After the `rcu_state` initialization, we can see the call of the ` __rcu_init_preempt` which depends on the `CONFIG_PREEMPT_RCU` kernel configuration option. It does the same as previous functions - initialization of the `rcu_preempt_state` structure with the `rcu_init_one` function which has `rcu_state` type. After this, in the `rcu_init`, we can see the call of the:
+About these states you can read [here](http://lwn.net/Articles/264090/). As I wrote above we need to initialize `rcu_state` structures and `rcu_init_one` function will help us with it. After the `rcu_state` initialization, we can see the call of the ` __rcu_init_preempt` which depends on the [`CONFIG_PREEMPT_RCU`](https://github.com/torvalds/linux/blob/master/kernel/rcu/Kconfig) kernel configuration option. It does the same as previous functions - initialization of the `rcu_preempt_state` structure with the `rcu_init_one` function which has `rcu_state` type. After this, in the `rcu_init`, we can see the call of the:
 
 ```C
 open_softirq(RCU_SOFTIRQ, rcu_process_callbacks);

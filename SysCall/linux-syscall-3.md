@@ -26,7 +26,7 @@ ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsysca
 
 After this, these system calls will be executed in userspace and this means that there will not be [context switching](https://en.wikipedia.org/wiki/Context_switch). Mapping of the `vsyscall` page occurs in the `map_vsyscall` function that is defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vsyscall/vsyscall_64.c) source code file. This function is called during the Linux kernel initialization in the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file (we saw this function in the fifth [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-5) of the Linux kernel initialization process chapter).
 
-Note that implementation of the `map_vsyscall` function depends on the `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option:
+Note that implementation of the `map_vsyscall` function depends on the [`CONFIG_X86_VSYSCALL_EMULATION`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option:
 
 ```C
 #ifdef CONFIG_X86_VSYSCALL_EMULATION
@@ -254,7 +254,7 @@ Here we can see that [uname](https://en.wikipedia.org/wiki/Uname) util was linke
 
 The first provides `vDSO` functionality, the second is `C` [standard library](https://en.wikipedia.org/wiki/C_standard_library) and the third is the program interpreter (more about this you can read in the part that describes [linkers](https://0xax.gitbook.io/linux-insides/summary/toolchain/linux-toolchain-2)). So, the `vDSO` solves limitations of the `vsyscall`. Implementation of the `vDSO` is similar to `vsyscall`.
 
-Initialization of the `vDSO` occurs in the `init_vdso` function that defined in the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vma.c) source code file. This function starts from the initialization of the `vDSO` images for 32-bits and 64-bits depends on the `CONFIG_X86_X32_ABI` kernel configuration option:
+Initialization of the `vDSO` occurs in the `init_vdso` function that defined in the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vma.c) source code file. This function starts from the initialization of the `vDSO` images for 32-bits and 64-bits depends on the [`CONFIG_X86_X32_ABI`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option:
 
 ```C
 static int __init init_vdso(void)

@@ -171,7 +171,7 @@ look at the last column;
 
 fields. Note that the `irq_data` structure represents set of the per irq chip data passed down to chip functions. It contains `mask` - precomputed bitmask for accessing the chip registers, `irq` - interrupt number, `hwirq` - hardware interrupt number, local to the interrupt domain chip low level interrupt hardware access, etc.
 
-After this depends on the `CONFIG_X86_64` and `CONFIG_X86_LOCAL_APIC` kernel configuration option call the `init_bsp_APIC` function from the [arch/x86/kernel/apic/apic.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/apic/apic.c):
+After this depends on the [`CONFIG_X86_64`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) and [`CONFIG_X86_LOCAL_APIC`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option call the `init_bsp_APIC` function from the [arch/x86/kernel/apic/apic.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/apic/apic.c):
 
 ```C
 #if defined(CONFIG_X86_64) || defined(CONFIG_X86_LOCAL_APIC)
@@ -408,13 +408,13 @@ if (!acpi_ioapic && !of_ioapic && nr_legacy_irqs())
 	setup_irq(2, &irq2);
 ```
 
-First of all let's deal with the condition. The `acpi_ioapic` variable represents existence of [I/O APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs). It defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/acpi/boot.c). This variable set in the `acpi_set_irq_model_ioapic` function that called during the processing `Multiple APIC Description Table`. This occurs during initialization of the architecture-specific stuff in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) (more about it we will know in the other chapter about [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)). Note that the value of the `acpi_ioapic` variable depends on the `CONFIG_ACPI` and `CONFIG_X86_LOCAL_APIC` Linux kernel configuration options. If these options were not set, this variable will be just zero:
+First of all let's deal with the condition. The `acpi_ioapic` variable represents existence of [I/O APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller#I.2FO_APICs). It defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/acpi/boot.c). This variable set in the `acpi_set_irq_model_ioapic` function that called during the processing `Multiple APIC Description Table`. This occurs during initialization of the architecture-specific stuff in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) (more about it we will know in the other chapter about [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)). Note that the value of the `acpi_ioapic` variable depends on the [`CONFIG_ACPI`](https://github.com/torvalds/linux/blob/master/drivers/acpi/Kconfig) and `CONFIG_X86_LOCAL_APIC` Linux kernel configuration options. If these options were not set, this variable will be just zero:
 
 ```C
 #define acpi_ioapic 0
 ```
 
-The second condition - `!of_ioapic && nr_legacy_irqs()` checks that we do not use [Open Firmware](https://en.wikipedia.org/wiki/Open_Firmware) `I/O APIC` and legacy interrupt controller. We already know about the `nr_legacy_irqs`. The second is `of_ioapic` variable defined in the [arch/x86/kernel/devicetree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/devicetree.c) and initialized in the `dtb_ioapic_setup` function that build information about `APICs` in the [devicetree](https://en.wikipedia.org/wiki/Device_tree). Note that `of_ioapic` variable depends on the `CONFIG_OF` Linux kernel configuration option. If this option is not set, the value of the `of_ioapic` will be zero too:
+The second condition - `!of_ioapic && nr_legacy_irqs()` checks that we do not use [Open Firmware](https://en.wikipedia.org/wiki/Open_Firmware) `I/O APIC` and legacy interrupt controller. We already know about the `nr_legacy_irqs`. The second is `of_ioapic` variable defined in the [arch/x86/kernel/devicetree.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/devicetree.c) and initialized in the `dtb_ioapic_setup` function that build information about `APICs` in the [devicetree](https://en.wikipedia.org/wiki/Device_tree). Note that `of_ioapic` variable depends on the [`CONFIG_OF`](https://github.com/torvalds/linux/blob/master/drivers/of/Kconfig) Linux kernel configuration option. If this option is not set, the value of the `of_ioapic` will be zero too:
 
 ```C
 #ifdef CONFIG_OF

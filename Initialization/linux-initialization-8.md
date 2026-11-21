@@ -199,7 +199,7 @@ void __init page_alloc_init(void)
 }
 ```
 
-It setups setup the `startup` and `teardown` callbacks (second and third parameters) for the `CPUHP_PAGE_ALLOC_DEAD` cpu [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) state. Of course the implementation of this function depends on the `CONFIG_HOTPLUG_CPU` kernel configuration option and if this option is set, such callbacks will be set for all cpu(s) in the system depends on their `hotplug` states. [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) mechanism is a big theme and it will not be described in this book.
+It setups setup the `startup` and `teardown` callbacks (second and third parameters) for the `CPUHP_PAGE_ALLOC_DEAD` cpu [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) state. Of course the implementation of this function depends on the [`CONFIG_HOTPLUG_CPU`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option and if this option is set, such callbacks will be set for all cpu(s) in the system depends on their `hotplug` states. [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) mechanism is a big theme and it will not be described in this book.
 
 After this function we can see the kernel command line in the initialization output:
 
@@ -255,7 +255,7 @@ pgtable_init();
 vmalloc_init();
 ```
 
-The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of them it in the [Linux kernel memory manager](https://0xax.gitbook.io/linux-insides/summary/mm) chapter.
+The first is `page_ext_init_flatmem` which depends on the [`CONFIG_SPARSEMEM`](https://github.com/torvalds/linux/blob/master/mm/Kconfig) kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of them it in the [Linux kernel memory manager](https://0xax.gitbook.io/linux-insides/summary/mm) chapter.
 
 That's all. Now we can look on the `scheduler`.
 
@@ -305,8 +305,8 @@ The `bit_wait_table` is array of wait queues that will be used for wait/wake up 
 #endif
 ```
 
-* `CONFIG_FAIR_GROUP_SCHED`;
-* `CONFIG_RT_GROUP_SCHED`.
+* [`CONFIG_FAIR_GROUP_SCHED`](https://github.com/torvalds/linux/blob/master/init/Kconfig);
+* [`CONFIG_RT_GROUP_SCHED`](https://github.com/torvalds/linux/blob/master/init/Kconfig).
 
 Both of these options provide two different planning models. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt), the current scheduler - `CFS` or `Completely Fair Scheduler` use a simple concept. It models process scheduling as if the system has an ideal multitasking processor where each process would receive `1/n` processor time, where `n` is the number of the runnable processes. The scheduler uses the special set of rules. These rules determine when and how to select a new process to run and they are called `scheduling policy`.
 
@@ -425,7 +425,7 @@ After `root domain` initialization, we make initialization of the `bandwidth` fo
 
 with the same default values.
 
-In the next step, depends on the `CONFIG_CGROUP_SCHED` kernel configuration option we allocate `slab` cache for `task_group(s)` and initialize the `siblings` and `children` lists of the root task group. As we can read from the documentation, the `CONFIG_CGROUP_SCHED` is:
+In the next step, depends on the [`CONFIG_CGROUP_SCHED`](https://github.com/torvalds/linux/blob/master/init/Kconfig) kernel configuration option we allocate `slab` cache for `task_group(s)` and initialize the `siblings` and `children` lists of the root task group. As we can read from the documentation, the `CONFIG_CGROUP_SCHED` is:
 
 ```
 This option allows you to create arbitrary task groups using the "cgroup" pseudo

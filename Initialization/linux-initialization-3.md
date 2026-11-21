@@ -214,7 +214,7 @@ static inline void *phys_to_virt(phys_addr_t address)
 }
 ```
 
-only with one difference: we pass argument with the `phys_addr_t` which depends on `CONFIG_PHYS_ADDR_T_64BIT`:
+only with one difference: we pass argument with the `phys_addr_t` which depends on [`CONFIG_PHYS_ADDR_T_64BIT`](https://github.com/torvalds/linux/blob/master/mm/Kconfig):
 
 ```C
 #ifdef CONFIG_PHYS_ADDR_T_64BIT
@@ -382,7 +382,7 @@ NUMA node id depends on `MAX_NUMNODES` macro which is defined in the [include/li
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
 ```
 
-where `NODES_SHIFT` depends on `CONFIG_NODES_SHIFT` configuration parameter and is defined as:
+where `NODES_SHIFT` depends on [`CONFIG_NODES_SHIFT`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) configuration parameter and is defined as:
 
 ```C
 #ifdef CONFIG_NODES_SHIFT

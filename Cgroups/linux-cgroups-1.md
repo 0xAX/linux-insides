@@ -23,7 +23,7 @@ One `control group subsystem` represents one kind of resources like a processor 
 * `hugetlb` - activates support for [huge pages](https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt) for a group;
 * `pid` - sets limit to number of processes in a group.
 
-Each of these control group subsystems depends on related configuration option. For example the `cpuset` subsystem should be enabled via `CONFIG_CPUSETS` kernel configuration option, the `io` subsystem via `CONFIG_BLK_CGROUP` kernel configuration option and etc. All of these kernel configuration options may be found in the `General setup → Control Group support` menu:
+Each of these control group subsystems depends on related configuration option. For example the `cpuset` subsystem should be enabled via [`CONFIG_CPUSETS`](https://github.com/torvalds/linux/blob/master/init/Kconfig) kernel configuration option, the `io` subsystem via [`CONFIG_BLK_CGROUP`](https://github.com/torvalds/linux/blob/master/init/Kconfig) kernel configuration option and etc. All of these kernel configuration options may be found in the `General setup → Control Group support` menu:
 
 ![menuconfig](images/menuconfig.png)
 
