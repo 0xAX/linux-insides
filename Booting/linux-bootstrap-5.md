@@ -394,7 +394,7 @@ The next action before the kernel is decompressed is to perform the sanitising c
 #endif
 ```
 
-After all these checks, we can see the familiar message on the screen of our computers:
+After all these checks, we can see the familiar message on the screen of our computers if the kernel is configured with the `CONFIG_X86_VERBOSE_BOOTUP` option:
 
 ```
 Decompressing Linux...
