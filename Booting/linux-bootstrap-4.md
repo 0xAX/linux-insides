@@ -1,4 +1,4 @@
-# Kernel booting process. Part 4
+# Kernel booting process - Part 4
 
 In the previous [part](./linux-bootstrap-3.md), we saw the transition from the [real mode](https://en.wikipedia.org/wiki/Real_mode) into [protected mode](http://en.wikipedia.org/wiki/Protected_mode). At this point, the two crucial things were changed: 
 
