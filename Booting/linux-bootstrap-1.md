@@ -55,7 +55,7 @@ If we take the largest possible values for the segment selector and the offset -
 '0x10ffef'
 ```
 
-This gives us the address `0x10FFEF`, which is `65_520` bytes past the 1 MB boundary. Since, in real mode on the original **8086** CPU, the CPU could only access the first 1 MB of memory, any address above `0xFFFFF` would wrap around back to the beginning of the address space. On modern **386+** CPUs the physical bus is wider even in real mode, but the address computation still based on the `segment:offset`.
+This gives us the address `0x10FFEF`, which is `65_520` bytes past the 1 MB boundary. Since, in real mode on the original **8086** CPU, the CPU could only access the first 1 MB of memory, any address above `0xFFFFF` would wrap around back to the beginning of the address space. On modern **386+** CPUs the physical bus is wider even in real mode, but the address computation is still based on the `segment:offset`.
 
 Now that we understand the basics of real mode and its memory addressing limitations, let's return to the state after a hardware reset.
 
@@ -110,23 +110,23 @@ We stopped at the point when a CPU jumps from the reset vector to the firmware. 
 
 The first job of BIOS is to bring the system into a working state. It runs a series of hardware checks and initializations - memory tests, peripheral setup, chipset configuration - all part of the [POST](https://en.wikipedia.org/wiki/Power-on_self-test) routine. Once everything is checked, the next step is to find an operating system to boot. The BIOS doesn't pick just a random disk. It follows a boot order, a list stored in its configuration.
 
-When the BIOS tries to boot from a hard drive, it looks for a [boot sector](https://en.wikipedia.org/wiki/Boot_sector). On hard drives partitioned with an [MBR partition layout](https://en.wikipedia.org/wiki/Master_boot_record), the boot sector is the first `512`-byte sector. Its first `446` bytes are available for boot code, followed by a `64`-byte partition table, and the final two bytes must be `0x55` and `0xAA`. These two last bytes says to BIOS somewhat like "yes - this device is bootable". Once the BIOS finds the valid boot sector, it copies it into the fixed memory location at `0x7C00`, jumps to there and start executing it.
+When the BIOS tries to boot from a hard drive, it looks for a [boot sector](https://en.wikipedia.org/wiki/Boot_sector). On hard drives partitioned with an [MBR partition layout](https://en.wikipedia.org/wiki/Master_boot_record), the boot sector is the first `512`-byte sector. Its first `446` bytes are available for boot code, followed by a `64`-byte partition table, and the final two bytes must be `0x55` and `0xAA`. These last two bytes tell the BIOS something like "yes - this device is bootable". Once the BIOS finds the valid boot sector, it copies it into the fixed memory location at `0x7C00`, jumps there and starts executing it.
 
 In general, real mode's memory map is as follows:
 
 | Address Range         | Description                          |
 |-----------------------|--------------------------------------|
-| 0x00000000–0x000003FF | Real Mode Interrupt Vector Table     |
-| 0x00000400–0x000004FF | BIOS Data Area                       |
-| 0x00000500–0x00007BFF | Unused                               |
-| 0x00007C00–0x00007DFF | Bootloader                           |
-| 0x00007E00–0x0009FFFF | Unused                               |
-| 0x000A0000–0x000BFFFF | Video RAM (VRAM) Memory              |
-| 0x000B0000–0x000B7FFF | Monochrome Video Memory              |
-| 0x000B8000–0x000BFFFF | Color Video Memory                   |
-| 0x000C0000–0x000C7FFF | Video ROM BIOS                       |
-| 0x000C8000–0x000EFFFF | BIOS Shadow Area                     |
-| 0x000F0000–0x000FFFFF | System BIOS                          |
+| 0x00000000-0x000003FF | Real Mode Interrupt Vector Table     |
+| 0x00000400-0x000004FF | BIOS Data Area                       |
+| 0x00000500-0x00007BFF | Unused                               |
+| 0x00007C00-0x00007DFF | Bootloader                           |
+| 0x00007E00-0x0009FFFF | Unused                               |
+| 0x000A0000-0x000BFFFF | Video RAM (VRAM) Memory              |
+| 0x000B0000-0x000B7FFF | Monochrome Video Memory              |
+| 0x000B8000-0x000BFFFF | Color Video Memory                   |
+| 0x000C0000-0x000C7FFF | Video ROM BIOS                       |
+| 0x000C8000-0x000EFFFF | BIOS Shadow Area                     |
+| 0x000F0000-0x000FFFFF | System BIOS                          |
 
 We can do a simple experiment and create a very primitive boot code:
 
@@ -174,7 +174,7 @@ Booting from Hard Disk...
 !
 ```
 
-Of course, a real-world boot sector has "slightly" speaking more code for loading of an operating system instead of printing an exclamation mark, but it may interesting to experiment. In this example, we can see that the code will be executed in `16-bit` real mode which is specified by the `[BITS 16]` directive. After starting, it calls the [0x10](https://en.wikipedia.org/wiki/INT_10H) interrupt, which just prints the `!` symbol. The `times` directive will pad that number of bytes up to `510th` byte with zeros. In the end we "hard-code" the last two magic bytes `0x55` and `0xAA`. To exit from the virtual machine, you can press - `Ctrl+a x`.
+Of course, a real-world boot sector has "slightly" more code for loading an operating system instead of printing an exclamation mark, but it may be interesting to experiment. In this example, we can see that the code will be executed in `16-bit` real mode which is specified by the `[BITS 16]` directive. After starting, it calls the [0x10](https://en.wikipedia.org/wiki/INT_10H) interrupt, which just prints the `!` symbol. The `times` directive pads the binary with zeros up to the `510th` byte. In the end we "hard-code" the last two magic bytes `0x55` and `0xAA`. To exit from the virtual machine, you can press - `Ctrl+a x`.
 
 From this point onwards, the BIOS hands control over to the bootloader.
 
@@ -187,11 +187,11 @@ Continuing from where we left off - the BIOS has now selected a boot device, fou
 The core image starts with [diskboot.S](https://github.com/rhboot/grub2/blob/master/grub-core/boot/i386/pc/diskboot.S), which is usually stored right after the first sector of the disk. The code from the `diskboot.S` file loads the rest of the core image into memory. The core image contains the code of the loader itself and drivers for reading different filesystems. After the whole core image is loaded into memory, the execution continues from the [grub_main](https://github.com/rhboot/grub2/blob/master/grub-core/kern/main.c) function. This is where GRUB sets up the environment it needs to operate:
 
 - Initializes the console so messages and menus can be displayed.
-- Sets the root device - the disk from which GRUB will read files modules and configuration files.
+- Sets the root device - the disk from which GRUB will read modules and configuration files.
 - Loads and parses the GRUB configuration file.
 - Loads required modules.
 
-Once these tasks are complete, we may see the familiar GRUB menu where we can choose the operating system we want to load. When we select one of the menu entries, GRUB executes the [boot](https://www.gnu.org/software/grub/manual/grub/grub.html#boot) command which boots the selected operating system. So how the loader loads the Linux kernel? To answer on this question, we need to get back to the Linux kernel boot protocol.
+Once these tasks are complete, we may see the familiar GRUB menu where we can choose the operating system we want to load. When we select one of the menu entries, GRUB executes the [boot](https://www.gnu.org/software/grub/manual/grub/grub.html#boot) command which boots the selected operating system. So how does the loader load the Linux kernel? To answer this question, we need to get back to the Linux kernel boot protocol.
 
 As we can read in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst), the bootloader must load the kernel into memory, fill some fields in the kernel setup header and pass control to the kernel code. The kernel image begins with a legacy boot sector, followed by the real-mode setup code. This early part of the image contains a special structure called the kernel setup header. It is located at the `0x01F1` offset from the beginning of the kernel image and contains fields that describe how the kernel should be loaded and started. We may look at the boot [linker script](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld) to confirm the value of this offset:
 
@@ -200,7 +200,7 @@ As we can read in the [documentation](https://github.com/torvalds/linux/blob/mas
 	. = ASSERT(hdr == 0x1f1, "The setup header has the wrong offset!");
 ```
 
-The kernel [setup header](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) is split on two parts and the first part starts from the following fields:
+The kernel [setup header](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) is split into two parts and the first part starts from the following fields:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L233-L241 -->
 ```assembly
@@ -410,7 +410,7 @@ Now we can inspect the memory dump at the `0x90000` address:
 00090000  4d 5a 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |MZ..............|
 ```
 
-We can see the same `MZ` header from which the Linux kernel setup head starts. In addition, we can inspect the memory at the `0x90200` address to see that there is the kernel setup code entry point and the second part of the kernel setup header:
+We can see the same `MZ` header from which the Linux kernel image starts. In addition, we can inspect the memory at the `0x90200` address to see that there is the kernel setup code entry point and the second part of the kernel setup header:
 
 ```bash
 ~$ hexdump -C /tmp/dump | grep 00090200
@@ -624,7 +624,7 @@ Since we know what the `.bss` is and why the kernel setup code should fill it wi
 
 The main goal of this code is to clear, or in other words, to fill with zeros the memory area between `__bss_start` and `_end`. To fill this memory area with zeros, the `rep stos` instruction is used. This instruction puts the value of the `eax` register into the destination pointed to by `es:di`. That is why we unified the values of the `ds` and `es` registers at the beginning of the kernel setup code. The `rep` prefix specifies the repetition of the `stos` instruction based on the value of the `cx` register.
 
-To clear this memory area, at first we set the borders of this area - from the [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld) to `_end + 3`. We add `3` bytes to the `_end` address because we are going to write zeros in double words, meaning four bytes at a time. Adding three bytes ensures that when we later divide by four, any reminder at the end of the memory area is still covered. After we set up the borders of the memory area and fill the `eax` with zero using the `xor` instruction, the `rep stosl` does its job.
+To clear this memory area, at first we set the borders of this area - from the [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld) to `_end + 3`. We add `3` bytes to the `_end` address because we are going to write zeros in double words, meaning four bytes at a time. Adding three bytes ensures that when we later divide by four, any remainder at the end of the memory area is still covered. After we set up the borders of the memory area and fill the `eax` with zero using the `xor` instruction, the `rep stosl` does its job.
 
 The effect of this code is that zeros are written through the entire memory from `__bss_start` to `_end`. To know their exact addresses, we can inspect the `setup.elf` file with the [readelf](https://en.wikipedia.org/wiki/Readelf) utility:
 
@@ -636,7 +636,7 @@ $ readelf -a arch/x86/boot/setup.elf  | grep bss
    169: 00003f00     0 NOTYPE  GLOBAL DEFAULT   12 __bss_start
 ```
 
-These offsets inside the setup segment. Since in our case the kernel image is loaded at physical address `0x90000`, the symbols translate to:
+These are offsets inside the setup segment. Since in our case the kernel image is loaded at physical address `0x90000`, the symbols translate to:
 
 - __bss_start - `0x90000 + 0x3f00 = 0x93F00`
 - __bss_end - `0x90000 + 0x5280 = 0x95280`
