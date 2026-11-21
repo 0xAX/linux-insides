@@ -141,7 +141,7 @@ boot:
     mov al, '!'
     ;; TTY-style text output
     mov ah, 0x0e
-    ;; Position where to print the character
+    ;; Display page number
     mov bh, 0x00
     ;; Color
     mov bl, 0x07
