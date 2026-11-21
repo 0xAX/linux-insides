@@ -1,4 +1,4 @@
-# Kernel Booting Process - Part 1
+# Kernel booting process - Part 1
 
 If you've read my earlier [posts](https://github.com/0xAX/asm) about [assembly language](https://en.wikipedia.org/wiki/Assembly_language) for Linux x86_64, you might see that I started to get interested in low-level programming. I've written a set of articles on assembly programming for [x86_64](https://en.wikipedia.org/wiki/X86-64) Linux and, in parallel, began exploring the Linux kernel source code. I've always been fascinated by what happens under the hood - how programs execute on a CPU, how they're laid out in memory, how the kernel schedules processes and manages resources, how the network stack operates at a low level, and many other details. This series is a way of sharing my journey.
 
@@ -12,7 +12,7 @@ The main goal of this series is to provide a guide to the Linux kernel for reade
 
 That's enough introduction - let's dive into the Linux kernel!
 
-## The Magic Power Button - What happens next?
+## The magic power button - what happens next?
 
 Although this is a series of posts about Linux kernel, we will not jump straight into kernel code. First, let's step back and look at what happens before the kernel even comes into play. Everything starts from the turning on a computer. And we will start from this point as well.
 
@@ -104,7 +104,7 @@ The address `0xFFFFFFF0` is much larger than `0xFFFFF` (1MB). How can the CPU ac
 
 When the CPU wakes up, it reads the jump at the `0xFFFFFFF0` address, jump into the firmware, and the long chain of the boot process begins. This is the very first step on the way to boot the Linux kernel.
 
-## From Power-On to Bootloader
+## From power-on to bootloader
 
 We stopped at the point when a CPU jumps from the reset vector to the firmware. On a legacy PC, that means the BIOS. On modern computers it is UEFI. In the next chapters we will see the booting processes on a legacy PC using the BIOS, and later UEFI.
 
@@ -178,7 +178,7 @@ Of course, a real-world boot sector has "slightly" speaking more code for loadin
 
 From this point onwards, the BIOS hands control over to the bootloader.
 
-## The Bootloader Stage
+## The bootloader stage
 
 There are a number of different bootloaders that can boot Linux kernel, such as [GRUB 2](https://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project), [systemd-boot](https://www.freedesktop.org/software/systemd/man/latest/systemd-boot.html), and others. The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst) which specifies the requirements for a bootloader to implement Linux support. In this chapter, we will take a short look how GRUB 2 does loading.
 
@@ -417,7 +417,7 @@ We can see the same `MZ` header from which the Linux kernel setup head starts. I
 00090200  eb 6a 48 64 72 53 0f 02  00 00 00 00 00 10 00 43  |.jHdrS.........C|
 ```
 
-## The Beginning of the Kernel Setup Stage
+## The beginning of the kernel setup stage
 
 The bootloader has now loaded the Linux kernel and the kernel setup code into memory, filled the header fields, and then jumped to the corresponding memory address. Finally, we are in the kernel 🎉
 
@@ -519,7 +519,7 @@ start_of_setup:
 
 We need to do both of these two things to clear the [bss](https://en.wikipedia.org/wiki/.bss) section properly a bit later. From this point we are sure that both `ds` and `es` segment registers point to the same address - `0x9000`.
 
-### Stack Setup
+### Stack setup
 
 We need to prepare for C language environment. The next step is to setup the stack. Let's take a look at the next lines of the code:
 
@@ -566,7 +566,7 @@ From this point, the kernel setup code has a valid stack that starts at `0x9000:
 
 ![early-stack](./images/early-stack.svg)
 
-### BSS Setup
+### BSS setup
 
 Before the kernel's setup code can switch to C code, two final tasks must be done:
 

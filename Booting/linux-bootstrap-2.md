@@ -139,7 +139,7 @@ In the next part, we will see the transition into protected mode. But before the
 
 Let's continue from the point where we have stopped in the previous chapter.
 
-## Back to the Kernel: Entering main.c
+## Back to the kernel: entering main.c
 
 As we already have mentioned in the beginning of this chapter, one of the kernel's first main goals is to switch the processor into protected mode. But before this can happen, the kernel need to do some preparations.
 

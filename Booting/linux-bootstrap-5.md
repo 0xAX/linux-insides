@@ -1,4 +1,4 @@
-# Kernel booting process. Part 5
+# Kernel booting process - Part 5
 
 In the previous [part](./linux-bootstrap-4.md), we saw the transition from the [protected mode](https://en.wikipedia.org/wiki/Protected_mode) into [long mode](https://en.wikipedia.org/wiki/Long_mode), but what we have in memory is not yet the kernel image ready to run. We are still in the kernel setup code, which should decompress the kernel and pass control to it. The next step before we see the Linux kernel entrypoint is kernel decompression.
 
