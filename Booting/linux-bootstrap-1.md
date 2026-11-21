@@ -497,7 +497,7 @@ After the jump to the `start_of_setup` label, the kernel setup code enters the v
 
 In the next sections, we'll walk through each of these steps in detail.
 
-### Aligning the segment registers
+### Unifying the segment registers
 
 Reading the Linux kernel boot protocol for `x86_64`, we can see:
 
