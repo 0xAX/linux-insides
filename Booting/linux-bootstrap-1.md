@@ -517,7 +517,7 @@ start_of_setup:
 	cld
 ```
 
-We need to do both of these two things to clear the [bss](https://en.wikipedia.org/wiki/.bss) section properly a bit later. From this point we are sure that both `ds` and `es` segment registers point to the same address - `0x9000`.
+We need to do both of these two things to clear the [bss](https://en.wikipedia.org/wiki/.bss) section properly a bit later. From this point we are sure that both `ds` and `es` segment registers hold the same value - `0x9000`.
 
 ### Stack setup
 
