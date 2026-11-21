@@ -28,7 +28,7 @@ struct memblock {
 };
 ```
 
-This structure contains five fields. First is `bottom_up` which allows allocating memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three fields describe the type of the memory block. It can be: reserved, memory and physical memory (physical memory is available if the `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` configuration option is enabled). Now we see yet another data structure - `memblock_type`. Let's look at its definition:
+This structure contains five fields. First is `bottom_up` which allows allocating memory in bottom-up mode when it is `true`. Next field is `current_limit`. This field describes the limit size of the memory block. The next three fields describe the type of the memory block. It can be: reserved, memory and physical memory (physical memory is available if the [`CONFIG_HAVE_MEMBLOCK_PHYS_MAP`](https://github.com/torvalds/linux/blob/master/mm/Kconfig) configuration option is enabled). Now we see yet another data structure - `memblock_type`. Let's look at its definition:
 
 ```C
 struct memblock_type {
@@ -163,7 +163,7 @@ This function takes a physical base address and the size of the memory region as
 memblock_add_range(&memblock.memory, base, size, MAX_NUMNODES, 0);
 ```
 
-function. We pass the memory block type - `memory`, the physical base address and the size of the memory region, the maximum number of nodes which is 1 if `CONFIG_NODES_SHIFT` is not set in the configuration file or `1 << CONFIG_NODES_SHIFT` if it is set, and the flags. The `memblock_add_range` function adds a new memory region to the memory block. It starts by checking the size of the given region and if it is zero it just returns. After this, `memblock_add_range` checks the existence of the memory regions in the `memblock` structure with the given `memblock_type`. If there are no memory regions, we just fill a new `memory_region` with the given values and return (we already saw the implementation of this in the [First touch of the Linux kernel memory manager framework](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-3)). If `memblock_type` is not empty, we start to add a new memory region to the `memblock` with the given `memblock_type`.
+function. We pass the memory block type - `memory`, the physical base address and the size of the memory region, the maximum number of nodes which is 1 if [`CONFIG_NODES_SHIFT`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) is not set in the configuration file or `1 << CONFIG_NODES_SHIFT` if it is set, and the flags. The `memblock_add_range` function adds a new memory region to the memory block. It starts by checking the size of the given region and if it is zero it just returns. After this, `memblock_add_range` checks the existence of the memory regions in the `memblock` structure with the given `memblock_type`. If there are no memory regions, we just fill a new `memory_region` with the given values and return (we already saw the implementation of this in the [First touch of the Linux kernel memory manager framework](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-3)). If `memblock_type` is not empty, we start to add a new memory region to the `memblock` with the given `memblock_type`.
 
 First of all we get the end of the memory region with the:
 

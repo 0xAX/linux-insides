@@ -243,7 +243,7 @@ static int __init acpi_parse_fadt(struct acpi_table_header *table)
 }
 ```
 
-So, if the `CONFIG_X86_PM_TIMER` Linux kernel configuration option is disabled or something going wrong in the `acpi_parse_fadt` function, we can't access the `Power Management Timer` register and return from the `init_acpi_pm_clocksource`. In other way, if the value of the `pmtmr_ioport` variable is not zero, we check rate of this timer and register this clock source by the call of the:
+So, if the [`CONFIG_X86_PM_TIMER`](https://github.com/torvalds/linux/blob/master/drivers/acpi/Kconfig) Linux kernel configuration option is disabled or something going wrong in the `acpi_parse_fadt` function, we can't access the `Power Management Timer` register and return from the `init_acpi_pm_clocksource`. In other way, if the value of the `pmtmr_ioport` variable is not zero, we check rate of this timer and register this clock source by the call of the:
 
 ```C
 clocksource_register_hz(&clocksource_acpi_pm, PMTMR_TICKS_PER_SEC);

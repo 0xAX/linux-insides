@@ -284,7 +284,7 @@ Disabling/Enabling local interrupts
 
 The next step in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) which is related to the interrupts and interrupts handling after we have set the `canary` value to the interrupt stack - is the call of the `local_irq_disable` macro.
 
-This macro defined in the [include/linux/irqflags.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqflags.h) header file and as you can understand, we can disable interrupts for the CPU with the call of this macro. Let's look on its implementation. First of all note that it depends on the `CONFIG_TRACE_IRQFLAGS_SUPPORT` kernel configuration option:
+This macro defined in the [include/linux/irqflags.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqflags.h) header file and as you can understand, we can disable interrupts for the CPU with the call of this macro. Let's look on its implementation. First of all note that it depends on the [`CONFIG_TRACE_IRQFLAGS_SUPPORT`](https://github.com/torvalds/linux/blob/master/arch/Kconfig) kernel configuration option:
 
 ```C
 #ifdef CONFIG_TRACE_IRQFLAGS_SUPPORT
@@ -324,7 +324,7 @@ int     redundant_softirqs_off;
 }
 ```
 
-If you will set `CONFIG_DEBUG_LOCKDEP` kernel configuration option, the `lockdep_stats_debug_show` function will write all tracing information to the `/proc/lockdep`:
+If you will set [`CONFIG_DEBUG_LOCKDEP`](https://github.com/torvalds/linux/blob/master/lib/Kconfig.debug) kernel configuration option, the `lockdep_stats_debug_show` function will write all tracing information to the `/proc/lockdep`:
 
 ```C
 static void lockdep_stats_debug_show(struct seq_file *m)

@@ -14,7 +14,7 @@ After the call of the `acpi_early_init` function from the [init/main.c](https://
 #endif
 ```
 
-Here we can see the call of the `init_espfix_bsp` function which depends on the `CONFIG_X86_ESPFIX64` kernel configuration option. As we can understand from the function name, it does something with the stack. This function is defined in the [arch/x86/kernel/espfix_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/espfix_64.c) and prevents leaking of `31:16` bits of the `esp` register during returning to 16-bit stack. First of all we install `espfix` page upper directory into the kernel page directory in the `init_espfix_bs`:
+Here we can see the call of the `init_espfix_bsp` function which depends on the [`CONFIG_X86_ESPFIX64`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option. As we can understand from the function name, it does something with the stack. This function is defined in the [arch/x86/kernel/espfix_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/espfix_64.c) and prevents leaking of `31:16` bits of the `esp` register during returning to 16-bit stack. First of all we install `espfix` page upper directory into the kernel page directory in the `init_espfix_bs`:
 
 ```C
 pgd_p = &init_level4_pgt[pgd_index(ESPFIX_BASE_ADDR)];

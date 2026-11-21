@@ -177,7 +177,7 @@ ifeq ($(MAKECMDGOALS),modules)
 endif
 ```
 
-Here we can see definition of these variables and the value of `KBUILD_BUILTIN` variable will depend on the `CONFIG_MODVERSIONS` kernel configuration parameter if we pass only `modules` to `make`. The next step is to include the `kbuild` file.
+Here we can see definition of these variables and the value of `KBUILD_BUILTIN` variable will depend on the [`CONFIG_MODVERSIONS`](https://github.com/torvalds/linux/blob/master/kernel/module/Kconfig) kernel configuration parameter if we pass only `modules` to `make`. The next step is to include the `kbuild` file.
 
 ```Makefile
 include scripts/Kbuild.include

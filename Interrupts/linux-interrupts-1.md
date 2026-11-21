@@ -264,7 +264,7 @@ Each active thread has a large stack in the Linux kernel for the `x86_64` archit
 #define THREAD_SIZE  (PAGE_SIZE << THREAD_SIZE_ORDER)
 ```
 
-The `PAGE_SIZE` is `4096`-bytes and the `THREAD_SIZE_ORDER` depends on the `KASAN_STACK_ORDER`. As we can see, the `KASAN_STACK` depends on the `CONFIG_KASAN` kernel configuration parameter and is defined as:
+The `PAGE_SIZE` is `4096`-bytes and the `THREAD_SIZE_ORDER` depends on the `KASAN_STACK_ORDER`. As we can see, the `KASAN_STACK` depends on the [`CONFIG_KASAN`](https://github.com/torvalds/linux/blob/master/lib/Kconfig.kasan) kernel configuration parameter and is defined as:
 
 ```C
 #ifdef CONFIG_KASAN

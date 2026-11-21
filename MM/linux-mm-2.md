@@ -379,7 +379,7 @@ As soon as early `ioremap` has been setup successfully, we can use it. It provid
 * early_ioremap
 * early_iounmap
 
-for mapping/unmapping of I/O physical address to virtual address. Both functions depend on the `CONFIG_MMU` configuration option. [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit) is a special block of memory management. The main purpose of this block is the translation of physical addresses to virtual addresses. The memory management unit knows about the high-level page table addresses (`pgd`) from the `cr3` control register. If `CONFIG_MMU` options is set to `n`, `early_ioremap` just returns the given physical address and `early_iounmap` does nothing. If `CONFIG_MMU` option is set to `y`, `early_ioremap` calls `__early_ioremap` which takes three parameters:
+for mapping/unmapping of I/O physical address to virtual address. Both functions depend on the [`CONFIG_MMU`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) configuration option. [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit) is a special block of memory management. The main purpose of this block is the translation of physical addresses to virtual addresses. The memory management unit knows about the high-level page table addresses (`pgd`) from the `cr3` control register. If `CONFIG_MMU` options is set to `n`, `early_ioremap` just returns the given physical address and `early_iounmap` does nothing. If `CONFIG_MMU` option is set to `y`, `early_ioremap` calls `__early_ioremap` which takes three parameters:
 
 * `phys_addr` - base physical address of the `I/O` memory region to map on virtual addresses;
 * `size`      - size of the `I/O` memory region;

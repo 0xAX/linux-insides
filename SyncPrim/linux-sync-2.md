@@ -44,7 +44,7 @@ config QUEUED_SPINLOCKS
 	depends on SMP
 ```
 
-This means that the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option will be enabled by default if the `ARCH_USE_QUEUED_SPINLOCKS` is enabled. We may see that the `ARCH_USE_QUEUED_SPINLOCKS` is enabled by default in the `x86_64` specific kernel configuration file - [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig):
+This means that the [`CONFIG_QUEUED_SPINLOCKS`](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks) kernel configuration option will be enabled by default if the `ARCH_USE_QUEUED_SPINLOCKS` is enabled. We may see that the `ARCH_USE_QUEUED_SPINLOCKS` is enabled by default in the `x86_64` specific kernel configuration file - [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig):
 
 ```
 config X86

@@ -122,7 +122,7 @@ void set_task_stack_end_magic(struct task_struct *tsk)
 }
 ```
 
-Its implementation is simple. `set_task_stack_end_magic` gets the end of the stack for the given `task_struct` with the `end_of_stack` function. Earlier (and now for all architectures besides `x86_64`) stack was located in the `thread_info` structure. So the end of a process stack depends on the `CONFIG_STACK_GROWSUP` configuration option. As we learn in `x86_64` architecture, the stack grows down. So the end of the process stack will be:
+Its implementation is simple. `set_task_stack_end_magic` gets the end of the stack for the given `task_struct` with the `end_of_stack` function. Earlier (and now for all architectures besides `x86_64`) stack was located in the `thread_info` structure. So the end of a process stack depends on the [`CONFIG_STACK_GROWSUP`](https://github.com/torvalds/linux/blob/master/arch/parisc/Kconfig) configuration option. As we learn in `x86_64` architecture, the stack grows down. So the end of the process stack will be:
 
 ```C
 (unsigned long *)(task_thread_info(p) + 1);
@@ -134,7 +134,7 @@ where `task_thread_info` just returns the stack which we filled with the `INIT_T
 #define task_thread_info(task)  ((struct thread_info *)(task)->stack)
 ```
 
-From the Linux kernel `v4.9-rc1` release, `thread_info` structure may contains only flags and stack pointer resides in `task_struct` structure which represents a thread in the Linux kernel. This depends on `CONFIG_THREAD_INFO_IN_TASK` kernel configuration option which is enabled by default for `x86_64`. You can be sure in this if you will look in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) configuration build file:
+From the Linux kernel `v4.9-rc1` release, `thread_info` structure may contains only flags and stack pointer resides in `task_struct` structure which represents a thread in the Linux kernel. This depends on [`CONFIG_THREAD_INFO_IN_TASK`](https://github.com/torvalds/linux/blob/master/init/Kconfig) kernel configuration option which is enabled by default for `x86_64`. You can be sure in this if you will look in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) configuration build file:
 
 ```
 config THREAD_INFO_IN_TASK
@@ -235,7 +235,7 @@ The current function from the `start_kernel` is `boot_cpu_init`. This function i
 int cpu = smp_processor_id();
 ```
 
-For now it is just zero. If the `CONFIG_DEBUG_PREEMPT` configuration option is disabled, `smp_processor_id` just expands to the call of `raw_smp_processor_id` which expands to the:
+For now it is just zero. If the [`CONFIG_DEBUG_PREEMPT`](https://github.com/torvalds/linux/blob/master/lib/Kconfig.debug) configuration option is disabled, `smp_processor_id` just expands to the call of `raw_smp_processor_id` which expands to the:
 
 ```C
 #define raw_smp_processor_id() (this_cpu_read(cpu_number))
@@ -307,7 +307,7 @@ set_cpu_present(cpu, true);
 set_cpu_possible(cpu, true);
 ```
 
-All of these functions use the concept - `cpumask`. `cpu_possible` is a set of CPU ID's which can be plugged in at any time during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depend on the `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. Implementation of the all of these functions are very similar. Every function checks the second parameter. If it is `true`, it calls `cpumask_set_cpu` or `cpumask_clear_cpu` otherwise.
+All of these functions use the concept - `cpumask`. `cpu_possible` is a set of CPU ID's which can be plugged in at any time during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depend on the [`CONFIG_HOTPLUG_CPU`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) configuration option and if this option is disabled `possible == present` and `active == online`. Implementation of the all of these functions are very similar. Every function checks the second parameter. If it is `true`, it calls `cpumask_set_cpu` or `cpumask_clear_cpu` otherwise.
 
 For example let's look at `set_cpu_possible`. As we passed `true` as the second parameter, the:
 

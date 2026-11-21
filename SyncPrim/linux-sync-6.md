@@ -97,7 +97,7 @@ As we may see the, `__SEQLOCK_UNLOCKED` macro executes initialization of fields 
 #define SEQCNT_ZERO(lockname) { .sequence = 0, SEQCOUNT_DEP_MAP_INIT(lockname)}
 ```
 
-So we just initialize counter of the given sequential lock to zero and additionally we can see [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related initialization which depends on the state of the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option:
+So we just initialize counter of the given sequential lock to zero and additionally we can see [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) related initialization which depends on the state of the [`CONFIG_DEBUG_LOCK_ALLOC`](https://github.com/torvalds/linux/blob/master/lib/Kconfig.debug) kernel configuration option:
 
 ```C
 #ifdef CONFIG_DEBUG_LOCK_ALLOC

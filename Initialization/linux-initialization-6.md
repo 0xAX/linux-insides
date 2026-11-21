@@ -110,7 +110,7 @@ In the next step we can see following conditional statement:
 	}
 ```
 
-The first `acpi_mps_check` function from the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/acpi/boot.c) depends on `CONFIG_X86_LOCAL_APIC` and `CONFIG_x86_MPPARSE` configuration options:
+The first `acpi_mps_check` function from the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/acpi/boot.c) depends on [`CONFIG_X86_LOCAL_APIC`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) and `CONFIG_x86_MPPARSE` configuration options:
 
 ```C
 int __init acpi_mps_check(void)
@@ -165,7 +165,7 @@ char *__init pcibios_setup(char *str) {
 }
 ```
 
-So, if `CONFIG_PCI` option is set and we passed `pci=earlydump` option to the kernel command line, next function which will be called - `early_dump_pci_devices` from the [arch/x86/pci/early.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/pci/early.c). This function checks `noearly` PCI parameter with:
+So, if [`CONFIG_PCI`](https://github.com/torvalds/linux/blob/master/drivers/pci/Kconfig) option is set and we passed `pci=earlydump` option to the kernel command line, next function which will be called - `early_dump_pci_devices` from the [arch/x86/pci/early.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/pci/early.c). This function checks `noearly` PCI parameter with:
 
 ```C
 if (!early_pci_allowed())

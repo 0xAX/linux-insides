@@ -146,7 +146,7 @@ which prevents `variable defined but not used` warning. The last line of the `__
 LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 ```
 
-depends on the `CONFIG_LTO` kernel configuration option and just provides stub for the compiler [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization):
+depends on the [`CONFIG_LTO`](https://github.com/torvalds/linux/blob/master/arch/Kconfig) kernel configuration option and just provides stub for the compiler [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization):
 
 ```
 #ifdef CONFIG_LTO

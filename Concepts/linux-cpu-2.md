@@ -21,7 +21,7 @@ set_cpu_possible(cpu, true);
 
 Before we consider implementation of these functions, let's consider all of these masks.
 
-The `cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot or in other words mask of possible CPUs contains maximum number of CPUs which are possible in the system. It will be equal to value of the `NR_CPUS` which is set statically via the `CONFIG_NR_CPUS` kernel configuration option.
+The `cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot or in other words mask of possible CPUs contains maximum number of CPUs which are possible in the system. It will be equal to value of the `NR_CPUS` which is set statically via the [`CONFIG_NR_CPUS`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option.
 
 The `cpu_present` mask represents which CPUs are currently plugged in.
 
@@ -29,7 +29,7 @@ The `cpu_online` represents a subset of the `cpu_present` and indicates CPUs whi
 
 The last mask is `cpu_active`. Bits of this mask tells to Linux kernel is a task may be moved to a certain processor.
 
-All of these masks depend on the `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. The implementations of all of these functions are very similar. Every function checks the second parameter. If it is `true`, it calls `cpumask_set_cpu` otherwise it calls `cpumask_clear_cpu` .
+All of these masks depend on the [`CONFIG_HOTPLUG_CPU`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) configuration option and if this option is disabled `possible == present` and `active == online`. The implementations of all of these functions are very similar. Every function checks the second parameter. If it is `true`, it calls `cpumask_set_cpu` otherwise it calls `cpumask_clear_cpu` .
 
 There are two ways for a `cpumask` creation. First is to use `cpumask_t`. It is defined as:
 

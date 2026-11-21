@@ -60,7 +60,7 @@ pr_info("NR_CPUS:%d nr_cpumask_bits:%d nr_cpu_ids:%d nr_node_ids:%d\n",
         NR_CPUS, nr_cpumask_bits, nr_cpu_ids, nr_node_ids);
 ```
 
-The `setup_per_cpu_areas` starts from the output information about the maximum number of CPUs set during kernel configuration with the `CONFIG_NR_CPUS` configuration option, actual number of CPUs, `nr_cpumask_bits` is the same that `NR_CPUS` bit for the new `cpumask` operators and number of `NUMA` nodes.
+The `setup_per_cpu_areas` starts from the output information about the maximum number of CPUs set during kernel configuration with the [`CONFIG_NR_CPUS`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) configuration option, actual number of CPUs, `nr_cpumask_bits` is the same that `NR_CPUS` bit for the new `cpumask` operators and number of `NUMA` nodes.
 
 We can see this output in the dmesg:
 

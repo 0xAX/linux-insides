@@ -64,7 +64,7 @@ When the `early_trap_pf_init` will be called, the `set_intr_gate` will be expand
 trace_idtentry page_fault do_page_fault has_error_code=1
 ```
 
-We saw in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3) how `#DB` and `#BP` handlers defined. They were defined with the `idtentry` macro, but here we can see `trace_idtentry`. This macro defined in the same source code file and depends on the `CONFIG_TRACING` kernel configuration option:
+We saw in the previous [part](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-3) how `#DB` and `#BP` handlers defined. They were defined with the `idtentry` macro, but here we can see `trace_idtentry`. This macro defined in the same source code file and depends on the [`CONFIG_TRACING`](https://github.com/torvalds/linux/blob/master/kernel/trace/Kconfig) kernel configuration option:
 
 ```assembly
 #ifdef CONFIG_TRACING
@@ -214,7 +214,7 @@ There are many different function calls after the `early_trap_pf_init` in the `s
 #endif
 ```
 
-Note that it depends on the `CONFIG_EISA` kernel configuration parameter which represents `EISA` support. Here we use `early_ioremap` function to map `I/O` memory on the page tables. We use `readl` function to read first `4` bytes from the mapped region and if they are equal to `EISA` string we set `EISA_bus` to one. In the end we just unmap previously mapped region. More about `early_ioremap` you can read in the part which describes [Fix-Mapped Addresses and ioremap](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2).
+Note that it depends on the [`CONFIG_EISA`](https://github.com/torvalds/linux/blob/master/drivers/eisa/Kconfig) kernel configuration parameter which represents `EISA` support. Here we use `early_ioremap` function to map `I/O` memory on the page tables. We use `readl` function to read first `4` bytes from the mapped region and if they are equal to `EISA` string we set `EISA_bus` to one. In the end we just unmap previously mapped region. More about `early_ioremap` you can read in the part which describes [Fix-Mapped Addresses and ioremap](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2).
 
 After this we start to fill the `Interrupt Descriptor Table` with the different interrupt gates. First of all we set `#DE` or `Divide Error` and `#NMI` or `Non-maskable Interrupt`:
 
@@ -279,7 +279,7 @@ After that we setup this exception gates, we can see setup of the `Machine-Check
 #endif
 ```
 
-Note that it depends on the `CONFIG_X86_MCE` kernel configuration option and indicates that the processor detected an internal [machine error](https://en.wikipedia.org/wiki/Machine-check_exception) or a bus error, or that an external agent detected a bus error. The next exception gate is for the [SIMD](https://en.wikipedia.org/?title=SIMD) Floating-Point exception:
+Note that it depends on the [`CONFIG_X86_MCE`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option and indicates that the processor detected an internal [machine error](https://en.wikipedia.org/wiki/Machine-check_exception) or a bus error, or that an external agent detected a bus error. The next exception gate is for the [SIMD](https://en.wikipedia.org/?title=SIMD) Floating-Point exception:
 
 ```C
 set_intr_gate(X86_TRAP_XF, &simd_coprocessor_error);
@@ -322,7 +322,7 @@ After this we setup the interrupt gate for the `ia32_syscall` and add `0x80` to 
 #endif
 ```
 
-There is `CONFIG_IA32_EMULATION` kernel configuration option on `x86_64` Linux kernels. This option provides ability to execute 32-bit processes in compatibility-mode. In the next parts we will see how it works, in the meantime we need only to know that there is yet another interrupt gate in the `IDT` with the vector number `0x80`. In the next step we maps `IDT` to the fixmap area:
+There is [`CONFIG_IA32_EMULATION`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option on `x86_64` Linux kernels. This option provides ability to execute 32-bit processes in compatibility-mode. In the next parts we will see how it works, in the meantime we need only to know that there is yet another interrupt gate in the `IDT` with the vector number `0x80`. In the next step we maps `IDT` to the fixmap area:
 
 ```C
 __set_fixmap(FIX_RO_IDT, __pa_symbol(idt_table), PAGE_KERNEL_RO);

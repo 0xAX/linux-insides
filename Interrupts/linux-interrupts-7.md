@@ -21,7 +21,7 @@ Generally, a handler of an `I/O` interrupt must be flexible enough to service se
 * Execute the interrupt service routine (next we will call it `ISR`) which is associated with the device;
 * Restore registers and return from an interrupt;
 
-Ok, we know a little theory and now let's start with the `early_irq_init` function. The implementation of the `early_irq_init` function is in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c). This function make early initialization of the `irq_desc` structure. The `irq_desc` structure is the foundation of interrupt management code in the Linux kernel. An array of this structure, which has the same name - `irq_desc`, keeps track of every interrupt request source in the Linux kernel. This structure defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqdesc.h) and as you can note it depends on the `CONFIG_SPARSE_IRQ` kernel configuration option. This kernel configuration option enables support for sparse IRQs. The `irq_desc` structure contains many different fields:
+Ok, we know a little theory and now let's start with the `early_irq_init` function. The implementation of the `early_irq_init` function is in the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c). This function make early initialization of the `irq_desc` structure. The `irq_desc` structure is the foundation of interrupt management code in the Linux kernel. An array of this structure, which has the same name - `irq_desc`, keeps track of every interrupt request source in the Linux kernel. This structure defined in the [include/linux/irqdesc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqdesc.h) and as you can note it depends on the [`CONFIG_SPARSE_IRQ`](https://github.com/torvalds/linux/blob/master/kernel/irq/Kconfig) kernel configuration option. This kernel configuration option enables support for sparse IRQs. The `irq_desc` structure contains many different fields:
 
 * `irq_common_data` - per irq and chip data passed down to chip functions;
 * `status_use_accessors` - contains status of the interrupt source which is combination of the values from the `enum` from the [include/linux/irq.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irq.h) and different macros which are defined in the same source code file;
@@ -55,7 +55,7 @@ int __init early_irq_init(void)
 }
 ```
 
-The `node` is an online [NUMA](https://en.wikipedia.org/wiki/Non-uniform_memory_access) node which depends on the `MAX_NUMNODES` value which depends on the `CONFIG_NODES_SHIFT` kernel configuration parameter:
+The `node` is an online [NUMA](https://en.wikipedia.org/wiki/Non-uniform_memory_access) node which depends on the `MAX_NUMNODES` value which depends on the [`CONFIG_NODES_SHIFT`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration parameter:
 
 ```C
 #define MAX_NUMNODES    (1 << NODES_SHIFT)
@@ -95,7 +95,7 @@ More about this will be in the another chapter about the `NUMA`. The next step a
 init_irq_default_affinity();
 ```
 
-function. The `init_irq_default_affinity` function defined in the same source code file and depends on the `CONFIG_SMP` kernel configuration option allocates a given [cpumask](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) structure (in our case it is the `irq_default_affinity`):
+function. The `init_irq_default_affinity` function defined in the same source code file and depends on the [`CONFIG_SMP`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option allocates a given [cpumask](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) structure (in our case it is the `irq_default_affinity`):
 
 ```C
 #if defined(CONFIG_SMP)
@@ -126,7 +126,7 @@ which prints `NR_IRQS`:
 [    0.000000] NR_IRQS:4352
 ```
 
-The `NR_IRQS` is the maximum number of the `irq` descriptors or in another words maximum number of interrupts. Its value depends on the state of the `CONFIG_X86_IO_APIC` kernel configuration option. If the `CONFIG_X86_IO_APIC` is not set and the Linux kernel uses an old [PIC](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) chip, the `NR_IRQS` is:
+The `NR_IRQS` is the maximum number of the `irq` descriptors or in another words maximum number of interrupts. Its value depends on the state of the [`CONFIG_X86_IO_APIC`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option. If the `CONFIG_X86_IO_APIC` is not set and the Linux kernel uses an old [PIC](https://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) chip, the `NR_IRQS` is:
 
 ```C
 #define NR_IRQS_LEGACY                    16
@@ -157,7 +157,7 @@ In other way, when the `CONFIG_X86_IO_APIC` kernel configuration option is set, 
 ...
 ```
 
-We remember from the previous parts, that the amount of processors we can set during Linux kernel configuration process with the `CONFIG_NR_CPUS` configuration option:
+We remember from the previous parts, that the amount of processors we can set during Linux kernel configuration process with the [`CONFIG_NR_CPUS`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) configuration option:
 
 ![kernel](images/kernel.png)
 
@@ -282,7 +282,7 @@ After this we go through the all [possible](https://0xax.gitbook.io/linux-inside
 		*per_cpu_ptr(desc->kstat_irqs, cpu) = 0;
 ```
 
-and call the `desc_smp_init` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c) that initializes `NUMA` node of the given interrupt descriptor, sets default `SMP` affinity and clears the `pending_mask` of the given interrupt descriptor depends on the value of the `CONFIG_GENERIC_PENDING_IRQ` kernel configuration option:
+and call the `desc_smp_init` function from the [kernel/irq/irqdesc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/irq/irqdesc.c) that initializes `NUMA` node of the given interrupt descriptor, sets default `SMP` affinity and clears the `pending_mask` of the given interrupt descriptor depends on the value of the [`CONFIG_GENERIC_PENDING_IRQ`](https://github.com/torvalds/linux/blob/master/kernel/irq/Kconfig) kernel configuration option:
 
 ```C
 static void desc_smp_init(struct irq_desc *desc, int node)

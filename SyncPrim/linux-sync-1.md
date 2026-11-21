@@ -79,7 +79,7 @@ typedef struct spinlock {
 } spinlock_t;
 ```
 
-and located in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file. We may see that its implementation depends on the state of the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option. We will skip this now, because all debugging related stuff will be in the end of this part. So, if the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option is disabled, the `spinlock_t` contains [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with one field which is - `raw_spinlock`:
+and located in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file. We may see that its implementation depends on the state of the [`CONFIG_DEBUG_LOCK_ALLOC`](https://github.com/torvalds/linux/blob/master/lib/Kconfig.debug) kernel configuration option. We will skip this now, because all debugging related stuff will be in the end of this part. So, if the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option is disabled, the `spinlock_t` contains [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with one field which is - `raw_spinlock`:
 
 ```C
 typedef struct spinlock {
@@ -204,7 +204,7 @@ function which allows us to `acquire` a `spinlock`. The `raw_spin_lock` macro is
 #define raw_spin_lock(lock)	_raw_spin_lock(lock)
 ```
 
-Where `_raw_spin_lock` is defined depends on whether `CONFIG_SMP` option is set and `CONFIG_INLINE_SPIN_LOCK` option is set. If the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) is disabled, `_raw_spin_lock` is defined in the [include/linux/spinlock_api_up.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_api_up.h) header file as a macro and looks like:
+Where `_raw_spin_lock` is defined depends on whether [`CONFIG_SMP`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) option is set and [`CONFIG_INLINE_SPIN_LOCK`](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks) option is set. If the [SMP](https://en.wikipedia.org/wiki/Symmetric_multiprocessing) is disabled, `_raw_spin_lock` is defined in the [include/linux/spinlock_api_up.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_api_up.h) header file as a macro and looks like:
 
 ```C
 #define _raw_spin_lock(lock)	__LOCK(lock)

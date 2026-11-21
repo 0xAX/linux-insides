@@ -244,7 +244,7 @@ void load_stage2_idt(void)
 }
 ```
 
-We can skip the part of the code wrapped with `CONFIG_AMD_MEM_ENCRYPT` as it is not of main interest for us right now, but try to understand the rest of the function's body. It is similar to the first stage of the `Interrupt Descriptor Table`. It loads the entries of this table using the `lidt` instruction, which we already have seen before. The only single difference is that it sets up two interrupt handlers:
+We can skip the part of the code wrapped with [`CONFIG_AMD_MEM_ENCRYPT`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) as it is not of main interest for us right now, but try to understand the rest of the function's body. It is similar to the first stage of the `Interrupt Descriptor Table`. It loads the entries of this table using the `lidt` instruction, which we already have seen before. The only single difference is that it sets up two interrupt handlers:
 
 - `PF` - Page fault interrupt handler
 - `NMI` - Non-maskable interrupt handler
@@ -406,7 +406,7 @@ The next action before the kernel is decompressed is to perform the sanitising c
 #endif
 ```
 
-After all these checks, we can see the familiar message on the screen of our computers if the kernel is configured with the `CONFIG_X86_VERBOSE_BOOTUP` option:
+After all these checks, we can see the familiar message on the screen of our computers if the kernel is configured with the [`CONFIG_X86_VERBOSE_BOOTUP`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig.debug) option:
 
 ```
 Decompressing Linux...

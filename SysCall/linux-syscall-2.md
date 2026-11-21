@@ -144,7 +144,7 @@ After we have set the entry point for system calls, we need to set the following
 * `MSR_IA32_SYSENTER_ESP` - target `esp` for the `sysenter` instruction;
 * `MSR_IA32_SYSENTER_EIP` - target `eip` for the `sysenter` instruction.
 
-The values of these model specific register depend on the `CONFIG_IA32_EMULATION` kernel configuration option. If this kernel configuration option is enabled, it allows legacy 32-bit programs to run under a 64-bit kernel. In the first case, if the `CONFIG_IA32_EMULATION` kernel configuration option is enabled, we fill these model specific registers with the entry point for the system calls the compatibility mode:
+The values of these model specific register depend on the [`CONFIG_IA32_EMULATION`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option. If this kernel configuration option is enabled, it allows legacy 32-bit programs to run under a 64-bit kernel. In the first case, if the `CONFIG_IA32_EMULATION` kernel configuration option is enabled, we fill these model specific registers with the entry point for the system calls the compatibility mode:
 
 ```C
 wrmsrl(MSR_CSTAR, entry_SYSCALL_compat);
@@ -291,7 +291,7 @@ where the `__X32_SYSCALL_BIT` is
 #define __X32_SYSCALL_BIT	0x40000000
 ```
 
-As we can see the `__SYSCALL_MASK` depends on the `CONFIG_X86_X32_ABI` kernel configuration option and represents the mask for the 32-bit [ABI](https://en.wikipedia.org/wiki/Application_binary_interface) in the 64-bit kernel.
+As we can see the `__SYSCALL_MASK` depends on the [`CONFIG_X86_X32_ABI`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option and represents the mask for the 32-bit [ABI](https://en.wikipedia.org/wiki/Application_binary_interface) in the 64-bit kernel.
 
 So we check the value of the `__SYSCALL_MASK` and if the `CONFIG_X86_X32_ABI` is disabled we compare the value of the `rax` register to the maximum syscall number (`__NR_syscall_max`), alternatively if the `CONFIG_X86_X32_ABI` is enabled we mask the `eax` register with the `__X32_SYSCALL_BIT` and do the same comparison:
 
@@ -344,7 +344,7 @@ After this we can see the call of the `LOCKDEP_SYS_EXIT` macro from the [arch/x8
 LOCKDEP_SYS_EXIT
 ```
 
-The implementation of this macro depends on the `CONFIG_DEBUG_LOCK_ALLOC` kernel configuration option that allows us to debug locks on exit from a system call. And again, we will not consider it in this chapter, but will return to it in a separate one. In the end of the `entry_SYSCALL_64` function we restore all general purpose registers besides `rcx` and `r11`, because the `rcx` register must contain the return address to the application that called system call and the `r11` register contains the old [flags register](https://en.wikipedia.org/wiki/FLAGS_register). After all general purpose registers are restored, we fill `rcx` with the return address, `r11` register with the flags and `rsp` with the old stack pointer:
+The implementation of this macro depends on the [`CONFIG_DEBUG_LOCK_ALLOC`](https://github.com/torvalds/linux/blob/master/lib/Kconfig.debug) kernel configuration option that allows us to debug locks on exit from a system call. And again, we will not consider it in this chapter, but will return to it in a separate one. In the end of the `entry_SYSCALL_64` function we restore all general purpose registers besides `rcx` and `r11`, because the `rcx` register must contain the return address to the application that called system call and the `r11` register contains the old [flags register](https://en.wikipedia.org/wiki/FLAGS_register). After all general purpose registers are restored, we fill `rcx` with the return address, `r11` register with the flags and `rsp` with the old stack pointer:
 
 ```assembly
 RESTORE_C_REGS_EXCEPT_RCX_R11
