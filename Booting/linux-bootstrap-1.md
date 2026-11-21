@@ -703,7 +703,7 @@ Here is the list of the links that you may find useful during reading of this ch
 - [80386](https://en.wikipedia.org/wiki/Intel_80386)
 - [Reset vector](https://en.wikipedia.org/wiki/Reset_vector)
 - [Real mode](https://en.wikipedia.org/wiki/Real_mode)
-- [Linux kernel boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.rst)
+- [Linux kernel boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst)
 - [Ralf Brown's Interrupt List](https://wiki.osdev.org/Ralf_Brown%27s_Interrupt_List)
 - [Power supply](https://en.wikipedia.org/wiki/Power_supply)
 - [Power good signal](https://en.wikipedia.org/wiki/Power_good_signal)
