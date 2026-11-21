@@ -391,7 +391,7 @@ There are three sections at the beginning of the linker script above:
 - `.rodata..compressed` - section with the compressed kernel image
 - `.text` - section with the decompressor code
 
-The kernel decompression happens in-place, which is the same place where the compressed kernel is. This means that the parts of the decompressed kernel image will overwrite the parts of the compressed image during the decompression process. It may sound dangerous – if the decompressed part overwrites the decompressor code or the part of the compressed kernel image that is not decompressed yet, this will lead to code or image corruption.
+The kernel decompression happens in-place, which is the same place where the compressed kernel is. This means that the parts of the decompressed kernel image will overwrite the parts of the compressed image during the decompression process. It may sound dangerous - if the decompressed part overwrites the decompressor code or the part of the compressed kernel image that is not decompressed yet, this will lead to code or image corruption.
 
 One way to avoid this problem is to allocate a buffer for the decompressed kernel image and copy the compressed image outside of it. But this is not the most effective way in terms of memory consumption, and may not work on devices with not enough memory to hold both kernel images.
 
@@ -401,9 +401,9 @@ Schematically, it can be represented like this:
 
 ![kernel-relocation](./images/kernel-relocation.svg)
 
-The buffer for the decompressed kernel starts at the address specified by the `LOAD_PHYSICAL_ADDR` macro, which by default expands to the `0x1000000` address. Since we loaded this address below (at `0x100000`), the kernel setup code should copy itself, the compressed kernel image, and the decompressor code at this address. In addition, to have some room for the safe in-place decompression, it should calculate a special offset from the beginning of this buffer.
+The buffer for the decompressed kernel starts at the address where the kernel will run. For a relocatable kernel, this is the load address aligned up to the value of the `kernel_alignment` field from the kernel setup header, but not lower than the address specified by the `LOAD_PHYSICAL_ADDR` macro. The `kernel_alignment` field is set from the [`CONFIG_PHYSICAL_ALIGN`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option, which is `0x200000` by default, and the `LOAD_PHYSICAL_ADDR` macro by default expands to the `0x1000000` address. Since the kernel was loaded below this address (at `0x100000`), the buffer starts at `0x1000000`. The decompressor should copy itself, together with the compressed kernel image, to the end of this buffer. The size of the buffer is calculated during the kernel build, so that the room left at the beginning of the buffer is enough for the safe in-place decompression.
 
-We can see this calculation in the following code:
+We can see how the beginning of this buffer and the new location of the decompressor are calculated in the following code:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L146-L161 -->
 ```assembly
@@ -427,14 +427,14 @@ We can see this calculation in the following code:
 
 Despite it may look scary, it is not as complex as it may seem. Let's take a closer look at it and try to understand what it does.
 
-The `ebp` register contains the physical address where the protected kernel mode was loaded. We know that this address is `0x100000`. This address is aligned to the two-megabyte boundary, and the result value is compared with the `LOAD_PHYSICAL_ADDRESS`:
+The `ebp` register contains the physical address where the protected-mode part of the kernel was loaded. We know that this address is `0x100000`. This address is aligned up to the `kernel_alignment` boundary, and the result value is compared with the `LOAD_PHYSICAL_ADDR`:
 
-- If this value is equal to or greater than `LOAD_PHYSICAL_ADDRESS`, we leave it as is. 
-- Otherwise, we put the value of the `LOAD_PHYSICAL_ADDRESS` (which is `0x1000000`) into the `ebx` register. 
+- If this value is equal to or greater than `LOAD_PHYSICAL_ADDR`, we leave it as is. 
+- Otherwise, we put the value of the `LOAD_PHYSICAL_ADDR` (which is `0x1000000`) into the `ebx` register. 
 
 At this moment, we have the pointer to the beginning of the buffer where the kernel image is relocated and decompressed in the `ebx` register.
 
-The last two lines are the most interesting. Using them, the kernel calculates the offset where to move the compressed kernel image with the decompressor for safe in-place decompression. At first, we add the `BP_init_size` to the `ebx` register. The `BP_init_size` is the maximum value between the size of the uncompressed kernel image code (from `_text` to `_end`) and the size of the kernel setup code + compressed kernel image + decompressor code. At this moment, the `ebx` register points to the end of the decompression buffer. On the last line of the code, we move this pointer back to the new place of the `startup_32` symbol within the decompression buffer.
+The last two lines are the most interesting. Using them, the kernel calculates the address where to move the compressed kernel image with the decompressor for safe in-place decompression. At first, we add the value of the `init_size` field to the `ebx` register. This value is the maximum between the size of the decompressed kernel image (from `_text` to `_end`) and the size of the decompressor with the compressed kernel image plus the room needed for the safe in-place decompression. At this moment, the `ebx` register points to the end of the decompression buffer. On the last line of the code, we move this pointer back to the new place of the `startup_32` symbol within the decompression buffer.
 
 As a result, we get something like this:
 
