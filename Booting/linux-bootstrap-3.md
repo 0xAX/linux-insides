@@ -95,10 +95,9 @@ vga=<mode>
 This tells us that we can add the `vga` option to the kernel's command line. As mentioned in the description above, this option can have different values. For example, it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you see a menu with the possible video modes. We can test it using [QEMU](https://www.qemu.org/) virtual machine as we did in the previous parts:
 
 ```bash
-sudo qemu-system-x86_64 -kernel ./linux/arch/x86/boot/bzImage                \
-                        -nographic                                           \
-                        -append "console=ttyS0 nokaslr vga=ask"              \
-                        -initrd /boot/initramfs-6.17.0-rc3-g1b237f190eb3.img 
+qemu-system-x86_64 -kernel ./arch/x86/boot/bzImage \
+                   -nographic                      \
+                   -append "console=ttyS0 nokaslr vga=ask"
 ```
 
 If you did everything correctly, after the kernel is loaded it will ask you to press the `ENTER`. By pressing on it you should see something like this:
