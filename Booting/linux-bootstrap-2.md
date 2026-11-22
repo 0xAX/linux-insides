@@ -1,10 +1,10 @@
 # Kernel booting process - Part 2
 
-We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we walked through the very early stages of the booting process and first assembly instructions of the Linux kernel code. Aside from different mechanisms, this code was responsible for preparing the environment for the [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming language. At the end of the chapter, we reached a symbolic milestone - the very first call of a C function. This function has a classical name - `main` - and is defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file.
+We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we walked through the very early stages of the booting process and first assembly instructions of the Linux kernel code. Aside from different mechanisms, this code was responsible for preparing the environment for the [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming language. At the end of the part, we reached a symbolic milestone - the very first call of a C function. This function has a classical name - `main` - and is defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file.
 
 From here on, we will still see some assembly code on our way, but it will be more and more rare 🤓 Now it is time for more "high-level" logic!
 
-From the previous part, we know that the kernel setup code is still running in [real mode](https://en.wikipedia.org/wiki/Real_mode). Its primary task is to move the processor first into [protected mode](https://en.wikipedia.org/wiki/Protected_mode), and then into [long mode](https://en.wikipedia.org/wiki/Long_mode). Almost all of the C code we will see in the next chapters exists for this purpose - to prepare and complete these transitions.
+From the previous part, we know that the kernel setup code is still running in [real mode](https://en.wikipedia.org/wiki/Real_mode). Its primary task is to move the processor first into [protected mode](https://en.wikipedia.org/wiki/Protected_mode), and then into [long mode](https://en.wikipedia.org/wiki/Long_mode). Almost all of the C code we will see in the next parts exists for this purpose - to prepare and complete these transitions.
 
 In this part, we'll keep digging through the kernel's setup code and cover:
 
@@ -20,7 +20,7 @@ Time to explore these steps in detail!
 
 The Linux kernel for x86_64 operates in a special mode called - [long mode](http://en.wikipedia.org/wiki/Long_mode). One of the main goal of all the setup kernel code is to switch to this mode. But before we can move to this mode, the kernel must switch the CPU into [protected mode](https://en.wikipedia.org/wiki/Protected_mode).
 
-What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the previous chapter we already know that currently CPU operates in [real mode](https://en.wikipedia.org/wiki/Real_mode). For us it is mostly means - memory segmentation. As a short reminder - to access a memory location, the combination of two CPU [registers](https://en.wikipedia.org/wiki/Processor_register) is used:
+What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the previous part we already know that currently CPU operates in [real mode](https://en.wikipedia.org/wiki/Real_mode). For us it is mostly means - memory segmentation. As a short reminder - to access a memory location, the combination of two CPU [registers](https://en.wikipedia.org/wiki/Processor_register) is used:
 
 - A segment register - `cs`, `ds`, `ss` and `es` which defines segment selector.
 - A general purpose register which specifies offset within the segment.
@@ -137,11 +137,11 @@ When a program running in protected mode references a memory, the CPU need to ca
 
 In the next part, we will see the transition into protected mode. But before the kernel can be switched to protected mode, we need to do some more preparations.
 
-Let's continue from the point where we have stopped in the previous chapter.
+Let's continue from the point where we have stopped in the previous part.
 
 ## Back to the kernel: entering main.c
 
-As we already have mentioned in the beginning of this chapter, one of the kernel's first main goals is to switch the processor into protected mode. But before this can happen, the kernel need to do some preparations.
+As we already have mentioned in the beginning of this part, one of the kernel's first main goals is to switch the processor into protected mode. But before this can happen, the kernel need to do some preparations.
 
 If we look at the very beginning of the `main` function from the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c), the very first thing we will see is a call of the `init_default_io_ops` function.
 
@@ -281,7 +281,7 @@ From this point we can print messages from the kernel setup code 🎉. Time to m
 
 ### Heap initialization
 
-We have seen the initialization of the `stack` and `bss` memory areas in the previous chapter. The next step is to initialize the [heap](https://en.wikipedia.org/wiki/Memory_management#HEAP) memory area. The heap initialization takes place in the `init_heap` function:
+We have seen the initialization of the `stack` and `bss` memory areas in the previous part. The next step is to initialize the [heap](https://en.wikipedia.org/wiki/Memory_management#HEAP) memory area. The heap initialization takes place in the `init_heap` function:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L118-131 -->
 ```C
@@ -341,7 +341,7 @@ This initially gives `heap_end` a value of `0x9000`. At this point, the kernel s
 
 ![early-heap](./images/early-heap.svg)
 
-Now the heap is initialized, although we will see the usage of it in the next chapters.
+Now the heap is initialized, although we will see the usage of it in the next parts.
 
 ### CPU validation
 
@@ -371,7 +371,7 @@ If the level of CPU is less than the required level specified by the [`CONFIG_X8
 
 ### Memory detection
 
-After the kernel became sure that the CPU which it is running on is suitable, the next stage is to detect available memory in the system. This task is handled by the `detect_memory` function, which queries the system firmware to obtain a map of physical memory regions. To do this, the kernel uses the special BIOS service - `0xE820`, but kernel can fallback to legacy BIOS services like `0xE801` or `0x88`. In this chapter, we will see only the implementation of the `0xE820` interface.
+After the kernel became sure that the CPU which it is running on is suitable, the next stage is to detect available memory in the system. This task is handled by the `detect_memory` function, which queries the system firmware to obtain a map of physical memory regions. To do this, the kernel uses the special BIOS service - `0xE820`, but kernel can fallback to legacy BIOS services like `0xE801` or `0x88`. In this part, we will see only the implementation of the `0xE820` interface.
 
 The `detect_memory` function defined in the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c) and as just mentioned, tries to get the information about available memory:
 
@@ -458,7 +458,7 @@ This function performs two tasks using [BIOS interrupt](https://en.wikipedia.org
 1. Gets the state of a keyboard which contains information about state of certain modifier keys, like for example Caps Lock active or not.
 2. Sets the keyboard repeat delay and rate, which determine how long a key must be held down before it begins repeating and how fast it repeats then.
 
-After the BIOS interrupt was executed, the keyboard should be initialized. If you are wondering why we need a working keyboard at such an early stage, the answer is - it can be used during the selection of the video mode. We will see more details in the [next chapter](linux-bootstrap-3.md).
+After the BIOS interrupt was executed, the keyboard should be initialized. If you are wondering why we need a working keyboard at such an early stage, the answer is - it can be used during the selection of the video mode. We will see more details in the [next part](linux-bootstrap-3.md).
 
 ### Gathering system information
 
@@ -498,7 +498,7 @@ This is the end of the second part about Linux kernel insides. If you have quest
 
 ## Links
 
-Here is the list of the links that you may find useful during reading of this chapter:
+Here is the list of the links that you may find useful during reading of this part:
 
 - [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)
 - [Long mode](http://en.wikipedia.org/wiki/Long_mode)
