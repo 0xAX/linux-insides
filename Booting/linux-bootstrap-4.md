@@ -495,7 +495,7 @@ When the processor translates a virtual address, it performs the following steps
 
 In addition to a physical address of the next-level table, each page table entry contains flags in its first `12` bits, plus the no-execute flag in bit `63`. These flags are:
 
-| Bit   | Name                     | Description                                                                                                                                        |
+| Flag  | Name                     | Description                                                                                                                                        |
 |-------|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|
 | `P`   | Present                  | Indicates whether the page or page table entry is valid and exists in memory. If cleared, accessing the corresponding address causes a page fault. |
 | `RW`  | Read/Write               | Determines whether write operations are permitted. If cleared, the page is read-only; if set, writes are allowed (subject to privilege rules).     |
@@ -505,6 +505,7 @@ In addition to a physical address of the next-level table, each page table entry
 | `A`   | Accessed                 | Set automatically by the processor when the page-table entry is used during address translation. Useful for page replacement decisions.            |
 | `D`   | Dirty                    | Set automatically by the processor when a write operation occurs to a mapped page. Indicates that the page has been modified.                      |
 | `PS`  | Page Size                | Determines whether the entry maps a large page (e.g., 2 MiB or 1 GiB) instead of pointing to a lower-level page table.                             |
+| `G`   | Global                   | Keeps the [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entry for the page across reloads of the `cr3` register when set.      |
 | `NX`  | No-Execute               | Prevents instruction execution from the referenced page when set. Used to enforce executable/non-executable memory protections.                    |
        
 You might wonder how an 8-byte entry can contain both a physical address of the next-level page table and flags at the same time. The reason is that each page table is aligned on a four-kilobyte boundary. As a result, the lower 12 bits of its physical address are always zero. These 12 bits are therefore used to store the flags. The upper bits are free as well, because a physical address on x86_64 is at most 52 bits wide, and that is where `NX` lives.
@@ -607,7 +608,7 @@ Here we already fill four page directory tables with `2048` entries. The first e
 - Large Page
 - Global
 
-The two additional flags tell the processor to keep [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entry across reload of the value of the `cr3` register and use two-megabyte pages. The `Global` flag works only if the `PGE` bit of the `cr4` register is set, which is not the case at this point, so it is ignored for now.
+The two additional flags tell the processor to keep TLB entry across reload of the value of the `cr3` register and use two-megabyte pages. The `Global` flag works only if the `PGE` bit of the `cr4` register is set, which is not the case at this point, so it is ignored for now.
 
 There is no need to populate the lowest-level page tables yet. Every entry in the 2nd-level page directory has the `Large Page` bit set, which means each entry directly maps a two-megabyte region of physical memory. During the address translation, the page-walk procedure stops at the 2nd-level page table, and the lower `21` bits of the virtual address are used as the offset inside that two-megabyte page.
 
