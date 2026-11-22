@@ -167,7 +167,7 @@ else
 endif
 ```
 
-Since we are consider the kernel for `x86_64` architecture, we assume that the [`CONFIG_X86_64`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) is set to `y`. As the result, the `head_64.S` file will be used during the kernel build process. Let's start to investigate this what the kernel does in this file.
+Since we consider the kernel for `x86_64` architecture, we assume that the [`CONFIG_X86_64`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) is set to `y`. As the result, the `head_64.S` file will be used during the kernel build process. Let's start to investigate what the kernel does in this file.
 
 ### Reload the segments if needed
 
