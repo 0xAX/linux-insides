@@ -410,7 +410,7 @@ The next chapter will be about kernel initialization and we will study the first
 ## Links
 
 - [Address Space Layout Randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
-- [Linux kernel boot protocol](https://github.com/torvalds/linux/blob/v4.16/Documentation/x86/boot.txt)
+- [Linux kernel boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst)
 - [Long mode](https://en.wikipedia.org/wiki/Long_mode)
 - [Initial ramdisk](https://en.wikipedia.org/wiki/Initial_ramdisk)
 - [Four-level page tables](https://lwn.net/Articles/117749/)
