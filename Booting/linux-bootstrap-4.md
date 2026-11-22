@@ -605,7 +605,7 @@ Here we already fill four page directory tables with `2048` entries. The first e
 - Large Page
 - Global
 
-The two additional flags tell the processor to keep [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entry across reload of the value of the `cr3` register and use two-megabyte pages.
+The two additional flags tell the processor to keep [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entry across reload of the value of the `cr3` register and use two-megabyte pages. The `Global` flag works only if the `PGE` bit of the `cr4` register is set, which is not the case at this point, so it is ignored for now.
 
 There is no need to populate the lowest-level page tables yet. Every entry in the 2nd-level page directory has the `Large Page` bit set, which means each entry directly maps a two-megabyte region of physical memory. During the address translation, the page-walk procedure stops at the 2nd-level page table, and the lower `21` bits of the virtual address are used as the offset inside that two-megabyte page.
 
