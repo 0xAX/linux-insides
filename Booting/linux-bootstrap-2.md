@@ -371,7 +371,7 @@ If the level of CPU is less than the required level specified by the [`CONFIG_X8
 
 ### Memory detection
 
-After the kernel became sure that the CPU which it is running on is suitable, the next stage is to detect available memory in the system. This task is handled by the `detect_memory` function, which queries the system firmware to obtain a map of physical memory regions. To do this, the kernel uses the special BIOS service - `0xE820`, but kernel can fallback to legacy BIOS services like `0xE801` or `0x88`. In this part, we will see only the implementation of the `0xE820` interface.
+After the kernel became sure that the CPU which it is running on is suitable, the next stage is to detect available memory in the system. This task is handled by the `detect_memory` function, which queries the system firmware to obtain a map of physical memory regions. To do this, the kernel queries the special BIOS service `0xE820` and, in addition, the legacy BIOS services `0xE801` and `0x88`. The kernel uses their results later only if the `0xE820` map is not available. In this part, we will see only the implementation of the `0xE820` interface.
 
 The `detect_memory` function defined in the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c) and as just mentioned, tries to get the information about available memory:
 
