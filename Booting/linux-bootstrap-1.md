@@ -106,7 +106,7 @@ When the CPU wakes up, it reads the jump at the `0xFFFFFFF0` address, jump into 
 
 ## From power-on to bootloader
 
-We stopped at the point when a CPU jumps from the reset vector to the firmware. On a legacy PC, that means the BIOS. On modern computers it is UEFI. In the next chapters we will see the booting processes on a legacy PC using the BIOS, and later UEFI.
+We stopped at the point when a CPU jumps from the reset vector to the firmware. On a legacy PC, that means the BIOS. On modern computers it is UEFI. In the next chapters we will see the booting process on a legacy PC using the BIOS. The UEFI boot process may be covered later.
 
 The first job of BIOS is to bring the system into a working state. It runs a series of hardware checks and initializations - memory tests, peripheral setup, chipset configuration - all part of the [POST](https://en.wikipedia.org/wiki/Power-on_self-test) routine. Once everything is checked, the next step is to find an operating system to boot. The BIOS doesn't pick just a random disk. It follows a boot order, a list stored in its configuration.
 
@@ -253,7 +253,7 @@ hexdump -C /tmp/dump | grep MZ
 00010000  4d 5a 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |MZ..............|
 ```
 
-Linux kernel image starts from `4D 5A` bytes as you may see in the beginning of the kernel setup code:
+If the kernel is built with the `CONFIG_EFI_STUB` option, which is enabled in most configurations, the kernel image starts from `4D 5A` bytes, as you may see in the beginning of the kernel setup code:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/header.S#L42-L46 -->
 ```assembly
