@@ -546,7 +546,7 @@ The kernel needs to fill this structure with the proper page table entries for e
 	rep	stosl
 ```
 
-At the beginning, we set the address of the top of the page table to the `edi` register. After this, the kernel fills with zeros the memory area that will be occupied by the page table. The boot page table will have the following structure:
+At the beginning, the kernel puts the address of the beginning of the `pgtable` area into the `edi` register. After this, the kernel fills with zeros the memory area that will be occupied by the page table. The boot page table will have the following structure:
 
 - 1 level4 table
 - 1 level3 table
