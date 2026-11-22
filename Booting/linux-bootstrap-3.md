@@ -92,7 +92,7 @@ vga=<mode>
 	line is parsed.
 ```
 
-This tells us that we can add the `vga` option to the kernel's command line. As mentioned in the description above, this option can have different values. For example, it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you see a menu with the possible video modes. We can test it using [QEMU](https://www.qemu.org/) virtual machine as we did in the previous chapters:
+This tells us that we can add the `vga` option to the kernel's command line. As mentioned in the description above, this option can have different values. For example, it can be an integer number `0xFFFD` or `ask`. If you pass `ask` to `vga`, you see a menu with the possible video modes. We can test it using [QEMU](https://www.qemu.org/) virtual machine as we did in the previous parts:
 
 ```bash
 sudo qemu-system-x86_64 -kernel ./linux/arch/x86/boot/bzImage                \
@@ -153,7 +153,7 @@ After getting the video mode set by the bootloader, we can see resetting the hea
 
 If you have read [part 2](./linux-bootstrap-2.md), you should remember the initialization of the heap memory area. This memory area starts right after the end of [BSS](https://en.wikipedia.org/wiki/.bss) and lasts till the stack.
 
-The kernel setup code provides a couple of utility macros and functions for managing the early heap. Let's take a look at some of them, especially at those relevant for this chapter.
+The kernel setup code provides a couple of utility macros and functions for managing the early heap. Let's take a look at some of them, especially at those relevant for this part.
 
 The `RESET_HEAP` macro resets the heap by setting the `HEAP` variable to `_end`, which represents the end of the early setup kernel's image, including the early code, data, and BSS memory areas. By doing this, we set the heap pointer to the very beginning of the heap.
 
@@ -445,7 +445,7 @@ This structure provides information about the pointer to the Interrupt Descripto
 
 ### Set up Global Descriptor Table
 
-Next, we set up the Global Descriptor Table. As you may remember, the memory access is based on the `segment:offset` addressing in real mode. The protected mode introduces a different model based on the `Global Descriptor Table`. If you forgot the details about the Global Description Table structure, you can find more information in the [previous chapter](./linux-bootstrap-2.md#protected-mode).
+Next, we set up the Global Descriptor Table. As you may remember, the memory access is based on the `segment:offset` addressing in real mode. The protected mode introduces a different model based on the `Global Descriptor Table`. If you forgot the details about the Global Description Table structure, you can find more information in the [previous part](./linux-bootstrap-2.md#protected-mode).
 
 Instead of fixed segment bases and limits, the CPU now looks for memory regions defined by descriptors located in the Global Descriptor Table. The goal of the kernel is to set up these descriptors.
 
@@ -608,7 +608,7 @@ This is the end of the third part about Linux kernel insides. If you have questi
 
 ## Links
 
-Here is the list of the links that you may find useful during reading of this chapter:
+Here is the list of the links that you may find useful during reading of this part:
 
 - [QEMU](https://www.qemu.org/)
 - [VGA](http://en.wikipedia.org/wiki/Video_Graphics_Array)
