@@ -196,7 +196,7 @@ BUILDIO(w, w, u16)
 BUILDIO(l,  , u32)
 ```
 
-All of these functions use `in` and `out` assembly instructions which send the given value to the given port or read the value from the given port. If the syntax is not familiar to you, you can read the chapter about [inline assembly](../Toolchain/linux-toolchain-4.md).
+All of these functions use `in` and `out` assembly instructions which send the given value to the given port or read the value from the given port. If the syntax is not familiar to you, you can read the part about [inline assembly](../Toolchain/linux-toolchain-4.md).
 
 After initialization of callbacks for writing to a serial port, the next step is copying of the kernel setup header filled by a bootloader into the corresponding field of the C `boot_params` structure. This will make the fields from the kernel setup header more easily accessible. All the copying is handled by the `copy_boot_params` function with the help of `memcpy`:
 
