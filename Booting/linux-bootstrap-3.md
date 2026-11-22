@@ -545,7 +545,7 @@ After this, we compute the physical base address of the current code segment and
 
 The next jump to the label `1` may look quite unexpected. Why does the kernel even need this jump? With the previous instruction, we changed the offset of the far jump at the label `2`. In other words, the code modified itself. While the CPU executes the current instruction, it may have already fetched several subsequent instruction bytes into its internal prefetch queue. Old processors like the 386 and 486 could execute such prefetched bytes without noticing that the code in memory has changed. A jump instruction flushes the prefetch queue, so the modified far jump will be fetched again.
 
-At the next steps, we save the segment addresses of the data and task state in general-purpose registers `cx` and `di` and set the `PE` bit in the [control register](https://en.wikipedia.org/wiki/Control_register) `cr0`. From this point, the protected mode is turned on, and we just need to jump into it to set the proper value of the code segment:
+At the next steps, we save the segment selectors of the data and task state segments in general-purpose registers `cx` and `di` and set the `PE` bit in the [control register](https://en.wikipedia.org/wiki/Control_register) `cr0`. From this point, the protected mode is turned on, and we just need to jump into it to set the proper value of the code segment:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L41-L44 -->
 ```assembly
@@ -564,7 +564,7 @@ The kernel is in protected mode now 🥳🥳🥳
 SYM_FUNC_START_LOCAL_NOALIGN(.Lin_pm32)
 ```
 
-Let's look at the first steps taken in the protected mode. First of all we set up the data segment with the data segment address that we preserved in the `cx` register at the previous step:
+Let's look at the first steps taken in the protected mode. First of all we set up the data segment registers with the data segment selector that we preserved in the `cx` register at the previous step:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L50-L55 -->
 ```assembly
