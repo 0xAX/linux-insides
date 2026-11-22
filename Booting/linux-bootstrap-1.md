@@ -267,9 +267,9 @@ If the kernel is built with the `CONFIG_EFI_STUB` option, which is enabled in mo
 If you want to get a similar memory dump, follow these steps. First of all, you need to build kernel. If you do not know how to do it, you can find detailed instruction [here](https://github.com/0xAX/linux-insides/blob/master/Contributing/linux-contributing-1.md). On the diagram above, we can see that the `Protected-mode` kernel starts from `0x100000`. Knowing this address we can start the kernel in the qemu virtual machine with the following command:
 
 ```bash
-qemu-system-x86_64 -kernel ./linux/arch/x86/boot/bzImage \
-                   -nographic                            \
-                   -append "console=ttyS0 nokaslr"       \
+qemu-system-x86_64 -kernel ./arch/x86/boot/bzImage \
+                   -nographic                      \
+                   -append "console=ttyS0 nokaslr" \
                    -s -S
 ```
 
