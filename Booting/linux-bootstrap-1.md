@@ -14,7 +14,7 @@ That's enough introduction - let's dive into the Linux kernel!
 
 ## The magic power button - what happens next?
 
-Although this is a series of posts about Linux kernel, we will not jump straight into kernel code. First, let's step back and look at what happens before the kernel even comes into play. Everything starts from the turning on a computer. And we will start from this point as well.
+Although this is a series of posts about Linux kernel, we will not jump straight into kernel code. First, let's step back and look at what happens before the kernel even comes into play. Everything starts when you turn on a computer. And we will start from this point as well.
 
 When you press the "magic" power button on your laptop or desktop computer, the [motherboard](https://en.wikipedia.org/wiki/Motherboard) sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply). In response, the power supply delivers the proper amount of electricity to other components of the computer. Once the motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it triggers the CPU to start. The CPU then performs a reset: it clears any leftover data in its registers and loads predefined values into each of them, preparing for the very first instructions of the boot process.
 
@@ -22,9 +22,9 @@ Each **x86_64** processor begins execution in a special mode called [real mode](
 
 The **8086** was a 16-bit microprocessor. Basically it means that its general-purpose registers and instruction pointer were `16` bits wide. However, the chip was designed with a `20-bit` physical memory address bus - the set of electrical lines used to select memory locations. With `20` address lines, the CPU can form addresses from `0x00000` to `0xFFFFF`, giving access to exactly `1 MB` of physical memory or `2^20` bytes.
 
-Because the registers on **8086** processors were only `16` bits wide, the largest value they could hold was `0xFFFF` which equals 64 KB. This means that, using just a single 16-bit value, the CPU could only directly address 64 KB of memory at a time. This leads us to the question - how can a processor with 16-bit registers access 20-bit addresses? The answer is [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation).
+Because the registers on **8086** processors were only `16` bits wide, the largest value they could hold was `0xFFFF`, or `65_535`. This means that, using just a single 16-bit value, the CPU could only directly address 64 KB of memory at a time. This leads us to the question - how can a processor with 16-bit registers access 20-bit addresses? The answer is [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation).
 
-To make use of the entire 1 MB space provided by the 20-bit address bus, the **8086** used a scheme called [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation). Each segment is up to `65_536` bytes long and can start at any 16-byte boundary, so segments may overlap. Instead of using just one value to identify a memory location, a CPU uses the two:
+To make use of the entire 1 MB space provided by the 20-bit address bus, the **8086** used segments. Each segment is up to `65_536` bytes long and can start at any 16-byte boundary, so segments may overlap. Instead of using just one value to identify a memory location, a CPU uses the two:
 
 1. Segment selector - identifies the starting point (base address) of a 64 KB segment. Represented by the value of the `cs` (code-segment) register.
 2. Offset - specifies how far into that segment the target address is. Represented by the value of the `ip` register.
@@ -78,7 +78,7 @@ In real mode, the base address is normally formed by shifting the 16-bit segment
 '0xfffffff0'
 ```
 
-We got `0xFFFFFFF0`, which is 16 bytes below 4GB. This is the very first address where the CPU starts the execution after reset. This address has special name - [reset vector](https://en.wikipedia.org/wiki/Reset_vector). It is the memory location at which the CPU expects to find the first instruction to execute after reset. Usually it contains a [jump](https://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction which points to the [BIOS](https://en.wikipedia.org/wiki/BIOS) or [UEFI](https://en.wikipedia.org/wiki/UEFI) entry point. For example, if we take a look at the [source code](https://github.com/coreboot/coreboot/blob/main/src/cpu/x86/entry16.S) of the [coreboot](https://www.coreboot.org/), we will see it there:
+We got `0xFFFFFFF0`, which is 16 bytes below 4GB. This is the very first address where the CPU starts the execution after reset. This address has a special name - [reset vector](https://en.wikipedia.org/wiki/Reset_vector). It is the memory location at which the CPU expects to find the first instruction to execute after reset. Usually it contains a [jump](https://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) (`jmp`) instruction which points to the [BIOS](https://en.wikipedia.org/wiki/BIOS) or [UEFI](https://en.wikipedia.org/wiki/UEFI) entry point. For example, if we take a look at the [source code](https://github.com/coreboot/coreboot/blob/main/src/cpu/x86/entry16.S) of the [coreboot](https://www.coreboot.org/), we will see it there:
 
 <!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/main/src/cpu/x86/entry16.S#L155-L159 -->
 ```assembly
@@ -89,9 +89,9 @@ _start:
 	jmp		_start16bit
 ```
 
-To prove that this code is located at the `0xFFFFFFF0` address, we may take a look at the [linker script](https://github.com/coreboot/coreboot/blob/master/src/arch/x86/bootblock.ld):
+To prove that this code is located at the `0xFFFFFFF0` address, we may take a look at the [linker script](https://github.com/coreboot/coreboot/blob/main/src/arch/x86/bootblock.ld):
 
-<!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/master/src/arch/x86/bootblock.ld#L72-L78 -->
+<!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/main/src/arch/x86/bootblock.ld#L72-L78 -->
 ```linker-script
 	. = 0xfffffff0;
 	_X86_RESET_VECTOR = .;
@@ -104,7 +104,7 @@ To prove that this code is located at the `0xFFFFFFF0` address, we may take a lo
 
 The address `0xFFFFFFF0` is much larger than `0xFFFFF` (1MB). How can the CPU access this address in real mode? The answer is the hidden base of the `cs` register we saw above. The usual `selector << 4` formula can't produce anything above `0x10FFEF`, but right after reset the base is `0xFFFF0000`, so the CPU reaches the top of the 4GB address space even in real mode. This lasts only until the first far jump reloads `cs`. After that, the base is calculated the usual way again.
 
-When the CPU wakes up, it reads the jump at the `0xFFFFFFF0` address, jump into the firmware, and the long chain of the boot process begins. This is the very first step on the way to boot the Linux kernel.
+When the CPU wakes up, it reads the jump at the `0xFFFFFFF0` address, jumps into the firmware, and the long chain of the boot process begins. This is the very first step on the way to boot the Linux kernel.
 
 ## From power-on to bootloader
 
@@ -122,7 +122,8 @@ In general, real mode's memory map is as follows:
 | 0x00000400-0x000004FF | BIOS Data Area                       |
 | 0x00000500-0x00007BFF | Unused                               |
 | 0x00007C00-0x00007DFF | Bootloader                           |
-| 0x00007E00-0x0009FFFF | Unused                               |
+| 0x00007E00-0x0009FBFF | Unused                               |
+| 0x0009FC00-0x0009FFFF | Extended BIOS Data Area              |
 | 0x000A0000-0x000BFFFF | Video RAM (VRAM) Memory              |
 | 0x000B0000-0x000B7FFF | Monochrome Video Memory              |
 | 0x000B8000-0x000BFFFF | Color Video Memory                   |
@@ -184,7 +185,7 @@ From this point onwards, the BIOS hands control over to the bootloader.
 
 There are a number of different bootloaders that can boot Linux kernel, such as [GRUB 2](https://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project), [systemd-boot](https://www.freedesktop.org/software/systemd/man/latest/systemd-boot.html), and others. The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst) which specifies the requirements for a bootloader to implement Linux support. In this chapter, we will take a short look how GRUB 2 does loading.
 
-Continuing from where we left off - the BIOS has now selected a boot device, found its boot sector, loaded it into memory and passed control to the code located there. GRUB 2 bootloader consists of multiple [stages](https://www.gnu.org/software/grub/manual/grub/grub.html#Images). The first stage of the boot code is in the [boot.S](https://github.com/rhboot/grub2/blob/master/grub-core/boot/i386/pc/boot.S) source code file. Due to limited amount of space for the first boot sector, this code has only single goal - to load [core image](https://www.gnu.org/software/grub/manual/grub/html_node/Images.html) into memory and jump to it.
+Continuing from where we left off - the BIOS has now selected a boot device, found its boot sector, loaded it into memory and passed control to the code located there. GRUB 2 bootloader consists of multiple [stages](https://www.gnu.org/software/grub/manual/grub/grub.html#Images). The first stage of the boot code is in the [boot.S](https://github.com/rhboot/grub2/blob/master/grub-core/boot/i386/pc/boot.S) source code file. Due to the limited amount of space for the first boot sector, this code has only a single goal - to load [core image](https://www.gnu.org/software/grub/manual/grub/html_node/Images.html) into memory and jump to it.
 
 The core image starts with [diskboot.S](https://github.com/rhboot/grub2/blob/master/grub-core/boot/i386/pc/diskboot.S), which is usually stored right after the first sector of the disk. The code from the `diskboot.S` file loads the rest of the core image into memory. The core image contains the code of the loader itself and drivers for reading different filesystems. After the whole core image is loaded into memory, the execution continues from the [grub_main](https://github.com/rhboot/grub2/blob/master/grub-core/kern/main.c) function. This is where GRUB sets up the environment it needs to operate:
 
@@ -197,7 +198,7 @@ Once these tasks are complete, we may see the familiar GRUB menu where we can ch
 
 As we can read in the [documentation](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst), the bootloader must load the kernel into memory, fill some fields in the kernel setup header and pass control to the kernel code. The kernel image begins with a legacy boot sector, followed by the real-mode setup code. This early part of the image contains a special structure called the kernel setup header. It is located at the `0x01F1` offset from the beginning of the kernel image and contains fields that describe how the kernel should be loaded and started. We may look at the boot [linker script](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld) to confirm the value of this offset:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/setup.ld#L70-70 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/setup.ld#L70-L70 -->
 ```linker-script
 	. = ASSERT(hdr == 0x1f1, "The setup header has the wrong offset!");
 ```
@@ -217,7 +218,7 @@ root_dev:	.word 0			/* Default to major/minor 0/0 */
 boot_flag:	.word 0xAA55
 ```
 
-The bootloader may fill some of these fields in the setup header which marked as being type `write` or `modify` in the Linux boot protocol. The values set by the bootloader will be taken from its configuration or will be calculated during boot. Of course we will not go over full descriptions and explanations of all the fields of the kernel setup header. Instead, we will take a look closer at this or that field if we will meet it during our research of the kernel code.
+The bootloader may fill some of these fields in the setup header which are marked as being type `write` or `modify` in the Linux boot protocol. The values set by the bootloader will be taken from its configuration or will be calculated during boot. Of course we will not go over full descriptions and explanations of all the fields of the kernel setup header. Instead, we will take a look closer at this or that field if we meet it during our research of the kernel code.
 
 According to the Linux kernel boot protocol, memory will be mapped as follows after loading the kernel:
 
@@ -266,7 +267,7 @@ If the kernel is built with the `CONFIG_EFI_STUB` option, which is enabled in mo
 	.word	IMAGE_DOS_SIGNATURE
 ```
 
-If you want to get a similar memory dump, follow these steps. First of all, you need to build kernel. If you do not know how to do it, you can find detailed instruction [here](https://github.com/0xAX/linux-insides/blob/master/Contributing/linux-contributing-1.md). On the diagram above, we can see that the `Protected-mode` kernel starts from `0x100000`. Knowing this address we can start the kernel in the qemu virtual machine with the following command:
+If you want to get a similar memory dump, follow these steps. First of all, you need to build kernel. If you do not know how to do it, you can find detailed instruction [here](https://github.com/0xAX/linux-insides/blob/master/Contributing/linux-contributing-1.md). On the diagram above, we can see that the `Protected-mode` kernel starts from `0x100000`. Knowing this address, we can set a breakpoint on it. First, start the kernel in the qemu virtual machine with the following command:
 
 ```bash
 qemu-system-x86_64 -kernel ./arch/x86/boot/bzImage \
@@ -280,7 +281,7 @@ After the virtual machine is started, we can attach the debugger to it, set up a
 ```bash
 gdb vmlinux
 (gdb) target remote :1234
-(gdb) hbreak *0x100000
+(gdb) break *0x100000
 (gdb) c
 Continuing.
 
@@ -317,9 +318,9 @@ Now we can run qemu virtual machine with our image:
 qemu-system-x86_64 -drive format=raw,file=hdd.img -m 256M -s -S -no-reboot -no-shutdown -vga virtio
 ```
 
-Connect with [gdb](https://sourceware.org/gdb/) debugger and setup breakpoint:
+Connect with [gdb](https://sourceware.org/gdb/) debugger and set up a breakpoint:
 
-```
+```bash
 gdb
 (gdb) target remote localhost:1234
 Remote debugging using localhost:1234
@@ -420,6 +421,7 @@ But from which point are we jumping? After the kernel setup code receives contro
 
 This applies also to the GRUB 2 bootloader. We can see in its [source code](https://github.com/rhboot/grub2/blob/master/grub-core/loader/i386/pc/linux.c):
 
+<!-- https://raw.githubusercontent.com/rhboot/grub2/refs/heads/master/grub-core/loader/i386/pc/linux.c#L60-L64 -->
 ```C
 segment = grub_linux_real_target >> 4;
 state.gs = state.fs = state.es = state.ds = state.ss = segment;
@@ -442,7 +444,7 @@ With `segment = 0x9000`, setting `cs = 0x9000 + 0x20 = 0x9020` and `ip = 0` give
 Physical = (0x9020 << 4) + 0 = 0x90200
 ```
 
-This means execution starts at physical address `0x90200` which is exactly `512` bytes offset from where the setup code was loaded. In other words - the offset to the address where the `jump` instruction resides in the image.
+This means execution starts at physical address `0x90200` which is exactly `512` bytes offset from where the setup code was loaded. In other words - the offset to the address where the `jmp` instruction resides in the image.
 
 After the jump to the `start_of_setup` label, the kernel setup code enters the very first phase of its real work:
 
@@ -473,7 +475,7 @@ start_of_setup:
 	cld
 ```
 
-We need to do both of these two things to clear the [bss](https://en.wikipedia.org/wiki/.bss) section properly a bit later. From this point we are sure that both `ds` and `es` segment registers hold the same value - `0x9000`.
+We need to do both of these things to clear the [bss](https://en.wikipedia.org/wiki/.bss) section properly a bit later. From this point we are sure that both `ds` and `es` segment registers hold the same value - `0x9000`.
 
 ### Stack setup
 
@@ -492,7 +494,7 @@ We need to prepare for C language environment. The next step is to setup the sta
 	je	2f		# -> assume %sp is reasonably set
 ```
 
-Here we compare the value of the `ss` and `ds` registers to be sure that they are equal or to fix the `ss` otherwise. 
+Here we compare the value of the `ss` and `ds` registers to be sure that they are equal or to fix the `ss` otherwise.
 
 According to the comment to this code, only old versions of the [LILO](https://en.wikipedia.org/wiki/LILO_(bootloader)) bootloader can set these registers to different values. So we will skip all the "edge cases" and consider only a single case when the value of the `ss` register is equal to `ds`. Since the values of these registers are equal, we jump to the `2` label:
 
@@ -541,7 +543,7 @@ This simply compares the [setup_sig](https://github.com/torvalds/linux/blob/mast
 
 With the magic number confirmed, and knowing our segment registers and stack are already in the proper state, the only initialization left is to clear the `.bss` section. This section of memory is used to store statically allocated, uninitialized data. It must be zeroed before transferring control to the kernel's higher-level initialization code.
 
-There is no guarantee that this region of memory is zeroed at the time the kernel setup header is loaded into memory. The kernel setup image also cannot guarantee that this area is initially filled with zeroes, because the `.bss` area can extend beyond the memory region where the kernel setup code is loaded. You can verify it by calculating the size of the kernel setup code and comparing it with the `__bss_start` and `__bss_end` symbol addresses. The size of the kernel setup code can be determined by the `setup_sects` field from the kernel setup header:
+There is no guarantee that this region of memory is zeroed at the time the kernel setup code is loaded into memory. The kernel setup image also cannot guarantee that this area is initially filled with zeroes, because the `.bss` area can extend beyond the memory region where the kernel setup code is loaded. You can verify it by calculating the size of the kernel setup code and comparing it with the `__bss_start` and `__bss_end` symbol addresses. The size of the kernel setup code can be determined by the `setup_sects` field from the kernel setup header:
 
 > | Field           | Value         |
 > | --------------- | ------------- |
@@ -609,7 +611,7 @@ What's happening there, we will see in the next part.
 
 ## Conclusion
 
-This is the end of the first part about Linux kernel insides. If you have questions or suggestions, feel free ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part, we will see the first C code that executes in the Linux kernel setup, the implementation of memory routines such as `memset`, `memcpy`, `earlyprintk`, early console implementation and initialization, and much more.
+This is the end of the first part about Linux kernel insides. If you have questions or suggestions, feel free to ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part, we will see the first C code that executes in the Linux kernel setup, the implementation of memory routines such as `memset`, `memcpy`, early console implementation and initialization, and much more.
 
 ## Links
 
