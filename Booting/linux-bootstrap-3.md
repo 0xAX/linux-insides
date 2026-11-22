@@ -316,7 +316,7 @@ The very first function that we can see in `go_to_protected_mode` is the `realmo
 We will consider only a standard use case, when the bootloader does not provide any hooks. In this case, we just disable non-maskable interrupts:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L28-L30 -->
-```assembly
+```C
 		asm volatile("cli");
 		outb(0x80, 0x70); /* Disable NMI */
 		io_delay();
