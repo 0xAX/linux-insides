@@ -57,7 +57,7 @@ If we take the largest possible values for the segment selector and the offset -
 '0x10ffef'
 ```
 
-This gives us the address `0x10FFEF`, which is `65_520` bytes past the 1 MB boundary. Since, in real mode on the original **8086** CPU, the CPU could only access the first 1 MB of memory, any address above `0xFFFFF` would wrap around back to the beginning of the address space. On modern **386+** CPUs the physical bus is wider even in real mode, but the address computation is still based on the `segment:offset`.
+This gives us the address `0x10FFEF`, which is `65_519` bytes past the 1 MB boundary. Since, in real mode on the original **8086** CPU, the CPU could only access the first 1 MB of memory, any address above `0xFFFFF` would wrap around back to the beginning of the address space. On modern **386+** CPUs the physical bus is wider even in real mode, but the address computation is still based on the `segment:offset`.
 
 Now that we understand the basics of real mode and its memory addressing limitations, let's return to the state after a hardware reset.
 
@@ -110,7 +110,7 @@ When the CPU wakes up, it reads the jump at the `0xFFFFFFF0` address, jumps into
 
 ## From power-on to bootloader
 
-We stopped at the point when a CPU jumps from the reset vector to the firmware. On a legacy PC, that means the BIOS. On modern computers it is UEFI. In the next chapters we will see the booting process on a legacy PC using the BIOS. The UEFI boot process may be covered later.
+We stopped at the point when a CPU jumps from the reset vector to the firmware. On a legacy PC, that means the BIOS. On modern computers it is UEFI. In the next parts we will see the booting process on a legacy PC using the BIOS. The UEFI boot process may be covered later.
 
 The first job of BIOS is to bring the system into a working state. It runs a series of hardware checks and initializations - memory tests, peripheral setup, chipset configuration - all part of the [POST](https://en.wikipedia.org/wiki/Power-on_self-test) routine. Once everything is checked, the next step is to find an operating system to boot. The BIOS doesn't pick just a random disk. It follows a boot order, a list stored in its configuration.
 
@@ -251,7 +251,7 @@ X             +------------------------+
 ... where the address X is as low as the design of the boot loader permits.
 ```
 
-We can see that when the bootloader transfers control to the kernel, execution starts right after the kernel's boot sector - that is, at the address `X` plus the length of the boot sector. The value of this `X` depends on how the kernel loaded. For example if I try to load kernel just with [qemu](https://www.qemu.org/), the starting address of the kernel image is at `0x10000`:
+We can see that when the bootloader transfers control to the kernel, execution starts right after the kernel's boot sector - that is, at the address `X` plus the length of the boot sector. The value of this `X` depends on how the kernel is loaded. For example if I try to load kernel just with [qemu](https://www.qemu.org/), the starting address of the kernel image is at `0x10000`:
 
 ```bash
 hexdump -C /tmp/dump | grep MZ
