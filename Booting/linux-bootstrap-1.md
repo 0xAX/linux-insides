@@ -318,7 +318,7 @@ qemu-system-x86_64 -drive format=raw,file=hdd.img -m 256M -s -S -no-reboot -no-s
 Connect with [gdb](https://sourceware.org/gdb/) debugger and setup breakpoint:
 
 ```
-$ gdb
+gdb
 (gdb) target remote localhost:1234
 Remote debugging using localhost:1234
 (gdb) break *0x90200
@@ -358,14 +358,14 @@ As in the QEMU example above, we can take a memory dump here as well, this time 
 Now we can check that the kernel image is in its place:
 
 ```bash
-~$ hexdump -C /tmp/dump | grep 00090000
+hexdump -C /tmp/dump | grep 00090000
 00090000  4d 5a 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |MZ..............|
 ```
 
 We can see the same `MZ` header from which the Linux kernel image starts. In addition, we can inspect the memory at the `0x90200` address to see that there is the kernel setup code entry point and the second part of the kernel setup header:
 
 ```bash
-~$ hexdump -C /tmp/dump | grep 00090200
+hexdump -C /tmp/dump | grep 00090200
 00090200  eb 6a 48 64 72 53 0f 02  00 00 00 00 00 10 00 43  |.jHdrS.........C|
 ```
 
