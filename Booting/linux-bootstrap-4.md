@@ -337,7 +337,7 @@ Before the kernel can switch to long mode, it checks that it runs on a suitable 
 	jnz	.Lno_longmode
 ```
 
-The `verify_cpu` function is defined in [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) and executes the [CPUID](https://en.wikipedia.org/wiki/CPUID) instruction to check the details of the processors on which the kernel is running. In our case, the most crucial check is for long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) support. This function returns the result in the `eax` register. Its value is `0` on success and `1` on failure. If long mode is not supported by the current processor, the kernel jumps to the `no_longmode` label, which stops the CPU with the `hlt` instruction:
+The `verify_cpu` function is defined in [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) and executes the [CPUID](https://en.wikipedia.org/wiki/CPUID) instruction to check the details of the processors on which the kernel is running. In our case, the most crucial check is for long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions) support. This function returns the result in the `eax` register. Its value is `0` on success and `1` on failure. If long mode is not supported by the current processor, the kernel jumps to the `.Lno_longmode` label, which stops the CPU with the `hlt` instruction:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L482-L487 -->
 ```assembly
