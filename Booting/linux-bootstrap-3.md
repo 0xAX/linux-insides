@@ -419,7 +419,7 @@ And that's all! Once these two structures will be configured, the Linux kernel c
 
 Before the CPU can safely enter protected mode, it needs to know where to find the handlers that are triggered in the case of [interrupts and exceptions](https://en.wikipedia.org/wiki/Interrupt). In real mode, the CPU relies on the [Interrupt Vector Table](https://en.wikipedia.org/wiki/Interrupt_vector_table). In protected mode, this mechanism changes to the Interrupt Descriptor Table.
 
-The Interrupt Descriptor Table is a special structure located in memory that contains descriptors. This structure describes where the CPU can find handlers for interrupts and exceptions. We will see the full description of the Interrupt Description Table and its entries later, because for now, we have disabled all interrupts in the previous steps. Let's take a look at the function that sets up a zero-filled Interrupt Descriptor Table:
+The Interrupt Descriptor Table is a special structure located in memory that contains descriptors. This structure describes where the CPU can find handlers for interrupts and exceptions. We will see the full description of the Interrupt Description Table and its entries later, because for now, we have disabled all interrupts in the previous steps. Let's take a look at the function that sets up an empty Interrupt Descriptor Table:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L94-L98 -->
 ```C
@@ -430,7 +430,7 @@ static void setup_idt(void)
 }
 ```
 
-As we can see, it just loads the IDT (which is filled with zeros) using the `lidtl` instruction. The `null_idt` has type `gdt_ptr`, which is a structure defined in the same [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c) file:
+As we can see, it just loads an empty IDT, with the base address and size set to zero, using the `lidtl` instruction. The `null_idt` has type `gdt_ptr`, which is a structure defined in the same [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c) file:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L60-L63 -->
 ```C
