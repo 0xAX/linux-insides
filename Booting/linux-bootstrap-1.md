@@ -342,57 +342,20 @@ During the execution of the `linux` command, you will see the debug line:
 relocator: min_addr = 0x0, max_addr = 0xffffffff, target = 0x90000
 ```
 
-That confirms that the kernel image will be loaded at the `0x90000` address. During execution of the `boot` command, the breakpoint should be caught. In debugger you can execute `i r` command and see that we are at the `0x9020:0x0000`
+That confirms that the kernel image will be loaded at the `0x90000` address. During execution of the `boot` command, the breakpoint should be caught. In debugger you can execute `i r` command and see that we are at the `0x9020:0x0000`:
 
 ```
 rip            0x0                 0x0
 cs             0x9020              36896
 ```
 
-If you continue to execute `si` commands in the debugger CLI, you will go step by step through the early kernel setup code. If you exit from the debugger, you will see the continuation of the kernel loading procedure.
-
-In addition, we can confirm this address using the same approach as in the example with QEMU above. We know that according to the Linux kernel boot protocol, the protected mode kernel is loaded at the `100000` address. We can set a breakpoint at this address and create a memory dump. To do this, run the QEMU virtual machine using the same command:
-
-```bash
-qemu-system-x86_64 -drive format=raw,file=hdd.img -m 256M -s -S -no-reboot -no-shutdown -vga virtio
-```
-
-At the next step, attach with gdb to the virtual machine:
+As in the QEMU example above, we can take a memory dump here as well, this time up to `0x100000` to cover the kernel setup code:
 
 ```
-(gdb) target remote localhost:1234
-Remote debugging using localhost:1234
-0x000000000000fff0 in ?? ()
-(gdb) break *0x100000
-Breakpoint 1 at 0x100000
-(gdb) c
-Continuing.
+(gdb) dump binary memory /tmp/dump 0x0000 0x100000
 ```
 
-At the beginning, the breakpoint stops us at the GRUB code itself. Because of this, we need to continue in the debugger with the `c` command. Return to the QEMU window now, and execute these commands:
-
-```
-set pager=1
-set debug=all
-linux /boot/bzImage
-boot
-```
-
-During the boot process, the debugger stops us the second time at the breakpoint which we set at the `100000` address:
-
-```
-Breakpoint 1, 0x0000000000100000 in ?? ()
-(gdb) c
-Continuing.
-```
-
-This time, we are at the entry point of the Linux kernel in protected mode. Execute the next command in the debugger shell to get a memory dump:
-
-```
-dump binary memory /tmp/dump 0x0000 0x200000
-```
-
-Now we can inspect the memory dump at the `0x90000` address:
+Now we can check that the kernel image is in its place:
 
 ```bash
 ~$ hexdump -C /tmp/dump | grep 00090000
@@ -405,6 +368,8 @@ We can see the same `MZ` header from which the Linux kernel image starts. In add
 ~$ hexdump -C /tmp/dump | grep 00090200
 00090200  eb 6a 48 64 72 53 0f 02  00 00 00 00 00 10 00 43  |.jHdrS.........C|
 ```
+
+If you continue to execute `si` commands in the debugger CLI, you will go step by step through the early kernel setup code. If you exit from the debugger, you will see the continuation of the kernel loading procedure.
 
 ## The beginning of the kernel setup stage
 
