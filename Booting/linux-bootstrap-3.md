@@ -583,7 +583,7 @@ Since we are in protected mode, our segment bases point to zero. Because of this
 	addl	%ebx, %esp
 ```
 
-The last step before the jump into actual 32-bit entry point is to clear the general purpose registers:
+One of the last steps before the jump into the actual 32-bit entry point is to clear the general purpose registers:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pmjump.S#L65-L69 -->
 ```assembly
