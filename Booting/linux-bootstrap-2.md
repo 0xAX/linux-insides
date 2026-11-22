@@ -420,7 +420,7 @@ struct boot_e820_entry {
 } __attribute__((packed));
 ```
 
-After the information is called, the kernel prints a message about the available memory regions. You can find it in the [dmesg](https://en.wikipedia.org/wiki/Dmesg) output:
+The kernel prints this memory map later, during initialization. You can find it in the [dmesg](https://en.wikipedia.org/wiki/Dmesg) output:
 
 ```
 [    0.000000] e820: BIOS-provided physical RAM map:
