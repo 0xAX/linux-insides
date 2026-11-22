@@ -1,6 +1,6 @@
 # Kernel booting process - Part 2
 
-We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we walked through the very early stages of the booting process and the first assembly instructions of the Linux kernel code. Aside from different mechanisms, this code was responsible for preparing the environment for the [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming language. At the end of the part, we reached a symbolic milestone - the very first call of a C function. This function has a classical name - `main` - and is defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file.
+We have already started our journey into the Linux kernel in the previous [part](./linux-bootstrap-1.md), where we walked through the very early stages of the booting process and the first assembly instructions of the Linux kernel code. Among other things, this code was responsible for preparing the environment for the [C](https://en.wikipedia.org/wiki/C_(programming_language)) programming language. At the end of the part, we reached a symbolic milestone - the very first call of a C function. This function has a classical name - `main` - and is defined in the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file.
 
 From here on, we will still see some assembly code on our way, but it will be more and more rare 🤓 Now it is time for more "high-level" logic!
 
@@ -55,7 +55,7 @@ As mentioned above, the GDT contains `segment descriptors` which describe memory
 
 Do not worry! I know it may look a little bit intimidating at first glance, especially in comparison to the relatively simple addressing in real mode, but we will go through it in detail. We will start from the bottom, from right to left.
 
-The first field is `LIMIT 15:0`. It represents the first 16 bits of the segment limit. The second part is located at the bits `51:48`. This field provides information about the size of a segment. Having 20-bit size of the limit field, it may seem that the max size of a memory segment can be 1 MB, but it is not like that. In addition, the max size of a segment depends on the 55th `G` bit:
+The first field is `LIMIT 15:0`. It represents the first 16 bits of the segment limit. The second part is located at the bits `51:48`. This field provides information about the size of a segment. With a 20-bit limit field, it may seem that the max size of a memory segment is 1 MB, but this is not the case. The max size of a segment also depends on the 55th `G` bit:
 
 - If `G=0` - the value of the `LIMIT` field is interpreted in bytes.
 - If `G=1` - the value of the `LIMIT` field is interpreted in 4 KB units called pages.
@@ -371,7 +371,7 @@ If the level of CPU is less than the required level specified by the [`CONFIG_X8
 
 ### Memory detection
 
-After the kernel became sure that the CPU which it is running on is suitable, the next stage is to detect available memory in the system. This task is handled by the `detect_memory` function, which queries the system firmware to obtain a map of physical memory regions. To do this, the kernel queries the special BIOS service `0xE820` and, in addition, the legacy BIOS services `0xE801` and `0x88`. The kernel uses their results later only if the `0xE820` map is not available. In this part, we will see only the implementation of the `0xE820` interface.
+After the kernel has made sure that the CPU which it is running on is suitable, the next stage is to detect available memory in the system. This task is handled by the `detect_memory` function, which queries the system firmware to obtain a map of physical memory regions. To do this, the kernel queries the special BIOS service `0xE820` and, in addition, the legacy BIOS services `0xE801` and `0x88`. The kernel uses their results later only if the `0xE820` map is not available. In this part, we will see only the implementation of the `0xE820` interface.
 
 The `detect_memory` function is defined in the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c) and, as just mentioned, tries to get the information about available memory:
 
