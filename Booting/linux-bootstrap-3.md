@@ -503,7 +503,7 @@ Let's take a look at the definition of the code memory segment:
 
 The base address of this memory segment is defined as `0` and the limit as `0xFFFFF`. The `DESC_CODE32` value describes the flags of this segment. If we take a look at the flags, we can see that the granularity (bit `G`) of this segment is set to 4 KB units. This means that the segment covers addresses `0x00000000–0xFFFFFFFF`, which is the entire 4 GB linear address space. The same base address and limit are defined for the data segment. This is because the Linux kernel uses the so-called [flat memory model](https://en.wikipedia.org/wiki/Flat_memory_model).
 
-Besides the granularity bit, the `DESC_CODE32` specifies other flags. Among them, you can find a 32-bit segment that is readable, executable, and present in memory. The privilege level is set to the highest value as the kernel needs.
+Besides the granularity bit, the `DESC_CODE32` specifies other flags. Among them, you can find a 32-bit segment that is readable, executable, and present in memory. The privilege level is set to `0`, the highest privilege, as the kernel needs.
 
 Looking at the documentation of the Global Descriptor Table and its entries, you can check all the initial segments by yourself. It is not so hard.
 
