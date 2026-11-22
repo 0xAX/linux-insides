@@ -275,7 +275,7 @@ After the serial port initialization we can see the first output:
 		puts("early console in setup code\n");
 ```
 
-The `puts` function uses the `inb` function that we have seen above during initialization of I/O callbacks.
+The `puts` function uses the `inb` and `outb` functions that we have seen above during initialization of I/O callbacks.
 
 From this point we can print messages from the kernel setup code 🎉. Time to move to the next step.
 
