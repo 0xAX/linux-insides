@@ -23,7 +23,7 @@ The Linux kernel for x86_64 operates in a special mode called - [long mode](http
 What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the previous part we already know that the CPU currently operates in [real mode](https://en.wikipedia.org/wiki/Real_mode). For us it mostly means - memory segmentation. As a short reminder - to access a memory location, the combination of two CPU [registers](https://en.wikipedia.org/wiki/Processor_register) is used:
 
 - A segment register - `cs`, `ds`, `ss` and `es` which defines the segment selector.
-- A general purpose register which specifies the offset within the segment.
+- The instruction pointer or a general purpose register which specifies the offset within the segment.
 
 The main motivation for switching from real mode is its memory addressing limitation. As we saw in the previous part, real mode can address only 2<sup>20</sup> bytes. This is just 1 MB of RAM. Obviously, modern software, including an operating system kernel, needs more. To break these constraints, a new processor mode was introduced - `protected mode`.
 
