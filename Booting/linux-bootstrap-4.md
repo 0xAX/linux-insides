@@ -143,7 +143,7 @@ In this part, we will focus only on switching to long mode. The kernel image dec
 - [head_32.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_32.S)
 - [head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)
 
-We will focus only on the `head_64.S` file. Yes, the file name contains the `64` suffix, despite the kernel being in the 32-bit protected mode at the moment. The explanation for this situation is simple. Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile). We can see the following `make` goal here:
+We will focus only on the `head_64.S` file. Yes, the file name contains the `64` suffix, despite the kernel being in the 32-bit protected mode at the moment. The explanation for this situation is simple. Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile). We can see the following list of files that `arch/x86/boot/compressed/vmlinux` is built from:
 
 ```Makefile
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/kernel_info.o $(obj)/head_$(BITS).o \
@@ -151,7 +151,7 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/kernel_info.o $(obj)/head_$(BITS).o 
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
 
-The first line contains the following target - `$(obj)/head_$(BITS).o`. This means that `make` will select the file during the kernel build process based on the `$(BITS)` value. This `make` variable is defined in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) Makefile and its value depends on the kernel's configuration:
+Among them, we can see `$(obj)/head_$(BITS).o`. This means that `make` will select the file during the kernel build process based on the `$(BITS)` value. This `make` variable is defined in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) Makefile and its value depends on the kernel's configuration:
 
 ```Makefile
 ifeq ($(CONFIG_X86_32),y)
