@@ -267,10 +267,10 @@ If the kernel is built with the `CONFIG_EFI_STUB` option, which is enabled in mo
 If you want to get a similar memory dump, follow these steps. First of all, you need to build kernel. If you do not know how to do it, you can find detailed instruction [here](https://github.com/0xAX/linux-insides/blob/master/Contributing/linux-contributing-1.md). On the diagram above, we can see that the `Protected-mode` kernel starts from `0x100000`. Knowing this address we can start the kernel in the qemu virtual machine with the following command:
 
 ```bash
-sudo qemu-system-x86_64 -kernel ./linux/arch/x86/boot/bzImage \
-                        -nographic                            \
-                        -append "console=ttyS0 nokaslr"       \
-                        -initrd /boot/initramfs-6.17.0-rc1-g8f5ae30d69d7.img -s -S
+qemu-system-x86_64 -kernel ./linux/arch/x86/boot/bzImage \
+                   -nographic                            \
+                   -append "console=ttyS0 nokaslr"       \
+                   -s -S
 ```
 
 After the virtual machine is started, we can attach the debugger to it, set up a breakpoint on the entry point and get the dump:
@@ -295,27 +295,16 @@ qemu-img create hdd.img 64M
 parted hdd.img --script mklabel msdos
 parted hdd.img --script mkpart primary ext2 1MiB 100%
 parted hdd.img --script set 1 boot on
-LO_DEVICE=$(losetup -f)
+LO_DEVICE=$(sudo losetup -f)
 sudo losetup -P "${LO_DEVICE}" hdd.img
 sudo mkfs.ext2 "${LO_DEVICE}"p1
+sudo mkdir -p /mnt/tmp
 sudo mount "${LO_DEVICE}"p1 /mnt/tmp
-sudo mkdir -p /mnt/tmp/boot/grub
 sudo grub2-install \
   --target=i386-pc \
   --boot-directory=/mnt/tmp/boot \
   "${LO_DEVICE}"
 sudo cp ./arch/x86/boot/bzImage /mnt/tmp/boot/
-sudo tee /mnt/tmp/boot/grub/grub.cfg > /dev/null <<EOF
-terminal_input serial
-terminal_output serial
-set timeout=0
-set default=0
-set debug=linux
-
-menuentry "Linux" {
-    linux /boot/bzImage earlyprintk=serial,0x3f8,115200
-}
-EOF
 sudo umount /mnt/tmp
 sudo losetup -d "${LO_DEVICE}"
 ```
@@ -360,7 +349,7 @@ rip            0x0                 0x0
 cs             0x9020              36896
 ```
 
-If you continue to execute `s i` commands in the debugger CLI, you will go step by step through the early kernel setup code. If you exit from the debugger, you will see the continuation of the kernel loading procedure.
+If you continue to execute `si` commands in the debugger CLI, you will go step by step through the early kernel setup code. If you exit from the debugger, you will see the continuation of the kernel loading procedure.
 
 In addition, we can confirm this address using the same approach as in the example with QEMU above. We know that according to the Linux kernel boot protocol, the protected mode kernel is loaded at the `100000` address. We can set a breakpoint at this address and create a memory dump. To do this, run the QEMU virtual machine using the same command:
 
