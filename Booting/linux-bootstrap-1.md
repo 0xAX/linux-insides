@@ -428,7 +428,7 @@ state.ip = 0;
 
 Here, `grub_linux_real_target` is the physical address where the kernel setup code will be loaded. As we saw in the [previous section](#the-bootloader-stage), this address was `0x90000`. Shifting it right by four divides it by `16`, converting a physical address into a segment value - that's how real mode memory segmentation works.
 
-Then, GRUB sets the code segment specified by the `CS` register to `segment + 0x20` before starting execution. Why `0x20`? Let's remember that in real mode, physical addresses are computed as:
+Then, GRUB sets the code segment specified by the `cs` register to `segment + 0x20` before starting execution. Why `0x20`? Let's remember that in real mode, physical addresses are computed as:
 
 ```
 Physical = (cs << 4) + ip
