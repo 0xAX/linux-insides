@@ -44,7 +44,7 @@ sudo qemu-system-x86_64 -kernel ./linux/arch/x86/boot/bzImage \
 After this, run the GNU GDB debugger in another terminal and pass the following commands:
 
 ```
-$ gdb
+gdb
 (gdb) target remote :1234
 (gdb) hbreak *0x100000
 (gdb) c
@@ -206,7 +206,7 @@ SECTIONS
 This means that the code in this section is compiled to run at the address zero. We also can see this in the output of `objdump` utility:
 
 ```bash
-$ objdump -D /home/alex/disk/dev/linux/arch/x86/boot/compressed/vmlinux | less
+objdump -D /home/alex/disk/dev/linux/arch/x86/boot/compressed/vmlinux | less
 
 /home/alex/disk/dev/linux/arch/x86/boot/compressed/vmlinux:     file format elf64-x86-64
 
