@@ -586,7 +586,7 @@ In the next step, the kernel builds four `Page Directory` entries in the `Page D
 	jnz	1b
 ```
 
-In the code above, we can see the filling of the first four entries of the 3rd-level page table. The first entry of the 3rd level page table is located at the offset `0x1000` from the beginning of the top-level page table. The value of the `eax` register is similar to the 4th-level page table entry, with the difference that now it points to the 2nd-level page table. Next, the kernel fills the four entries of the 3rd-level page table in the "loop" until the value of the `ecx` register is not zero. As soon as these page table entries are filled, the kernel proceeds to the next-level page table:
+In the code above, we can see the filling of the first four entries of the 3rd-level page table. The first entry of the 3rd level page table is located at the offset `0x1000` from the beginning of the top-level page table. The value of the `eax` register is similar to the 4th-level page table entry, with the difference that now it points to the 2nd-level page table. Next, the kernel fills the four entries of the 3rd-level page table in the "loop" until the value of the `ecx` register becomes zero. As soon as these page table entries are filled, the kernel proceeds to the next-level page table:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L227-L235 -->
 ```assembly
