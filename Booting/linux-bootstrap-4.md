@@ -29,17 +29,19 @@ The value of the `eax` register contains the address of the `32-bit` entry point
 >
 > -- *The Linux/x86 Boot Protocol*, "Memory Layout"
 
-We can make make sure that this 32-bit entry point of the Linux kernel using the [GNU GDB](https://sourceware.org/gdb/) debugger and running the Linux kernel in the [QEMU](https://www.qemu.org/) virtual machine. To do this, you can run the following command in one terminal:
+We can make sure that this is the 32-bit entry point of the Linux kernel using the [GNU GDB](https://sourceware.org/gdb/) debugger and running the Linux kernel in the [QEMU](https://www.qemu.org/) virtual machine. To do this, you can run the following command in one terminal:
 
 ```bash
-sudo qemu-system-x86_64 -kernel ./linux/arch/x86/boot/bzImage \ 
-                        -nographic                            \
-                        -append "console=ttyS0 nokaslr" -s -S \ 
-                        -initrd /boot/initramfs-6.17.0-rc3-g1b237f190eb3.img
+qemu-system-x86_64 -kernel ./arch/x86/boot/bzImage \
+                   -nographic                      \
+                   -append "console=ttyS0 nokaslr" \
+                   -s -S
 ```
 
 > [!NOTE]
-> You need to pass your own kernel image and [initrd](https://en.wikipedia.org/wiki/Initial_ramdisk) image to the `-kernel` and `-initrd` command line options.
+> You need to pass your own kernel image to the `-kernel` command line option.
+>
+> To inspect the kernel structures, GDB needs the debug information from the `vmlinux` file, so the kernel must be built with the [`CONFIG_DEBUG_INFO`](https://github.com/torvalds/linux/blob/master/lib/Kconfig.debug) configuration option enabled.
 
 After this, run the GNU GDB debugger in another terminal and pass the following commands:
 
@@ -75,6 +77,8 @@ From the previous part, you may remember:
 So the `esi` register has the pointer to the `boot_params`. Let's inspect it to make sure that it is really it. For example we can take a look at the command line string that we passed to the virtual machine:
 
 ```
+(gdb) file ./vmlinux
+Reading symbols from ./vmlinux...
 (gdb) x/s ((struct boot_params *)$rsi)->hdr.cmd_line_ptr
 0x20000:	"console=ttyS0 nokaslr"
 (gdb) ptype struct boot_params
@@ -115,8 +119,6 @@ type = struct boot_params {
     struct edd_info eddbuf[6];
     __u8 _pad9[276];
 }
-(gdb) x/s ((struct boot_params *)$rsi)->hdr.cmd_line_ptr
-0x20000:	"console=ttyS0 nokaslr"
 ```
 
 We got it 🎉
