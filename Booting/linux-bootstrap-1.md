@@ -24,7 +24,7 @@ The **8086** was a 16-bit microprocessor. Basically it means that its general-pu
 
 Because the registers on **8086** processors were only `16` bits wide, the largest value they could hold was `0xFFFF` which equals 64 KB. This means that, using just a single 16-bit value, the CPU could only directly address 64 KB of memory at a time. This leads us to the question - how can a processor with 16-bit registers access 20-bit addresses? The answer is [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation).
 
-To make use of the entire 1 MB space provided by the 20-bit address bus, the **8086** used a scheme called [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation). All memory is divided into small, fixed-size segments of `65_536` bytes each. Instead of using just one value to identify a memory location, a CPU uses the two:
+To make use of the entire 1 MB space provided by the 20-bit address bus, the **8086** used a scheme called [memory segmentation](https://en.wikipedia.org/wiki/Memory_segmentation). Each segment is up to `65_536` bytes long and can start at any 16-byte boundary, so segments may overlap. Instead of using just one value to identify a memory location, a CPU uses the two:
 
 1. Segment selector - identifies the starting point (base address) of a 64 KB segment. Represented by the value of the `cs` (code-segment) register.
 2. Offset - specifies how far into that segment the target address is. Represented by the value of the `ip` register.
