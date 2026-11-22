@@ -648,34 +648,6 @@ The following diagram illustrates how the setup image, `.bss`, and the stack reg
 > [!IMPORTANT]
 > The addresses of the `__bss_start` and `__bss_end` may differ on your machine and depend on the Linux kernel version.
 
-We can confirm it by running an experiment. Add a simple change to the [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file, build the kernel with our change, and run the Linux kernel in the qemu virtual machine as we did before in this part. The change is:
-
-```diff
-modified   arch/x86/boot/main.c
-@@ -11,6 +11,7 @@
-  * Main module for the real-mode kernel code
-  */
- #include <linux/build_bug.h>
-+#include <asm/sections.h>
-
- #include "boot.h"
- #include "string.h"
-@@ -171,6 +172,8 @@ void main(void)
-	if (IS_ENABLED(CONFIG_EDD))
-		query_edd();
-
-+        printf("BSS start: %p. BSS end: %p\n", __bss_start, _end);
-+
-	/* Set the video mode */
-	set_video();
-```
-
-If you did everything correctly, you will see an output similar to:
-
-```
-BSS start: 00003F00. BSS end: 00005280
-```
-
 ### Jump to C code
 
 At this point, we initialized the [stack](#stack-setup) and [.bss](#bss-setup) sections. The last assembly instruction is a jump to C code:
