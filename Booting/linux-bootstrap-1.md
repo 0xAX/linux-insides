@@ -29,6 +29,8 @@ To make use of the entire 1 MB space provided by the 20-bit address bus, the **8
 1. Segment selector - identifies the starting point (base address) of a 64 KB segment. Represented by the value of the `cs` (code-segment) register.
 2. Offset - specifies how far into that segment the target address is. Represented by the value of the `ip` register.
 
+For the instructions to execute, these are the `cs` and `ip` registers. Data is accessed through the `ds`, `es` and `ss` segment registers in the same way.
+
 In real mode, the base address for a given segment selector is calculated as:
 
 ```
