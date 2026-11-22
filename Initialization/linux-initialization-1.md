@@ -1,6 +1,6 @@
 # Linux kernel initialization - Part 1
 
-The previous [post](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-6.md) was the final part of the chapter describing the [Linux kernel boot process](https://github.com/0xAX/linux-insides/tree/master/Booting). In that chapter, we looked at the kernel boot process step by step, starting from the very first actions and instructions executed after the system powers on, through the bootloader, and finally into the Linux kernel setup code.
+The previous [post](../Booting/linux-bootstrap-6.md) was the final part of the chapter describing the [Linux kernel boot process](https://github.com/0xAX/linux-insides/tree/master/Booting). In that chapter, we looked at the kernel boot process step by step, starting from the very first actions and instructions executed after the system powers on, through the bootloader, and finally into the Linux kernel setup code.
 
 Now we are entering the next stage of the journey - the initialization of the Linux kernel. The CPU has switched modes, the temporary page tables have been built, the kernel image has been decompressed, placed at its final location in memory, and control has been passed to it. For now, the kernel is in a very early state. It is running on simple identity-mapped page tables and a temporary GDT inherited from the early setup code. It must rebuild all of these structures before it can continue.
 
