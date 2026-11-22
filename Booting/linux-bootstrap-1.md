@@ -603,7 +603,7 @@ At this point, we initialized the [stack](#stack-setup) and [.bss](#bss-setup) s
 
 The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) source code file.
 
-What's happening there, we will see in the next chapter.
+What's happening there, we will see in the next part.
 
 ## Conclusion
 
