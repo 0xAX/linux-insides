@@ -283,7 +283,7 @@ From this point we can print messages from the kernel setup code 🎉. Time to m
 
 We have seen the initialization of the `stack` and `bss` memory areas in the previous part. The next step is to initialize the [heap](https://en.wikipedia.org/wiki/Memory_management#HEAP) memory area. The heap initialization takes place in the `init_heap` function:
 
-<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L118-131 -->
+<!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/main.c#L118-L131 -->
 ```C
 static void init_heap(void)
 {
