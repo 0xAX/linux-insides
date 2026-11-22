@@ -281,7 +281,7 @@ The new Global Descriptor table contains four descriptors:
 - 32-bit kernel data segment
 - 16-byte task state descriptor
 
-We already saw loading the Global Descriptor Table in the previous [part](./linux-bootstrap-3.md#set-up-global-descriptor-table), and now we're doing almost the same, but we set descriptors to use `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode.
+We already saw loading the Global Descriptor Table in the previous [part](./linux-bootstrap-3.md#set-up-the-global-descriptor-table), and now we're doing almost the same, but we set descriptors to use `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode.
 
 After the new Global Descriptor Table is loaded, the next step is to set up the stack:
 
