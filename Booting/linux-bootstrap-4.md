@@ -9,7 +9,7 @@ Despite this, the kernel is still in its early setup mode. There are many differ
 
 The main characteristic of this new mode (as with all the earlier modes) is the way it defines the memory model. In real mode, the memory model was relatively simple, and each memory location was formed based on the base address specified in a segment register, plus some offset. In protected mode, the global and local descriptor tables contain descriptors that describe memory areas. All the memory accesses in long mode are based on the new mechanism called [paging](https://en.wikipedia.org/wiki/Memory_paging). One of the crucial goals of the kernel setup code before it can switch to the long mode is to set up paging.
 
-In this chapter, we will see how the kernel switches to long mode in detail.
+In this part, we will see how the kernel switches to long mode in detail.
 
 > [!NOTE]
 > There will be lots of assembly code in this part, so if you are not familiar with that, read another set of my [posts about assembly programming](https://github.com/0xAX/asm).
@@ -133,12 +133,12 @@ The `32-bit` entry point is defined in [arch/x86/boot/compressed/head_64.S](http
 SYM_FUNC_START(startup_32)
 ```
 
-First of all, it is worth knowing why the directory is named `compressed`. It's because the kernel is in the [`bzImage`](https://en.wikipedia.org/wiki/Vmlinux#bzImage) file, which is a compressed package that contains the kernel image and kernel setup code. In all previous chapters, we were researching the kernel setup code. The next two big steps, which the kernel's setup code should do before we see the entry point of the kernel itself, are:
+First of all, it is worth knowing why the directory is named `compressed`. It's because the kernel is in the [`bzImage`](https://en.wikipedia.org/wiki/Vmlinux#bzImage) file, which is a compressed package that contains the kernel image and kernel setup code. In all previous parts, we were researching the kernel setup code. The next two big steps, which the kernel's setup code should do before we see the entry point of the kernel itself, are:
 
 - Switch to long mode
 - Decompress the kernel image and jump to its entry point
 
-In this part, we will focus only on switching to long mode. The kernel image decompression will be covered in the next chapters. Returning to the current kernel code, you can find the following two files in the [arch/x86/boot/compressed](https://github.com/torvalds/linux/tree/master/arch/x86/boot/compressed) directory:
+In this part, we will focus only on switching to long mode. The kernel image decompression will be covered in the next parts. Returning to the current kernel code, you can find the following two files in the [arch/x86/boot/compressed](https://github.com/torvalds/linux/tree/master/arch/x86/boot/compressed) directory:
 
 - [head_32.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_32.S)
 - [head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)
@@ -189,7 +189,7 @@ SYM_FUNC_START(startup_32)
 
 When the direction flag is clear, all string or copy-like operations used for copying data, like for example [stos](https://www.felixcloutier.com/x86/stos:stosb:stosw:stosd:stosq) or [scas](https://www.felixcloutier.com/x86/scas:scasb:scasw:scasd), will increment the index registers `esi` or `edi`. We need to clear the direction flag because later we will use string operations for tasks such as clearing space for page tables or copying data.
 
-The next instruction is to disable interrupts - `cli`. We have already seen it in the previous chapter. The interrupts are disabled "twice" because modern bootloaders can load the kernel starting from this point, but not only one that we have seen in the [first chapter](./linux-bootstrap-1.md).
+The next instruction is to disable interrupts - `cli`. We have already seen it in the previous part. The interrupts are disabled "twice" because modern bootloaders can load the kernel starting from this point, but not only one that we have seen in the [first part](./linux-bootstrap-1.md).
 
 After these two simple instructions, the next step is to calculate the difference between where the kernel is compiled to run, and where it actually was loaded. If we will take a look at the linker [script](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S), we will see the following definition:
 
@@ -313,7 +313,7 @@ The last action after we loaded the new Global Descriptor Table is to reload the
 
 Since we cannot change the code segment register using the `mov` instruction, a trick with the `lretl` instruction is used to load the correct value into `cs`. This instruction fetches two values from the top of the stack, then puts the first value into the `eip` register and the second value into the `cs` register. From this moment, we have a proper kernel code selector and instruction pointer values.
 
-Just a couple of steps separate us from transitioning into the long mode. As mentioned at the beginning of this chapter, one of the most crucial steps is to set up `paging`. But before that, the kernel needs to do the last preparations, which we will see in the next sections.
+Just a couple of steps separate us from transitioning into the long mode. As mentioned at the beginning of this part, one of the most crucial steps is to set up `paging`. But before that, the kernel needs to do the last preparations, which we will see in the next sections.
 
 ## Last steps before paging setup
 
@@ -678,7 +678,7 @@ This is the end of the fourth part about Linux kernel insides. If you have quest
 
 ## Links
 
-Here is the list of the links that you may find useful during reading of this chapter:
+Here is the list of the links that you may find useful during reading of this part:
 
 - [Real mode](https://en.wikipedia.org/wiki/Real_mode)
 - [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)

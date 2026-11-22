@@ -4,7 +4,7 @@ In the previous [part](./linux-bootstrap-4.md), we saw the transition from the [
 
 ## First steps in the long mode
 
-The point where we stopped in the previous chapter is the [lret](https://www.felixcloutier.com/x86/ret) instruction, which performed "jump" to the `64-bit` entry point located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
+The point where we stopped in the previous part is the [lret](https://www.felixcloutier.com/x86/ret) instruction, which performed "jump" to the `64-bit` entry point located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L280-L282 -->
 ```assembly
@@ -80,14 +80,14 @@ The next step is to compute the difference between the location the kernel was c
 	addq	%rbp, %rbx
 ```
 
-This operation is very similar to what we have seen already in the [Calculation of the kernel relocation address](./linux-bootstrap-4.md#calculation-of-the-kernel-relocation-address) section of the previous chapter.
+This operation is very similar to what we have seen already in the [Calculation of the kernel relocation address](./linux-bootstrap-4.md#calculation-of-the-kernel-relocation-address) section of the previous part.
 
 > [!TIP]
 > It is highly recommended to read carefully [Calculation of the kernel relocation address](./linux-bootstrap-4.md#calculation-of-the-kernel-relocation-address) before trying to understand this code.
 
 This piece of code is almost a 1:1 copy of what we have seen in protected mode. If you understood it back then, you shouldn't have any problems understanding it now. The main purpose of this code is to set up the `rbp` and `ebx` registers with the base addresses where the kernel will be decompressed, and the address where the kernel image with decompressor code should be relocated for safe decompression.
 
-The only difference with the code from protected mode is that now, the kernel can use `rip` based addressing to get the address of the `startup_32`. So it does not need to do magic tricks with `call` and `popl` instructions like in protected mode. All the rest is just the same as what we already have seen in the previous chapter and done only for the same reason - if the bootloader is loaded, the kernel starts from the `64-bit` mode, and the protected mode code is skipped.
+The only difference with the code from protected mode is that now, the kernel can use `rip` based addressing to get the address of the `startup_32`. So it does not need to do magic tricks with `call` and `popl` instructions like in protected mode. All the rest is just the same as what we already have seen in the previous part and done only for the same reason - if the bootloader is loaded, the kernel starts from the `64-bit` mode, and the protected mode code is skipped.
 
 After these addresses are obtained, the kernel sets up the stack for the decompressor code:
 
@@ -150,7 +150,7 @@ After the new Global Descriptor Table is loaded, the next step is to load the ne
 
 The `load_stage1_idt` function is defined in [arch/x86/boot/compressed/idt_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/idt_64.c) and uses the `lidt` instruction to load the address of the new `Interrupt Descriptor Table`. For this moment, the `Interrupt Descriptor Table` has `NULL` entries to avoid handling the interrupts. As you can remember, the interrupts are disabled at this moment anyway. The valid interrupt handlers will be loaded after kernel relocation.
 
-The next steps after this are highly related to the setup of `5-level` paging, if it is configured using the `CONFIG_PGTABLE_LEVELS=5` kernel configuration option. This feature extends the virtual address space beyond the traditional 4-level paging scheme, but it is still relatively uncommon in practice and not essential for understanding the mainline boot flow. As mentioned in the [previous chapter](./linux-bootstrap-4.md), for clarity and focus, we'll set it aside and continue with the standard 4-level paging case.
+The next steps after this are highly related to the setup of `5-level` paging, if it is configured using the `CONFIG_PGTABLE_LEVELS=5` kernel configuration option. This feature extends the virtual address space beyond the traditional 4-level paging scheme, but it is still relatively uncommon in practice and not essential for understanding the mainline boot flow. As mentioned in the [previous part](./linux-bootstrap-4.md), for clarity and focus, we'll set it aside and continue with the standard 4-level paging case.
 
 ### Kernel relocation
 
@@ -273,7 +273,7 @@ After the `Interrupt Descriptor Table` is re-loaded, the `initialize_identity_ma
 	call	initialize_identity_maps
 ```
 
-This function is defined in [arch/x86/boot/compressed/ident_map_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/ident_map_64.c) and sets up the identity-mapped page tables used by the decompressor. Depending on how the kernel was loaded, it either extends the early page tables or builds new ones. Yes, the kernel needs to initialize page tables one more time, despite we have seen the initialization and setup of the early page tables in the [previous chapter](./linux-bootstrap-4.md#set-up-paging). The reason for "one more" page table is that if the kernel was loaded at the `64-bit` entrypoint, it uses the page table built by the bootloader. Since the kernel was relocated to a new place, the decompressor code can overwrite these page tables during decompression.
+This function is defined in [arch/x86/boot/compressed/ident_map_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/ident_map_64.c) and sets up the identity-mapped page tables used by the decompressor. Depending on how the kernel was loaded, it either extends the early page tables or builds new ones. Yes, the kernel needs to initialize page tables one more time, despite we have seen the initialization and setup of the early page tables in the [previous part](./linux-bootstrap-4.md#set-up-paging). The reason for "one more" page table is that if the kernel was loaded at the `64-bit` entrypoint, it uses the page table built by the bootloader. Since the kernel was relocated to a new place, the decompressor code can overwrite these page tables during decompression.
 
 The new page table is built in a very similar way to the [previous page table](./linux-bootstrap-4.md#set-up-paging). Each [virtual address](https://en.wikipedia.org/wiki/Virtual_address_space) directly corresponds to the same [physical address](https://en.wikipedia.org/wiki/Physical_address). That is why it is called the identity mapping.
 
@@ -289,7 +289,7 @@ Now let's take a look at the implementation of this function. It starts by initi
 
 This structure provides information about memory mappings and a callback to allocate space for page table entries. The `context` field is used for tracking the allocated page tables. The `page_flag` and `kernpg_flag` fields define various page attributes (such as `present`, `writable`, or `executable`), which are reflected in their names.
 
-In the next step, the kernel reads the address of the top-level page table from the `cr3` [control register](https://en.wikipedia.org/wiki/Control_register) and compares it with the `_pgtable`. If you read the previous chapter, you remember that `_pgtable` is the page table initialized by the early kernel setup code before switching to long mode. If we came from the `startup_32`, and it is exactly our case, the `cr3` register contains the same address as `_pgtable`. In this case, the kernel reuses and extends this page table:
+In the next step, the kernel reads the address of the top-level page table from the `cr3` [control register](https://en.wikipedia.org/wiki/Control_register) and compares it with the `_pgtable`. If you read the previous part, you remember that `_pgtable` is the page table initialized by the early kernel setup code before switching to long mode. If we came from the `startup_32`, and it is exactly our case, the `cr3` register contains the same address as `_pgtable`. In this case, the kernel reuses and extends this page table:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/ident_map_64.c#L142-L146 -->
 ```C
@@ -339,7 +339,7 @@ After all the identity mapping page table entries were initialized, the kernel u
 	write_cr3(top_level_pgt);
 ```
 
-Since we came from `startup_32`, the first four gigabytes were already mapped, so the page tables still have the same structure that we saw in the previous chapter:
+Since we came from `startup_32`, the first four gigabytes were already mapped, so the page tables still have the same structure that we saw in the previous part:
 
 ![early-4g-page-tables](./images/early-4g-page-tables.svg)
 
@@ -369,7 +369,7 @@ Right now, we are finally at the last point before we see the kernel entrypoint.
 
 The kernel decompression is performed by the `extract_kernel` function defined in [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c). This function starts with the video mode and console initialization that we already saw in the previous parts. The kernel needs to do this again because it does not know if the kernel was loaded in the [real mode](https://en.wikipedia.org/wiki/Real_mode) or whether the bootloader used the `32-bit` or `64-bit` boot protocol.
 
-We will skip all these initialization steps as we already saw them in the previous chapters. After the first initialization steps are done, the decompressor code stores the pointers to the start of the free heap memory and to the end of it:
+We will skip all these initialization steps as we already saw them in the previous parts. After the first initialization steps are done, the decompressor code stores the pointers to the start of the free heap memory and to the end of it:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/misc.c#L458-L459 -->
 ```C
@@ -379,7 +379,7 @@ We will skip all these initialization steps as we already saw them in the previo
 
 The main reason to set up the heap borders is that the kernel decompressor code uses the heap intensively during decompression.
 
-After the initialization of the heap, the kernel calls the `choose_random_location` function from [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c). This function chooses the random location in memory to write the decompressed kernel to. This function performs work only if the address randomization is enabled. At this point, we will skip it and move to the next step, as it is not the most crucial point in the kernel decompression. If you are interested in what this function does, you can find more information in the [next chapter](./linux-bootstrap-6.md).
+After the initialization of the heap, the kernel calls the `choose_random_location` function from [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c). This function chooses the random location in memory to write the decompressed kernel to. This function performs work only if the address randomization is enabled. At this point, we will skip it and move to the next step, as it is not the most crucial point in the kernel decompression. If you are interested in what this function does, you can find more information in the [next part](./linux-bootstrap-6.md).
 
 Now let's get back to the `extract_kernel` function. Since we assume that the kernel address randomization is disabled, the address where the kernel image will be decompressed is stored in the `output` parameter without any change. The value from this variable is obtained from the `rbp` register as calculated in the previous steps.
 
@@ -499,7 +499,7 @@ Once the relocations are applied, the decompressor code jumps to the kernel entr
 
 Now we are in the kernel 🎉🎉🎉
 
-The kernel entrypoint is the `startup_64` function from [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S). This is our next stop, but it will be in the next set of chapters - [Kernel initialization process](https://github.com/0xAX/linux-insides/tree/master/Initialization).
+The kernel entrypoint is the `startup_64` function from [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S). This is our next stop, but it will be in the next chapter - [Kernel initialization process](https://github.com/0xAX/linux-insides/tree/master/Initialization).
 
 ## Conclusion
 
@@ -507,7 +507,7 @@ This is the end of the fifth part about Linux kernel insides. If you have questi
 
 ## Links
 
-Here is the list of the links that you can find useful when reading this chapter:
+Here is the list of the links that you can find useful when reading this part:
 
 - [Real mode](https://en.wikipedia.org/wiki/Real_mode)
 - [Protected mode](http://en.wikipedia.org/wiki/Protected_mode)
