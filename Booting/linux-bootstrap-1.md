@@ -91,14 +91,16 @@ _start:
 
 To prove that this code is located at the `0xFFFFFFF0` address, we may take a look at the [linker script](https://github.com/coreboot/coreboot/blob/main/src/arch/x86/bootblock.ld):
 
-<!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/main/src/arch/x86/bootblock.ld#L72-L78 -->
+<!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/main/src/arch/x86/bootblock.ld#L8-L8 -->
 ```linker-script
-	. = 0xfffffff0;
-	_X86_RESET_VECTOR = .;
+#define RESET_VECTOR 0xfffffff0
+```
+
+<!-- https://raw.githubusercontent.com/coreboot/coreboot/refs/heads/main/src/arch/x86/bootblock.ld#L78-L81 -->
+```linker-script
+	. = RESET_VECTOR;
 	.reset . : {
 		*(.reset);
-		. = _X86_RESET_VECTOR_FILLING;
-		BYTE(0);
 	}
 ```
 
