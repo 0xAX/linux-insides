@@ -626,17 +626,7 @@ The main goal of this code is to clear, or in other words, to fill with zeros th
 
 To clear this memory area, at first we set the borders of this area - from the [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld) to `_end + 3`. We add `3` bytes to the `_end` address because we are going to write zeros in double words, meaning four bytes at a time. Adding three bytes ensures that when we later divide by four, any remainder at the end of the memory area is still covered. After we set up the borders of the memory area and fill the `eax` with zero using the `xor` instruction, the `rep stosl` does its job.
 
-The effect of this code is that zeros are written through the entire memory from `__bss_start` to `_end`. To know their exact addresses, we can inspect the `setup.elf` file with the [readelf](https://en.wikipedia.org/wiki/Readelf) utility:
-
-```bash
-$ readelf -a arch/x86/boot/setup.elf  | grep bss
-  [12] .bss              NOBITS          00003f00 004efc 001380 00  WA  0   0 32
-   00     .bstext .header .entrytext .inittext .initdata .text .text32 .rodata .videocards .data .signature .bss
-   145: 00005280     0 NOTYPE  GLOBAL DEFAULT   12 __bss_end
-   169: 00003f00     0 NOTYPE  GLOBAL DEFAULT   12 __bss_start
-```
-
-These are offsets inside the setup segment. Since in our case the kernel image is loaded at physical address `0x90000`, the symbols translate to:
+The effect of this code is that zeros are written through the entire memory from `__bss_start` to `_end`. As we saw in the `readelf` output above, these symbols are offsets inside the setup segment. Since in our case the kernel image is loaded at physical address `0x90000`, the symbols translate to:
 
 - __bss_start - `0x90000 + 0x3f00 = 0x93F00`
 - __bss_end - `0x90000 + 0x5280 = 0x95280`
