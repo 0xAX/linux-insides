@@ -100,7 +100,7 @@ To prove that this code is located at the `0xFFFFFFF0` address, we may take a lo
 	}
 ```
 
-The address `0xFFFFFFF0` is much larger than `0xFFFFF` (1MB). How can the CPU access this address in real mode? The answer is simple. Most likely you have something more modern than **8086** CPU with 20-bit address bus. More modern processors starts in real mode but with 32-bit or 64-bit bus.
+The address `0xFFFFFFF0` is much larger than `0xFFFFF` (1MB). How can the CPU access this address in real mode? The answer is the hidden base of the `cs` register we saw above. The usual `selector << 4` formula can't produce anything above `0x10FFEF`, but right after reset the base is `0xFFFF0000`, so the CPU reaches the top of the 4GB address space even in real mode. This lasts only until the first far jump reloads `cs`. After that, the base is calculated the usual way again.
 
 When the CPU wakes up, it reads the jump at the `0xFFFFFFF0` address, jump into the firmware, and the long chain of the boot process begins. This is the very first step on the way to boot the Linux kernel.
 
