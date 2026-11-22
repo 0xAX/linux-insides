@@ -484,7 +484,7 @@ The initial memory descriptors specified by the items of the `boot_gdt` array. T
 Initially, the 3 memory descriptors specified:
 
 - Code segment
-- Memory segment
+- Data segment
 - Task state segment
 
 We will skip the description of the task state segment for now, as it was added there (according to the comment) to make [Intel VT](https://en.wikipedia.org/wiki/X86_virtualization#Intel_virtualization_(VT-x)) happy.
