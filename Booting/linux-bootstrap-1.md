@@ -554,7 +554,7 @@ There is no guarantee that this region of memory is zeroed at the time the kerne
 >
 > -- *The Linux/x86 Boot Protocol*, "Details of Header Fields", `setup_sects`
 
-In my build, this field has the value `31`, so the size of the whole real-mode part of the kernel is `(31 + 1) * 512 = 0x4000`. Looking at the `__bss_end` and `__bss_start` symbols, we can see that this area extends beyond `0x4000`:
+In my build, this field has the value `31`, so the size of the whole real-mode part of the kernel is `(31 + 1) * 512 = 0x4000`. Looking at the `__bss_end` and `__bss_start` symbols with the [readelf](https://en.wikipedia.org/wiki/Readelf) utility, we can see that this area extends beyond `0x4000`:
 
 ```bash
 readelf -a arch/x86/boot/setup.elf | grep "bss"
