@@ -38,7 +38,7 @@ For now, our attention stays on segmentation. We'll return to paging later, once
 
 ### Memory segmentation in protected mode
 
-In protected mode, memory segmentation is completely redesigned. Fixed 64 KB real mode segments are gone. Instead, each segment is now defined by a special data structure called a `Segment Descriptor` which specifies the properties of a memory segment. The segment descriptors are stored in a special structure called the `Global Descriptor Table` or `GDT`. Whenever a CPU needs to find an actual physical memory address, it consults this table. The GDT itself is just a block of memory. Its address is stored in the special CPU register called `gdtr`.  This is a 48-bit register and consists of two parts:
+In protected mode, memory segmentation is completely redesigned. Fixed 64 KB real mode segments are gone. Instead, each segment is now defined by a special data structure called a `Segment Descriptor` which specifies the properties of a memory segment. The segment descriptors are stored in a special structure called the `Global Descriptor Table` or `GDT`. Whenever a segment register is loaded, the CPU consults this table. The GDT itself is just a block of memory. Its address is stored in the special CPU register called `gdtr`.  This is a 48-bit register and consists of two parts:
 
 - The size of the Global Descriptor Table
 - The address of the Global Descriptor Table
@@ -456,7 +456,7 @@ static void keyboard_init(void)
 This function performs two tasks using [BIOS interrupt](https://en.wikipedia.org/wiki/BIOS_interrupt_call) `0x16`:
 
 1. Gets the state of a keyboard which contains information about state of certain modifier keys, like for example Caps Lock active or not.
-2. Sets the keyboard repeat rate which determines how long a key must hold down before it begins repeating
+2. Sets the keyboard repeat delay and rate, which determine how long a key must be held down before it begins repeating and how fast it repeats then.
 
 After the BIOS interrupt was executed, the keyboard should be initialized. If you are wondering why we need a working keyboard at such an early stage, the answer is - it can be used during the selection of the video mode. We will see more details in the [next chapter](linux-bootstrap-3.md).
 
