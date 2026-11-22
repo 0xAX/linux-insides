@@ -403,6 +403,8 @@ Schematically, it can be represented like this:
 
 The buffer for the decompressed kernel starts at the address where the kernel will run. For a relocatable kernel, this is the load address aligned up to the value of the `kernel_alignment` field from the kernel setup header, but not lower than the address specified by the `LOAD_PHYSICAL_ADDR` macro. The `kernel_alignment` field is set from the [`CONFIG_PHYSICAL_ALIGN`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) kernel configuration option, which is `0x200000` by default, and the `LOAD_PHYSICAL_ADDR` macro by default expands to the `0x1000000` address. Since the kernel was loaded below this address (at `0x100000`), the buffer starts at `0x1000000`. The decompressor should copy itself, together with the compressed kernel image, to the end of this buffer. The size of the buffer is calculated during the kernel build, so that the room left at the beginning of the buffer is enough for the safe in-place decompression.
 
+If the [kernel address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization) is enabled, the decompressor may later choose another address for the decompressed kernel, using the memory map to find a free region. In this case, the buffer is used only as the place where the decompressor runs. We disabled it with the `nokaslr` command line option, so the kernel will be decompressed into this buffer.
+
 We can see how the beginning of this buffer and the new location of the decompressor are calculated in the following code:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L146-L161 -->
