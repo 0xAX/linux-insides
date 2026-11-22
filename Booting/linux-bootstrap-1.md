@@ -337,11 +337,11 @@ If you did everything correctly, you will see the GRUB 2 prompt in the qemu wind
 ```
 set pager=1
 set debug=all
-linux /boot/bzImage
+linux16 /boot/bzImage
 boot
 ```
 
-During the execution of the `linux` command, you will see the debug line:
+During the execution of the `linux16` command, you will see the debug line:
 
 ```
 relocator: min_addr = 0x0, max_addr = 0xffffffff, target = 0x90000
