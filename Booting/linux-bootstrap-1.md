@@ -183,7 +183,7 @@ From this point onwards, the BIOS hands control over to the bootloader.
 
 ## The bootloader stage
 
-There are a number of different bootloaders that can boot Linux kernel, such as [GRUB 2](https://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project), [systemd-boot](https://www.freedesktop.org/software/systemd/man/latest/systemd-boot.html), and others. The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst) which specifies the requirements for a bootloader to implement Linux support. In this chapter, we will take a short look how GRUB 2 does loading.
+There are a number of different bootloaders that can boot Linux kernel, such as [GRUB 2](https://www.gnu.org/software/grub/), [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project), [systemd-boot](https://www.freedesktop.org/software/systemd/man/latest/systemd-boot.html), and others. The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst) which specifies the requirements for a bootloader to implement Linux support. In this part, we will take a short look how GRUB 2 does loading.
 
 Continuing from where we left off - the BIOS has now selected a boot device, found its boot sector, loaded it into memory and passed control to the code located there. GRUB 2 bootloader consists of multiple [stages](https://www.gnu.org/software/grub/manual/grub/grub.html#Images). The first stage of the boot code is in the [boot.S](https://github.com/rhboot/grub2/blob/master/grub-core/boot/i386/pc/boot.S) source code file. Due to the limited amount of space for the first boot sector, this code has only a single goal - to load [core image](https://www.gnu.org/software/grub/manual/grub/html_node/Images.html) into memory and jump to it.
 
@@ -281,7 +281,7 @@ After the virtual machine is started, we can attach the debugger to it, set up a
 ```bash
 gdb vmlinux
 (gdb) target remote :1234
-(gdb) break *0x100000
+(gdb) hbreak *0x100000
 (gdb) c
 Continuing.
 
@@ -324,8 +324,8 @@ Connect with [gdb](https://sourceware.org/gdb/) debugger and set up a breakpoint
 gdb
 (gdb) target remote localhost:1234
 Remote debugging using localhost:1234
-(gdb) break *0x90200
-Breakpoint 1 at 0x90200
+(gdb) hbreak *0x90200
+Hardware assisted breakpoint 1 at 0x90200
 (gdb) c
 Continuing.
 ```
@@ -615,7 +615,7 @@ This is the end of the first part about Linux kernel insides. If you have questi
 
 ## Links
 
-Here is the list of the links that you may find useful during reading of this chapter:
+Here is the list of the links that you may find useful during reading of this part:
 
 - [Intel 80386 programmer's reference manual 1986](http://css.csail.mit.edu/6.858/2014/readings/i386.pdf)
 - [Minimal Boot Loader in Assembler with comments](https://github.com/Stefan20162016/linux-insides-code/blob/master/bootloader.asm)
