@@ -425,11 +425,11 @@ This applies also to the GRUB 2 bootloader. We can see in its [source code](http
 
 <!-- https://raw.githubusercontent.com/rhboot/grub2/refs/heads/master/grub-core/loader/i386/pc/linux.c#L60-L64 -->
 ```C
-segment = grub_linux_real_target >> 4;
-state.gs = state.fs = state.es = state.ds = state.ss = segment;
-state.sp = GRUB_LINUX_SETUP_STACK;
-state.cs = segment + 0x20;
-state.ip = 0;
+  segment = grub_linux_real_target >> 4;
+  state.gs = state.fs = state.es = state.ds = state.ss = segment;
+  state.sp = GRUB_LINUX_SETUP_STACK;
+  state.cs = segment + 0x20;
+  state.ip = 0;
 ```
 
 Here, `grub_linux_real_target` is the physical address where the kernel setup code will be loaded. As we saw in the [previous section](#the-bootloader-stage), this address was `0x90000`. Shifting it right by four divides it by `16`, converting a physical address into a segment value - that's how real mode memory segmentation works.
