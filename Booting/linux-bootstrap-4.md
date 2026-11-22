@@ -23,7 +23,7 @@ The last point where we stopped was the [jump](https://en.wikipedia.org/wiki/Bra
 	jmpl	*%eax			# Jump to the 32-bit entrypoint
 ```
 
-The value of the `eax` register contains the address of the `32-bit` entry point. What is this address? To answer on this question, we can read the [Linux kernel x86 boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst) document:
+The value of the `eax` register contains the address of the `32-bit` entry point that comes from the `code32_start` field of the kernel setup header. What is this address? To answer on this question, we can read the [Linux kernel x86 boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst) document:
 
 > When using bzImage, the protected-mode kernel was relocated to 0x100000
 >
