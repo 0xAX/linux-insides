@@ -23,7 +23,7 @@ The last point where we stopped was the [jump](https://en.wikipedia.org/wiki/Bra
 	jmpl	*%eax			# Jump to the 32-bit entrypoint
 ```
 
-The value of the `eax` register contains the address of the `32-bit` entry point that comes from the `code32_start` field of the kernel setup header. What is this address? To answer on this question, we can read the [Linux kernel x86 boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst) document:
+The value of the `eax` register contains the address of the `32-bit` entry point that comes from the `code32_start` field of the kernel setup header. What is this address? To answer this question, we can read the [Linux kernel x86 boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/arch/x86/boot.rst) document:
 
 > When using bzImage, the protected-mode kernel was relocated to 0x100000
 >
@@ -169,7 +169,7 @@ endif
 
 Since we consider the kernel for `x86_64` architecture, we assume that the [`CONFIG_X86_64`](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) is set to `y`. As the result, the `head_64.S` file will be used during the kernel build process. Let's start to investigate what the kernel does in this file.
 
-### Reload the segments if needed
+### Calculation of the load address
 
 As we already know, our start is in [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file. The entry point is defined by the `startup_32` symbol.
 
@@ -249,6 +249,8 @@ Schematically, it can be represented like this:
 
 Starting from this moment, the `ebp` register contains the physical address of the `startup_32` symbol. Next, it will be used to calculate the offset to any other symbols or structures in memory.
 
+### Loading the new Global Descriptor Table
+
 The very first such structure that we need to access is the Global Descriptor Table. To switch to long mode, we need to update the previously loaded Global Descriptor Table with `64-bit` segments:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L106-L109 -->
@@ -283,7 +285,7 @@ The new Global Descriptor table contains four descriptors:
 - 32-bit kernel data segment
 - 16-byte task state descriptor
 
-We already saw loading the Global Descriptor Table in the previous [part](./linux-bootstrap-3.md#set-up-the-global-descriptor-table), and now we're doing almost the same, but we set descriptors to use `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode.
+We already saw loading the Global Descriptor Table in the previous [part](./linux-bootstrap-3.md#set-up-the-global-descriptor-table), and now we're doing almost the same, but the new table also contains the `__KERNEL_CS` descriptor with `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode.
 
 After the new Global Descriptor Table is loaded, the next step is to set up the stack:
 
@@ -319,7 +321,7 @@ Just a couple of steps separate us from transitioning into the long mode. As men
 
 ## Last steps before paging setup
 
-As we mentioned in the previous section, there a couple of additional steps before we can setup paging and switch to long mode. These steps are:
+As we mentioned in the previous section, there are a couple of additional steps before we can setup paging and switch to long mode. These steps are:
 
 - Verification of CPU
 - Calculation of the relocation address
