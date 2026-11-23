@@ -571,6 +571,8 @@ In the code above, the kernel fills the first entry of the top-level page table 
 - Read/Write
 - User
 
+The `edx` register in the last instruction is used only if the kernel runs with memory encryption enabled. In our case, it contains zero, so this instruction does not change the entry. We will see the same instruction in the next two snippets.
+
 In the next step, the kernel builds four `Page Directory` entries in the `Page Directory Pointer` table with the same `Present+Read/Write/User` flags:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/compressed/head_64.S#L216-L224 -->
