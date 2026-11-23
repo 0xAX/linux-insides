@@ -528,7 +528,7 @@ Each table has the same internal structure. The only difference between them is 
 
 If you are interested in this topic, you can find more information about page tables and page table entries structure in the [Intel® 64 and IA-32 Architectures Software Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html).
 
-Now that we know a little about paging, we can return to the kernel and update our knowledge by looking at the real code. Now we will see how the kernel builds the early page table to switch to long mode. But before we jump directly to the code, we need to remember one important thing. The kernel will be relocated to the address stored in the `ebx` register, as seen above. So, all structures, including the page tables, should be aligned to this address.
+Now that we know a little about paging, we can return to the kernel and update our knowledge by looking at the real code. Now we will see how the kernel builds the early page table to switch to long mode. But before we jump directly to the code, we need to remember one important thing. The kernel will be relocated to the address stored in the `ebx` register, as seen above. So, the kernel builds the page tables right in the memory where it will be relocated.
 
 The page table structure for boot is defined in the same source code file and looks like this:
 
