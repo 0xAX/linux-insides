@@ -423,7 +423,7 @@ struct boot_e820_entry {
 The kernel prints this memory map later, during initialization. You can find it in the [dmesg](https://en.wikipedia.org/wiki/Dmesg) output:
 
 ```
-[    0.000000] e820: BIOS-provided physical RAM map:
+[    0.000000] BIOS-provided physical RAM map:
 [    0.000000] BIOS-e820: [mem 0x0000000000000000-0x000000000009fbff] usable
 [    0.000000] BIOS-e820: [mem 0x000000000009fc00-0x000000000009ffff] reserved
 [    0.000000] BIOS-e820: [mem 0x00000000000f0000-0x00000000000fffff] reserved
