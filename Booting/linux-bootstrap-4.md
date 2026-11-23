@@ -300,7 +300,7 @@ After the new Global Descriptor Table is loaded, the next step is to set up the 
 	leal	rva(boot_stack_end)(%ebp), %esp
 ```
 
-In the previous step, we loaded a new Global Descriptor Table, but all the segment registers may still have selectors from the old table. If those selectors point to invalid entries in the new Global Descriptor Table, the next memory access can cause [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault). Setting them to `__BOOT_DS`, which is a well-known descriptor, should fix this potential fault and allow us to set the proper stack pointed by `boot_stack_end`.
+In the previous step, we loaded a new Global Descriptor Table, but all the segment registers still have selectors from the old table. Memory accesses continue to work, because the processor uses the descriptors cached in the hidden part of the segment registers and does not read the Global Descriptor Table. The processor reads the table only when a selector is written to a segment register. If a selector value from the old table is written to a segment register again and points to an invalid entry in the new Global Descriptor Table, the processor will raise a [General Protection Fault](https://en.wikipedia.org/wiki/General_protection_fault). To avoid this, the kernel does not keep the old selectors and sets the segment registers to `__BOOT_DS`, which is a well-known descriptor in the new table. After this, we can set the proper stack pointed by `boot_stack_end`.
 
 The last action after we loaded the new Global Descriptor Table is to reload the `cs` descriptor:
 
