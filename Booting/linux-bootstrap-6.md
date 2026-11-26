@@ -403,7 +403,7 @@ At this point, both the physical and virtual base addresses are determined - ran
 
 ## Conclusion
 
-This is the end of the sixth part about Linux kernel insides. If you have questions or suggestions, feel free ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
+This is the end of the sixth part about Linux kernel insides. If you have questions or suggestions, feel free to ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
 
 The next chapter will be about kernel initialization and we will study the first steps take in the Linux kernel initialization code.
 

@@ -133,7 +133,7 @@ testl $3, CS(%rsp)
 jnz 1f
 ```
 
-Here we checks first and second bits in the `CS`. You can remember that `CS` register contains segment selector where first two bits are `RPL`. All privilege levels are integers in the range 0–3, where the lowest number corresponds to the highest privilege. So if interrupt came from the kernel mode we call `save_paranoid`	or jump on label `1` if not. In the `save_paranoid` we store all general purpose registers on the stack and switch user `gs` on kernel `gs` if need:
+Here we checks first and second bits in the `CS`. You can remember that `CS` register contains segment selector where first two bits are `RPL`. All privilege levels are integers in the range 0-3, where the lowest number corresponds to the highest privilege. So if interrupt came from the kernel mode we call `save_paranoid`	or jump on label `1` if not. In the `save_paranoid` we store all general purpose registers on the stack and switch user `gs` on kernel `gs` if need:
 
 ```assembly
 	movl $1,%ebx

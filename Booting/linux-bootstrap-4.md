@@ -1,11 +1,11 @@
 # Kernel booting process - Part 4
 
-In the previous [part](./linux-bootstrap-3.md), we saw the transition from the [real mode](https://en.wikipedia.org/wiki/Real_mode) into [protected mode](http://en.wikipedia.org/wiki/Protected_mode). At this point, the two crucial things were changed: 
+In the previous [part](./linux-bootstrap-3.md), we saw the transition from the [real mode](https://en.wikipedia.org/wiki/Real_mode) into [protected mode](http://en.wikipedia.org/wiki/Protected_mode). At this point, the two crucial things were changed:
 
 - The processor now can address up to four gigabytes of memory
-- The privilege levels were set for the memory access 
+- The privilege levels were set for the memory access
 
-Despite this, the kernel is still in its early setup mode. There are many different things that the early setup code should prepare before we reach the main kernel's entry point. Right now, the processor operates in protected mode. However, protected mode is not the main mode in which `x86_64` processors should operate – it exists only for backward compatibility. The next crucial step is to switch to the native mode for `x86_64` - [long mode](https://en.wikipedia.org/wiki/Long_mode).
+Despite this, the kernel is still in its early setup mode. There are many different things that the early setup code should prepare before we reach the main kernel's entry point. Right now, the processor operates in protected mode. However, protected mode is not the main mode in which `x86_64` processors should operate - it exists only for backward compatibility. The next crucial step is to switch to the native mode for `x86_64` - [long mode](https://en.wikipedia.org/wiki/Long_mode).
 
 The main characteristic of this new mode (as with all the earlier modes) is the way it defines the memory model. In real mode, the memory model was relatively simple, and each memory location was formed based on the base address specified in a segment register, plus some offset. In protected mode, the global and local descriptor tables contain descriptors that describe memory areas. All the memory accesses in long mode are based on the new mechanism called [paging](https://en.wikipedia.org/wiki/Memory_paging). One of the crucial goals of the kernel setup code before it can switch to the long mode is to set up paging.
 
@@ -72,7 +72,7 @@ eflags         0x46	    [ PF ZF ]
 
 From the previous part, you may remember:
 
-> First of all, we preserve the address of `boot_params` structure in the `esi` register.
+> First of all, we preserve the address of the `boot_params` structure in the `esi` register since we continue to use parameters that the kernel got during boot in later stages.
 
 So the `esi` register has the pointer to the `boot_params`. Let's inspect it to make sure that it is really it. For example we can take a look at the command line string that we passed to the virtual machine:
 
@@ -208,9 +208,9 @@ SECTIONS
 This means that the code in this section is compiled to run at the address zero. We also can see this in the output of `objdump` utility:
 
 ```bash
-objdump -D /home/alex/disk/dev/linux/arch/x86/boot/compressed/vmlinux | less
+objdump -D ./arch/x86/boot/compressed/vmlinux | less
 
-/home/alex/disk/dev/linux/arch/x86/boot/compressed/vmlinux:     file format elf64-x86-64
+./arch/x86/boot/compressed/vmlinux:     file format elf64-x86-64
 
 
 Disassembly of section .head.text:
@@ -232,7 +232,7 @@ We know both these addresses based on the experiment above, and as a result, we 
 	subl	$ rva(1b), %ebp
 ```
 
-The `call` instruction is used to get the physical address where the kernel is actually loaded. This trick works because after the `call` instruction is executed, the stack should have the return address on top. This return address will be exactly the address of the label `1`. 
+The `call` instruction is used to get the physical address where the kernel is actually loaded. This trick works because after the `call` instruction is executed, the stack should have the return address on top. This return address will be exactly the address of the label `1`.
 
 In the code above, the kernel sets up a temporary mini stack where the return address will be stored after the `call` instruction. Right after the call, we pop this address from the stack and save it in the `ebp` register. Using the last instruction, we subtract the difference between the link-time addresses of the label `1` and `startup_32` using the `rva` macro and `subl` instruction, and store the result in the `ebp` register.
 
@@ -435,8 +435,8 @@ Despite it may look scary, it is not as complex as it may seem. Let's take a clo
 
 The `ebp` register contains the physical address where the protected-mode part of the kernel was loaded. We know that this address is `0x100000`. This address is aligned up to the `kernel_alignment` boundary, and the result value is compared with the `LOAD_PHYSICAL_ADDR`:
 
-- If this value is equal to or greater than `LOAD_PHYSICAL_ADDR`, we leave it as is. 
-- Otherwise, we put the value of the `LOAD_PHYSICAL_ADDR` (which is `0x1000000`) into the `ebx` register. 
+- If this value is equal to or greater than `LOAD_PHYSICAL_ADDR`, we leave it as is.
+- Otherwise, we put the value of the `LOAD_PHYSICAL_ADDR` (which is `0x1000000`) into the `ebx` register.
 
 At this moment, we have the pointer to the beginning of the buffer where the kernel image is relocated and decompressed in the `ebx` register.
 
@@ -488,12 +488,12 @@ Each group of `9` bits selects an entry in one level of the page-table hierarchy
 When the processor translates a virtual address, it performs the following steps:
 
 1. It reads the `cr3` control register to obtain the physical address of the top-level page table called `PML4`.
-2. It extracts bits `47–39` of the virtual address and uses them as an index of the `PML4` page table.
+2. It extracts bits `47-39` of the virtual address and uses them as an index of the `PML4` page table.
 3. The selected `PML4` entry contains the physical address of the next-level table called `PDPT`.
-4. Bits `38–30` are selected to find an entry in the `PDPT`.
-5. Bits `29–21` are selected to find an entry in the `PD`.
-6. Bits `20–12` select an entry in the `PT`.
-7. Bits `11–0` provide the offset inside the resulting physical page.
+4. Bits `38-30` are selected to find an entry in the `PDPT`.
+5. Bits `29-21` are selected to find an entry in the `PD`.
+6. Bits `20-12` select an entry in the `PT`.
+7. Bits `11-0` provide the offset inside the resulting physical page.
 
 In addition to a physical address of the next-level table, each page table entry contains flags in its first `12` bits, plus the no-execute flag in bit `63`. These flags are:
 
@@ -509,7 +509,7 @@ In addition to a physical address of the next-level table, each page table entry
 | `PS`  | Page Size                | Determines whether the entry maps a large page (e.g., 2 MiB or 1 GiB) instead of pointing to a lower-level page table.                             |
 | `G`   | Global                   | Keeps the [TLB](https://en.wikipedia.org/wiki/Translation_lookaside_buffer) entry for the page across reloads of the `cr3` register when set.      |
 | `NX`  | No-Execute               | Prevents instruction execution from the referenced page when set. Used to enforce executable/non-executable memory protections.                    |
-       
+
 You might wonder how an 8-byte entry can contain both a physical address of the next-level page table and flags at the same time. The reason is that each page table is aligned on a four-kilobyte boundary. As a result, the lower 12 bits of its physical address are always zero. These 12 bits are therefore used to store the flags. The upper bits are free as well, because a physical address on x86_64 is at most 52 bits wide, and that is where `NX` lives.
 
 Now that we know how the processor translates a virtual address to a physical address using paging, it is time to take a look at the structure of page tables.
@@ -526,7 +526,7 @@ A page table in x86_64 is a four-kilobyte memory area that contains 512 entries.
 Each table has the same internal structure. The only difference between them is how their entries are interpreted. As we already know, an entry in a page table is 64 bits wide. It contains two types of information:
 
 - A physical address of either the next-level page table or a physical memory page
-- A set of control flags that define access permissions and status information 
+- A set of control flags that define access permissions and status information
 
 If you are interested in this topic, you can find more information about page tables and page table entries structure in the [Intel® 64 and IA-32 Architectures Software Developer Manuals](https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html).
 
@@ -555,7 +555,7 @@ At the beginning, the kernel puts the address of the beginning of the `pgtable` 
 
 - 1 level4 table
 - 1 level3 table
-- 4 level2 table that maps everything with 2M pages
+- 4 level2 tables that map everything with 2M pages
 
 After the kernel clears the memory region reserved for the page tables, it starts populating it with entries. At the start, it fills the first and single entry of the top-level page table. The following snippet shows this:
 
@@ -683,7 +683,7 @@ The Linux kernel is now in 64-bit mode! 🎉
 
 ## Conclusion
 
-This is the end of the fourth part about Linux kernel insides. If you have questions or suggestions, feel free ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
+This is the end of the fourth part about Linux kernel insides. If you have questions or suggestions, feel free to ping me on X - [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
 
 ## Links
 

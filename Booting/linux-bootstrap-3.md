@@ -66,7 +66,7 @@ u16 mode = boot_params.hdr.vid_mode;
 ```
 
 > [!NOTE]
-> Instead of good old standard C data types like `int`, `short`, `unsigned short`, the Linux kernel provides its own data types for numeric values. Here is the table that will help you to remember them:
+> Instead of good old standard C data types like `int`, `short`, `unsigned short`, the Linux kernel provides its own data types for numeric values. Here is the table that will help you to remember them. The sizes are in bytes and valid for x86_64:
 >
 > | Type | char | short | int | long | u8 | u16 | u32 | u64 |
 > |------|------|-------|-----|------|----|-----|-----|-----|
@@ -79,6 +79,8 @@ Offset	Proto	Name		Meaning
 /Size
 01FA/2	ALL	    vid_mode	Video mode control
 ```
+
+If the bootloader does not fill this field, it keeps the default value which is set in the [arch/x86/boot/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/Makefile). This is `NORMAL_VGA`, the standard VGA text mode with 80 columns and 25 rows.
 
 Information about potential values for this field can also be found in the Linux kernel boot protocol document:
 
@@ -295,7 +297,27 @@ static int vga_set_mode(struct mode_info *mode)
 
 The `vga_set_mode` function is responsible for configuring the VGA display to a specific text mode, based on the settings which we collected in the previous steps. The `vga_set_basic_mode` function resets the VGA hardware into a standard text mode. The next statement sets up the video mode based on the video mode that was selected. Most of these functions have a very similar implementation based on the `0x10` BIOS interrupt.
 
-After this step, the video mode is configured and we save all the information about it again for later use. Having done this, the video mode setup is complete and now we can take a look at the last preparation before we see the switch into the protected mode.
+After this step, the video mode is configured and we save all the information about it again for later use. Having done this, the video mode setup is complete. Before we take a look at the last preparation for the switch into protected mode, let's see what protected mode is.
+
+## Protected mode
+
+The Linux kernel for x86_64 operates in a special mode called - [long mode](http://en.wikipedia.org/wiki/Long_mode). One of the main goals of all the kernel setup code is to switch to this mode. But before the kernel can switch to this mode, the kernel must switch the CPU into [protected mode](https://en.wikipedia.org/wiki/Protected_mode).
+
+What is [protected mode](https://en.wikipedia.org/wiki/Protected_mode)? From the [first part](linux-bootstrap-1.md) we already know that the CPU currently operates in [real mode](https://en.wikipedia.org/wiki/Real_mode). For us it mostly means - the way memory is addressed. As a short reminder - to access a memory location, the combination of two CPU [registers](https://en.wikipedia.org/wiki/Processor_register) is used:
+
+- A segment register - `cs`, `ds`, `ss` and `es` which defines the segment selector.
+- The instruction pointer or a general purpose register which specifies the offset within the segment.
+
+The main motivation for switching from real mode is its memory addressing limitation. As we saw in the first part, real mode can address only 2<sup>20</sup> bytes. This is just 1 MB of RAM. Obviously, modern software, including an operating system kernel, needs more. To break these constraints, a new processor mode was introduced - `protected mode`.
+
+Protected mode was introduced to the x86 architecture in 1982 and became the primary operating mode of Intel processors, starting with the [80286](http://en.wikipedia.org/wiki/Intel_80286) until the introduction of x86_64 and long mode. This mode brought many changes and improvements, but one of the most crucial was the memory management. The 20-bit address bus was replaced with a 24-bit address bus on the 80286 and a 32-bit address bus on the 80386. The latter allows access to 4 Gigabytes of memory in comparison to the 1 Megabyte in real mode.
+
+Memory management in protected mode is divided into two, mostly independent mechanisms:
+
+- `Segmentation`
+- `Paging`
+
+For now, only the first one is important for us, because the Linux kernel for x86_64 does not use paging in protected mode. We will get to segmentation later in this part, when the kernel sets up the Global Descriptor Table. We'll return to paging when the kernel prepares the switch into 64-bit long mode.
 
 ## Last preparation before transition into protected mode
 
@@ -322,11 +344,11 @@ We will consider only a standard use case, when the bootloader does not provide 
 		io_delay();
 ```
 
-An interrupt is a signal to the CPU that is emitted by hardware or software. After getting such a signal, the CPU suspends the current instruction sequence, saves its state, and transfers control to the interrupt handler. After the interrupt handler has finished its work, it transfers control back to the interrupted instruction. Non-maskable interrupts (NMI) are interrupts that are always processed, independently of permission. They cannot be ignored and are typically used to signal non-recoverable hardware errors. We will not dive into the details of interrupts now, but we will discuss them in the next parts.
+An interrupt is a signal to the CPU that is emitted by hardware or software. After getting such a signal, the CPU suspends the current instruction sequence, saves its state, and transfers control to the interrupt handler. After the interrupt handler has finished its work, it transfers control back to the interrupted instruction. Non-maskable interrupts (NMI) are interrupts that the CPU cannot disable with the interrupt flag. If such an interrupt arrives, it is always processed. They are typically used to signal non-recoverable hardware errors. We will not dive into the details of interrupts now, but we will discuss them in the next parts.
 
 At the first line, there is an [inline assembly](../Toolchain/linux-toolchain-4.md) statement with the `cli` instruction, which clears the [interrupt flag](https://en.wikipedia.org/wiki/Interrupt_flag). After this, external interrupts are disabled. The next line disables NMI (non-maskable interrupt).
 
-Let's get back to the code. In the second line, we set the byte `0x80` to the port `0x70`. After that, a call to the `io_delay` function occurs. `io_delay` causes a little delay and looks like this:
+Let's get back to the code. In the second line, we set the byte `0x80` to the port `0x70`. The CPU itself cannot ignore non-maskable interrupts, but on the PC the signal goes through a gate before it reaches the CPU. The highest bit of the port `0x70` controls this gate, so after this write non-maskable interrupts are not delivered to the CPU anymore. After that, a call to the `io_delay` function occurs. `io_delay` causes a little delay and looks like this:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/boot.h#L39-L43 -->
 ```C
@@ -404,7 +426,7 @@ This function masks or in other words forbids all interrupts on the primary and 
 
 All the operations before this point were executed for a safe transition to the protected mode. The next operations will prepare the transition to the protected mode. Let's take a look at them.
 
-## Entering protected mode
+## Setting up the descriptor tables
 
 At this point, we are very close to seeing the switch into protected mode of the Linux kernel.
 
@@ -444,11 +466,31 @@ This structure provides information about the pointer to the Interrupt Descripto
 
 ### Set up the Global Descriptor Table
 
-Next, we set up the Global Descriptor Table. As you may remember, the memory access is based on the `segment:offset` addressing in real mode. The protected mode introduces a different model based on the `Global Descriptor Table`. If you forgot the details about the Global Descriptor Table structure, you can find more information in the [previous part](./linux-bootstrap-2.md#protected-mode).
+The Interrupt Descriptor Table is loaded now and the next step is to set up the Global Descriptor Table. As you may remember, the memory access is based on the `segment:offset` addressing in real mode. The protected mode introduces a different model based on the `Global Descriptor Table`.
 
-Instead of fixed segment bases and limits, the CPU now looks for memory regions defined by descriptors located in the Global Descriptor Table. The goal of the kernel is to set up these descriptors.
+> [!NOTE]
+> The concept of the Global Descriptor Table is described in detail in the [dedicated part](../X86/linux-x86-1.md), so here we will mention only what is needed to understand the code. If you have never heard about it, I highly recommend reading that part first.
 
-All the work will be done by the `setup_gdt` function, which is defined in the same source code file. Let's take a look at the definition of this function:
+In protected mode, memory segmentation is completely redesigned. Fixed 64 KB real mode segments are gone. Instead, each segment is now defined by a special data structure called a `Segment Descriptor` which specifies the properties of a memory segment - its base, limit, type, and different flags. The segment descriptors are stored in a special structure called the `Global Descriptor Table` or `GDT`. Whenever a segment register is loaded, the CPU consults this table. The GDT itself is just a block of memory. Its address is stored in the special CPU register called `gdtr`. This is a 48-bit register and consists of two parts:
+
+- The size of the Global Descriptor Table
+- The address of the Global Descriptor Table
+
+In a moment, we will see how the Linux kernel builds and loads its GDT. For now, it's enough to know that the CPU provides a dedicated instruction to load the table's address into the `gdtr` register:
+
+```assembly
+lgdt gdt
+```
+
+How does the CPU actually refer to one of these descriptors during execution? Just like in real mode - using segment registers. In protected mode they contain segment selectors too, but a segment selector is handled differently. Each segment descriptor has an associated segment selector which is a 16-bit structure. The most important part of it for us is the `Index` - the number of the descriptor in the Global Descriptor Table.
+
+When a program running in protected mode references memory, the CPU needs to calculate a proper physical address. The following steps are needed to get a physical address in protected mode:
+
+1. A segment selector is loaded into one of the segment registers, if it is not already there.
+2. The CPU tries to find an associated segment descriptor in the Global Descriptor Table based on the `Index` value from the segment selector. If the descriptor was found, the CPU caches it, so it does not need to read the Global Descriptor Table on every memory access.
+3. The physical address will be the base address from the segment descriptor plus the offset from the instruction pointer or memory location referenced within an executed instruction.
+
+After this short reminder about segmentation, we can get back to the code. The Global Descriptor Table is set up by the `setup_gdt` function, which is defined in the same source code file as `setup_idt`. Let's take a look at the definition of this function:
 
 <!-- https://raw.githubusercontent.com/torvalds/linux/refs/heads/master/arch/x86/boot/pm.c#L65-L89 -->
 ```C
@@ -505,7 +547,7 @@ The base address of this memory segment is defined as `0` and the limit as `0xFF
 
 Besides the granularity bit, the `DESC_CODE32` specifies other flags. Among them, you can find a 32-bit segment that is readable, executable, and present in memory. The privilege level is set to `0`, the highest privilege, as the kernel needs.
 
-Looking at the documentation of the Global Descriptor Table and its entries, you can check all the initial segments by yourself. It is not so hard.
+Looking at the [documentation of the Global Descriptor Table and its entries](../X86/linux-x86-1.md), you can check all the initial segments by yourself. It is not so hard.
 
 ## Transition into protected mode
 

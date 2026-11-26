@@ -181,7 +181,7 @@ wrmsrl_safe(MSR_IA32_SYSENTER_ESP, 0ULL);
 wrmsrl_safe(MSR_IA32_SYSENTER_EIP, 0ULL);
 ```
 
-You can read more about the `Global Descriptor Table` in the second [part](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-2) of the chapter that describes the booting process of the Linux kernel.
+You can read more about the `Global Descriptor Table` in the [part](../X86/linux-x86-1.md) which is devoted to it.
 
 At the end of the `syscall_init` function, we just mask flags in the [flags register](https://en.wikipedia.org/wiki/FLAGS_register) by writing the set of flags to the `MSR_SYSCALL_MASK` model specific register:
 

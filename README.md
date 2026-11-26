@@ -13,7 +13,7 @@
 [![Patreon](https://img.shields.io/badge/Patreon-f96854?style=flat-square&logo=patreon&logoColor=white)](https://www.patreon.com/0xAX)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=flat-square&logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/0xAX)
 
-<img src="Assets/banner.svg" alt="Linux insides — a book-in-progress about the Linux kernel and its insides" width="900">
+<img src="Assets/banner.svg" alt="Linux insides - a book-in-progress about the Linux kernel and its insides" width="900">
 </div>
 
 # Introduction

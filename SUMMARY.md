@@ -71,7 +71,7 @@
     * [Radix tree](DataStructures/linux-datastructures-3.md)
     * [Data types in the kernel]()
 * [x86 fundamentals](X86/README.md)
-    * [Global Descriptor Table]()
+    * [Global Descriptor Table](X86/linux-x86-1.md)
     * [Interrupt Descriptor Table](X86/linux-x86-2.md)
     * [Paging](X86/linux-x86-3.md)
     * [CPUID]()

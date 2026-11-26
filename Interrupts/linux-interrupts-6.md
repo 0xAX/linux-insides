@@ -75,7 +75,7 @@ The `__KERNEL_CS` macro defined in the [arch/x86/include/asm/segment.h](https://
 #define __KERNEL_CS	(GDT_ENTRY_KERNEL_CS*8)
 ```
 
-more about `GDT` you can read in the second [part](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-2) of the Linux kernel booting process chapter. If `cs` is not kernel segment, it means that it is not nested `NMI` and we jump on the `first_nmi` label. Let's consider this case. First of all we put address of the current stack pointer to the `rdx` and pushes `1` to the stack in the `first_nmi` label:
+more about `GDT` you can read in the [part](../X86/linux-x86-1.md) which is devoted to it. If `cs` is not kernel segment, it means that it is not nested `NMI` and we jump on the `first_nmi` label. Let's consider this case. First of all we put address of the current stack pointer to the `rdx` and pushes `1` to the stack in the `first_nmi` label:
 
 ```assembly
 first_nmi:
