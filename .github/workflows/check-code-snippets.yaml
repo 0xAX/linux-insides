@@ -2,6 +2,8 @@ name: check code snippets
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '23 6 * * 1'
   push:
     branches:
       - master
@@ -41,6 +43,63 @@ jobs:
           cache-dependency-glob: scripts/uv.lock
       - name: Validate code snippets
         env:
-          GITHUB_TOKEN: ${{ secrets.GIT_API_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GIT_API_TOKEN || github.token }}
         run: |
           uv run --project scripts --locked ./scripts/check_code_snippets.py .
+
+  report-failure:
+    name: report scheduled failure
+    if: ${{ always() && needs.check-code-snippets.result == 'failure' && github.event_name == 'schedule' }}
+    needs:
+      - check-code-snippets
+    runs-on:
+      - ubuntu-24.04
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - name: Create or update failure issue
+        uses: actions/github-script@v9
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        with:
+          script: |
+            const marker = '<!-- check-code-snippets-failure -->';
+            const title = '[CI] Code snippet validation failed';
+            const body = [
+              marker,
+              'The scheduled code snippet validation failed.',
+              '',
+              `Workflow run: ${process.env.RUN_URL}`,
+              '',
+              'Please inspect the failed run and update the affected book snippets or their source references.'
+            ].join('\n');
+
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100
+            });
+
+            const existingIssue = issues.find(issue =>
+              !issue.pull_request && issue.body?.includes(marker)
+            );
+
+            if (existingIssue) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body
+              });
+              core.info(`Updated existing issue #${existingIssue.number}`);
+            } else {
+              const { data: issue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body
+              });
+              core.info(`Created issue #${issue.number}`);
+            }
